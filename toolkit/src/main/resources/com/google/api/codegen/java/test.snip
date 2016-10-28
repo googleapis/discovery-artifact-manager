@@ -1,0 +1,165 @@
+@extends "java/common.snip"
+@extends "java/initcode.snip"
+
+@snippet generate(xapiTest)
+  {@renderFileHeader(xapiTest.fileHeader)}
+
+  @@javax.annotation.Generated("by GAPIC")
+  public class {@xapiTest.name} {
+    @join mockService : xapiTest.mockServices
+      private static {@mockService.className} {@mockService.varName};
+    @end
+    private static MockServiceHelper serviceHelper;
+    private {@xapiTest.apiClassName} api;
+
+    @@BeforeClass
+    public static void startStaticServer() {
+      @join mockService : xapiTest.mockServices
+        {@mockService.varName} = new {@mockService.className}();
+      @end
+      serviceHelper = new MockServiceHelper("in-process-1", Arrays.<MockGrpcService>asList({@mockServiceArgs(xapiTest.mockServices)}));
+      serviceHelper.start();
+    }
+
+    @@AfterClass
+    public static void stopServer() {
+      serviceHelper.stop();
+    }
+
+    @@Before
+    public void setUp() throws IOException {
+      serviceHelper.reset();
+      {@xapiTest.apiSettingsClassName} settings = {@xapiTest.apiSettingsClassName}.defaultBuilder()
+          .provideChannelWith(serviceHelper.createChannel(), true)
+          .build();
+      api = {@xapiTest.apiClassName}.create(settings);
+    }
+
+    @@After
+    public void tearDown() throws Exception {
+      api.close();
+    }
+
+    @join test : xapiTest.testCases
+      {@testCase(test)}
+
+    @end
+  }
+@end
+
+@private mockServiceArgs(mockServices)
+  @join mockService : mockServices on ", "
+    {@mockService.varName}
+  @end
+@end
+
+@private testCase(test)
+  @if test.isGrpcStreaming
+    {@grpcStreamingTestCase(test)}
+  @else
+    {@nonGrpcStreamingTestCase(test)}
+  @end
+@end
+
+@private nonGrpcStreamingTestCase(test)
+  @@Test
+  @@SuppressWarnings("all")
+  public void {@test.name}() {
+    {@setResponse(test)}
+
+    {@initCode(test.initCode)}
+
+    {@methodCall(test)}
+
+    List<GeneratedMessageV3> actualRequests = {@test.mockServiceVarName}.getRequests();
+    Assert.assertEquals(1, actualRequests.size());
+    {@test.requestTypeName} actualRequest = ({@test.requestTypeName})actualRequests.get(0);
+
+    @join assert : test.asserts
+      Assert.assertEquals({@assert.expectedValueIdentifier}, \
+        actualRequest.{@assert.actualValueGetter}());
+    @end
+  }
+@end
+
+@private grpcStreamingTestCase(test)
+  @@Test
+  @@SuppressWarnings("all")
+  public void {@test.name}() throws Exception {
+    {@setResponse(test)}
+    {@initCode(test.initCode)}
+
+    @switch test.grpcStreamingType
+    @case "BidiStreaming"
+      {@bidiStreamingCall(test)}
+    @case "ServerStreaming"
+      {@serverStreamingCall(test)}
+    @default
+      $unhandled case - test.grpcStreamingType.toString$
+    @end
+
+    List<{@test.responseTypeName}> actualResponses = responseObserver.future().get();
+    Assert.assertEquals(1, actualResponses.size());
+    Assert.assertEquals(expectedResponse, actualResponses.get(0));
+    Assert.assertEquals(0, responseObserver.errors().size());
+  }
+@end
+
+@private bidiStreamingCall(test)
+  MockStreamObserver<StreamingRecognizeResponse> responseObserver = new MockStreamObserver<>();
+
+  StreamingCallable<{@test.requestTypeName}, {@test.responseTypeName}> callable =
+      api.{@test.surfaceMethodName}();
+  StreamObserver<{@test.requestTypeName}> requestObserver =
+      callable.bidiStreamingCall(responseObserver);
+
+  requestObserver.onNext(request);
+  requestObserver.onCompleted();
+@end
+
+@private serverStreamingCall(test)
+  MockStreamObserver<{@test.responseTypeName}> responseObserver = new MockStreamObserver<>();
+
+  StreamingCallable<{@test.requestTypeName}, {@test.responseTypeName}> callable =
+      api.{@test.surfaceMethodName}();
+  callable.serverStreamingCall(request, responseObserver);
+@end
+
+@private setResponse(test)
+  {@initCode(test.mockResponse.initCode)}
+  List<GeneratedMessageV3> expectedResponses = new ArrayList<>();
+  expectedResponses.add(expectedResponse);
+  {@test.mockServiceVarName}.setResponses(expectedResponses);
+@end
+
+@private methodCall(test)
+  @switch test.methodType
+  @case "PagedFlattenedMethod"
+    {@test.responseTypeName} pagedListResponse = api.{@test.surfaceMethodName}(\
+      {@sampleMethodCallArgList(test.initCode.fieldSettings)});
+
+    @join pageStreamingResponseView : test.pageStreamingResponseViews
+      List<{@pageStreamingResponseView.resourceTypeName}> {@pageStreamingResponseView.resourcesVarName} = Lists.newArrayList(pagedListResponse.{@pageStreamingResponseView.resourcesIterateMethod}());
+      Assert.assertEquals(1, {@pageStreamingResponseView.resourcesVarName}.size());
+      Assert.assertEquals(expectedResponse.{@pageStreamingResponseView.resourcesFieldGetterName}().get(0), {@pageStreamingResponseView.resourcesVarName}.get(0));
+    @end
+  @case "FlattenedMethod"
+    @if test.hasReturnValue
+      {@test.responseTypeName} actualResponse =
+          api.{@test.surfaceMethodName}(\
+          {@sampleMethodCallArgList(test.initCode.fieldSettings)});
+      Assert.assertEquals(expectedResponse, actualResponse);
+    @else
+      api.{@test.surfaceMethodName}(\
+            {@sampleMethodCallArgList(test.initCode.fieldSettings)});
+    @end
+  @default
+    $unhandledCase: {@test.type}$
+  @end
+@end
+
+@private sampleMethodCallArgList(fieldSettings)
+  @join fieldSetting : fieldSettings on ", "
+    {@fieldSetting.identifier}
+  @end
+@end
