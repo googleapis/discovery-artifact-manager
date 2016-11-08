@@ -28,6 +28,19 @@ git subrepo push clients/php/google-api-php-client-services
 
 If you need to reset your HEAD locally after a subrepo push, then you would not want to subsequently pull again (since that will merge the upstream changes you pushed earlier). Instead, you can force-push your chnages by using `git subrepo push --force`.
 
+After you push your subrepo, you should also push `discovery-artifact-manager` to your review branch.
 
+# Pushing changes for review
+
+When you make a change to code that lives in `discovery-artifact-manager`, either directly or via subrepos, you should stage your code to your own Github review branch and then create a Pull Request from there to the Github `master` branch.
+
+1. Create a review branch on Github. We'll refer to the name of the branch as `${REVIEW_BRANCH}`.
+1. From your local machine, push to the review branch:
+
+```
+git push origin master:${REVIEW_BRANCH}
+```
+
+1. On Github, issue a Pull Request against the `master` branch.
 
 
