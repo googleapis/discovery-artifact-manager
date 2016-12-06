@@ -36,11 +36,16 @@ public abstract class ResourceNameMessageConfigs {
     for (ResourceNameMessageConfigProto messageResourceTypesProto :
         configProto.getResourceNameGenerationList()) {
       ResourceNameMessageConfig messageResourceTypeConfig =
-          ResourceNameMessageConfig.createInterfaceConfig(diagCollector, messageResourceTypesProto);
+          ResourceNameMessageConfig.createResourceNameMessageConfig(
+              diagCollector, messageResourceTypesProto);
       messageResourceTypeConfigMap.put(
           messageResourceTypeConfig.messageName(), messageResourceTypeConfig);
     }
     return new AutoValue_ResourceNameMessageConfigs(messageResourceTypeConfigMap.build());
+  }
+
+  public boolean isEmpty() {
+    return getResourceTypeConfigMap().isEmpty();
   }
 
   public boolean fieldHasResourceName(Field field) {

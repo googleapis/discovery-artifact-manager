@@ -1,5 +1,6 @@
 @extends "csharp/common.snip"
 
+# common: StaticLangApiAndSettingsFileView
 @snippet generate(common)
     {@renderFileHeader(common.fileHeader)}
 
@@ -16,6 +17,7 @@
 
 @end
 
+# api: StaticLangApiView, settings: StaticLangSettingsView
 @private settings(api, settings)
     /// <summary>
     /// Settings for a <see cref="{@api.name}"/>.
@@ -151,6 +153,7 @@
     }
 @end
 
+# api: StaticLangApiView, settings: StaticLangSettingsView
 @private abstractClient(api, settings)
     /// <summary>
     /// {@api.grpcServiceName} client wrapper, for convenient use.
@@ -181,29 +184,6 @@
 
         private static readonly ChannelPool s_channelPool = new ChannelPool(DefaultScopes);
 
-        @join format : api.formatResourceFunctions
-            /// <summary>
-            /// Path template for a {@format.entityName} resource. Parameters:
-            /// <list type="bullet">
-            @join param : format.resourceIdParams
-                /// <item><description>{@param.docName}</description></item>
-            @end
-            /// </list>
-            /// </summary>
-            public static PathTemplate {@format.pathTemplateName} { get; } = new PathTemplate("{@format.pattern}");
-        
-            /// <summary>
-            /// Creates a {@format.entityName} resource name from its component IDs.
-            /// </summary>
-            @join param : format.resourceIdParams
-                /// <param name="{@param.name}">The {@param.docName} ID.</param>
-            @end
-            /// <returns>
-            /// The full {@format.entityName} resource name.
-            /// </returns>
-            public static string {@format.name}({@formatResourceParams(format.resourceIdParams)}) => {@format.pathTemplateName}.Expand({@formatResourceArgs(format.resourceIdParams)});
-
-        @end
         // Note: we could have parameterless overloads of Create and CreateAsync,
         // documented to just use the default endpoint, settings and credentials.
         // Pros:
@@ -279,6 +259,7 @@
     }
 @end
 
+# api: StaticLangApiView, settings: StaticLangSettingsView
 @private implClient(api, settings)
     /// <summary>
     /// {@api.grpcServiceName} client wrapper implementation, for convenient use.
@@ -314,6 +295,11 @@
         /// </summary>
         public override {@api.grpcTypeName} GrpcClient { get; }
         
+        // Partial modifier methods contain '_' to ensure no name conflicts with RPC methods.
+        @join method : api.modifyMethods
+            partial void {@method.name}(ref {@method.requestTypeName} request, ref CallSettings settings);
+        @end
+        
         @join method : api.apiMethodsImpl
             {@xmlDoc(method.doc)}
             {@method(method, TRUE)}
@@ -322,6 +308,7 @@
     }
 @end
 
+# method: StaticLangApiMethodView, isImpl: boolean
 @private method(method, isImpl)
     @switch method.type.toString
     @case "FlattenedMethod"
@@ -332,52 +319,56 @@
         {@flattenedMethodAsyncCancellationToken(method, isImpl)}
     @case "PagedFlattenedMethod"
         {@pagedFlattenedMethodSync(method, isImpl)}
-    @case "PagedFlattenedAsyncMethod" 
+    @case "PagedFlattenedAsyncMethod"
         {@pagedFlattenedMethodAsync(method, isImpl)}
+    @case "RequestObjectMethod"
+        {@requestObjectMethodSync(method, isImpl)}
+    @case "AsyncRequestObjectMethod"
+        {@requestObjectMethodAsync(method, isImpl)}
+    @case "PagedRequestObjectMethod"
+        {@pagedRequestObjectMethodSync(method, isImpl)}
+    @case "AsyncPagedRequestObjectMethod"
+        {@pagedRequestObjectMethodAsync(method, isImpl)}
     @default
         *** ERROR: Cannot handle method type '{@method.type.toString}' ***
     @end
 @end
 
+# method: StaticLangApiMethodView, isImpl: boolean
 @private flattenedMethodSync(method, isImpl)
     @if isImpl
-        public override {@method.responseTypeName} {@method.name}(
-            {@objectParams(method.methodParams)}) => {@method.callableName}.Sync(
-                new {@method.apiRequestTypeName}
+        *** ERROR: unexpected flattenedMethodSync implementation ***
+    @else
+        public virtual {@method.responseTypeName} {@method.name}(
+            {@objectParams(method.methodParams)}) => {@method.name}(
+                new {@method.serviceRequestTypeName}
                 {
                     {@requestProperties(method.forwardingMethodParams)}
                 },
                 callSettings);
-    @else
-        public virtual {@method.responseTypeName} {@method.name}(
-            {@objectParams(method.methodParams)})
-        {
-            throw new NotImplementedException();
-        }
     @end
 @end
 
+# method: StaticLangApiMethodView, isImpl: boolean
 @private flattenedMethodAsyncCallSettings(method, isImpl)
     @if isImpl
-        public override {@method.responseTypeName} {@method.name}(
-            {@objectParams(method.methodParams)}) => {@method.callableName}.Async(
-                new {@method.apiRequestTypeName}
+        *** ERROR: unexpected flattenedMethodAsyncCallSettings implementation ***
+        }
+    @else
+        public virtual {@method.responseTypeName} {@method.name}(
+            {@objectParams(method.methodParams)}) => {@method.name}(
+                new {@method.serviceRequestTypeName}
                 {
                     {@requestProperties(method.forwardingMethodParams)}
                 },
                 callSettings);
-    @else
-        public virtual {@method.responseTypeName} {@method.name}(
-            {@objectParams(method.methodParams)})
-        {
-            throw new NotImplementedException();
-        }
     @end
 @end
 
+# method: StaticLangApiMethodView, isImpl: boolean
 @private flattenedMethodAsyncCancellationToken(method, isImpl)
     @if isImpl
-        *** ERROR: Should never get here ***
+        *** ERROR: unexpected flattenedMethodAsyncCancellationToken implementation ***
     @else
         public virtual {@method.responseTypeName} {@method.name}(
             {@objectParams(method.methodParams)}) => {@method.name}(
@@ -386,58 +377,144 @@
     @end
 @end
 
+# method: StaticLangApiMethodView, isImp: boolean
+@private requestObjectMethodSync(method, isImpl)
+    @if isImpl
+        public override {@method.responseTypeName} {@method.name}(
+            {@method.serviceRequestTypeName} request,
+            CallSettings callSettings = null)
+        {
+            {@method.modifyMethodName}(ref request, ref callSettings);
+            @if method.hasReturnValue
+                return {@method.callableName}.Sync(request, callSettings);
+            @else
+                {@method.callableName}.Sync(request, callSettings);
+            @end
+        }
+    @else
+        public virtual {@method.responseTypeName} {@method.name}(
+            {@method.serviceRequestTypeName} request,
+            CallSettings callSettings = null)
+        {
+            throw new NotImplementedException();
+        }
+    @end
+@end
+
+# method: StaticLangApiMethodView, isImp: boolean
+@private requestObjectMethodAsync(method, isImpl)
+    @if isImpl
+        public override {@method.responseTypeName} {@method.name}(
+            {@method.serviceRequestTypeName} request,
+            CallSettings callSettings = null)
+        {
+            {@method.modifyMethodName}(ref request, ref callSettings);
+            return {@method.callableName}.Async(request, callSettings);
+        }
+    @else
+        public virtual {@method.responseTypeName} {@method.name}(
+            {@method.serviceRequestTypeName} request,
+            CallSettings callSettings = null)
+        {
+            throw new NotImplementedException();
+        }
+    @end
+@end
+
+# method: StaticLangApiMethodView, isImpl: boolean
 @private pagedFlattenedMethodSync(method, isImpl)
     @if isImpl
-        public override IPagedEnumerable<{@method.listMethod.responseTypeName}, {@method.listMethod.resourceTypeName}> {@method.name}(
-            {@objectParams(method.methodParams)}) => new PagedEnumerable<{@method.listMethod.requestTypeName}, {@method.listMethod.responseTypeName}, {@method.listMethod.resourceTypeName}>(
-                {@method.callableName},
-                new {@method.apiRequestTypeName}
+        *** ERROR: unexpected pagedFlattenedMethodSync implementation ***
+    @else
+        public virtual PagedEnumerable<{@method.listMethod.responseTypeName}, {@method.listMethod.resourceTypeName}> {@method.name}(
+            {@objectParams(method.methodParams)}) => {@method.name}(
+                new {@method.serviceRequestTypeName}
                 {
                     {@requestProperties(method.forwardingMethodParams)}
                     PageToken = pageToken ?? "",
                     PageSize = pageSize ?? 0,
                 },
                 callSettings);
-    @else
-        public virtual IPagedEnumerable<{@method.listMethod.responseTypeName}, {@method.listMethod.resourceTypeName}> {@method.name}(
-            {@objectParams(method.methodParams)})
-        {
-            throw new NotImplementedException();
-        }
     @end
 @end
 
+# method: StaticLangApiMethodView, isImp: boolean
 @private pagedFlattenedMethodAsync(method, isImpl)
     @if isImpl
-        public override IPagedAsyncEnumerable<{@method.listMethod.responseTypeName}, {@method.listMethod.resourceTypeName}> {@method.name}(
-            {@objectParams(method.methodParams)}) => new PagedAsyncEnumerable<{@method.listMethod.requestTypeName}, {@method.listMethod.responseTypeName}, {@method.listMethod.resourceTypeName}>(
-                {@method.callableName},
-                new {@method.apiRequestTypeName}
+        *** ERROR: unexpected pagedFlattenedMethodAsync implementation ***
+    @else
+        public virtual PagedAsyncEnumerable<{@method.listMethod.responseTypeName}, {@method.listMethod.resourceTypeName}> {@method.name}(
+            {@objectParams(method.methodParams)}) => {@method.name}(
+                new {@method.serviceRequestTypeName}
                 {
                     {@requestProperties(method.forwardingMethodParams)}
                     PageToken = pageToken ?? "",
                     PageSize = pageSize ?? 0,
                 },
                 callSettings);
+    @end
+@end
+
+# method: StaticLangApiMethodView, isImpl: boolean
+@private pagedRequestObjectMethodSync(method, isImpl)
+    @if isImpl
+        public override PagedEnumerable<{@method.listMethod.responseTypeName}, {@method.listMethod.resourceTypeName}> {@method.name}(
+            {@method.serviceRequestTypeName} request,
+            CallSettings callSettings = null)
+        {
+            {@method.modifyMethodName}(ref request, ref callSettings);
+            return new GrpcPagedEnumerable<{@method.listMethod.requestTypeName}, {@method.listMethod.responseTypeName}, {@method.listMethod.resourceTypeName}>({@method.callableName}, request, callSettings);
+        }
     @else
-        public virtual IPagedAsyncEnumerable<{@method.listMethod.responseTypeName}, {@method.listMethod.resourceTypeName}> {@method.name}(
-            {@objectParams(method.methodParams)})
+        public virtual PagedEnumerable<{@method.listMethod.responseTypeName}, {@method.listMethod.resourceTypeName}> {@method.name}(
+            {@method.serviceRequestTypeName} request,
+            CallSettings callSettings = null)
         {
             throw new NotImplementedException();
         }
     @end
 @end
 
+# method: StaticLangApiMethodView, isImpl: boolean
+@private pagedRequestObjectMethodAsync(method, isImpl)
+    @if isImpl
+        public override PagedAsyncEnumerable<{@method.listMethod.responseTypeName}, {@method.listMethod.resourceTypeName}> {@method.name}(
+            {@method.serviceRequestTypeName} request,
+            CallSettings callSettings = null)
+        {
+            {@method.modifyMethodName}(ref request, ref callSettings);
+            return new GrpcPagedAsyncEnumerable<{@method.listMethod.requestTypeName}, {@method.listMethod.responseTypeName}, {@method.listMethod.resourceTypeName}>({@method.callableName}, request, callSettings);
+        }
+    @else
+        public virtual PagedAsyncEnumerable<{@method.listMethod.responseTypeName}, {@method.listMethod.resourceTypeName}> {@method.name}(
+            {@method.serviceRequestTypeName} request,
+            CallSettings callSettings = null)
+        {
+            throw new NotImplementedException();
+        }
+    @end
+@end
+
+# params: List[RequestObjectParamView]
 @private requestProperties(params)
     @join param : params
-        @if param.isArray
-            {@param.nameAsMethodName} = { {@param.name} },
+        @if param.hasTransformParamFunction
+            @if param.isCollection
+                {@param.nameAsMethodName} = { {@param.name}.Select(x => {@param.transformParamFunctionName}(x) },
+            @else
+                {@param.nameAsMethodName} = {@param.transformParamFunctionName}({@param.name}),
+            @end
         @else
-            {@param.nameAsMethodName} = {@param.name},
+            @if param.isCollection
+                {@param.nameAsMethodName} = { {@param.name} },
+            @else
+                {@param.nameAsMethodName} = {@param.name},
+            @end
         @end
     @end
 @end
 
+# api: StaticLangApiView, settings: StaticLangSettingsView
 @private partialPageStreaming(api, settings)
     // Partial classes to enable page-streaming
 

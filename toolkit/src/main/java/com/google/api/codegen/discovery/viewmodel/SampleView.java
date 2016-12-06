@@ -58,6 +58,7 @@ public abstract class SampleView implements ViewModel {
 
   public abstract List<String> methodNameComponents();
 
+  @Nullable
   public abstract String requestVarName();
 
   @Nullable
@@ -116,6 +117,34 @@ public abstract class SampleView implements ViewModel {
 
   @Nullable
   public abstract String contextVarName();
+
+  // PHP specific section...
+  @Nullable
+  public abstract String optParamsVarName();
+
+  // Ruby specific section...
+  @Nullable
+  public abstract String serviceRequirePath();
+
+  @Nullable
+  public abstract String serviceTypeNamespace();
+
+  // C# specific section...
+  @Nullable
+  public abstract String dataNamespace();
+
+  @Nullable
+  public abstract String namespaceName();
+
+  // Python specific section...
+  @Nullable
+  public abstract String credentialsVarName();
+
+  @Nullable
+  public abstract String lastMethodNameComponent();
+
+  @Nullable
+  public abstract List<String> methodParamAssigments();
 
   public static Builder newBuilder() {
     return new AutoValue_SampleView.Builder();
@@ -195,6 +224,22 @@ public abstract class SampleView implements ViewModel {
     public abstract Builder getClientFuncName(String val);
 
     public abstract Builder contextVarName(String val);
+
+    public abstract Builder optParamsVarName(String val);
+
+    public abstract Builder serviceRequirePath(String val);
+
+    public abstract Builder serviceTypeNamespace(String val);
+
+    public abstract Builder dataNamespace(String val);
+
+    public abstract Builder namespaceName(String val);
+
+    public abstract Builder credentialsVarName(String val);
+
+    public abstract Builder lastMethodNameComponent(String val);
+
+    public abstract Builder methodParamAssigments(List<String> val);
 
     public abstract SampleView build();
   }

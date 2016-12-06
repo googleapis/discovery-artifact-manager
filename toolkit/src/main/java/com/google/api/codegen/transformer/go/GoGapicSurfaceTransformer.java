@@ -36,8 +36,10 @@ import com.google.api.codegen.transformer.ServiceTransformer;
 import com.google.api.codegen.transformer.SurfaceNamer;
 import com.google.api.codegen.transformer.SurfaceTransformerContext;
 import com.google.api.codegen.util.CommonRenderingUtil;
+import com.google.api.codegen.util.Name;
 import com.google.api.codegen.util.TypeAlias;
 import com.google.api.codegen.util.go.GoTypeTable;
+import com.google.api.codegen.viewmodel.LongRunningOperationDetailView;
 import com.google.api.codegen.viewmodel.PackageInfoView;
 import com.google.api.codegen.viewmodel.PageStreamingDescriptorClassView;
 import com.google.api.codegen.viewmodel.RetryConfigDefinitionView;
@@ -69,7 +71,7 @@ import java.util.TreeMap;
 
 public class GoGapicSurfaceTransformer implements ModelToViewTransformer {
 
-  private static final String XAPI_TEMPLATE_FILENAME = "go/main.snip";
+  private static final String API_TEMPLATE_FILENAME = "go/main.snip";
   private static final String SAMPLE_TEMPLATE_FILENAME = "go/example.snip";
   private static final String DOC_TEMPLATE_FILENAME = "go/doc.snip";
 
@@ -94,7 +96,7 @@ public class GoGapicSurfaceTransformer implements ModelToViewTransformer {
 
   @Override
   public List<String> getTemplateFileNames() {
-    return Arrays.asList(XAPI_TEMPLATE_FILENAME, DOC_TEMPLATE_FILENAME, SAMPLE_TEMPLATE_FILENAME);
+    return Arrays.asList(API_TEMPLATE_FILENAME, DOC_TEMPLATE_FILENAME, SAMPLE_TEMPLATE_FILENAME);
   }
 
   @Override
@@ -124,7 +126,7 @@ public class GoGapicSurfaceTransformer implements ModelToViewTransformer {
     Interface service = context.getInterface();
     ApiConfig apiConfig = context.getApiConfig();
 
-    view.templateFileName(XAPI_TEMPLATE_FILENAME);
+    view.templateFileName(API_TEMPLATE_FILENAME);
     view.serviceDoc(serviceTransformer.generateServiceDoc(context, null));
     view.clientTypeName(namer.getApiWrapperClassName(service));
     view.clientConstructorName(namer.getApiWrapperClassConstructorName(service));
@@ -145,7 +147,10 @@ public class GoGapicSurfaceTransformer implements ModelToViewTransformer {
     view.pathTemplates(pathTemplateTransformer.generatePathTemplates(context));
     view.pathTemplateGetters(pathTemplateTransformer.generatePathTemplateGetterFunctions(context));
     view.callSettings(apiCallableTransformer.generateCallSettings(context));
-    view.apiMethods(generateApiMethods(context, context.getSupportedMethods()));
+
+    List<StaticLangApiMethodView> apiMethods =
+        generateApiMethods(context, context.getSupportedMethods());
+    view.apiMethods(apiMethods);
 
     view.iamResources(iamResourceTransformer.generateIamResources(context));
     if (!apiConfig.getInterfaceConfig(service).getIamResources().isEmpty()) {
@@ -161,6 +166,16 @@ public class GoGapicSurfaceTransformer implements ModelToViewTransformer {
     }
     view.pageStreamingDescriptorClasses(
         new ArrayList<PageStreamingDescriptorClassView>(iterators.values()));
+
+    // Same with long running operations.
+    Map<String, LongRunningOperationDetailView> lros = new TreeMap<>();
+    for (StaticLangApiMethodView apiMethod : apiMethods) {
+      LongRunningOperationDetailView lro = apiMethod.operationMethod();
+      if (lro != null) {
+        lros.put(lro.clientReturnTypeName(), lro);
+      }
+    }
+    view.lroDetailViews(new ArrayList<LongRunningOperationDetailView>(lros.values()));
 
     ServiceConfig serviceConfig = new ServiceConfig();
     view.serviceAddress(serviceConfig.getServiceAddress(service));
@@ -230,7 +245,6 @@ public class GoGapicSurfaceTransformer implements ModelToViewTransformer {
     return packageInfo.build();
   }
 
-  @VisibleForTesting
   static ModelTypeTable createTypeTable() {
     return new ModelTypeTable(new GoTypeTable(), new GoModelTypeNameConverter());
   }
@@ -248,6 +262,8 @@ public class GoGapicSurfaceTransformer implements ModelToViewTransformer {
             apiMethodTransformer.generateGrpcStreamingRequestObjectMethod(methodContext));
       } else if (methodConfig.isPageStreaming()) {
         apiMethods.add(apiMethodTransformer.generatePagedRequestObjectMethod(methodContext));
+      } else if (methodConfig.isLongRunningOperation()) {
+        apiMethods.add(apiMethodTransformer.generateOperationRequestObjectMethod(methodContext));
       } else {
         apiMethods.add(apiMethodTransformer.generateRequestObjectMethod(methodContext));
       }
@@ -302,6 +318,7 @@ public class GoGapicSurfaceTransformer implements ModelToViewTransformer {
     ModelTypeTable typeTable = context.getTypeTable();
     typeTable.saveNicknameFor("fmt;;;");
     typeTable.saveNicknameFor("runtime;;;");
+    typeTable.saveNicknameFor("strings;;;");
     typeTable.saveNicknameFor("golang.org/x/net/context;;;");
     typeTable.saveNicknameFor("google.golang.org/grpc;;;");
     typeTable.saveNicknameFor("google.golang.org/grpc/metadata;;;");
@@ -379,9 +396,5 @@ public class GoGapicSurfaceTransformer implements ModelToViewTransformer {
                   ImportContext.EXAMPLE,
                   ImportKind.SERVER_STREAM,
                   ImmutableList.<String>of("io;;;"))
-              .put(
-                  ImportContext.EXAMPLE,
-                  ImportKind.LRO,
-                  ImmutableList.<String>of("github.com/golang/protobuf/ptypes;;;"))
               .build();
 }

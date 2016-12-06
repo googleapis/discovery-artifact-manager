@@ -60,6 +60,11 @@ public class RubyGapicContext extends GapicContext implements RubyContext {
     super(model, apiConfig);
   }
 
+  @Override
+  protected boolean isSupported(Method method) {
+    return true;
+  }
+
   // Snippet Helpers
   // ===============
 
@@ -138,15 +143,21 @@ public class RubyGapicContext extends GapicContext implements RubyContext {
 
   /** Return YARD return type string for the given method, or null if the return type is nil. */
   @Nullable
-  private String returnTypeComment(Method method, MethodConfig config) {
-    MessageType returnMessageType = method.getOutputMessage();
-    if (returnMessageType.getFullName().equals("google.protobuf.Empty")) {
+  private String returnTypeComment(Method method, MethodConfig config, Interface service) {
+    if (config.isReturnEmptyMessageMethod(method)) {
       return null;
     }
 
     String classInfo = rubyTypeName(method.getOutputType());
 
-    if (config.isPageStreaming()) {
+    if (method.getResponseStreaming()) {
+      return "@return [Enumerable<"
+          + classInfo
+          + ">]\n"
+          + "  An enumerable of "
+          + classInfo
+          + " instances.\n";
+    } else if (config.isPageStreaming()) {
       String resourceType = rubyTypeName(config.getPageStreaming().getResourcesField().getType());
       return "@return [Google::Gax::PagedEnumerable<"
           + resourceType
@@ -157,6 +168,8 @@ public class RubyGapicContext extends GapicContext implements RubyContext {
           + "  See Google::Gax::PagedEnumerable documentation for other\n"
           + "  operations such as per-page iteration or access to the response\n"
           + "  object.";
+    } else if (isLongrunning(method, service)) {
+      return "@return [Google::Gax::Operation]";
     } else {
       return "@return [" + classInfo + "]";
     }
@@ -171,20 +184,28 @@ public class RubyGapicContext extends GapicContext implements RubyContext {
 
     // Generate parameter types
     StringBuilder paramTypesBuilder = new StringBuilder();
-    for (Field field :
-        removePageTokenFromFields(method.getInputType().getMessageType().getFields(), config)) {
-      if (config.isPageStreaming()
-          && field.equals((config.getPageStreaming().getPageSizeField()))) {
-        paramTypesBuilder.append(
-            fieldParamComment(
-                field,
-                "The maximum number of resources contained in the underlying API\n"
-                    + "response. If page streaming is performed per-resource, this\n"
-                    + "parameter does not affect the return value. If page streaming is\n"
-                    + "performed per-page, this determines the maximum number of\n"
-                    + "resources in a page."));
-      } else {
-        paramTypesBuilder.append(fieldParamComment(field, null));
+    if (method.getRequestStreaming()) {
+      paramTypesBuilder.append(
+          "@param reqs [Enumerable<"
+              + rubyTypeName(method.getInputType())
+              + ">]\n"
+              + "  The input requests.\n");
+    } else {
+      for (Field field :
+          removePageTokenFromFields(method.getInputType().getMessageType().getFields(), config)) {
+        if (config.isPageStreaming()
+            && field.equals((config.getPageStreaming().getPageSizeField()))) {
+          paramTypesBuilder.append(
+              fieldParamComment(
+                  field,
+                  "The maximum number of resources contained in the underlying API\n"
+                      + "response. If page streaming is performed per-resource, this\n"
+                      + "parameter does not affect the return value. If page streaming is\n"
+                      + "performed per-page, this determines the maximum number of\n"
+                      + "resources in a page."));
+        } else {
+          paramTypesBuilder.append(fieldParamComment(field, null));
+        }
       }
     }
     paramTypesBuilder.append(
@@ -193,7 +214,7 @@ public class RubyGapicContext extends GapicContext implements RubyContext {
             + "  retries, etc.");
     String paramTypes = paramTypesBuilder.toString();
 
-    String returnType = returnTypeComment(method, config);
+    String returnType = returnTypeComment(method, config, service);
 
     // Generate comment contents
     StringBuilder contentBuilder = new StringBuilder();
@@ -354,6 +375,22 @@ public class RubyGapicContext extends GapicContext implements RubyContext {
         modelTypeTable,
         new RubySurfaceNamer(getApiConfig().getPackageName()),
         new RubyFeatureConfig());
+  }
+
+  public boolean isLongrunning(Method method, Interface service) {
+    return getApiConfig()
+        .getInterfaceConfig(service)
+        .getMethodConfig(method)
+        .isLongRunningOperation();
+  }
+
+  public boolean hasLongrunningMethod(Interface service) {
+    for (Method method : getSupportedMethodsV2(service)) {
+      if (isLongrunning(method, service)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // Constants

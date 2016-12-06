@@ -27,13 +27,13 @@ public class SampleNamer extends NameFormatterDelegator {
   }
 
   /** Returns the application name of the sample. */
-  public String getSampleApplicationName(String apiTypeName) {
-    return "Google-" + apiTypeName + "Sample/0.1";
+  public String getSampleApplicationName(String apiCanonicalName) {
+    return "Google-" + apiCanonicalName.replace(" ", "") + "Sample/0.1";
   }
 
   /** Returns the class name of the sample. */
   public String getSampleClassName(String apiTypeName) {
-    return className(Name.upperCamel(apiTypeName, "Example"));
+    return publicClassName(Name.upperCamel(apiTypeName, "Example"));
   }
 
   /** Returns the variable name of the service. */
@@ -68,9 +68,13 @@ public class SampleNamer extends NameFormatterDelegator {
     return localVarName(Name.lowerCamel("request"));
   }
 
-  /** Returns the variable name of the request body. */
   public String getRequestBodyVarName() {
     return localVarName(Name.lowerCamel("requestBody"));
+  }
+
+  /** Returns the variable name of the request body. */
+  public String getRequestBodyVarName(String requestBodyTypeName) {
+    return getRequestBodyVarName();
   }
 
   /** Returns the variable name of the response. */

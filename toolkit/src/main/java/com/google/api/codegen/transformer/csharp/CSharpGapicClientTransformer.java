@@ -38,14 +38,16 @@ import com.google.api.codegen.transformer.SurfaceNamer;
 import com.google.api.codegen.transformer.SurfaceTransformerContext;
 import com.google.api.codegen.util.csharp.CSharpTypeTable;
 import com.google.api.codegen.viewmodel.ApiCallSettingsView;
-import com.google.api.codegen.viewmodel.ApiCallableType;
+import com.google.api.codegen.viewmodel.ApiCallableImplType;
 import com.google.api.codegen.viewmodel.ApiCallableView;
-import com.google.api.codegen.viewmodel.ApiMethodType;
+import com.google.api.codegen.viewmodel.ClientMethodType;
+import com.google.api.codegen.viewmodel.ModifyMethodView;
 import com.google.api.codegen.viewmodel.ReroutedGrpcView;
 import com.google.api.codegen.viewmodel.SettingsDocView;
 import com.google.api.codegen.viewmodel.StaticLangApiAndSettingsFileView;
 import com.google.api.codegen.viewmodel.StaticLangApiMethodView;
 import com.google.api.codegen.viewmodel.StaticLangApiView;
+import com.google.api.codegen.viewmodel.StaticLangResourceNamesView;
 import com.google.api.codegen.viewmodel.StaticLangSettingsView;
 import com.google.api.codegen.viewmodel.ViewModel;
 import com.google.api.tools.framework.model.Interface;
@@ -62,6 +64,7 @@ import java.util.Set;
 public class CSharpGapicClientTransformer implements ModelToViewTransformer {
 
   private static final String XAPI_TEMPLATE_FILENAME = "csharp/gapic_client.snip";
+  private static final String RESOURCENAMES_TEMPLATE_FILENAME = "csharp/gapic_resourcenames.snip";
 
   private final GapicCodePathMapper pathMapper;
   private final ApiMethodTransformer apiMethodTransformer = new ApiMethodTransformer();
@@ -84,7 +87,9 @@ public class CSharpGapicClientTransformer implements ModelToViewTransformer {
   public List<ViewModel> transform(Model model, ApiConfig apiConfig) {
     List<ViewModel> surfaceDocs = new ArrayList<>();
     SurfaceNamer namer = new CSharpSurfaceNamer(apiConfig.getPackageName());
+    CSharpFeatureConfig featureConfig = new CSharpFeatureConfig();
 
+    Interface aService = null;
     for (Interface service : new InterfaceView().getElementIterable(model)) {
       SurfaceTransformerContext context =
           SurfaceTransformerContext.create(
@@ -92,23 +97,43 @@ public class CSharpGapicClientTransformer implements ModelToViewTransformer {
               apiConfig,
               createTypeTable(apiConfig.getPackageName()),
               namer,
-              new CSharpFeatureConfig());
+              featureConfig);
 
       surfaceDocs.add(generateApiAndSettingsView(context));
+      aService = service;
     }
+
+    SurfaceTransformerContext context =
+        SurfaceTransformerContext.create(
+            aService, apiConfig, createTypeTable(apiConfig.getPackageName()), namer, featureConfig);
+    surfaceDocs.add(generateResourceNamesView(context));
 
     return surfaceDocs;
   }
 
   @Override
   public List<String> getTemplateFileNames() {
-    return Arrays.asList(XAPI_TEMPLATE_FILENAME);
+    return Arrays.asList(XAPI_TEMPLATE_FILENAME, RESOURCENAMES_TEMPLATE_FILENAME);
   }
 
   private ModelTypeTable createTypeTable(String implicitPackageName) {
     return new ModelTypeTable(
         new CSharpTypeTable(implicitPackageName),
         new CSharpModelTypeNameConverter(implicitPackageName));
+  }
+
+  private StaticLangResourceNamesView generateResourceNamesView(SurfaceTransformerContext context) {
+    StaticLangResourceNamesView.Builder view = StaticLangResourceNamesView.newBuilder();
+    view.templateFileName(RESOURCENAMES_TEMPLATE_FILENAME);
+    String outputPath = pathMapper.getOutputPath(context.getInterface(), context.getApiConfig());
+    view.outputPath(outputPath + File.separator + "ResourceNames.cs");
+    view.resourceNames(pathTemplateTransformer.generateResourceNames(context));
+    view.resourceProtos(pathTemplateTransformer.generateResourceProtos(context));
+    context.getTypeTable().saveNicknameFor("Google.Api.Gax.GaxPreconditions");
+    context.getTypeTable().saveNicknameFor("System.Linq.Enumerable");
+    context.getTypeTable().saveNicknameFor("System.InvalidOperationException");
+    view.fileHeader(fileHeaderTransformer.generateFileHeader(context));
+    return view.build();
   }
 
   private StaticLangApiAndSettingsFileView generateApiAndSettingsView(
@@ -146,8 +171,9 @@ public class CSharpGapicClientTransformer implements ModelToViewTransformer {
     apiClass.settingsClassName(context.getNamer().getApiSettingsClassName(context.getInterface()));
     List<ApiCallableView> callables = new ArrayList<>();
     for (ApiCallableView call : apiCallableTransformer.generateStaticLangApiCallables(context)) {
-      if (call.type() == ApiCallableType.SimpleApiCallable
-          || call.type() == ApiCallableType.BundlingApiCallable) {
+      if (call.type() == ApiCallableImplType.SimpleApiCallable
+          || call.type() == ApiCallableImplType.BundlingApiCallable
+          || call.type() == ApiCallableImplType.InitialOperationApiCallable) {
         callables.add(call);
       }
     }
@@ -166,13 +192,23 @@ public class CSharpGapicClientTransformer implements ModelToViewTransformer {
     }
     apiClass.apiMethodsImpl(methodsImpl);
     apiClass.hasDefaultInstance(context.getInterfaceConfig().hasDefaultInstance());
+    apiClass.hasLongRunningOperations(context.getInterfaceConfig().hasLongRunningOperations());
     apiClass.reroutedGrpcClients(generateReroutedGrpcView(context));
+    apiClass.modifyMethods(generateModifyMethods(context));
 
     return apiClass.build();
   }
 
-  private boolean methodTypeHasImpl(ApiMethodType type) {
-    return type != ApiMethodType.FlattenedAsyncCancellationTokenMethod;
+  private boolean methodTypeHasImpl(ClientMethodType type) {
+    switch (type) {
+      case RequestObjectMethod:
+      case AsyncRequestObjectMethod:
+      case PagedRequestObjectMethod:
+      case AsyncPagedRequestObjectMethod:
+        return true;
+      default:
+        return false;
+    }
   }
 
   private StaticLangSettingsView generateSettingsClass(SurfaceTransformerContext context) {
@@ -237,6 +273,19 @@ public class CSharpGapicClientTransformer implements ModelToViewTransformer {
     return new ArrayList<ReroutedGrpcView>(reroutedViews);
   }
 
+  private List<ModifyMethodView> generateModifyMethods(SurfaceTransformerContext context) {
+    SurfaceNamer namer = context.getNamer();
+    ModelTypeTable typeTable = context.getTypeTable();
+    List<ModifyMethodView> modifyMethods = new ArrayList<>();
+    for (Method method : context.getSupportedMethods()) {
+      ModifyMethodView.Builder builder = ModifyMethodView.builder();
+      builder.name(namer.getModifyMethodName(method));
+      builder.requestTypeName(typeTable.getAndSaveNicknameFor(method.getInputType()));
+      modifyMethods.add(builder.build());
+    }
+    return modifyMethods;
+  }
+
   private List<StaticLangApiMethodView> generateApiMethods(SurfaceTransformerContext context) {
     List<ParamWithSimpleDoc> pagedMethodAdditionalParams =
         new ImmutableList.Builder<ParamWithSimpleDoc>()
@@ -248,6 +297,7 @@ public class CSharpGapicClientTransformer implements ModelToViewTransformer {
     List<StaticLangApiMethodView> apiMethods = new ArrayList<>();
     for (Method method : context.getSupportedMethods()) {
       MethodConfig methodConfig = context.getMethodConfig(method);
+      MethodTransformerContext requestMethodContext = context.asRequestMethodContext(method);
       if (mixinsDisabled && methodConfig.getRerouteToGrpcInterface() != null) {
         continue;
       }
@@ -264,6 +314,12 @@ public class CSharpGapicClientTransformer implements ModelToViewTransformer {
                     methodContext, pagedMethodAdditionalParams));
           }
         }
+        apiMethods.add(
+            apiMethodTransformer.generatePagedRequestObjectAsyncMethod(
+                requestMethodContext, csharpCommonTransformer.callSettingsParam()));
+        apiMethods.add(
+            apiMethodTransformer.generatePagedRequestObjectMethod(
+                requestMethodContext, csharpCommonTransformer.callSettingsParam()));
       } else {
         if (methodConfig.isFlattening()) {
           for (FlatteningConfig flatteningGroup : methodConfig.getFlatteningConfigs()) {
@@ -273,16 +329,22 @@ public class CSharpGapicClientTransformer implements ModelToViewTransformer {
                 apiMethodTransformer.generateFlattenedAsyncMethod(
                     methodContext,
                     csharpCommonTransformer.callSettingsParam(),
-                    ApiMethodType.FlattenedAsyncCallSettingsMethod));
+                    ClientMethodType.FlattenedAsyncCallSettingsMethod));
             apiMethods.add(
                 apiMethodTransformer.generateFlattenedAsyncMethod(
                     methodContext,
                     csharpCommonTransformer.cancellationTokenParam(),
-                    ApiMethodType.FlattenedAsyncCancellationTokenMethod));
+                    ClientMethodType.FlattenedAsyncCancellationTokenMethod));
             apiMethods.add(
                 apiMethodTransformer.generateFlattenedMethod(
                     methodContext, csharpCommonTransformer.callSettingsParam()));
           }
+          apiMethods.add(
+              apiMethodTransformer.generateRequestObjectAsyncMethod(
+                  requestMethodContext, csharpCommonTransformer.callSettingsParam()));
+          apiMethods.add(
+              apiMethodTransformer.generateRequestObjectMethod(
+                  requestMethodContext, csharpCommonTransformer.callSettingsParam()));
         }
       }
     }

@@ -15,18 +15,22 @@
 package com.google.api.codegen.transformer.php;
 
 import com.google.api.codegen.ServiceMessages;
-import com.google.api.codegen.config.CollectionConfig;
 import com.google.api.codegen.config.MethodConfig;
+import com.google.api.codegen.config.SingleResourceNameConfig;
 import com.google.api.codegen.transformer.ModelTypeFormatterImpl;
 import com.google.api.codegen.transformer.ModelTypeTable;
 import com.google.api.codegen.transformer.SurfaceNamer;
 import com.google.api.codegen.util.Name;
+import com.google.api.codegen.util.NamePath;
+import com.google.api.codegen.util.TypeAlias;
 import com.google.api.codegen.util.php.PhpNameFormatter;
+import com.google.api.codegen.util.php.PhpRenderingUtil;
 import com.google.api.codegen.util.php.PhpTypeTable;
 import com.google.api.tools.framework.model.Field;
 import com.google.api.tools.framework.model.Interface;
 import com.google.api.tools.framework.model.Method;
 import com.google.api.tools.framework.model.TypeRef;
+import java.util.List;
 
 /** The SurfaceNamer for PHP. */
 public class PhpSurfaceNamer extends SurfaceNamer {
@@ -39,6 +43,16 @@ public class PhpSurfaceNamer extends SurfaceNamer {
   }
 
   @Override
+  public String getApiWrapperClassName(Interface interfaze) {
+    return publicClassName(Name.upperCamel(interfaze.getSimpleName(), "Client"));
+  }
+
+  @Override
+  public String getApiWrapperVariableName(Interface interfaze) {
+    return localVarName(Name.upperCamel(interfaze.getSimpleName(), "Client"));
+  }
+
+  @Override
   public String getFieldSetFunctionName(TypeRef type, Name identifier) {
     if (type.isMap() || type.isRepeated()) {
       return publicMethodName(Name.from("add").join(identifier));
@@ -48,13 +62,9 @@ public class PhpSurfaceNamer extends SurfaceNamer {
   }
 
   @Override
-  public String getPathTemplateName(Interface service, CollectionConfig collectionConfig) {
-    return inittedConstantName(Name.from(collectionConfig.getEntityName(), "name", "template"));
-  }
-
-  @Override
-  public void addPageStreamingDescriptorImports(ModelTypeTable typeTable) {
-    typeTable.saveNicknameFor("Google\\GAX\\PageStreamingDescriptor");
+  public String getPathTemplateName(
+      Interface service, SingleResourceNameConfig resourceNameConfig) {
+    return inittedConstantName(Name.from(resourceNameConfig.getEntityName(), "name", "template"));
   }
 
   @Override
@@ -70,8 +80,13 @@ public class PhpSurfaceNamer extends SurfaceNamer {
   }
 
   @Override
+  public List<String> getDocLines(String text) {
+    return PhpRenderingUtil.getDocLines(text);
+  }
+
+  @Override
   public String getRetrySettingsTypeName() {
-    return "Google\\GAX\\RetrySettings";
+    return "\\Google\\GAX\\RetrySettings";
   }
 
   @Override
@@ -85,7 +100,7 @@ public class PhpSurfaceNamer extends SurfaceNamer {
       return "";
     }
     if (methodConfig.isPageStreaming()) {
-      return "Google\\GAX\\PagedListResponse";
+      return "\\Google\\GAX\\PagedListResponse";
     }
     return getModelTypeFormatter().getFullNameFor(method.getOutputType());
   }
@@ -93,5 +108,27 @@ public class PhpSurfaceNamer extends SurfaceNamer {
   @Override
   public String getFullyQualifiedApiWrapperClassName(Interface service) {
     return getPackageName() + "\\" + getApiWrapperClassName(service);
+  }
+
+  @Override
+  public String getGrpcClientTypeName(Interface service) {
+    return qualifiedName(getGrpcClientTypeName(service, "Client"));
+  }
+
+  @Override
+  public String getAndSaveNicknameForGrpcClientTypeName(
+      ModelTypeTable typeTable, Interface service) {
+    String grpcClientTypeName = getGrpcClientTypeName(service);
+    String aliasNickname = getGrpcClientTypeName(service, "GrpcClient").getHead();
+    return typeTable.getAndSaveNicknameFor(
+        TypeAlias.createAliasedImport(grpcClientTypeName, aliasNickname));
+  }
+
+  private NamePath getGrpcClientTypeName(Interface service, String suffix) {
+    NamePath namePath =
+        getTypeNameConverter().getNamePath(getModelTypeFormatter().getFullNameFor(service));
+    String publicClassName =
+        publicClassName(Name.upperCamelKeepUpperAcronyms(namePath.getHead(), suffix));
+    return namePath.withHead(publicClassName);
   }
 }
