@@ -18,6 +18,7 @@
 class Google_Service_CloudBuild_Build extends Google_Collection
 {
   protected $collection_key = 'steps';
+  public $buildTriggerId;
   public $createTime;
   public $finishTime;
   public $id;
@@ -40,6 +41,14 @@ class Google_Service_CloudBuild_Build extends Google_Collection
   protected $stepsDataType = 'array';
   public $timeout;
 
+  public function setBuildTriggerId($buildTriggerId)
+  {
+    $this->buildTriggerId = $buildTriggerId;
+  }
+  public function getBuildTriggerId()
+  {
+    return $this->buildTriggerId;
+  }
   public function setCreateTime($createTime)
   {
     $this->createTime = $createTime;

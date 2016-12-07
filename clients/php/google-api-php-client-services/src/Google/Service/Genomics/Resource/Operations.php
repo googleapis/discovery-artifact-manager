@@ -70,7 +70,9 @@ class Google_Service_Genomics_Resource_Operations extends Google_Service_Resourc
    * OperationMetadata.projectId. * createTime: The time this job was created, in
    * seconds from the [epoch](http://en.wikipedia.org/wiki/Unix_time). Can use
    * `>=` and/or `= 1432140000` * `projectId = my-project AND createTime >=
-   * 1432140000 AND createTime <= 1432150000 AND status = RUNNING`
+   * 1432140000 AND createTime <= 1432150000 AND status = RUNNING` * `projectId =
+   * my-project AND labels.color = *` * `projectId = my-project AND labels.color =
+   * red`
    * @opt_param int pageSize The maximum number of results to return. If
    * unspecified, defaults to 256. The maximum value is 2048.
    * @opt_param string pageToken The standard list page token.

@@ -54,7 +54,8 @@ class Google_Service_Dfareporting_Resource_Subaccounts extends Google_Service_Re
     return $this->call('insert', array($params), "Google_Service_Dfareporting_Subaccount");
   }
   /**
-   * Gets a list of subaccounts, possibly filtered. (subaccounts.listSubaccounts)
+   * Gets a list of subaccounts, possibly filtered. This method supports paging.
+   * (subaccounts.listSubaccounts)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param array $optParams Optional parameters.

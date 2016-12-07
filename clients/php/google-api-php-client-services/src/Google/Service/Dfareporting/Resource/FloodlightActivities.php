@@ -83,8 +83,8 @@ class Google_Service_Dfareporting_Resource_FloodlightActivities extends Google_S
     return $this->call('insert', array($params), "Google_Service_Dfareporting_FloodlightActivity");
   }
   /**
-   * Retrieves a list of floodlight activities, possibly filtered.
-   * (floodlightActivities.listFloodlightActivities)
+   * Retrieves a list of floodlight activities, possibly filtered. This method
+   * supports paging. (floodlightActivities.listFloodlightActivities)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param array $optParams Optional parameters.

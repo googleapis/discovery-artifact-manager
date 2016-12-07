@@ -23,6 +23,8 @@ class Google_Service_ShoppingContent_Inventory extends Google_Model
   public $kind;
   protected $loyaltyPointsType = 'Google_Service_ShoppingContent_LoyaltyPoints';
   protected $loyaltyPointsDataType = '';
+  protected $pickupType = 'Google_Service_ShoppingContent_InventoryPickup';
+  protected $pickupDataType = '';
   protected $priceType = 'Google_Service_ShoppingContent_Price';
   protected $priceDataType = '';
   public $quantity;
@@ -62,6 +64,14 @@ class Google_Service_ShoppingContent_Inventory extends Google_Model
   public function getLoyaltyPoints()
   {
     return $this->loyaltyPoints;
+  }
+  public function setPickup(Google_Service_ShoppingContent_InventoryPickup $pickup)
+  {
+    $this->pickup = $pickup;
+  }
+  public function getPickup()
+  {
+    return $this->pickup;
   }
   public function setPrice(Google_Service_ShoppingContent_Price $price)
   {

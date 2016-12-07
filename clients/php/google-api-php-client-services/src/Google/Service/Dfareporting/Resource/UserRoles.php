@@ -67,7 +67,8 @@ class Google_Service_Dfareporting_Resource_UserRoles extends Google_Service_Reso
     return $this->call('insert', array($params), "Google_Service_Dfareporting_UserRole");
   }
   /**
-   * Retrieves a list of user roles, possibly filtered. (userRoles.listUserRoles)
+   * Retrieves a list of user roles, possibly filtered. This method supports
+   * paging. (userRoles.listUserRoles)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param array $optParams Optional parameters.

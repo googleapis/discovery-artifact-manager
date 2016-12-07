@@ -21,6 +21,7 @@ class Google_Service_Clouderrorreporting_ListGroupStatsResponse extends Google_C
   protected $errorGroupStatsType = 'Google_Service_Clouderrorreporting_ErrorGroupStats';
   protected $errorGroupStatsDataType = 'array';
   public $nextPageToken;
+  public $timeRangeBegin;
 
   public function setErrorGroupStats($errorGroupStats)
   {
@@ -37,5 +38,13 @@ class Google_Service_Clouderrorreporting_ListGroupStatsResponse extends Google_C
   public function getNextPageToken()
   {
     return $this->nextPageToken;
+  }
+  public function setTimeRangeBegin($timeRangeBegin)
+  {
+    $this->timeRangeBegin = $timeRangeBegin;
+  }
+  public function getTimeRangeBegin()
+  {
+    return $this->timeRangeBegin;
   }
 }

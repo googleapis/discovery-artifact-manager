@@ -18,8 +18,6 @@
 class Google_Service_ServiceManagement_Service extends Google_Collection
 {
   protected $collection_key = 'types';
-  protected $analyticsType = 'Google_Service_ServiceManagement_Analytics';
-  protected $analyticsDataType = '';
   protected $apisType = 'Google_Service_ServiceManagement_Api';
   protected $apisDataType = 'array';
   protected $authenticationType = 'Google_Service_ServiceManagement_Authentication';
@@ -66,14 +64,6 @@ class Google_Service_ServiceManagement_Service extends Google_Collection
   protected $visibilityType = 'Google_Service_ServiceManagement_Visibility';
   protected $visibilityDataType = '';
 
-  public function setAnalytics(Google_Service_ServiceManagement_Analytics $analytics)
-  {
-    $this->analytics = $analytics;
-  }
-  public function getAnalytics()
-  {
-    return $this->analytics;
-  }
   public function setApis($apis)
   {
     $this->apis = $apis;

@@ -106,8 +106,22 @@ class Google_Service_Dataproc_Resource_ProjectsRegionsClusters extends Google_Se
    * the request.
    * @param array $optParams Optional parameters.
    *
-   * @opt_param int pageSize The standard List page size.
-   * @opt_param string pageToken The standard List page token.
+   * @opt_param string filter [Optional] A filter constraining the clusters to
+   * list. Filters are case-sensitive and have the following syntax: field:value
+   * [field:value] ... or field = value [AND [field = value]] ... where **field**
+   * is one of `status.state`, `clusterName`, or `labels.[KEY]`, and `[KEY]` is a
+   * label key. **value** can be `*` to match all values. `status.state` can be
+   * one of the following: `ACTIVE`, `INACTIVE`, `CREATING`, `RUNNING`, `ERROR`,
+   * `DELETING`, or `UPDATING`. `ACTIVE` contains the `CREATING`, `UPDATING`, and
+   * `RUNNING` states. `INACTIVE` contains the `DELETING` and `ERROR` states.
+   * `clusterName` is the name of the cluster provided at creation time. Only the
+   * logical `AND` operator is supported; space-separated items are treated as
+   * having an implicit `AND` operator. Example valid filters are:
+   * status.state:ACTIVE clusterName:mycluster labels.env:staging \
+   * labels.starred:* and status.state = ACTIVE AND clusterName = mycluster \ AND
+   * labels.env = staging AND labels.starred = *
+   * @opt_param int pageSize [Optional] The standard List page size.
+   * @opt_param string pageToken [Optional] The standard List page token.
    * @return Google_Service_Dataproc_ListClustersResponse
    */
   public function listProjectsRegionsClusters($projectId, $region, $optParams = array())

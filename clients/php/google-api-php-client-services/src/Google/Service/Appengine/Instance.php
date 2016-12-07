@@ -29,6 +29,7 @@ class Google_Service_Appengine_Instance extends Google_Model
   public $startTime;
   public $vmDebugEnabled;
   public $vmId;
+  public $vmIp;
   public $vmName;
   public $vmStatus;
   public $vmZoneName;
@@ -128,6 +129,14 @@ class Google_Service_Appengine_Instance extends Google_Model
   public function getVmId()
   {
     return $this->vmId;
+  }
+  public function setVmIp($vmIp)
+  {
+    $this->vmIp = $vmIp;
+  }
+  public function getVmIp()
+  {
+    return $this->vmIp;
   }
   public function setVmName($vmName)
   {

@@ -67,8 +67,8 @@ class Google_Service_Dfareporting_Resource_ContentCategories extends Google_Serv
     return $this->call('insert', array($params), "Google_Service_Dfareporting_ContentCategory");
   }
   /**
-   * Retrieves a list of content categories, possibly filtered.
-   * (contentCategories.listContentCategories)
+   * Retrieves a list of content categories, possibly filtered. This method
+   * supports paging. (contentCategories.listContentCategories)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param array $optParams Optional parameters.

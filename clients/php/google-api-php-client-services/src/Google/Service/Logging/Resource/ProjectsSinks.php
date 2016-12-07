@@ -33,6 +33,12 @@ class Google_Service_Logging_Resource_ProjectsSinks extends Google_Service_Resou
    * request.
    * @param Google_Service_Logging_LogSink $postBody
    * @param array $optParams Optional parameters.
+   *
+   * @opt_param bool uniqueWriterIdentity Optional. Whether the sink will have a
+   * dedicated service account returned in the sink's writer_identity. Set this
+   * field to be true to export logs from one project to a different project. This
+   * field is ignored for non-project sinks (e.g. organization sinks) because
+   * those sinks are required to have dedicated service accounts.
    * @return Google_Service_Logging_LogSink
    */
   public function create($parent, Google_Service_Logging_LogSink $postBody, $optParams = array())
@@ -74,8 +80,8 @@ class Google_Service_Logging_Resource_ProjectsSinks extends Google_Service_Resou
   /**
    * Lists sinks. (sinks.listProjectsSinks)
    *
-   * @param string $parent Required. The cloud resource containing the sinks.
-   * Example: `"projects/my-logging-project"`.
+   * @param string $parent Required. The resource name where this sink was
+   * created. Example: `"projects/my-logging-project"`.
    * @param array $optParams Optional parameters.
    *
    * @opt_param int pageSize Optional. The maximum number of results to return
@@ -103,6 +109,12 @@ class Google_Service_Logging_Resource_ProjectsSinks extends Google_Service_Resou
    * /my-sink-id"`.
    * @param Google_Service_Logging_LogSink $postBody
    * @param array $optParams Optional parameters.
+   *
+   * @opt_param bool uniqueWriterIdentity Optional. Whether the sink will have a
+   * dedicated service account returned in the sink's writer_identity. Set this
+   * field to be true to export logs from one project to a different project. This
+   * field is ignored for non-project sinks (e.g. organization sinks) because
+   * those sinks are required to have dedicated service accounts.
    * @return Google_Service_Logging_LogSink
    */
   public function update($sinkName, Google_Service_Logging_LogSink $postBody, $optParams = array())

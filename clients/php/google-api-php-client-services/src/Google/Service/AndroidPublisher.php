@@ -37,6 +37,7 @@ class Google_Service_AndroidPublisher extends Google_Service
   public $edits;
   public $edits_apklistings;
   public $edits_apks;
+  public $edits_deobfuscationfiles;
   public $edits_details;
   public $edits_expansionfiles;
   public $edits_images;
@@ -338,6 +339,41 @@ class Google_Service_AndroidPublisher extends Google_Service
                   'required' => true,
                 ),
                 'editId' => array(
+                  'location' => 'path',
+                  'type' => 'string',
+                  'required' => true,
+                ),
+              ),
+            ),
+          )
+        )
+    );
+    $this->edits_deobfuscationfiles = new Google_Service_AndroidPublisher_Resource_EditsDeobfuscationfiles(
+        $this,
+        $this->serviceName,
+        'deobfuscationfiles',
+        array(
+          'methods' => array(
+            'upload' => array(
+              'path' => '{packageName}/edits/{editId}/apks/{apkVersionCode}/deobfuscationFiles/{deobfuscationFileType}',
+              'httpMethod' => 'POST',
+              'parameters' => array(
+                'packageName' => array(
+                  'location' => 'path',
+                  'type' => 'string',
+                  'required' => true,
+                ),
+                'editId' => array(
+                  'location' => 'path',
+                  'type' => 'string',
+                  'required' => true,
+                ),
+                'apkVersionCode' => array(
+                  'location' => 'path',
+                  'type' => 'integer',
+                  'required' => true,
+                ),
+                'deobfuscationFileType' => array(
                   'location' => 'path',
                   'type' => 'string',
                   'required' => true,

@@ -40,7 +40,8 @@ class Google_Service_Dfareporting_Resource_ChangeLogs extends Google_Service_Res
     return $this->call('get', array($params), "Google_Service_Dfareporting_ChangeLog");
   }
   /**
-   * Retrieves a list of change logs. (changeLogs.listChangeLogs)
+   * Retrieves a list of change logs. This method supports paging.
+   * (changeLogs.listChangeLogs)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param array $optParams Optional parameters.

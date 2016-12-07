@@ -18,6 +18,7 @@
 class Google_Service_IdentityToolkit_IdentitytoolkitRelyingpartyUploadAccountRequest extends Google_Collection
 {
   protected $collection_key = 'users';
+  public $allowOverwrite;
   public $delegatedProjectNumber;
   public $hashAlgorithm;
   public $memoryCost;
@@ -29,6 +30,14 @@ class Google_Service_IdentityToolkit_IdentitytoolkitRelyingpartyUploadAccountReq
   protected $usersType = 'Google_Service_IdentityToolkit_UserInfo';
   protected $usersDataType = 'array';
 
+  public function setAllowOverwrite($allowOverwrite)
+  {
+    $this->allowOverwrite = $allowOverwrite;
+  }
+  public function getAllowOverwrite()
+  {
+    return $this->allowOverwrite;
+  }
   public function setDelegatedProjectNumber($delegatedProjectNumber)
   {
     $this->delegatedProjectNumber = $delegatedProjectNumber;

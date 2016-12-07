@@ -40,8 +40,8 @@ class Google_Service_Dfareporting_Resource_DirectorySiteContacts extends Google_
     return $this->call('get', array($params), "Google_Service_Dfareporting_DirectorySiteContact");
   }
   /**
-   * Retrieves a list of directory site contacts, possibly filtered.
-   * (directorySiteContacts.listDirectorySiteContacts)
+   * Retrieves a list of directory site contacts, possibly filtered. This method
+   * supports paging. (directorySiteContacts.listDirectorySiteContacts)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param array $optParams Optional parameters.

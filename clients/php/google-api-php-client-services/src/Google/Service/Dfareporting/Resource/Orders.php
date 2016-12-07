@@ -41,7 +41,8 @@ class Google_Service_Dfareporting_Resource_Orders extends Google_Service_Resourc
     return $this->call('get', array($params), "Google_Service_Dfareporting_Order");
   }
   /**
-   * Retrieves a list of orders, possibly filtered. (orders.listOrders)
+   * Retrieves a list of orders, possibly filtered. This method supports paging.
+   * (orders.listOrders)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param string $projectId Project ID for orders.

@@ -18,6 +18,7 @@
 class Google_Service_Dataproc_GceClusterConfig extends Google_Collection
 {
   protected $collection_key = 'tags';
+  public $internalIpOnly;
   public $metadata;
   public $networkUri;
   public $serviceAccountScopes;
@@ -25,6 +26,14 @@ class Google_Service_Dataproc_GceClusterConfig extends Google_Collection
   public $tags;
   public $zoneUri;
 
+  public function setInternalIpOnly($internalIpOnly)
+  {
+    $this->internalIpOnly = $internalIpOnly;
+  }
+  public function getInternalIpOnly()
+  {
+    return $this->internalIpOnly;
+  }
   public function setMetadata($metadata)
   {
     $this->metadata = $metadata;

@@ -42,6 +42,9 @@ class Google_Service_Gmail extends Google_Service
   /** Manage mailbox labels. */
   const GMAIL_LABELS =
       "https://www.googleapis.com/auth/gmail.labels";
+  /** View your email message metadata such as labels and headers, but not the email body. */
+  const GMAIL_METADATA =
+      "https://www.googleapis.com/auth/gmail.metadata";
   /** View and modify but not delete your email. */
   const GMAIL_MODIFY =
       "https://www.googleapis.com/auth/gmail.modify";

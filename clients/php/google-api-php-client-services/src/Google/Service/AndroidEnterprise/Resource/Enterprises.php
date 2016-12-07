@@ -283,7 +283,13 @@ class Google_Service_AndroidEnterprise_Resource_Enterprises extends Google_Servi
     return $this->call('setAccount', array($params), "Google_Service_AndroidEnterprise_EnterpriseAccount");
   }
   /**
-   * Sets the store layout for the enterprise. (enterprises.setStoreLayout)
+   * Sets the store layout for the enterprise. By default, storeLayoutType is set
+   * to "basic" and the basic store layout is enabled. The basic layout only
+   * contains apps approved by the administrator, and that have been added to the
+   * available product set for a user (using the  setAvailableProductSet call).
+   * Apps on the page are sorted in order of their product ID value. If you create
+   * a custom store layout (by setting storeLayoutType = "custom"), the basic
+   * store layout is disabled. (enterprises.setStoreLayout)
    *
    * @param string $enterpriseId The ID of the enterprise.
    * @param Google_Service_AndroidEnterprise_StoreLayout $postBody

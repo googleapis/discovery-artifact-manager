@@ -35,6 +35,7 @@ class Google_Service_Dataflow_Resource_ProjectsJobs extends Google_Service_Resou
    * @opt_param string view Level of information requested in response.
    * @opt_param string replaceJobId DEPRECATED. This field is now on the Job
    * message.
+   * @opt_param string location The location which contains this job.
    * @return Google_Service_Dataflow_Job
    */
   public function create($projectId, Google_Service_Dataflow_Job $postBody, $optParams = array())
@@ -51,6 +52,7 @@ class Google_Service_Dataflow_Resource_ProjectsJobs extends Google_Service_Resou
    * @param array $optParams Optional parameters.
    *
    * @opt_param string view Level of information requested in response.
+   * @opt_param string location The location which contains this job.
    * @return Google_Service_Dataflow_Job
    */
   public function get($projectId, $jobId, $optParams = array())
@@ -69,6 +71,8 @@ class Google_Service_Dataflow_Resource_ProjectsJobs extends Google_Service_Resou
    * @opt_param string startTime Return only metric data that has changed since
    * this time. Default is to return all information about all metrics for the
    * job.
+   * @opt_param string location The location which contains the job specified by
+   * job_id.
    * @return Google_Service_Dataflow_JobMetrics
    */
   public function getMetrics($projectId, $jobId, $optParams = array())
@@ -91,6 +95,7 @@ class Google_Service_Dataflow_Resource_ProjectsJobs extends Google_Service_Resou
    * max_responses and an unspecified server-defined limit.
    * @opt_param string pageToken Set this to the 'next_page_token' field of a
    * previous response to request additional results in a long list.
+   * @opt_param string location The location which contains this job.
    * @return Google_Service_Dataflow_ListJobsResponse
    */
   public function listProjectsJobs($projectId, $optParams = array())
@@ -106,6 +111,8 @@ class Google_Service_Dataflow_Resource_ProjectsJobs extends Google_Service_Resou
    * @param string $jobId Identifies a single job.
    * @param Google_Service_Dataflow_Job $postBody
    * @param array $optParams Optional parameters.
+   *
+   * @opt_param string location The location which contains this job.
    * @return Google_Service_Dataflow_Job
    */
   public function update($projectId, $jobId, Google_Service_Dataflow_Job $postBody, $optParams = array())

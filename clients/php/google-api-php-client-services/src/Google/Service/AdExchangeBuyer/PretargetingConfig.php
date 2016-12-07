@@ -41,6 +41,7 @@ class Google_Service_AdExchangeBuyer_PretargetingConfig extends Google_Collectio
   protected $placementsDataType = 'array';
   public $platforms;
   public $supportedCreativeAttributes;
+  public $userIdentifierDataRequired;
   public $userLists;
   public $vendorTypes;
   public $verticals;
@@ -206,6 +207,14 @@ class Google_Service_AdExchangeBuyer_PretargetingConfig extends Google_Collectio
   public function getSupportedCreativeAttributes()
   {
     return $this->supportedCreativeAttributes;
+  }
+  public function setUserIdentifierDataRequired($userIdentifierDataRequired)
+  {
+    $this->userIdentifierDataRequired = $userIdentifierDataRequired;
+  }
+  public function getUserIdentifierDataRequired()
+  {
+    return $this->userIdentifierDataRequired;
   }
   public function setUserLists($userLists)
   {

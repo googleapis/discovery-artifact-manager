@@ -67,8 +67,8 @@ class Google_Service_Dfareporting_Resource_CreativeFields extends Google_Service
     return $this->call('insert', array($params), "Google_Service_Dfareporting_CreativeField");
   }
   /**
-   * Retrieves a list of creative fields, possibly filtered.
-   * (creativeFields.listCreativeFields)
+   * Retrieves a list of creative fields, possibly filtered. This method supports
+   * paging. (creativeFields.listCreativeFields)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param array $optParams Optional parameters.

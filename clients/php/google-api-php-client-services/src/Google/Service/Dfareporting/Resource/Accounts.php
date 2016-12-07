@@ -40,7 +40,8 @@ class Google_Service_Dfareporting_Resource_Accounts extends Google_Service_Resou
     return $this->call('get', array($params), "Google_Service_Dfareporting_Account");
   }
   /**
-   * Retrieves the list of accounts, possibly filtered. (accounts.listAccounts)
+   * Retrieves the list of accounts, possibly filtered. This method supports
+   * paging. (accounts.listAccounts)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param array $optParams Optional parameters.

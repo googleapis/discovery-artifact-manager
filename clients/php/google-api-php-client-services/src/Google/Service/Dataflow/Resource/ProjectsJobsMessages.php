@@ -45,6 +45,8 @@ class Google_Service_Dataflow_Resource_ProjectsJobsMessages extends Google_Servi
    * beginning of messages).
    * @opt_param string endTime Return only messages with timestamps < end_time.
    * The default is now (i.e. return up to the latest messages available).
+   * @opt_param string location The location which contains the job specified by
+   * job_id.
    * @return Google_Service_Dataflow_ListJobMessagesResponse
    */
   public function listProjectsJobsMessages($projectId, $jobId, $optParams = array())

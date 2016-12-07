@@ -17,10 +17,19 @@
 
 class Google_Service_ServiceManagement_AuthProvider extends Google_Model
 {
+  public $audiences;
   public $id;
   public $issuer;
   public $jwksUri;
 
+  public function setAudiences($audiences)
+  {
+    $this->audiences = $audiences;
+  }
+  public function getAudiences()
+  {
+    return $this->audiences;
+  }
   public function setId($id)
   {
     $this->id = $id;

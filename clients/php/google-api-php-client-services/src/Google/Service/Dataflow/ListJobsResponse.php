@@ -18,10 +18,20 @@
 class Google_Service_Dataflow_ListJobsResponse extends Google_Collection
 {
   protected $collection_key = 'jobs';
+  protected $failedLocationType = 'Google_Service_Dataflow_FailedLocation';
+  protected $failedLocationDataType = 'array';
   protected $jobsType = 'Google_Service_Dataflow_Job';
   protected $jobsDataType = 'array';
   public $nextPageToken;
 
+  public function setFailedLocation($failedLocation)
+  {
+    $this->failedLocation = $failedLocation;
+  }
+  public function getFailedLocation()
+  {
+    return $this->failedLocation;
+  }
   public function setJobs($jobs)
   {
     $this->jobs = $jobs;

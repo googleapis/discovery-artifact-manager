@@ -67,8 +67,8 @@ class Google_Service_Dfareporting_Resource_AdvertiserGroups extends Google_Servi
     return $this->call('insert', array($params), "Google_Service_Dfareporting_AdvertiserGroup");
   }
   /**
-   * Retrieves a list of advertiser groups, possibly filtered.
-   * (advertiserGroups.listAdvertiserGroups)
+   * Retrieves a list of advertiser groups, possibly filtered. This method
+   * supports paging. (advertiserGroups.listAdvertiserGroups)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param array $optParams Optional parameters.

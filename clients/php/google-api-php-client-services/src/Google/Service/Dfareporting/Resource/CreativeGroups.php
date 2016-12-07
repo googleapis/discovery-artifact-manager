@@ -54,8 +54,8 @@ class Google_Service_Dfareporting_Resource_CreativeGroups extends Google_Service
     return $this->call('insert', array($params), "Google_Service_Dfareporting_CreativeGroup");
   }
   /**
-   * Retrieves a list of creative groups, possibly filtered.
-   * (creativeGroups.listCreativeGroups)
+   * Retrieves a list of creative groups, possibly filtered. This method supports
+   * paging. (creativeGroups.listCreativeGroups)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param array $optParams Optional parameters.

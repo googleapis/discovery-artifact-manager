@@ -54,8 +54,8 @@ class Google_Service_Dfareporting_Resource_PlacementGroups extends Google_Servic
     return $this->call('insert', array($params), "Google_Service_Dfareporting_PlacementGroup");
   }
   /**
-   * Retrieves a list of placement groups, possibly filtered.
-   * (placementGroups.listPlacementGroups)
+   * Retrieves a list of placement groups, possibly filtered. This method supports
+   * paging. (placementGroups.listPlacementGroups)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param array $optParams Optional parameters.

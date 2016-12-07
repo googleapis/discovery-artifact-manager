@@ -40,6 +40,7 @@ class Google_Service_Drive_DriveFile extends Google_Collection
   protected $lastModifyingUserDataType = '';
   public $md5Checksum;
   public $mimeType;
+  public $modifiedByMe;
   public $modifiedByMeTime;
   public $modifiedTime;
   public $name;
@@ -214,6 +215,14 @@ class Google_Service_Drive_DriveFile extends Google_Collection
   public function getMimeType()
   {
     return $this->mimeType;
+  }
+  public function setModifiedByMe($modifiedByMe)
+  {
+    $this->modifiedByMe = $modifiedByMe;
+  }
+  public function getModifiedByMe()
+  {
+    return $this->modifiedByMe;
   }
   public function setModifiedByMeTime($modifiedByMeTime)
   {

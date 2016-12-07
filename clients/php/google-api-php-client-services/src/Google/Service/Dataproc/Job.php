@@ -17,13 +17,14 @@
 
 class Google_Service_Dataproc_Job extends Google_Collection
 {
-  protected $collection_key = 'statusHistory';
+  protected $collection_key = 'yarnApplications';
   public $driverControlFilesUri;
   public $driverOutputResourceUri;
   protected $hadoopJobType = 'Google_Service_Dataproc_HadoopJob';
   protected $hadoopJobDataType = '';
   protected $hiveJobType = 'Google_Service_Dataproc_HiveJob';
   protected $hiveJobDataType = '';
+  public $labels;
   protected $pigJobType = 'Google_Service_Dataproc_PigJob';
   protected $pigJobDataType = '';
   protected $placementType = 'Google_Service_Dataproc_JobPlacement';
@@ -40,6 +41,8 @@ class Google_Service_Dataproc_Job extends Google_Collection
   protected $statusDataType = '';
   protected $statusHistoryType = 'Google_Service_Dataproc_JobStatus';
   protected $statusHistoryDataType = 'array';
+  protected $yarnApplicationsType = 'Google_Service_Dataproc_YarnApplication';
+  protected $yarnApplicationsDataType = 'array';
 
   public function setDriverControlFilesUri($driverControlFilesUri)
   {
@@ -72,6 +75,14 @@ class Google_Service_Dataproc_Job extends Google_Collection
   public function getHiveJob()
   {
     return $this->hiveJob;
+  }
+  public function setLabels($labels)
+  {
+    $this->labels = $labels;
+  }
+  public function getLabels()
+  {
+    return $this->labels;
   }
   public function setPigJob(Google_Service_Dataproc_PigJob $pigJob)
   {
@@ -136,5 +147,13 @@ class Google_Service_Dataproc_Job extends Google_Collection
   public function getStatusHistory()
   {
     return $this->statusHistory;
+  }
+  public function setYarnApplications($yarnApplications)
+  {
+    $this->yarnApplications = $yarnApplications;
+  }
+  public function getYarnApplications()
+  {
+    return $this->yarnApplications;
   }
 }

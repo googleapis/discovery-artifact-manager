@@ -17,10 +17,21 @@
 
 class Google_Service_Sheets_BatchUpdateSpreadsheetRequest extends Google_Collection
 {
-  protected $collection_key = 'requests';
+  protected $collection_key = 'responseRanges';
+  public $includeSpreadsheetInResponse;
   protected $requestsType = 'Google_Service_Sheets_Request';
   protected $requestsDataType = 'array';
+  public $responseIncludeGridData;
+  public $responseRanges;
 
+  public function setIncludeSpreadsheetInResponse($includeSpreadsheetInResponse)
+  {
+    $this->includeSpreadsheetInResponse = $includeSpreadsheetInResponse;
+  }
+  public function getIncludeSpreadsheetInResponse()
+  {
+    return $this->includeSpreadsheetInResponse;
+  }
   public function setRequests($requests)
   {
     $this->requests = $requests;
@@ -28,5 +39,21 @@ class Google_Service_Sheets_BatchUpdateSpreadsheetRequest extends Google_Collect
   public function getRequests()
   {
     return $this->requests;
+  }
+  public function setResponseIncludeGridData($responseIncludeGridData)
+  {
+    $this->responseIncludeGridData = $responseIncludeGridData;
+  }
+  public function getResponseIncludeGridData()
+  {
+    return $this->responseIncludeGridData;
+  }
+  public function setResponseRanges($responseRanges)
+  {
+    $this->responseRanges = $responseRanges;
+  }
+  public function getResponseRanges()
+  {
+    return $this->responseRanges;
   }
 }

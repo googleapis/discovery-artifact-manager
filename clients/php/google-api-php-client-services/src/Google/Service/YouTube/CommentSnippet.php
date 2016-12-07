@@ -20,7 +20,6 @@ class Google_Service_YouTube_CommentSnippet extends Google_Model
   public $authorChannelId;
   public $authorChannelUrl;
   public $authorDisplayName;
-  public $authorGoogleplusProfileUrl;
   public $authorProfileImageUrl;
   public $canRate;
   public $channelId;
@@ -57,14 +56,6 @@ class Google_Service_YouTube_CommentSnippet extends Google_Model
   public function getAuthorDisplayName()
   {
     return $this->authorDisplayName;
-  }
-  public function setAuthorGoogleplusProfileUrl($authorGoogleplusProfileUrl)
-  {
-    $this->authorGoogleplusProfileUrl = $authorGoogleplusProfileUrl;
-  }
-  public function getAuthorGoogleplusProfileUrl()
-  {
-    return $this->authorGoogleplusProfileUrl;
   }
   public function setAuthorProfileImageUrl($authorProfileImageUrl)
   {
