@@ -21,6 +21,7 @@ import com.google.api.codegen.FixedResourceNameValueProto;
 import com.google.api.codegen.InterfaceConfigProto;
 import com.google.api.codegen.LanguageSettingsProto;
 import com.google.api.codegen.LicenseHeaderProto;
+import com.google.api.codegen.ReleaseLevel;
 import com.google.api.tools.framework.model.Diag;
 import com.google.api.tools.framework.model.DiagCollector;
 import com.google.api.tools.framework.model.Interface;
@@ -51,6 +52,9 @@ public abstract class ApiConfig {
 
   /** Returns the location of the domain layer, if any. */
   public abstract String getDomainLayerLocation();
+
+  /** Returns the release level of the API, if any. */
+  public abstract ReleaseLevel getReleaseLevel();
 
   /** Returns the resource name messages configuration. If none was specified, returns null. */
   @Nullable
@@ -113,6 +117,7 @@ public abstract class ApiConfig {
           interfaceConfigMap,
           settings.getPackageName(),
           settings.getDomainLayerLocation(),
+          settings.getReleaseLevel(),
           messageConfigs,
           copyrightLines,
           licenseLines,
@@ -137,6 +142,7 @@ public abstract class ApiConfig {
         interfaceConfigMap,
         packageName,
         domainLayerLocation,
+        ReleaseLevel.UNSET_RELEASE_LEVEL,
         messageConfigs,
         ImmutableList.<String>of(),
         ImmutableList.<String>of(),
@@ -330,10 +336,23 @@ public abstract class ApiConfig {
     return Iterables.filter(getResourceNameConfigs().values(), SingleResourceNameConfig.class);
   }
 
+  /**
+   * Returns a SingleResourceNameConfig object for the given entity name. If the entityName
+   * corresponds to a ResourceNameOneofConfig which contains at least one SingleResourceNameConfig,
+   * then the first of those SingleResourceNameConfigs is returned. If the entityName is neither a
+   * SingleResourceNameConfig or ResourceNameOneofConfig containing a SingleResourceNameConfig, then
+   * returns null.
+   */
   public SingleResourceNameConfig getSingleResourceNameConfig(String entityName) {
     ResourceNameConfig resourceNameConfig = getResourceNameConfigs().get(entityName);
     if (resourceNameConfig != null && resourceNameConfig instanceof SingleResourceNameConfig) {
       return (SingleResourceNameConfig) resourceNameConfig;
+    }
+    if (resourceNameConfig != null && resourceNameConfig instanceof ResourceNameOneofConfig) {
+      ResourceNameOneofConfig oneofConfig = (ResourceNameOneofConfig) resourceNameConfig;
+      if (Iterables.size(oneofConfig.getSingleResourceNameConfigs()) > 0) {
+        return Iterables.get(oneofConfig.getSingleResourceNameConfigs(), 0);
+      }
     }
     return null;
   }

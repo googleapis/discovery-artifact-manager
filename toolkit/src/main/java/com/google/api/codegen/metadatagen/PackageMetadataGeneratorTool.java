@@ -35,6 +35,7 @@ public class PackageMetadataGeneratorTool {
           .put(
               "python",
               Lists.newArrayList(
+                  "LICENSE.snip",
                   "py/setup.py.snip",
                   "py/README.rst.snip",
                   "py/PUBLISHING.rst.snip",
@@ -114,14 +115,6 @@ public class PackageMetadataGeneratorTool {
             .required(true)
             .build());
     options.addOption(
-        Option.builder("n")
-            .longOpt("name")
-            .desc("The full name for the API, including branding.")
-            .hasArg()
-            .argName("NAME")
-            .required(true)
-            .build());
-    options.addOption(
         Option.builder("p")
             .longOpt("package_name")
             .desc(
@@ -162,7 +155,6 @@ public class PackageMetadataGeneratorTool {
         cl.getOptionValue("defaults_config"),
         cl.getOptionValue("short_name"),
         cl.getOptionValue("package_name"),
-        cl.getOptionValue("name"),
         cl.getOptionValue("googleapis_path"),
         cl.getOptionValue("version"));
   }
@@ -177,7 +169,6 @@ public class PackageMetadataGeneratorTool {
       String defaultsConfig,
       String shortName,
       String packageName,
-      String name,
       String googleapisPath,
       String version) {
     ToolOptions options = ToolOptions.create();
@@ -188,7 +179,6 @@ public class PackageMetadataGeneratorTool {
     options.set(PackageMetadataGenerator.DEPENDENCIES_FILE, dependenciesConfig);
     options.set(PackageMetadataGenerator.API_DEFAULTS_FILE, defaultsConfig);
     options.set(PackageMetadataGenerator.SHORT_API_NAME, shortName);
-    options.set(PackageMetadataGenerator.LONG_API_NAME, name);
     options.set(PackageMetadataGenerator.API_PATH, googleapisPath);
     options.set(PackageMetadataGenerator.API_VERSION, version);
     if (Strings.isNullOrEmpty(packageName)) {

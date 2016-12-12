@@ -131,7 +131,7 @@ public class InitCodeTransformer {
     Map<String, String> fieldNamePatterns = context.getMethodConfig().getFieldNamePatterns();
     for (Map.Entry<String, String> fieldNamePattern : fieldNamePatterns.entrySet()) {
       SingleResourceNameConfig resourceNameConfig =
-          context.getSimpleResourceNameConfig(fieldNamePattern.getValue());
+          context.getSingleResourceNameConfig(fieldNamePattern.getValue());
       String apiWrapperClassName =
           context.getNamer().getApiWrapperClassName(context.getInterface());
       InitValueConfig initValueConfig =
@@ -472,8 +472,7 @@ public class InitCodeTransformer {
 
       fieldSetting.identifier(getVariableName(context, item));
       fieldSetting.initCodeLine(generateSurfaceInitCodeLine(context, item));
-
-      fieldSetting.requestFieldName(context.getNamer().publicFieldName(Name.from(item.getKey())));
+      fieldSetting.fieldName(context.getNamer().publicFieldName(Name.from(item.getKey())));
 
       allSettings.add(fieldSetting.build());
     }

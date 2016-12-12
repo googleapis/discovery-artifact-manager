@@ -14,6 +14,7 @@
  */
 package com.google.api.codegen.transformer;
 
+import com.google.api.codegen.ReleaseLevel;
 import com.google.api.codegen.config.FieldConfig;
 import com.google.api.codegen.config.MethodConfig;
 import com.google.api.codegen.config.ResourceNameConfig;
@@ -217,6 +218,14 @@ public class SurfaceNamer extends NameFormatterDelegator {
    */
   public String getApiWrapperModuleName() {
     return getNotImplementedString("SurfaceNamer.getApiWrapperModuleName");
+  }
+
+  /**
+   * The version of a variable that holds an instance of the module that contains the implementation
+   * of a particular proto interface. So far it is used by just NodeJS.
+   */
+  public String getApiWrapperModuleVersion() {
+    return getNotImplementedString("SurfaceNamer.getApiWrapperModuleVersion");
   }
 
   /**
@@ -1013,5 +1022,9 @@ public class SurfaceNamer extends NameFormatterDelegator {
   /** The type name of the API callable class for this service method type. */
   public String getApiCallableTypeName(ServiceMethodType serviceMethodType) {
     return getNotImplementedString("SurfaceNamer.getApiCallableTypeName");
+  }
+
+  public String getReleaseAnnotation(ReleaseLevel releaseLevel) {
+    return getNotImplementedString("SurfaceNamer.getReleaseAnnotation");
   }
 }
