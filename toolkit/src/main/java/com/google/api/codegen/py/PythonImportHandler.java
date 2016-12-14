@@ -24,14 +24,29 @@ import com.google.api.tools.framework.model.Method;
 import com.google.api.tools.framework.model.ProtoElement;
 import com.google.api.tools.framework.model.ProtoFile;
 import com.google.api.tools.framework.model.TypeRef;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 public class PythonImportHandler {
+
+  // TODO (geigerj): Read this from configuration?
+  private final List<String> COMMON_PROTOS =
+      Lists.newArrayList(
+          "google.iam",
+          "google.protobuf",
+          "google.api",
+          "google.longrunning",
+          "google.rpc",
+          "google.type",
+          "google.logging.type");
 
   /**
    * Bi-map from short names to PythonImport objects for imports. Should only be modified through
@@ -75,7 +90,8 @@ public class PythonImportHandler {
           method.getInputMessage().getFile(),
           PythonImport.create(
               ImportType.APP,
-              method.getInputMessage().getFile().getProto().getPackage(),
+              protoPackageToPythonPackage(
+                  method.getInputMessage().getFile().getProto().getPackage()),
               PythonProtoElements.getPbFileName(method.getInputMessage())));
       for (Field field : method.getInputMessage().getMessageFields()) {
         MessageType messageType = field.getType().getMessageType();
@@ -83,24 +99,25 @@ public class PythonImportHandler {
             messageType.getFile(),
             PythonImport.create(
                 ImportType.APP,
-                messageType.getFile().getProto().getPackage(),
+                protoPackageToPythonPackage(messageType.getFile().getProto().getPackage()),
                 PythonProtoElements.getPbFileName(messageType)));
       }
     }
   }
 
   /** This constructor is used for doc messages. */
-  public PythonImportHandler(ProtoFile file) {
+  public PythonImportHandler(ProtoFile file, Set<ProtoFile> importableProtoFiles) {
     for (MessageType message : file.getMessages()) {
       for (Field field : message.getMessageFields()) {
         MessageType messageType = field.getType().getMessageType();
         // Don't include imports to messages in the same file.
-        if (!messageType.getFile().equals(file)) {
+        ProtoFile messageParentFile = messageType.getFile();
+        if (!messageParentFile.equals(file) && importableProtoFiles.contains(messageParentFile)) {
           addImport(
-              messageType.getFile(),
+              messageParentFile,
               PythonImport.create(
                   ImportType.APP,
-                  messageType.getFile().getProto().getPackage(),
+                  protoPackageToPythonPackage(messageType.getFile().getProto().getPackage()),
                   PythonProtoElements.getPbFileName(messageType)));
         }
       }
@@ -123,7 +140,10 @@ public class PythonImportHandler {
     String path;
 
     if (fullyQualified) {
-      path = elt.getFile().getProto().getPackage() + "." + PythonProtoElements.getPbFileName(elt);
+      path =
+          protoPackageToPythonPackage(elt.getFile().getProto().getPackage())
+              + "."
+              + PythonProtoElements.getPbFileName(elt);
     } else {
       path = fileToModule(elt.getFile());
     }
@@ -263,5 +283,29 @@ public class PythonImportHandler {
     } else {
       return "";
     }
+  }
+
+  private String protoPackageToPythonPackage(String protoPackage) {
+    return protoPackageToPythonPackage(protoPackage, ".");
+  }
+
+  public String protoPackageToPythonPackage(String protoPackage, String sep) {
+    for (String commonProto : COMMON_PROTOS) {
+      String canonical = Joiner.on(".").join(Splitter.on(sep).split(protoPackage));
+      if (canonical.startsWith(commonProto)) {
+        return protoPackage;
+      }
+    }
+    List<String> packages = Lists.newArrayList(Splitter.on(sep).split(protoPackage));
+    if (packages.get(0).equals("google")) {
+      if (packages.size() > 1 && packages.get(1).equals("cloud")) {
+        packages = packages.subList(2, packages.size());
+      } else {
+        packages = packages.subList(1, packages.size());
+      }
+      packages.addAll(0, Lists.newArrayList("google", "cloud", "grpc"));
+      return Joiner.on(sep).join(packages);
+    }
+    return protoPackage;
   }
 }

@@ -21,7 +21,7 @@ import java.util.List;
 @AutoValue
 public abstract class OptionalArrayMethodView implements ApiMethodView {
 
-  public abstract ApiMethodType type();
+  public abstract ClientMethodType type();
 
   public abstract String apiClassName();
 
@@ -55,13 +55,15 @@ public abstract class OptionalArrayMethodView implements ApiMethodView {
 
   public abstract String stubName();
 
+  public abstract boolean isLongrunningOperation();
+
   public static Builder newBuilder() {
     return new AutoValue_OptionalArrayMethodView.Builder();
   }
 
   @AutoValue.Builder
   public abstract static class Builder {
-    public abstract Builder type(ApiMethodType val);
+    public abstract Builder type(ClientMethodType val);
 
     public abstract Builder apiClassName(String val);
 
@@ -95,6 +97,8 @@ public abstract class OptionalArrayMethodView implements ApiMethodView {
     public abstract Builder hasReturnValue(boolean val);
 
     public abstract Builder stubName(String val);
+
+    public abstract Builder isLongrunningOperation(boolean val);
 
     public abstract OptionalArrayMethodView build();
   }

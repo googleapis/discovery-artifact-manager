@@ -72,8 +72,8 @@ class Google_Service_Dfareporting_Resource_Placements extends Google_Service_Res
     return $this->call('insert', array($params), "Google_Service_Dfareporting_Placement");
   }
   /**
-   * Retrieves a list of placements, possibly filtered.
-   * (placements.listPlacements)
+   * Retrieves a list of placements, possibly filtered. This method supports
+   * paging. (placements.listPlacements)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param array $optParams Optional parameters.

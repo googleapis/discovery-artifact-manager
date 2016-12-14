@@ -19,11 +19,14 @@ class Google_Service_IdentityToolkit_IdentitytoolkitRelyingpartySignupNewUserReq
 {
   public $captchaChallenge;
   public $captchaResponse;
+  public $disabled;
   public $displayName;
   public $email;
+  public $emailVerified;
   public $idToken;
   public $instanceId;
   public $password;
+  public $photoUrl;
 
   public function setCaptchaChallenge($captchaChallenge)
   {
@@ -41,6 +44,14 @@ class Google_Service_IdentityToolkit_IdentitytoolkitRelyingpartySignupNewUserReq
   {
     return $this->captchaResponse;
   }
+  public function setDisabled($disabled)
+  {
+    $this->disabled = $disabled;
+  }
+  public function getDisabled()
+  {
+    return $this->disabled;
+  }
   public function setDisplayName($displayName)
   {
     $this->displayName = $displayName;
@@ -56,6 +67,14 @@ class Google_Service_IdentityToolkit_IdentitytoolkitRelyingpartySignupNewUserReq
   public function getEmail()
   {
     return $this->email;
+  }
+  public function setEmailVerified($emailVerified)
+  {
+    $this->emailVerified = $emailVerified;
+  }
+  public function getEmailVerified()
+  {
+    return $this->emailVerified;
   }
   public function setIdToken($idToken)
   {
@@ -80,5 +99,13 @@ class Google_Service_IdentityToolkit_IdentitytoolkitRelyingpartySignupNewUserReq
   public function getPassword()
   {
     return $this->password;
+  }
+  public function setPhotoUrl($photoUrl)
+  {
+    $this->photoUrl = $photoUrl;
+  }
+  public function getPhotoUrl()
+  {
+    return $this->photoUrl;
   }
 }

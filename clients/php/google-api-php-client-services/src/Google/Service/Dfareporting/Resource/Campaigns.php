@@ -58,7 +58,8 @@ class Google_Service_Dfareporting_Resource_Campaigns extends Google_Service_Reso
     return $this->call('insert', array($params), "Google_Service_Dfareporting_Campaign");
   }
   /**
-   * Retrieves a list of campaigns, possibly filtered. (campaigns.listCampaigns)
+   * Retrieves a list of campaigns, possibly filtered. This method supports
+   * paging. (campaigns.listCampaigns)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param array $optParams Optional parameters.

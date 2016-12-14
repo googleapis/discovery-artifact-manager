@@ -121,7 +121,8 @@ class Google_Service_ServiceManagement_Resource_Services extends Google_Service_
     return $this->call('generateConfigReport', array($params), "Google_Service_ServiceManagement_GenerateConfigReportResponse");
   }
   /**
-   * Gets a managed service. (services.get)
+   * Gets a managed service. Authentication is required unless the service is
+   * public. (services.get)
    *
    * @param string $serviceName The name of the service.  See the `ServiceManager`
    * overview for naming requirements.  For example: `example.googleapis.com`.
@@ -143,7 +144,7 @@ class Google_Service_ServiceManagement_Resource_Services extends Google_Service_
    * `example.googleapis.com`.
    * @param array $optParams Optional parameters.
    *
-   * @opt_param string configId
+   * @opt_param string configId The id of the service configuration resource.
    * @return Google_Service_ServiceManagement_Service
    */
   public function getConfig($serviceName, $optParams = array())
@@ -170,7 +171,10 @@ class Google_Service_ServiceManagement_Resource_Services extends Google_Service_
     return $this->call('getIamPolicy', array($params), "Google_Service_ServiceManagement_Policy");
   }
   /**
-   * Lists all managed services. (services.listServices)
+   * Lists all managed services. The result is limited to services that the caller
+   * has "servicemanagement.services.get" permission for. If the request is made
+   * without authentication, it returns only public services that are available to
+   * everyone. (services.listServices)
    *
    * @param array $optParams Optional parameters.
    *

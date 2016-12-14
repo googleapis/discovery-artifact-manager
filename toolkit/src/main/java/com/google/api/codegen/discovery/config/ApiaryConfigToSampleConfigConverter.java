@@ -44,15 +44,14 @@ public class ApiaryConfigToSampleConfigConverter {
     this.methods = methods;
     this.apiaryConfig = apiaryConfig;
     this.typeNameGenerator = typeNameGenerator;
+    typeNameGenerator.setApiNameAndVersion(apiaryConfig.getApiName(), apiaryConfig.getApiVersion());
 
     methodNameComponents = new HashMap<String, List<String>>();
     // Since methodNameComponents are used to generate the request type name, we
     // produce them here for ease of access.
     for (Method method : methods) {
-      String methodName = method.getName();
-      LinkedList<String> nameComponents = new LinkedList<>(Arrays.asList(methodName.split("\\.")));
-      nameComponents.removeFirst(); // Removes the API name.
-      methodNameComponents.put(method.getName(), nameComponents);
+      LinkedList<String> split = new LinkedList<>(Arrays.asList(method.getName().split("\\.")));
+      methodNameComponents.put(method.getName(), split);
     }
   }
 
@@ -67,10 +66,13 @@ public class ApiaryConfigToSampleConfigConverter {
     String apiTypeName = typeNameGenerator.getApiTypeName(apiaryConfig.getServiceCanonicalName());
     return SampleConfig.newBuilder()
         .apiTitle(apiaryConfig.getApiTitle())
+        .apiCanonicalName(apiaryConfig.getServiceCanonicalName())
         .apiName(apiName)
         .apiVersion(apiVersion)
         .apiTypeName(apiTypeName)
-        .packagePrefix(typeNameGenerator.getPackagePrefix(apiName, apiVersion))
+        .packagePrefix(
+            typeNameGenerator.getPackagePrefix(
+                apiName, apiaryConfig.getServiceCanonicalName(), apiVersion))
         .methods(methods)
         .authType(apiaryConfig.getAuthType())
         .authInstructionsUrl(apiaryConfig.getAuthInstructionsUrl())
@@ -117,7 +119,9 @@ public class ApiaryConfigToSampleConfigConverter {
     MethodInfo methodInfo =
         MethodInfo.newBuilder()
             .verb(apiaryConfig.getHttpMethod(method.getName()))
-            .nameComponents(methodNameComponents.get(method.getName()))
+            .nameComponents(
+                typeNameGenerator.getMethodNameComponents(
+                    methodNameComponents.get(method.getName())))
             .fields(fields.build())
             .requestType(requestType)
             .requestBodyType(requestBodyType)

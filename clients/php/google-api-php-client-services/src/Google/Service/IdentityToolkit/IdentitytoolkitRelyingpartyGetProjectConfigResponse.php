@@ -23,6 +23,7 @@ class Google_Service_IdentityToolkit_IdentitytoolkitRelyingpartyGetProjectConfig
   public $authorizedDomains;
   protected $changeEmailTemplateType = 'Google_Service_IdentityToolkit_EmailTemplate';
   protected $changeEmailTemplateDataType = '';
+  public $dynamicLinksDomain;
   public $enableAnonymousUser;
   protected $idpConfigType = 'Google_Service_IdentityToolkit_IdpConfig';
   protected $idpConfigDataType = 'array';
@@ -66,6 +67,14 @@ class Google_Service_IdentityToolkit_IdentitytoolkitRelyingpartyGetProjectConfig
   public function getChangeEmailTemplate()
   {
     return $this->changeEmailTemplate;
+  }
+  public function setDynamicLinksDomain($dynamicLinksDomain)
+  {
+    $this->dynamicLinksDomain = $dynamicLinksDomain;
+  }
+  public function getDynamicLinksDomain()
+  {
+    return $this->dynamicLinksDomain;
   }
   public function setEnableAnonymousUser($enableAnonymousUser)
   {

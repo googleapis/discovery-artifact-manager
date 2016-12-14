@@ -44,6 +44,7 @@ class Google_Service_Dfareporting_Resource_CampaignCreativeAssociations extends 
   }
   /**
    * Retrieves the list of creative IDs associated with the specified campaign.
+   * This method supports paging.
    * (campaignCreativeAssociations.listCampaignCreativeAssociations)
    *
    * @param string $profileId User profile ID associated with this request.

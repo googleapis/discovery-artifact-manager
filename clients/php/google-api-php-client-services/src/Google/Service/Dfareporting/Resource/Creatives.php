@@ -54,7 +54,8 @@ class Google_Service_Dfareporting_Resource_Creatives extends Google_Service_Reso
     return $this->call('insert', array($params), "Google_Service_Dfareporting_Creative");
   }
   /**
-   * Retrieves a list of creatives, possibly filtered. (creatives.listCreatives)
+   * Retrieves a list of creatives, possibly filtered. This method supports
+   * paging. (creatives.listCreatives)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param array $optParams Optional parameters.

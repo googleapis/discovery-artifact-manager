@@ -54,7 +54,8 @@ class Google_Service_Dfareporting_Resource_FloodlightActivityGroups extends Goog
     return $this->call('insert', array($params), "Google_Service_Dfareporting_FloodlightActivityGroup");
   }
   /**
-   * Retrieves a list of floodlight activity groups, possibly filtered.
+   * Retrieves a list of floodlight activity groups, possibly filtered. This
+   * method supports paging.
    * (floodlightActivityGroups.listFloodlightActivityGroups)
    *
    * @param string $profileId User profile ID associated with this request.

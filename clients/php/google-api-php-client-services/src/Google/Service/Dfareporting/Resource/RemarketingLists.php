@@ -54,8 +54,8 @@ class Google_Service_Dfareporting_Resource_RemarketingLists extends Google_Servi
     return $this->call('insert', array($params), "Google_Service_Dfareporting_RemarketingList");
   }
   /**
-   * Retrieves a list of remarketing lists, possibly filtered.
-   * (remarketingLists.listRemarketingLists)
+   * Retrieves a list of remarketing lists, possibly filtered. This method
+   * supports paging. (remarketingLists.listRemarketingLists)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param string $advertiserId Select only remarketing lists owned by this

@@ -19,7 +19,7 @@
  * Service definition for Dataproc (v1).
  *
  * <p>
- * Manages Hadoop-based clusters and jobs on Google Cloud Platform.</p>
+ * An API for managing Hadoop-based clusters and jobs on Google Cloud Platform.</p>
  *
  * <p>
  * For more information about this service, see the API
@@ -145,6 +145,10 @@ class Google_Service_Dataproc extends Google_Service
                   'location' => 'path',
                   'type' => 'string',
                   'required' => true,
+                ),
+                'filter' => array(
+                  'location' => 'query',
+                  'type' => 'string',
                 ),
                 'pageSize' => array(
                   'location' => 'query',
@@ -276,6 +280,10 @@ class Google_Service_Dataproc extends Google_Service
                   'type' => 'string',
                 ),
                 'jobStateMatcher' => array(
+                  'location' => 'query',
+                  'type' => 'string',
+                ),
+                'filter' => array(
                   'location' => 'query',
                   'type' => 'string',
                 ),

@@ -19,6 +19,7 @@ class Google_Service_ServiceControl_CheckRequest extends Google_Model
 {
   protected $operationType = 'Google_Service_ServiceControl_Operation';
   protected $operationDataType = '';
+  public $serviceConfigId;
 
   public function setOperation(Google_Service_ServiceControl_Operation $operation)
   {
@@ -27,5 +28,13 @@ class Google_Service_ServiceControl_CheckRequest extends Google_Model
   public function getOperation()
   {
     return $this->operation;
+  }
+  public function setServiceConfigId($serviceConfigId)
+  {
+    $this->serviceConfigId = $serviceConfigId;
+  }
+  public function getServiceConfigId()
+  {
+    return $this->serviceConfigId;
   }
 }

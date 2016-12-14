@@ -33,9 +33,11 @@ import com.google.api.codegen.ruby.RubyGapicContext;
 import com.google.api.codegen.ruby.RubySnippetSetRunner;
 import com.google.api.codegen.transformer.csharp.CSharpGapicClientTransformer;
 import com.google.api.codegen.transformer.csharp.CSharpGapicSnippetsTransformer;
+import com.google.api.codegen.transformer.go.GoGapicSurfaceTestTransformer;
 import com.google.api.codegen.transformer.go.GoGapicSurfaceTransformer;
 import com.google.api.codegen.transformer.java.JavaGapicSurfaceTestTransformer;
 import com.google.api.codegen.transformer.java.JavaGapicSurfaceTransformer;
+import com.google.api.codegen.transformer.nodejs.NodeJSGapicSurfaceTestTransformer;
 import com.google.api.codegen.transformer.php.PhpGapicSurfaceTransformer;
 import com.google.api.codegen.util.CommonRenderingUtil;
 import com.google.api.codegen.util.csharp.CSharpNameFormatter;
@@ -125,14 +127,24 @@ public class MainGapicProviderFactory
                 .build();
         providers.add(provider);
       }
+      if (generatorConfig.enableTestGenerator()) {
+        GapicProvider<? extends Object> testProvider =
+            ViewModelGapicProvider.newBuilder()
+                .setModel(model)
+                .setApiConfig(apiConfig)
+                .setSnippetSetRunner(new CommonSnippetSetRunner(new CommonRenderingUtil()))
+                .setModelToViewTransformer(new GoGapicSurfaceTestTransformer())
+                .build();
+        providers.add(testProvider);
+      }
 
     } else if (id.equals(JAVA)) {
-      GapicCodePathMapper javaPathMapper =
-          CommonGapicCodePathMapper.newBuilder()
-              .setPrefix("src/main/java")
-              .setShouldAppendPackage(true)
-              .build();
       if (generatorConfig.enableSurfaceGenerator()) {
+        GapicCodePathMapper javaPathMapper =
+            CommonGapicCodePathMapper.newBuilder()
+                .setPrefix("src/main/java")
+                .setShouldAppendPackage(true)
+                .build();
         GapicProvider<? extends Object> mainProvider =
             ViewModelGapicProvider.newBuilder()
                 .setModel(model)
@@ -201,6 +213,16 @@ public class MainGapicProviderFactory
                   .build();
           providers.add(messageProvider);
         }
+      }
+      if (generatorConfig.enableTestGenerator() && id.equals(NODEJS)) {
+        GapicProvider<? extends Object> testProvider =
+            ViewModelGapicProvider.newBuilder()
+                .setModel(model)
+                .setApiConfig(apiConfig)
+                .setSnippetSetRunner(new CommonSnippetSetRunner(new CommonRenderingUtil()))
+                .setModelToViewTransformer(new NodeJSGapicSurfaceTestTransformer())
+                .build();
+        providers.add(testProvider);
       }
 
     } else if (id.equals(PHP)) {

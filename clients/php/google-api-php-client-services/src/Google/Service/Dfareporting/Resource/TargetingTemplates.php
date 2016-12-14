@@ -54,8 +54,8 @@ class Google_Service_Dfareporting_Resource_TargetingTemplates extends Google_Ser
     return $this->call('insert', array($params), "Google_Service_Dfareporting_TargetingTemplate");
   }
   /**
-   * Retrieves a list of targeting templates, optionally filtered.
-   * (targetingTemplates.listTargetingTemplates)
+   * Retrieves a list of targeting templates, optionally filtered. This method
+   * supports paging. (targetingTemplates.listTargetingTemplates)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param array $optParams Optional parameters.

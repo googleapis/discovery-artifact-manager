@@ -26,6 +26,23 @@
 class Google_Service_Appengine_Resource_Apps extends Google_Service_Resource
 {
   /**
+   * Creates an App Engine application for a Google Cloud Platform project. This
+   * requires a project that excludes an App Engine application. For details about
+   * creating a project without an application, see the [Google Cloud Resource
+   * Manager create project topic](https://cloud.google.com/resource-manager/docs
+   * /creating-project). (apps.create)
+   *
+   * @param Google_Service_Appengine_Application $postBody
+   * @param array $optParams Optional parameters.
+   * @return Google_Service_Appengine_Operation
+   */
+  public function create(Google_Service_Appengine_Application $postBody, $optParams = array())
+  {
+    $params = array('postBody' => $postBody);
+    $params = array_merge($params, $optParams);
+    return $this->call('create', array($params), "Google_Service_Appengine_Operation");
+  }
+  /**
    * Gets information about an application. (apps.get)
    *
    * @param string $appsId Part of `name`. Name of the Application resource to
@@ -40,7 +57,7 @@ class Google_Service_Appengine_Resource_Apps extends Google_Service_Resource
     return $this->call('get', array($params), "Google_Service_Appengine_Application");
   }
   /**
-   * Updates application parameters. (apps.patch)
+   * Updates application fields. (apps.patch)
    *
    * @param string $appsId Part of `name`. Name of the application to update.
    * Example: `apps/myapp`.

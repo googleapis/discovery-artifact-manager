@@ -19,6 +19,7 @@ class Google_Service_Dataflow_ReportWorkItemStatusRequest extends Google_Collect
 {
   protected $collection_key = 'workItemStatuses';
   public $currentWorkerTime;
+  public $location;
   protected $workItemStatusesType = 'Google_Service_Dataflow_WorkItemStatus';
   protected $workItemStatusesDataType = 'array';
   public $workerId;
@@ -30,6 +31,14 @@ class Google_Service_Dataflow_ReportWorkItemStatusRequest extends Google_Collect
   public function getCurrentWorkerTime()
   {
     return $this->currentWorkerTime;
+  }
+  public function setLocation($location)
+  {
+    $this->location = $location;
+  }
+  public function getLocation()
+  {
+    return $this->location;
   }
   public function setWorkItemStatuses($workItemStatuses)
   {

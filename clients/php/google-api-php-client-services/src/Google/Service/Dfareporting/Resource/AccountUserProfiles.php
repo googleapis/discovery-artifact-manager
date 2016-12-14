@@ -54,8 +54,8 @@ class Google_Service_Dfareporting_Resource_AccountUserProfiles extends Google_Se
     return $this->call('insert', array($params), "Google_Service_Dfareporting_AccountUserProfile");
   }
   /**
-   * Retrieves a list of account user profiles, possibly filtered.
-   * (accountUserProfiles.listAccountUserProfiles)
+   * Retrieves a list of account user profiles, possibly filtered. This method
+   * supports paging. (accountUserProfiles.listAccountUserProfiles)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param array $optParams Optional parameters.

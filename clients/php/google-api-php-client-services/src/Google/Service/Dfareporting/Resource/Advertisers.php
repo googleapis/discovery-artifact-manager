@@ -54,8 +54,8 @@ class Google_Service_Dfareporting_Resource_Advertisers extends Google_Service_Re
     return $this->call('insert', array($params), "Google_Service_Dfareporting_Advertiser");
   }
   /**
-   * Retrieves a list of advertisers, possibly filtered.
-   * (advertisers.listAdvertisers)
+   * Retrieves a list of advertisers, possibly filtered. This method supports
+   * paging. (advertisers.listAdvertisers)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param array $optParams Optional parameters.

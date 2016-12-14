@@ -19,6 +19,7 @@ class Google_Service_Dataflow_LeaseWorkItemRequest extends Google_Collection
 {
   protected $collection_key = 'workerCapabilities';
   public $currentWorkerTime;
+  public $location;
   public $requestedLeaseDuration;
   public $workItemTypes;
   public $workerCapabilities;
@@ -31,6 +32,14 @@ class Google_Service_Dataflow_LeaseWorkItemRequest extends Google_Collection
   public function getCurrentWorkerTime()
   {
     return $this->currentWorkerTime;
+  }
+  public function setLocation($location)
+  {
+    $this->location = $location;
+  }
+  public function getLocation()
+  {
+    return $this->location;
   }
   public function setRequestedLeaseDuration($requestedLeaseDuration)
   {

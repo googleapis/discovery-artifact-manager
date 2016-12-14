@@ -54,7 +54,8 @@ class Google_Service_Dfareporting_Resource_Ads extends Google_Service_Resource
     return $this->call('insert', array($params), "Google_Service_Dfareporting_Ad");
   }
   /**
-   * Retrieves a list of ads, possibly filtered. (ads.listAds)
+   * Retrieves a list of ads, possibly filtered. This method supports paging.
+   * (ads.listAds)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param array $optParams Optional parameters.
@@ -75,8 +76,6 @@ class Google_Service_Dfareporting_Resource_Ads extends Google_Service_Resource
    * assigned.
    * @opt_param string creativeOptimizationConfigurationIds Select only ads with
    * these creative optimization configuration IDs.
-   * @opt_param string creativeType Select only ads with the specified
-   * creativeType.
    * @opt_param bool dynamicClickTracker Select only dynamic click trackers.
    * Applicable when type is AD_SERVING_CLICK_TRACKER. If true, select dynamic
    * click trackers. If false, select static click trackers. Leave unset to select

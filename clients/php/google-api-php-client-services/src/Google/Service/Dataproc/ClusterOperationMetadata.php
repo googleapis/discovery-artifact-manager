@@ -21,6 +21,7 @@ class Google_Service_Dataproc_ClusterOperationMetadata extends Google_Collection
   public $clusterName;
   public $clusterUuid;
   public $description;
+  public $labels;
   public $operationType;
   protected $statusType = 'Google_Service_Dataproc_ClusterOperationStatus';
   protected $statusDataType = '';
@@ -50,6 +51,14 @@ class Google_Service_Dataproc_ClusterOperationMetadata extends Google_Collection
   public function getDescription()
   {
     return $this->description;
+  }
+  public function setLabels($labels)
+  {
+    $this->labels = $labels;
+  }
+  public function getLabels()
+  {
+    return $this->labels;
   }
   public function setOperationType($operationType)
   {

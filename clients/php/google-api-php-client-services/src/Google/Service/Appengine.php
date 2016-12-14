@@ -30,9 +30,15 @@
  */
 class Google_Service_Appengine extends Google_Service
 {
+  /** View and manage your applications deployed on Google App Engine. */
+  const APPENGINE_ADMIN =
+      "https://www.googleapis.com/auth/appengine.admin";
   /** View and manage your data across Google Cloud Platform services. */
   const CLOUD_PLATFORM =
       "https://www.googleapis.com/auth/cloud-platform";
+  /** View your data across Google Cloud Platform services. */
+  const CLOUD_PLATFORM_READ_ONLY =
+      "https://www.googleapis.com/auth/cloud-platform.read-only";
 
   public $apps;
   public $apps_locations;
@@ -61,7 +67,11 @@ class Google_Service_Appengine extends Google_Service
         'apps',
         array(
           'methods' => array(
-            'get' => array(
+            'create' => array(
+              'path' => 'v1/apps',
+              'httpMethod' => 'POST',
+              'parameters' => array(),
+            ),'get' => array(
               'path' => 'v1/apps/{appsId}',
               'httpMethod' => 'GET',
               'parameters' => array(

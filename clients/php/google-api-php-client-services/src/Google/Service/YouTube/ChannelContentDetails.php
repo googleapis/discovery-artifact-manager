@@ -17,18 +17,9 @@
 
 class Google_Service_YouTube_ChannelContentDetails extends Google_Model
 {
-  public $googlePlusUserId;
   protected $relatedPlaylistsType = 'Google_Service_YouTube_ChannelContentDetailsRelatedPlaylists';
   protected $relatedPlaylistsDataType = '';
 
-  public function setGooglePlusUserId($googlePlusUserId)
-  {
-    $this->googlePlusUserId = $googlePlusUserId;
-  }
-  public function getGooglePlusUserId()
-  {
-    return $this->googlePlusUserId;
-  }
   public function setRelatedPlaylists(Google_Service_YouTube_ChannelContentDetailsRelatedPlaylists $relatedPlaylists)
   {
     $this->relatedPlaylists = $relatedPlaylists;

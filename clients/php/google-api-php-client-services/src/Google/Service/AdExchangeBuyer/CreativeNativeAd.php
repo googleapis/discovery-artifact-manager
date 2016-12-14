@@ -23,6 +23,7 @@ class Google_Service_AdExchangeBuyer_CreativeNativeAd extends Google_Collection
   protected $appIconDataType = '';
   public $body;
   public $callToAction;
+  public $clickLinkUrl;
   public $clickTrackingUrl;
   public $headline;
   protected $imageType = 'Google_Service_AdExchangeBuyer_CreativeNativeAdImage';
@@ -66,6 +67,14 @@ class Google_Service_AdExchangeBuyer_CreativeNativeAd extends Google_Collection
   public function getCallToAction()
   {
     return $this->callToAction;
+  }
+  public function setClickLinkUrl($clickLinkUrl)
+  {
+    $this->clickLinkUrl = $clickLinkUrl;
+  }
+  public function getClickLinkUrl()
+  {
+    return $this->clickLinkUrl;
   }
   public function setClickTrackingUrl($clickTrackingUrl)
   {

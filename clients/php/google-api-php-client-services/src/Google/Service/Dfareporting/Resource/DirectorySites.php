@@ -54,8 +54,8 @@ class Google_Service_Dfareporting_Resource_DirectorySites extends Google_Service
     return $this->call('insert', array($params), "Google_Service_Dfareporting_DirectorySite");
   }
   /**
-   * Retrieves a list of directory sites, possibly filtered.
-   * (directorySites.listDirectorySites)
+   * Retrieves a list of directory sites, possibly filtered. This method supports
+   * paging. (directorySites.listDirectorySites)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param array $optParams Optional parameters.

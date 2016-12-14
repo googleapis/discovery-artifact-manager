@@ -17,6 +17,8 @@
 
 class Google_Service_Sheets_Response extends Google_Model
 {
+  protected $addBandingType = 'Google_Service_Sheets_AddBandingResponse';
+  protected $addBandingDataType = '';
   protected $addChartType = 'Google_Service_Sheets_AddChartResponse';
   protected $addChartDataType = '';
   protected $addFilterViewType = 'Google_Service_Sheets_AddFilterViewResponse';
@@ -40,6 +42,14 @@ class Google_Service_Sheets_Response extends Google_Model
   protected $updateEmbeddedObjectPositionType = 'Google_Service_Sheets_UpdateEmbeddedObjectPositionResponse';
   protected $updateEmbeddedObjectPositionDataType = '';
 
+  public function setAddBanding(Google_Service_Sheets_AddBandingResponse $addBanding)
+  {
+    $this->addBanding = $addBanding;
+  }
+  public function getAddBanding()
+  {
+    return $this->addBanding;
+  }
   public function setAddChart(Google_Service_Sheets_AddChartResponse $addChart)
   {
     $this->addChart = $addChart;

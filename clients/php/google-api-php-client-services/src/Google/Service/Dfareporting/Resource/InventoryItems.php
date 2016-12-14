@@ -41,8 +41,8 @@ class Google_Service_Dfareporting_Resource_InventoryItems extends Google_Service
     return $this->call('get', array($params), "Google_Service_Dfareporting_InventoryItem");
   }
   /**
-   * Retrieves a list of inventory items, possibly filtered.
-   * (inventoryItems.listInventoryItems)
+   * Retrieves a list of inventory items, possibly filtered. This method supports
+   * paging. (inventoryItems.listInventoryItems)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param string $projectId Project ID for order documents.

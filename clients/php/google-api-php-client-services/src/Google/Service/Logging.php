@@ -83,6 +83,24 @@ class Google_Service_Logging extends Google_Service
                   'required' => true,
                 ),
               ),
+            ),'list' => array(
+              'path' => 'v2beta1/{+parent}/logs',
+              'httpMethod' => 'GET',
+              'parameters' => array(
+                'parent' => array(
+                  'location' => 'path',
+                  'type' => 'string',
+                  'required' => true,
+                ),
+                'pageSize' => array(
+                  'location' => 'query',
+                  'type' => 'integer',
+                ),
+                'pageToken' => array(
+                  'location' => 'query',
+                  'type' => 'string',
+                ),
+              ),
             ),
           )
         )
@@ -144,6 +162,24 @@ class Google_Service_Logging extends Google_Service
                   'required' => true,
                 ),
               ),
+            ),'list' => array(
+              'path' => 'v2beta1/{+parent}/logs',
+              'httpMethod' => 'GET',
+              'parameters' => array(
+                'parent' => array(
+                  'location' => 'path',
+                  'type' => 'string',
+                  'required' => true,
+                ),
+                'pageSize' => array(
+                  'location' => 'query',
+                  'type' => 'integer',
+                ),
+                'pageToken' => array(
+                  'location' => 'query',
+                  'type' => 'string',
+                ),
+              ),
             ),
           )
         )
@@ -162,6 +198,24 @@ class Google_Service_Logging extends Google_Service
                   'location' => 'path',
                   'type' => 'string',
                   'required' => true,
+                ),
+              ),
+            ),'list' => array(
+              'path' => 'v2beta1/{+parent}/logs',
+              'httpMethod' => 'GET',
+              'parameters' => array(
+                'parent' => array(
+                  'location' => 'path',
+                  'type' => 'string',
+                  'required' => true,
+                ),
+                'pageSize' => array(
+                  'location' => 'query',
+                  'type' => 'integer',
+                ),
+                'pageToken' => array(
+                  'location' => 'query',
+                  'type' => 'string',
                 ),
               ),
             ),
@@ -251,6 +305,10 @@ class Google_Service_Logging extends Google_Service
                   'type' => 'string',
                   'required' => true,
                 ),
+                'uniqueWriterIdentity' => array(
+                  'location' => 'query',
+                  'type' => 'boolean',
+                ),
               ),
             ),'delete' => array(
               'path' => 'v2beta1/{+sinkName}',
@@ -298,6 +356,10 @@ class Google_Service_Logging extends Google_Service
                   'location' => 'path',
                   'type' => 'string',
                   'required' => true,
+                ),
+                'uniqueWriterIdentity' => array(
+                  'location' => 'query',
+                  'type' => 'boolean',
                 ),
               ),
             ),

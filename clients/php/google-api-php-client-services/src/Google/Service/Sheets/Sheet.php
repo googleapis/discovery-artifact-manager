@@ -18,6 +18,8 @@
 class Google_Service_Sheets_Sheet extends Google_Collection
 {
   protected $collection_key = 'protectedRanges';
+  protected $bandedRangesType = 'Google_Service_Sheets_BandedRange';
+  protected $bandedRangesDataType = 'array';
   protected $basicFilterType = 'Google_Service_Sheets_BasicFilter';
   protected $basicFilterDataType = '';
   protected $chartsType = 'Google_Service_Sheets_EmbeddedChart';
@@ -35,6 +37,14 @@ class Google_Service_Sheets_Sheet extends Google_Collection
   protected $protectedRangesType = 'Google_Service_Sheets_ProtectedRange';
   protected $protectedRangesDataType = 'array';
 
+  public function setBandedRanges($bandedRanges)
+  {
+    $this->bandedRanges = $bandedRanges;
+  }
+  public function getBandedRanges()
+  {
+    return $this->bandedRanges;
+  }
   public function setBasicFilter(Google_Service_Sheets_BasicFilter $basicFilter)
   {
     $this->basicFilter = $basicFilter;

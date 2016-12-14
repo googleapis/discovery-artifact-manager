@@ -67,7 +67,7 @@ public class PythonGapicContext extends GapicContext {
           .put(Type.TYPE_FIXED32, "0")
           .put(Type.TYPE_SFIXED32, "0")
           .put(Type.TYPE_STRING, "\'\'")
-          .put(Type.TYPE_BYTES, "\'\'")
+          .put(Type.TYPE_BYTES, "b\'\'")
           .build();
 
   /** A map from primitive types to their names in Python. */
@@ -109,8 +109,10 @@ public class PythonGapicContext extends GapicContext {
   // Snippet Helpers
   // ===============
 
-  public String filePath(ProtoFile file) {
-    return file.getSimpleName().replace(".proto", "_pb2.py");
+  public String filePath(ProtoFile file, PythonImportHandler importHandler) {
+    return importHandler
+        .protoPackageToPythonPackage(file.getSimpleName(), "/")
+        .replace(".proto", "_pb2.py");
   }
 
   /** Return comments lines for a given proto element, extracted directly from the proto doc */
@@ -225,7 +227,7 @@ public class PythonGapicContext extends GapicContext {
   private String returnTypeComment(
       Method method, MethodConfig config, PythonImportHandler importHandler) {
     MessageType returnMessageType = method.getOutputMessage();
-    if (PythonProtoElements.isEmptyMessage(returnMessageType)) {
+    if (MethodConfig.isReturnEmptyMessageMethod(method)) {
       return null;
     }
 
@@ -258,7 +260,12 @@ public class PythonGapicContext extends GapicContext {
   private String getTrimmedDocs(ProtoElement elt) {
     String description = "";
     if (elt.hasAttribute(ElementDocumentationAttribute.KEY)) {
-      description = getSphinxifiedScopedDescription(elt).replaceAll("\\s*\\n\\s*", "\n");
+      // TODO (geigerj): "trimming" the docs means we don't support code blocks. Investigate
+      // supporting code blocks here.
+      description =
+          getSphinxifiedScopedDescription(elt)
+              .replaceAll("\\s*\\n\\s*", "\n")
+              .replaceAll("::\n", "");
     }
     return description;
   }

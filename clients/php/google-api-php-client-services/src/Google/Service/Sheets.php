@@ -148,9 +148,21 @@ class Google_Service_Sheets extends Google_Service
                   'type' => 'string',
                   'required' => true,
                 ),
+                'responseValueRenderOption' => array(
+                  'location' => 'query',
+                  'type' => 'string',
+                ),
                 'valueInputOption' => array(
                   'location' => 'query',
                   'type' => 'string',
+                ),
+                'responseDateTimeRenderOption' => array(
+                  'location' => 'query',
+                  'type' => 'string',
+                ),
+                'includeValuesInResponse' => array(
+                  'location' => 'query',
+                  'type' => 'boolean',
                 ),
                 'insertDataOption' => array(
                   'location' => 'query',
@@ -260,9 +272,21 @@ class Google_Service_Sheets extends Google_Service
                   'type' => 'string',
                   'required' => true,
                 ),
+                'responseValueRenderOption' => array(
+                  'location' => 'query',
+                  'type' => 'string',
+                ),
                 'valueInputOption' => array(
                   'location' => 'query',
                   'type' => 'string',
+                ),
+                'responseDateTimeRenderOption' => array(
+                  'location' => 'query',
+                  'type' => 'string',
+                ),
+                'includeValuesInResponse' => array(
+                  'location' => 'query',
+                  'type' => 'boolean',
                 ),
               ),
             ),

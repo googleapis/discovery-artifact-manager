@@ -69,6 +69,8 @@ class Google_Service_Dfareporting_Creative extends Google_Collection
   public $latestTraffickedCreativeId;
   public $name;
   public $overrideCss;
+  protected $progressOffsetType = 'Google_Service_Dfareporting_VideoOffset';
+  protected $progressOffsetDataType = '';
   public $redirectUrl;
   public $renderingId;
   protected $renderingIdDimensionValueType = 'Google_Service_Dfareporting_DimensionValue';
@@ -77,6 +79,8 @@ class Google_Service_Dfareporting_Creative extends Google_Collection
   public $requiredFlashVersion;
   protected $sizeType = 'Google_Service_Dfareporting_Size';
   protected $sizeDataType = '';
+  protected $skipOffsetType = 'Google_Service_Dfareporting_VideoOffset';
+  protected $skipOffsetDataType = '';
   public $skippable;
   public $sslCompliant;
   public $sslOverride;
@@ -400,6 +404,14 @@ class Google_Service_Dfareporting_Creative extends Google_Collection
   {
     return $this->overrideCss;
   }
+  public function setProgressOffset(Google_Service_Dfareporting_VideoOffset $progressOffset)
+  {
+    $this->progressOffset = $progressOffset;
+  }
+  public function getProgressOffset()
+  {
+    return $this->progressOffset;
+  }
   public function setRedirectUrl($redirectUrl)
   {
     $this->redirectUrl = $redirectUrl;
@@ -447,6 +459,14 @@ class Google_Service_Dfareporting_Creative extends Google_Collection
   public function getSize()
   {
     return $this->size;
+  }
+  public function setSkipOffset(Google_Service_Dfareporting_VideoOffset $skipOffset)
+  {
+    $this->skipOffset = $skipOffset;
+  }
+  public function getSkipOffset()
+  {
+    return $this->skipOffset;
   }
   public function setSkippable($skippable)
   {

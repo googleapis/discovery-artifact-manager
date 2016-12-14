@@ -20,6 +20,8 @@ class Google_Service_Sheets_UpdateValuesResponse extends Google_Model
   public $spreadsheetId;
   public $updatedCells;
   public $updatedColumns;
+  protected $updatedDataType = 'Google_Service_Sheets_ValueRange';
+  protected $updatedDataDataType = '';
   public $updatedRange;
   public $updatedRows;
 
@@ -46,6 +48,14 @@ class Google_Service_Sheets_UpdateValuesResponse extends Google_Model
   public function getUpdatedColumns()
   {
     return $this->updatedColumns;
+  }
+  public function setUpdatedData(Google_Service_Sheets_ValueRange $updatedData)
+  {
+    $this->updatedData = $updatedData;
+  }
+  public function getUpdatedData()
+  {
+    return $this->updatedData;
   }
   public function setUpdatedRange($updatedRange)
   {

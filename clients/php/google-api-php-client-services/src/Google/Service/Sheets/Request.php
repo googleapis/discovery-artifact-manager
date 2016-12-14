@@ -17,6 +17,8 @@
 
 class Google_Service_Sheets_Request extends Google_Model
 {
+  protected $addBandingType = 'Google_Service_Sheets_AddBandingRequest';
+  protected $addBandingDataType = '';
   protected $addChartType = 'Google_Service_Sheets_AddChartRequest';
   protected $addChartDataType = '';
   protected $addConditionalFormatRuleType = 'Google_Service_Sheets_AddConditionalFormatRuleRequest';
@@ -43,6 +45,8 @@ class Google_Service_Sheets_Request extends Google_Model
   protected $copyPasteDataType = '';
   protected $cutPasteType = 'Google_Service_Sheets_CutPasteRequest';
   protected $cutPasteDataType = '';
+  protected $deleteBandingType = 'Google_Service_Sheets_DeleteBandingRequest';
+  protected $deleteBandingDataType = '';
   protected $deleteConditionalFormatRuleType = 'Google_Service_Sheets_DeleteConditionalFormatRuleRequest';
   protected $deleteConditionalFormatRuleDataType = '';
   protected $deleteDimensionType = 'Google_Service_Sheets_DeleteDimensionRequest';
@@ -83,6 +87,8 @@ class Google_Service_Sheets_Request extends Google_Model
   protected $textToColumnsDataType = '';
   protected $unmergeCellsType = 'Google_Service_Sheets_UnmergeCellsRequest';
   protected $unmergeCellsDataType = '';
+  protected $updateBandingType = 'Google_Service_Sheets_UpdateBandingRequest';
+  protected $updateBandingDataType = '';
   protected $updateBordersType = 'Google_Service_Sheets_UpdateBordersRequest';
   protected $updateBordersDataType = '';
   protected $updateCellsType = 'Google_Service_Sheets_UpdateCellsRequest';
@@ -106,6 +112,14 @@ class Google_Service_Sheets_Request extends Google_Model
   protected $updateSpreadsheetPropertiesType = 'Google_Service_Sheets_UpdateSpreadsheetPropertiesRequest';
   protected $updateSpreadsheetPropertiesDataType = '';
 
+  public function setAddBanding(Google_Service_Sheets_AddBandingRequest $addBanding)
+  {
+    $this->addBanding = $addBanding;
+  }
+  public function getAddBanding()
+  {
+    return $this->addBanding;
+  }
   public function setAddChart(Google_Service_Sheets_AddChartRequest $addChart)
   {
     $this->addChart = $addChart;
@@ -209,6 +223,14 @@ class Google_Service_Sheets_Request extends Google_Model
   public function getCutPaste()
   {
     return $this->cutPaste;
+  }
+  public function setDeleteBanding(Google_Service_Sheets_DeleteBandingRequest $deleteBanding)
+  {
+    $this->deleteBanding = $deleteBanding;
+  }
+  public function getDeleteBanding()
+  {
+    return $this->deleteBanding;
   }
   public function setDeleteConditionalFormatRule(Google_Service_Sheets_DeleteConditionalFormatRuleRequest $deleteConditionalFormatRule)
   {
@@ -369,6 +391,14 @@ class Google_Service_Sheets_Request extends Google_Model
   public function getUnmergeCells()
   {
     return $this->unmergeCells;
+  }
+  public function setUpdateBanding(Google_Service_Sheets_UpdateBandingRequest $updateBanding)
+  {
+    $this->updateBanding = $updateBanding;
+  }
+  public function getUpdateBanding()
+  {
+    return $this->updateBanding;
   }
   public function setUpdateBorders(Google_Service_Sheets_UpdateBordersRequest $updateBorders)
   {

@@ -67,8 +67,8 @@ class Google_Service_Dfareporting_Resource_PlacementStrategies extends Google_Se
     return $this->call('insert', array($params), "Google_Service_Dfareporting_PlacementStrategy");
   }
   /**
-   * Retrieves a list of placement strategies, possibly filtered.
-   * (placementStrategies.listPlacementStrategies)
+   * Retrieves a list of placement strategies, possibly filtered. This method
+   * supports paging. (placementStrategies.listPlacementStrategies)
    *
    * @param string $profileId User profile ID associated with this request.
    * @param array $optParams Optional parameters.
