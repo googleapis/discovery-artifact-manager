@@ -1,0 +1,71 @@
+<?php
+require_once './vendor/autoload.php';
+
+include './parsedlib.php';
+
+function isValidObject($param, $types)
+{
+	foreach ($types as $validType) {
+		if ($param instanceof $validType) {
+			return True;
+		}
+	}
+	return False;
+}
+
+// For non-ADC based APIs, we use getClient to retrieve an initialized client
+// with auth configured. This stub is provided here so compilecheck has a
+// reference to the stub.
+function getClient() {
+  return new Google_Client();
+}
+
+
+function SampleID($parsedLib)
+{
+	// Initialization 
+	$param = '';
+	
+	// Type check
+	$className = get_class($Sample_Service->lib);
+	$reflection = new ReflectionMethod($className, 'sampleMethod');
+
+	$requiredArgs = array();
+	$providedArgs = array();
+
+	foreach ($reflection->getParameters() as $arg) {
+		if (!$arg->isOptional()) {
+			array_push($requiredArgs, $arg->name);
+		}
+	}
+	
+	// Skip $optParams - every method has this parameter and it's not required.
+	if ('param' != 'optParams') {
+		array_push($providedArgs, 'param');
+	}
+	
+	if ((!empty($requiredArgs) || !empty($providedArgs)) && $requiredArgs !== $providedArgs) {
+		throw new Exception('Incorrect parameters provided for method'
+			.' sampleMethod of '.$className."\n Provided:\n"
+			.json_encode($providedArgs)
+			."Required:\n"
+			.json_encode($requiredArgs));
+	}
+	
+	$key = new ParameterPath($className, 'sampleMethod', '$param');
+	if (gettype($param) != 'object' &&
+		!in_array(gettype($param), $parsedLib[(string)$key])) {
+		throw new Exception('Incorrect type of $param in method '
+			.'sampleMethod of '.$className."\n"
+			."Expected:\n".join('|', $parsedLib[(string)$key])."\nActual:\n".gettype($param)."\n");
+	}
+
+	if (gettype($param) == 'object' && !isValidObject($param, $parsedLib[(string)$key])) {
+		throw new Exception('Incorrect type of $param in method '
+			.'sampleMethod of '.$className."\n");
+	}
+
+	
+}
+
+SampleID($parsedLib);

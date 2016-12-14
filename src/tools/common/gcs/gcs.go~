@@ -1,0 +1,62 @@
+// Package gcs allows users to run the gsutil command to upload data
+// to Google Cloud storage.
+package gcs
+
+import (
+	"fmt"
+	"log"
+	"os/exec"
+	"strings"
+)
+
+// GCS handles uploading fragments to GCS.
+type GCS struct {
+	gsutil     string
+	objectPath string
+}
+
+// BucketPrefix is the path prefix that indicates a location in GCS.
+const BucketPrefix = "gs://"
+
+// Init initializes 'gcs' with the given path 'gsutilPath' to the
+// "gsutil" program on the client's machine, and the given
+// 'objectPath' path in GCS below which objects will be written. It
+// returns an error if it determines that either of these are invalid.
+func (gcs *GCS) Init(gsutilPath string, objectPath string) error {
+	gcs.objectPath = objectPath
+
+	gsutil, err := exec.LookPath(gsutilPath)
+	if err != nil {
+		return err
+	}
+	gcs.gsutil = gsutil
+
+	// re := regexp.MustCompile("^gs://[^/]+")
+	// bucket := re.FindString(objectPath)
+	// if len(bucket) == 0 {
+	// 	return fmt.Errorf("cannot determine GCS bucket from %q", objectPath)
+	// }
+
+	// cmd := exec.Command(gcs.gsutil, "ls", bucket)
+	// if err := cmd.Run(); err != nil {
+	// 	return fmt.Errorf("can't access bucket %q: %s", bucket, err)
+	// }
+
+	return nil
+}
+
+// Transfer initiates a gsutil recursive upload of the contents of the
+// file path 'src' to GCS, under the 'gsutilPath' specified at
+// initialization, and with content-type "application/json". It
+// returns an error in case of failure.
+func (gcs *GCS) Transfer(src, dst string) error {
+	args := fmt.Sprintf("-h Content-Type:application/json -m cp -r %s/* %s", src, dst)
+	cmd := exec.Command(fmt.Sprintf("%s", gcs.gsutil), strings.Split(args, " ")...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("gsutil error: %s\nOutput: %s\n", err, output)
+	}
+
+	log.Printf("gsutil output:\n%s", output)
+	return nil
+}

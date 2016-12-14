@@ -1,0 +1,214 @@
+package main
+
+import (
+	"fmt"
+	"gapi-tools/tools/snippetgen/mergesnippets/errorlist"
+	"gapi-tools/tools/snippetgen/mergesnippets/fragment"
+	"gapi-tools/tools/snippetgen/mergesnippets/gcs"
+	"gapi-tools/tools/snippetgen/mergesnippets/util"
+	"io/ioutil"
+	"log"
+	"os"
+	"path/filepath"
+	"strings"
+)
+
+type context struct {
+	manualDirectory    string
+	automaticDirectory string
+	publicDirectory    string
+	gcs                *gcs.GCS
+	tmpDir             string
+
+	manualFragments    fragmentMap
+	automaticFragments fragmentMap
+	mergedFragments    fragmentMap
+
+	errorList errorlist.Errors
+}
+
+func (ctx *context) Init(gsutilPath string) error {
+	gcs := &gcs.GCS{}
+	if err := gcs.Init(gsutilPath, ""); err != nil {
+		return err
+	}
+	ctx.gcs = gcs
+	return nil
+
+}
+
+func (ctx *context) PrepareDirectory(name, requested string, createIfLocal bool) (string, error) {
+	if strings.HasPrefix(requested, gcs.BucketPrefix) {
+		if len(ctx.tmpDir) == 0 {
+			tmpDir, err := ioutil.TempDir("", "snippetgen")
+			if err != nil {
+				return "", fmt.Errorf("error creating tempdir name: %s", err)
+			}
+			ctx.tmpDir = tmpDir
+			log.Printf("created tmpDir=%q", tmpDir)
+		}
+		requested = filepath.Join(ctx.tmpDir, name)
+		createIfLocal = true
+	}
+
+	if createIfLocal {
+		if err := os.MkdirAll(requested, os.ModePerm); err != nil {
+			return "", fmt.Errorf("error creating tempdir: %s", err)
+		}
+	} else {
+		if _, err := os.Stat(requested); err != nil {
+			return "", fmt.Errorf("could not stat directory %q: %q: %s", name, requested, err)
+		}
+	}
+
+	return requested, nil
+}
+
+func (ctx *context) createDirectories(manual, automatic, public string) error {
+	manualDirectory, err := ctx.PrepareDirectory("manual", manual, false)
+	if err != nil {
+		return err
+	}
+	automaticDirectory, err := ctx.PrepareDirectory("automatic", automatic, false)
+	if err != nil {
+		return err
+	}
+	publicDirectory, err := ctx.PrepareDirectory("public", public, true)
+	if err != nil {
+		return err
+	}
+
+	ctx.manualDirectory = manualDirectory
+	ctx.automaticDirectory = automaticDirectory
+	ctx.publicDirectory = publicDirectory
+
+	return nil
+}
+
+func (ctx *context) PullSources(manual, automatic string) error {
+	if strings.HasPrefix(manual, gcs.BucketPrefix) {
+		if err := ctx.gcs.Transfer(manual, ctx.manualDirectory); err != nil {
+			return err
+		}
+	}
+
+	if strings.HasPrefix(automatic, gcs.BucketPrefix) {
+		if err := ctx.gcs.Transfer(automatic, ctx.automaticDirectory); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (ctx *context) PushOutput(location string) error {
+	if strings.HasPrefix(location, gcs.BucketPrefix) {
+		if err := ctx.gcs.Transfer(ctx.publicDirectory, location); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type fragmentMap map[fragment.Key]*fragment.File
+
+func ReadFragmentsFrom(directory string) (fragmentMap, error) {
+	readFragments := make(fragmentMap)
+	errorList := errorlist.Errors{}
+
+	walkFn := func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			errorList.Add(fmt.Errorf("stopping processing of %q due to error at %q: %s", directory, path, err))
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		fragmentFile, err := fragment.FromFile(path)
+		if err != nil {
+			// record error but continue processing files
+			errorList.Add(err)
+			return nil
+		}
+
+		// If we have multiple revisions for the automatic
+		// snippets, use the latest one.
+		key := fragmentFile.Key()
+		if previous, ok := readFragments[key]; !ok || fragmentFile.ApiRevision() > previous.ApiRevision() {
+			readFragments[key] = fragmentFile
+		}
+		return nil
+	}
+
+	if err := filepath.Walk(directory, walkFn); err != nil {
+		return nil, fmt.Errorf("error reading snippets under %q: %s\n%s", directory, err, errorList.Error())
+	}
+
+	return readFragments, errorList.Error()
+}
+
+func (ctx *context) WriteMergedFragments() {
+	log.Printf("TODO: WriteFragments()")
+	for key, file := range ctx.mergedFragments {
+		if err := file.ToFile(ctx.publicDirectory); err != nil {
+			ctx.errorList.Add(fmt.Errorf("error writing file for %q: %s", key, err))
+		}
+	}
+}
+
+func (ctx *context) ReadFragments() {
+	var err error
+	ctx.manualFragments, err = ReadFragmentsFrom(ctx.manualDirectory)
+	if err != nil {
+		ctx.errorList.Add(err)
+	}
+	log.Printf("read %d automatic fragments from %q", len(ctx.manualFragments), ctx.manualDirectory)
+
+	ctx.automaticFragments, err = ReadFragmentsFrom(ctx.automaticDirectory)
+	if err != nil {
+		ctx.errorList.Add(err)
+	}
+	log.Printf("read %d automatic fragments from %q", len(ctx.automaticFragments), ctx.automaticDirectory)
+}
+
+func (ctx *context) MergeFragments() {
+	ctx.mergedFragments = make(fragmentMap)
+	for key, file := range ctx.manualFragments {
+		log.Printf("merging %q\n", key)
+		mergedFile, err := file.MergeWith(ctx.automaticFragments[key])
+		if err != nil {
+			ctx.errorList.Add(fmt.Errorf("error merging %q: %s", key, err))
+			continue
+		}
+		ctx.mergedFragments[mergedFile.Key()] = mergedFile
+	}
+
+	for key, file := range ctx.automaticFragments {
+		if !file.Processed {
+			log.Printf("adding %q\n", key)
+			ctx.mergedFragments[key] = file
+		}
+	}
+}
+
+func (ctx *context) ValidateMergedFragments() {
+	for key, file := range ctx.mergedFragments {
+		for language, _ := range file.Fragment.CodeFragment {
+			if !util.IsValidLanguage(language) {
+				ctx.errorList.Add(fmt.Errorf("invalid language in %q: %q", key, language))
+			}
+		}
+		for _, language := range util.RequiredLanguages {
+			if _, ok := file.Fragment.CodeFragment[language]; !ok {
+				ctx.errorList.Add(fmt.Errorf("required language missing in %q: %q", file.Key(), language))
+			}
+		}
+	}
+}
+
+// Make Error() fn?
+func (ctx *context) Error() error {
+	return ctx.errorList.Error()
+}

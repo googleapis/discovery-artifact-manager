@@ -1,0 +1,87 @@
+package fragment
+
+import (
+	"gapi-tools/tools/snippetgen/mergesnippets/util"
+	"testing"
+)
+
+func TestCheckLanguages(t *testing.T) {
+	info := &Info{Path: &Path{}, File: &File{}}
+
+	// No languages should fail validation.
+	if got, want := info.CheckLanguages() == nil, false; got != want {
+		t.Errorf("no code samples fails CheckLanguages: got: %v, want: %v", got, want)
+	}
+
+	// No languages should fail validation.
+	info.File.CodeFragment = make(map[string]*CodeFragment)
+	if got, want := info.CheckLanguages() == nil, false; got != want {
+		t.Errorf("no code samples fails CheckLanguages: got: %v, want: %v", got, want)
+	}
+
+	// An unrecognized languages should fail validation
+	info.File.CodeFragment["foo language"] = &CodeFragment{Fragment: "sample"}
+	if got, want := info.CheckLanguages() == nil, false; got != want {
+		t.Errorf("invalid language fails CheckLanguages: got: %v, want: %v", got, want)
+	}
+
+	// Excluding exactly one of the required languages should fail validation
+	for _, excludedLanguage := range util.RequiredLanguages {
+		info.File.CodeFragment = make(map[string]*CodeFragment)
+		for _, language := range util.RequiredLanguages {
+			if language != excludedLanguage {
+				info.File.CodeFragment[language] = &CodeFragment{Fragment: "sample"}
+			}
+		}
+		if got, want := info.CheckLanguages() == nil, false; got != want {
+			t.Errorf("missing required language %q fails CheckLanguages: got: %v, want: %v", excludedLanguage, got, want)
+		}
+	}
+
+	info.File.CodeFragment = make(map[string]*CodeFragment)
+	for _, language := range util.RequiredLanguages {
+		info.File.CodeFragment[language] = &CodeFragment{Fragment: "sample"}
+	}
+	// Having all the required languages only should pass validation
+	if got, want := info.CheckLanguages() == nil, true; got != want {
+		t.Errorf("having just the required languages passes CheckLanguages: got: %v, want: %v", got, want)
+	}
+
+	// Having all the required languages and an unknown language should fail validation
+	info.File.CodeFragment["foo language"] = &CodeFragment{Fragment: "sample"}
+	if got, want := info.CheckLanguages() == nil, false; got != want {
+		t.Errorf("having the required languages plus a disallowed language fails CheckLanguages: got: %v, want: %v", got, want)
+	}
+}
+
+func TestHasConsistentMetadata(t *testing.T) {
+	cases := []struct {
+		info       Info
+		consistent bool
+	}{
+		{info: Info{Path: &Path{fragmentName: util.FragmentFileSuffix}, File: &File{}}, consistent: true},
+		{info: Info{Path: &Path{fragmentName: util.FragmentFileSuffix, apiName: "alice"}, File: &File{APIName: "bob"}}, consistent: false},
+		{info: Info{Path: &Path{fragmentName: util.FragmentFileSuffix, apiVersion: "1"}, File: &File{APIName: "2"}}, consistent: false},
+		{info: Info{Path: &Path{fragmentName: "foo.frag.json"}, File: &File{ID: "bar"}}, consistent: false},
+		{info: Info{Path: &Path{fragmentName: "foo.frag.json"}, File: &File{ID: "foo"}}, consistent: true},
+		{info: Info{Path: &Path{fragmentName: "foo"}, File: &File{ID: "foo"}}, consistent: false},
+		{info: Info{Path: &Path{fragmentName: util.FragmentFileSuffix, apiRevision: "1"}, File: &File{APIRevision: "2"}}, consistent: false},
+
+		// Various combinations of the revision identifiers.
+		{info: Info{Path: &Path{fragmentName: util.FragmentFileSuffix}, File: &File{APIRevision: "0"}}, consistent: true},
+		{info: Info{Path: &Path{fragmentName: util.FragmentFileSuffix, apiRevision: "0"}, File: &File{APIRevision: "0"}}, consistent: true},
+		{info: Info{Path: &Path{fragmentName: util.FragmentFileSuffix}, File: &File{}}, consistent: true},
+		{info: Info{Path: &Path{fragmentName: util.FragmentFileSuffix, apiRevision: "0"}, File: &File{}}, consistent: true},
+
+		{info: Info{Path: &Path{fragmentName: util.FragmentFileSuffix}, File: &File{APIRevision: "1"}}, consistent: false},
+		{info: Info{Path: &Path{fragmentName: util.FragmentFileSuffix, apiRevision: "1"}, File: &File{APIRevision: "0"}}, consistent: false},
+		{info: Info{Path: &Path{fragmentName: util.FragmentFileSuffix, apiRevision: "0"}, File: &File{APIRevision: "1"}}, consistent: false},
+		{info: Info{Path: &Path{fragmentName: util.FragmentFileSuffix, apiRevision: "1"}, File: &File{}}, consistent: false},
+	}
+
+	for idx, test := range cases {
+		if got, want := test.info.HasConsistentMetadata(), test.consistent; got != want {
+			t.Errorf("%d: CheckForConsistency: got %v, want %v.\nPath: %#v\nFile: %#v\n\n", idx, got, want, test.info.Path, test.info.File)
+		}
+	}
+}

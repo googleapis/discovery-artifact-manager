@@ -1,0 +1,46 @@
+package fragment
+
+import (
+	"fmt"
+	"log"
+
+	"gapi-tools/tools/snippetgen/mergesnippets/errorlist"
+	"gapi-tools/tools/snippetgen/mergesnippets/util"
+)
+
+// HasConsistentMetadata returns true iff the metadata contained in
+// info.File matches that in info.Path.
+func (info *Info) HasConsistentMetadata() bool {
+	// TODO(vchudnov): Determine whether we can firm up the policy
+	// for missing or zero revisions.
+	revisionsOK := (info.Path.apiRevision == info.File.APIRevision) ||
+		((len(info.Path.apiRevision) == 0 || info.Path.apiRevision == "0") &&
+			(len(info.File.APIRevision) == 0 || info.File.APIRevision == "0"))
+	if !revisionsOK {
+		log.Printf("HasConsistentMetadata for %q: path revision: %q  file revision: %q\n", info.Key, info.Path.apiRevision, info.File.APIRevision)
+	}
+
+	return (info.Path.apiName == info.File.APIName &&
+		info.Path.apiVersion == info.File.APIVersion &&
+		revisionsOK &&
+		info.Path.fragmentName == info.File.ID+util.FragmentFileSuffix)
+}
+
+// CheckLanguages returns an error if the languages for the code
+// fragments in 'info' are incorrect. This can happen if a required
+// language is missing, or if an unrecognized language is present.
+func (info *Info) CheckLanguages() error {
+	allErrors := errorlist.Errors{}
+	for language, _ := range info.File.CodeFragment {
+		if !util.IsValidLanguage(language) {
+			allErrors.Add(fmt.Errorf("invalid language in %q: %q", info.Key(), language))
+		}
+	}
+	// nil check
+	for _, language := range util.RequiredLanguages {
+		if _, ok := info.File.CodeFragment[language]; !ok {
+			allErrors.Add(fmt.Errorf("required language missing in %q: %q", info.Key(), language))
+		}
+	}
+	return allErrors.Error()
+}

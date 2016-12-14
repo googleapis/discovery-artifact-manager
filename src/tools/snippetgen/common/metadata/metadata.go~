@@ -1,0 +1,124 @@
+// Package metadata contains utility functions as well as run-time constants for creating the fragment files.
+package metadata
+
+import "time"
+
+const (
+	// CurrentRevision is the value of the "revision" part of the
+	// fragment file path indicating this is a fragment for the
+	// latest revision of the API
+	CurrentRevision = "0"
+
+	// Format in included in the fragment file to indicate how it
+	// should be interpreted. This is built to future-proof the
+	// clients handling fragment files in case of a format change.
+	Format string = "1"
+
+	// ExtractorVersion contains the version of this extractor
+	// code, so that we can correlate extractor versions to
+	// generated snippets.
+	ExtractorVersion string = "0.1"
+
+	// FragmentFileSuffix is the extension for the fragment files
+	// in GCS.
+	FragmentFileSuffix = ".frag.json"
+)
+
+var (
+	// timeOfRun is the timestamp of this run, so that all
+	// fragment files have the same time even if this program
+	// takes some time to run.
+	timeOfRun = time.Now().UTC()
+
+	// Timestamp is the timestamp of this run for use in the
+	// snippet metadata.
+	Timestamp = timeOfRun.Format(time.RFC3339)
+
+	// TimestampShort is the timestamp of this run for use in CitC
+	// clients and CLs.
+	TimestampShort = timeOfRun.Format("20060102-150405")
+
+	// The languages that are allowed in snippets.
+	allowedLanguages = map[string]bool{
+		"Java":               true,
+		".NET":               false,
+		"PHP":                false,
+		"Python":             false,
+		"Ruby":               false,
+		"Dart":               false,
+		"Go":                 false,
+		"Google Web Toolkit": false,
+		"JavaScript":         false,
+		"Objective-C":        false,
+		"Node.js":            false,
+	}
+
+	// The languages that are required in the published snippets.
+	RequiredLanguages []string
+)
+
+type languageInfo struct {
+	name     string
+	required bool
+	position int
+}
+
+var (
+	KnownLanguages = [...]struct {
+		name     string
+		required bool
+	}{
+		{"Java", true},
+		{".NET", false},
+		{"PHP", false},
+		{"Python", false},
+		{"Ruby", false},
+		{"Dart", false},
+		{"Go", false},
+		{"Google Web Toolkit", false},
+		{"JavaScript", false},
+		{"Objective-C", false},
+		{"Node.js", false},
+	}
+)
+
+var (
+	supportedLanguages map[string]*languageInfo
+)
+
+func init() {
+	list := make([]string, 0, len(allowedLanguages))
+	for language, required := range allowedLanguages {
+		if required {
+			list = append(list, language)
+		}
+	}
+	RequiredLanguages = list
+
+	//// NEW
+	supportedLanguages = make(map[string]*languageInfo)
+	newList := make([]string, 0, len(allowedLanguages))
+	for idx, lang := range KnownLanguages {
+		language := &languageInfo{
+			name:     lang.name,
+			required: lang.required,
+			position: idx,
+		}
+		supportedLanguages[lang.name] = language
+		if lang.required {
+			newList = append(newList, lang.name)
+		}
+	}
+	RequiredLanguages = newList
+}
+
+// IsValidLanguage returns true iff 'lang' is one of the recognized
+// languages in which we show fragments.
+func IsValidLanguage(lang string) bool {
+	//	_, found := allowedLanguages[lang]
+
+	// NEW
+	_, found := supportedLanguages[lang]
+
+	return found
+}

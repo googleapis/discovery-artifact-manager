@@ -1,0 +1,238 @@
+package fragment
+
+import (
+	"encoding/json"
+	"fmt"
+	"gapi-tools/tools/snippetgen/mergesnippets/util"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+
+	"log"
+)
+
+type File struct {
+	PathMetadata *PathMetadata
+	Fragment     *Fragment
+	Processed    bool
+}
+
+func (ff *File) ApiRevision() int {
+	revision, err := strconv.Atoi(ff.PathMetadata.apiRevision)
+	if err != nil {
+		panic(fmt.Errorf("invalid version in fragment %q: %q", ff.PathMetadata.fragmentName, ff.PathMetadata.apiRevision))
+	}
+	return revision
+}
+
+func (ff *File) Clone() *File {
+	if ff == nil {
+		return nil
+	}
+	return &File{
+		PathMetadata: ff.PathMetadata.Clone(),
+		Fragment:     ff.Fragment.Clone(),
+		Processed:    false,
+	}
+}
+
+type Key PathMetadata
+
+func (key Key) String() string {
+	return fmt.Sprintf("%s~%s~%s~%s", key.apiName, key.apiVersion, key.apiRevision, key.fragmentName)
+}
+
+func (ff *File) Key() Key {
+	key := Key(*ff.PathMetadata)
+	key.apiRevision = "0"
+	return key
+}
+
+type PathMetadata struct {
+	apiName      string
+	apiVersion   string
+	apiRevision  string
+	fragmentName string
+}
+
+func (pmd *PathMetadata) Clone() *PathMetadata {
+	if pmd == nil {
+		return nil
+	}
+	return &PathMetadata{
+		apiName:      pmd.apiName,
+		apiVersion:   pmd.apiVersion,
+		apiRevision:  pmd.apiRevision,
+		fragmentName: pmd.fragmentName,
+	}
+}
+
+// Fragment contains the representation of the fragment file for a
+// single API method, ready for export into JSON, as specified in
+// go/vkit-sample-snippet-design
+type Fragment struct {
+	Format      string `json:"format"`
+	ID          string `json:"id"`
+	APIName     string `json:"apiName"`
+	APIVersion  string `json:"apiVersion"`
+	APIRevision string `json:"apiRevision"`
+	// TODO: Generation date
+
+	// A map from language to the fragment exemplifying use of the
+	// current method in that language.
+	CodeFragment map[string]*CodeFragment `json:"codeFragment"`
+}
+
+func (frag *Fragment) Clone() *Fragment {
+	if frag == nil {
+		return nil
+	}
+	other := &Fragment{
+		Format:       frag.Format,
+		ID:           frag.ID,
+		APIName:      frag.APIName,
+		APIVersion:   frag.APIVersion,
+		APIRevision:  frag.APIRevision,
+		CodeFragment: make(map[string]*CodeFragment),
+	}
+	for key, value := range frag.CodeFragment {
+		other.CodeFragment[key] = value.Clone()
+	}
+	return other
+}
+
+func AreCommensurate(first, second *Fragment) bool {
+	return first != nil && second != nil && first.ID == second.ID && first.APIName == second.APIName && first.APIVersion == second.APIVersion
+}
+
+// CodeFragment contains a snippet of code in a particular language,
+// and related metadata.
+type CodeFragment struct {
+	GenerationVersion string `json:"generationVersion"`
+	GenerationDate    string `json:"generationDate"`
+	Fragment          string `json:"fragment"`
+
+	// List of the client libraries on which this fragment
+	// depends.
+	Libraries []*LibraryInfo `json:"libraries"`
+}
+
+func (code *CodeFragment) Clone() *CodeFragment {
+	if code == nil {
+		return nil
+	}
+	other := &CodeFragment{
+		GenerationVersion: code.GenerationVersion,
+		GenerationDate:    code.GenerationDate,
+		Fragment:          code.Fragment,
+		Libraries:         make([]*LibraryInfo, len(code.Libraries)),
+	}
+	copy(other.Libraries, code.Libraries)
+	return other
+}
+
+// LibraryInfo contains information about a client library assumed by
+// this particular fragment.
+type LibraryInfo struct {
+	URL  string `json:"url"`
+	Name string `json:"name"`
+}
+
+func FromFile(path string) (*File, error) {
+	components := strings.Split(path, string(os.PathSeparator))
+	num := len(components)
+	if num < 4 {
+		return nil, fmt.Errorf("too few components in path %q", path)
+	}
+	pathMetadata := PathMetadata{
+		apiName:      components[num-4],
+		apiVersion:   components[num-3],
+		apiRevision:  components[num-2],
+		fragmentName: components[num-1],
+	}
+
+	if !strings.HasSuffix(pathMetadata.fragmentName, util.FragmentFileSuffix) {
+		return nil, fmt.Errorf("did not find extension %q in file %q", util.FragmentFileSuffix, path)
+	}
+
+	contents, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("error reading file %q: %s", path, err)
+	}
+
+	var fragment Fragment
+	if err := json.Unmarshal(contents, &fragment); err != nil {
+		return nil, fmt.Errorf("error unmarshalling JSON from %q: %s", path, err)
+	}
+
+	fragmentFile := &File{
+		PathMetadata: &pathMetadata,
+		Fragment:     &fragment,
+	}
+	return fragmentFile, nil
+}
+
+func (ff *File) ToFile(rootPath string) error {
+	const filePermissions = 0440
+	const directoryPermissions = 0750
+	if ff == nil || ff.PathMetadata == nil {
+		return fmt.Errorf("no metadata available")
+	}
+
+	md := ff.PathMetadata
+	path := filepath.Join(rootPath, md.apiName, md.apiVersion, md.apiRevision, md.fragmentName)
+	directory, _ := filepath.Split(path)
+
+	if err := os.MkdirAll(directory, directoryPermissions); err != nil {
+		return fmt.Errorf("error creating directory %q: %s", directory, err)
+	}
+
+	fragmentJSON, err := json.Marshal(ff.Fragment)
+	if err != nil {
+		return fmt.Errorf("error while marshalling JSON : %s", err)
+	}
+
+	if err := ioutil.WriteFile(path, fragmentJSON, filePermissions); err != nil {
+		return fmt.Errorf("error writing file %q: %s", path, err)
+	}
+
+	return nil
+}
+
+func (ff *File) MergeWith(otherFile *File) (*File, error) {
+	if ff.Processed == true {
+		return nil, fmt.Errorf("file %s has already been merged", ff)
+	}
+
+	if otherFile == nil {
+		ff.Processed = true
+		return ff, nil
+	}
+
+	if otherFile.Processed == true {
+		return nil, fmt.Errorf("file %s has already been merged", otherFile)
+	}
+
+	log.Printf("TODO(vchudnov): fill in MergeWith")
+	// TODO(vchudnov): Fill in.
+	this := ff.Fragment
+	other := otherFile.Fragment
+
+	if this.Format != other.Format {
+		return nil, fmt.Errorf("different fragment formats when merging %q (%q) and %q (%q)", ff.Key(), this.Format, otherFile.Key(), other.Format)
+	}
+	if !AreCommensurate(ff.Fragment, otherFile.Fragment) {
+		return nil, fmt.Errorf("trying to merge disparate fragments %q and %q\n%q:%#v\n%q:%#v", ff.Key(), otherFile.Key(), ff.Key(), ff, otherFile.Key(), other)
+	}
+
+	merged := otherFile.Clone()
+	for language, codeFragment := range this.CodeFragment {
+		merged.Fragment.CodeFragment[language] = codeFragment
+	}
+
+	ff.Processed = true
+	otherFile.Processed = true
+	return merged, nil
+}

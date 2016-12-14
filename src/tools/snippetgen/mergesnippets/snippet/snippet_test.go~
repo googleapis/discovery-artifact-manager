@@ -1,0 +1,61 @@
+package snippet
+
+import (
+	"gapi-tools/tools/snippetgen/mergesnippets/fragment"
+	"gapi-tools/tools/snippetgen/mergesnippets/util"
+	"testing"
+)
+
+func TestValidateMerged(t *testing.T) {
+	mrg := &Merger{}
+	frag := &fragment.Info{Path: &fragment.Path{}, File: &fragment.File{}}
+	key := frag.Key()
+
+	mrg.mergedFragments = make(fragmentMap)
+	mrg.mergedFragments[key] = frag
+
+	cases := []struct {
+		languages []string
+		valid     bool
+	}{
+		{
+			languages: []string{},
+			valid:     false,
+		},
+		{
+			languages: []string{"foo language"},
+			valid:     false,
+		},
+		{
+			languages: util.RequiredLanguages,
+			valid:     true,
+		},
+		{
+			languages: append(util.RequiredLanguages, "foo language"),
+			valid:     false,
+		},
+		{
+			languages: append(util.RequiredLanguages[1:]),
+			valid:     false,
+		},
+		{
+			languages: []string{"Python"},
+			valid:     false,
+		},
+	}
+
+	for idx, test := range cases {
+		mrg.errorList.Clear()
+		frag.File.CodeFragment = make(map[string]*fragment.CodeFragment)
+		for _, lang := range test.languages {
+			frag.File.CodeFragment[lang] = &fragment.CodeFragment{Fragment: "sample"}
+		}
+		if got, want := mrg.Error() == nil, true; got != want {
+			t.Errorf("%d: initial error is nil: got: %v, want: %v\n%s", idx, got, want, mrg.Error())
+		}
+		mrg.validateMergedFragments()
+		if got, want := mrg.Error() == nil, test.valid; got != want {
+			t.Errorf("%d: validateMergedFragments: got: %v, want: %v\nlanguages: %#v", got, want, test.languages)
+		}
+	}
+}

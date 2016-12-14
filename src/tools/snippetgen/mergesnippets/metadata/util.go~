@@ -1,0 +1,138 @@
+// Package util contains utility functions as well as run-time constants for creating the fragment files.
+package util
+
+import (
+	"fmt"
+	"os/exec"
+	"time"
+
+	"log"
+)
+
+const (
+	// CurrentRevision is the value of the "revision" part of the
+	// fragment file path indicating this is a fragment for the
+	// latest revision of the API
+	CurrentRevision = "0"
+
+	// Format in included in the fragment file to indicate how it
+	// should be interpreted. This is built to future-proof the
+	// clients handling fragment files in case of a format change.
+	Format string = "1"
+
+	// ExtractorVersion contains the version of this extractor
+	// code, so that we can correlate extractor versions to
+	// generated snippets.
+	ExtractorVersion string = "0.1"
+
+	// FragmentFileSuffix is the extension for the fragment files
+	// in GCS.
+	FragmentFileSuffix = ".frag.json"
+)
+
+var (
+	// timeOfRun is the timestamp of this run, so that all
+	// fragment files have the same time even if this program
+	// takes some time to run.
+	timeOfRun = time.Now().UTC()
+
+	// Timestamp is the timestamp of this run for use in the
+	// snippet metadata.
+	Timestamp = timeOfRun.Format(time.RFC3339)
+
+	// TimestampShort is the timestamp of this run for use in CitC
+	// clients and CLs.
+	TimestampShort = timeOfRun.Format("20060102-150405")
+
+	// The languages that are allowed in snippets.
+	allowedLanguages = map[string]bool{
+		"java":               true, /// capitalize
+		".NET":               false,
+		"PHP":                false,
+		"python":             false, /// capitalize
+		"Ruby":               false,
+		"Dart":               false,
+		"Go":                 false,
+		"Google Web Toolkit": false,
+		"JavaScript":         false,
+		"Objective-C":        false,
+		"Node.js":            false,
+	}
+
+	// The languages that are required in the published snippets.
+	RequiredLanguages []string
+)
+
+func init() {
+	list := make([]string, 0, len(allowedLanguages))
+	for language, required := range allowedLanguages {
+		if required {
+			list = append(list, language)
+		}
+	}
+	RequiredLanguages = list
+}
+
+// IsValidLanguage returns true iff 'lang' is one of the recognized
+// languages in which we show fragments.
+func IsValidLanguage(lang string) bool {
+	_, found := allowedLanguages[lang]
+	return found
+}
+
+func min(x, y int) int {
+	if x < y {
+		return x
+	}
+	return y
+}
+
+// CommonPrefix returns the longest prefix that is common to all the
+// elements of 'allStrings'
+func CommonPrefix(allStrings []string) string {
+	if len(allStrings) == 0 {
+		return ""
+	}
+
+	if len(allStrings) == 1 {
+		return allStrings[0]
+	}
+
+	prefix := allStrings[0]
+
+StringLoop:
+	for _, str := range allStrings[1:] {
+		num := min(len(str), len(prefix))
+		for idx := 0; idx < num; idx++ {
+			if str[idx] != prefix[idx] {
+				prefix = prefix[:idx]
+				continue StringLoop
+			}
+		}
+		prefix = prefix[:num]
+	}
+
+	return prefix
+}
+
+// RunInShell runs 'command' in the bash shell (assumed on the user's
+// path), logging and returning the output. It returns an error if the
+// command fails.
+func RunInShell(command string) (string, error) {
+	output, err := Run("bash", "-c", fmt.Sprintf("%s", command))
+	return output, err
+}
+
+// Run runs 'command' with 'arguments', logging and returning the
+// output. It returns an error if the command fails.
+func Run(command string, arguments ...string) (string, error) {
+	cmd := exec.Command(command, arguments...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("command error: %s\nCommand: %s\nArguments: %q\nOutput: %s\n", err, command, arguments, output)
+	}
+
+	log.Printf("Running: %q %q\nOutput:\n%s\n", command, arguments, output)
+	return string(output), nil
+
+}

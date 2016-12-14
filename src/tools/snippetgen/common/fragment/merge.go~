@@ -1,0 +1,46 @@
+package fragment
+
+import "fmt"
+
+func (info *Info) MergeWith(otherFile *Info) (*Info, error) {
+	if info.Processed == true {
+		return nil, fmt.Errorf("file %s has already been merged", info)
+	}
+
+	if otherFile == nil {
+		//	fmt.Printf("*** can't merge %q: other is nil\n", info.File.ID)
+		info.Processed = true
+		return info, nil
+	}
+
+	//fmt.Printf("*** merging %q and %q\n", info.File.ID, otherFile.File.ID)
+
+	if otherFile.Processed == true {
+		return nil, fmt.Errorf("file %s has already been merged", otherFile)
+	}
+
+	this := info.File
+	other := otherFile.File
+
+	if this.Format != other.Format {
+		return nil, fmt.Errorf("different fragment formats when merging %q (%q) and %q (%q)", info.Key(), this.Format, otherFile.Key(), other.Format)
+	}
+	if !AreCommensurate(info.File, otherFile.File) {
+		return nil, fmt.Errorf("trying to merge disparate fragments %q and %q\n%q:%#v\n%q:%#v", info.Key(), otherFile.Key(), info.Key(), info, otherFile.Key(), other)
+	}
+
+	merged := otherFile.Clone()
+	for language, codeFragment := range this.CodeFragment {
+		merged.File.CodeFragment[language] = codeFragment
+	}
+	merged.File.APIRevision = fmt.Sprintf("%s~%s", this.APIRevision, other.APIRevision)
+	fmt.Printf("*** updating revision to %q\n", merged.File.APIRevision)
+
+	info.Processed = true
+	otherFile.Processed = true
+	return merged, nil
+}
+
+func AreCommensurate(first, second *File) bool {
+	return first != nil && second != nil && first.Format == second.Format && first.ID == second.ID && first.APIName == second.APIName && first.APIVersion == second.APIVersion
+}
