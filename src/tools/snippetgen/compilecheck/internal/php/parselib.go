@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gapi-cmds/src/snippetgen/compilecheck/internal/filesys"
+	"discovery-artifact-manager/tools/snippetgen/compilecheck/internal/filesys"
 )
 
 // ParameterPath contains the path (class->method->parameter) used to identify the corresponding

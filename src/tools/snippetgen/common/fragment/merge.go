@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"gapi-cmds/src/snippetgen/common/metadata"
+	"discovery-artifact-manager/tools/snippetgen/common/metadata"
 )
 
 // currentMergeVersion contains the version identifier of the current

@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gapi-cmds/src/snippetgen/common/metadata"
+	"discovery-artifact-manager/tools/snippetgen/common/metadata"
 )
 
 // ParseFilePath extracts as much metadata as possible from a file

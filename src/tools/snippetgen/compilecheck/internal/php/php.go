@@ -11,8 +11,8 @@ import (
 	"os"
 	"strings"
 
-	"gapi-cmds/src/snippetgen/common/clientlib"
-	"gapi-cmds/src/snippetgen/compilecheck/internal/filesys"
+	"discovery-artifact-manager/tools/snippetgen/common/clientlib"
+	"discovery-artifact-manager/tools/snippetgen/compilecheck/internal/filesys"
 )
 
 // Sample represents a parsed sample snippet.

@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"fmt"
 
-	"gapi-cmds/src/snippetgen/compilecheck/internal/csharp"
-	"gapi-cmds/src/snippetgen/compilecheck/internal/golang"
-	"gapi-cmds/src/snippetgen/compilecheck/internal/java"
-	"gapi-cmds/src/snippetgen/compilecheck/internal/nodejs"
-	"gapi-cmds/src/snippetgen/compilecheck/internal/php"
-	"gapi-cmds/src/snippetgen/compilecheck/internal/py"
-	"gapi-cmds/src/snippetgen/compilecheck/internal/ruby"
+	"discovery-artifact-manager/tools/snippetgen/compilecheck/internal/csharp"
+	"discovery-artifact-manager/tools/snippetgen/compilecheck/internal/golang"
+	"discovery-artifact-manager/tools/snippetgen/compilecheck/internal/java"
+	"discovery-artifact-manager/tools/snippetgen/compilecheck/internal/nodejs"
+	"discovery-artifact-manager/tools/snippetgen/compilecheck/internal/php"
+	"discovery-artifact-manager/tools/snippetgen/compilecheck/internal/py"
+	"discovery-artifact-manager/tools/snippetgen/compilecheck/internal/ruby"
 )
 
 // check abstracts setting up compile checks for code samples.

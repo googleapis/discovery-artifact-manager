@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gapi-cmds/src/snippetgen/common/fragment"
+	"discovery-artifact-manager/tools/snippetgen/common/fragment"
 )
 
 // Init performs the C#-specific, language-independent

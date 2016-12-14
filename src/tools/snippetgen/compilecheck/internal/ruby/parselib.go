@@ -9,7 +9,7 @@ import (
 	"strings"
 	"unicode"
 
-	"gapi-cmds/src/snippetgen/compilecheck/internal/langutil"
+	"discovery-artifact-manager/tools/snippetgen/compilecheck/internal/langutil"
 )
 
 // renameFileName is the location of the client library's Ruby rename file.

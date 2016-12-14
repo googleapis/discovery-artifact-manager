@@ -8,7 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"gapi-cmds/src/snippetgen/common/fragment"
+	"discovery-artifact-manager/tools/snippetgen/common/fragment"
 )
 
 var formatters = []struct {

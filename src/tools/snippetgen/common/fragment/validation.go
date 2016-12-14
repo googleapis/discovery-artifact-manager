@@ -3,8 +3,8 @@ package fragment
 import (
 	"fmt"
 
-	"gapi-cmds/src/common/errorlist"
-	"gapi-cmds/src/snippetgen/common/metadata"
+	"discovery-artifact-manager/tools/common/errorlist"
+	"discovery-artifact-manager/tools/snippetgen/common/metadata"
 )
 
 // HasConsistentMetadata returns nil iff the metadata contained in

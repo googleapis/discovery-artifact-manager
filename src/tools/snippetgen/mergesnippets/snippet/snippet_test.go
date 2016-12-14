@@ -3,8 +3,8 @@ package snippet
 import (
 	"testing"
 
-	"gapi-cmds/src/snippetgen/common/fragment"
-	"gapi-cmds/src/snippetgen/common/metadata"
+	"discovery-artifact-manager/tools/snippetgen/common/fragment"
+	"discovery-artifact-manager/tools/snippetgen/common/metadata"
 )
 
 func TestValidateMerged(t *testing.T) {

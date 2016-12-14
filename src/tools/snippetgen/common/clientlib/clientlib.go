@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"gapi-cmds/src/common/errorlist"
+	"discovery-artifact-manager/tools/common/errorlist"
 )
 
 // Lib represents a downloadable client library.

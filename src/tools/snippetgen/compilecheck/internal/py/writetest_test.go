@@ -3,8 +3,8 @@ package py
 import (
 	"testing"
 
-	"gapi-cmds/src/snippetgen/compilecheck/internal/filesys"
-	"gapi-cmds/src/snippetgen/compilecheck/internal/langutil"
+	"discovery-artifact-manager/tools/snippetgen/compilecheck/internal/filesys"
+	"discovery-artifact-manager/tools/snippetgen/compilecheck/internal/langutil"
 
 	"github.com/pmezard/go-difflib/difflib"
 )

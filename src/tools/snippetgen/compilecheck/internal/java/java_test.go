@@ -2,7 +2,7 @@ package java
 
 import (
 	"fmt"
-	"gapi-cmds/src/snippetgen/common/clientlib"
+	"discovery-artifact-manager/tools/snippetgen/common/clientlib"
 	"io/ioutil"
 	"os"
 	"path/filepath"

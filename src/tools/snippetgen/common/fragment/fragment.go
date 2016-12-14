@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"gapi-cmds/src/snippetgen/common/metadata"
+	"discovery-artifact-manager/tools/snippetgen/common/metadata"
 )
 
 // Info encapsulates information about a fragment file for a single

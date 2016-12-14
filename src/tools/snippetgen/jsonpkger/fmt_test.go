@@ -4,8 +4,8 @@ import (
 	"go/format"
 	"testing"
 
-	"gapi-cmds/src/snippetgen/common/fragment"
-	"gapi-cmds/src/snippetgen/common/metadata"
+	"discovery-artifact-manager/tools/snippetgen/common/fragment"
+	"discovery-artifact-manager/tools/snippetgen/common/metadata"
 )
 
 func TestFormatterNames(t *testing.T) {

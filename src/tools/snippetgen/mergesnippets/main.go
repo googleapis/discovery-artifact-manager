@@ -14,7 +14,7 @@ import (
 	"flag"
 	"log"
 
-	"gapi-cmds/src/snippetgen/mergesnippets/snippet"
+	"discovery-artifact-manager/tools/snippetgen/mergesnippets/snippet"
 )
 
 var (

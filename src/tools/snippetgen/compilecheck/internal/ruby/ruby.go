@@ -11,10 +11,10 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"gapi-cmds/src/snippetgen/common/clientlib"
-	"gapi-cmds/src/snippetgen/common/fragment"
-	"gapi-cmds/src/snippetgen/compilecheck/internal/filesys"
-	"gapi-cmds/src/snippetgen/compilecheck/internal/langutil"
+	"discovery-artifact-manager/tools/snippetgen/common/clientlib"
+	"discovery-artifact-manager/tools/snippetgen/common/fragment"
+	"discovery-artifact-manager/tools/snippetgen/compilecheck/internal/filesys"
+	"discovery-artifact-manager/tools/snippetgen/compilecheck/internal/langutil"
 )
 
 var (

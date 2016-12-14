@@ -7,8 +7,8 @@ import (
 	"regexp"
 	"strings"
 
-	"gapi-cmds/src/common/parsehtml"
-	"gapi-cmds/src/snippetgen/compilecheck/internal/langutil"
+	"discovery-artifact-manager/tools/common/parsehtml"
+	"discovery-artifact-manager/tools/snippetgen/compilecheck/internal/langutil"
 
 	"golang.org/x/net/html"
 )

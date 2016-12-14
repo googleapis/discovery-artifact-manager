@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"gapi-cmds/src/common/clone"
+	"discovery-artifact-manager/tools/common/clone"
 )
 
 // Clone creates a deep copy of 'info'.

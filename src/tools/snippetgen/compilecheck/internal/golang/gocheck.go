@@ -10,7 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"gapi-cmds/src/snippetgen/compilecheck/internal/filesys"
+	"discovery-artifact-manager/tools/snippetgen/compilecheck/internal/filesys"
 )
 
 // Check sets up the Go compile check, satisfying checker.Func. It copies each snipppet into its

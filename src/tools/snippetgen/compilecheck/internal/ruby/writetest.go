@@ -7,7 +7,7 @@ import (
 	"strings"
 	"text/template"
 
-	"gapi-cmds/src/snippetgen/compilecheck/internal/langutil"
+	"discovery-artifact-manager/tools/snippetgen/compilecheck/internal/langutil"
 )
 
 func writeTest(ctx *checkContext) error {

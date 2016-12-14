@@ -10,10 +10,10 @@ import (
 	"path"
 	"path/filepath"
 
-	"gapi-cmds/src/common/errorlist"
-	"gapi-cmds/src/common/gcs"
-	"gapi-cmds/src/snippetgen/common/fragment"
-	"gapi-cmds/src/snippetgen/common/metadata"
+	"discovery-artifact-manager/tools/common/errorlist"
+	"discovery-artifact-manager/tools/common/gcs"
+	"discovery-artifact-manager/tools/snippetgen/common/fragment"
+	"discovery-artifact-manager/tools/snippetgen/common/metadata"
 )
 
 // fragmentMap indexes fragments by their unique key, which includes the method ID and the API version.

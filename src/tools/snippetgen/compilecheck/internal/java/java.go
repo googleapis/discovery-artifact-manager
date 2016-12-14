@@ -10,8 +10,8 @@ import (
 	"regexp"
 	"strings"
 
-	"gapi-cmds/src/snippetgen/common/clientlib"
-	"gapi-cmds/src/snippetgen/common/fragment"
+	"discovery-artifact-manager/tools/snippetgen/common/clientlib"
+	"discovery-artifact-manager/tools/snippetgen/common/fragment"
 )
 
 // Check sets up the Java compile check, satisfying compilecheck.checker.

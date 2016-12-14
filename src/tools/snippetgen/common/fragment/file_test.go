@@ -3,7 +3,7 @@ package fragment
 import (
 	"testing"
 
-	"gapi-cmds/src/snippetgen/common/metadata"
+	"discovery-artifact-manager/tools/snippetgen/common/metadata"
 )
 
 func TestParseFileName(t *testing.T) {

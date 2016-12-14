@@ -1,7 +1,7 @@
 package golang
 
 import (
-	"gapi-cmds/src/snippetgen/compilecheck/internal/filesys"
+	"discovery-artifact-manager/tools/snippetgen/compilecheck/internal/filesys"
 	"testing"
 )
 

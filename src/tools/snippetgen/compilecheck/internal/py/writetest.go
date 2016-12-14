@@ -7,7 +7,7 @@ import (
 	"strings"
 	"text/template"
 
-	"gapi-cmds/src/snippetgen/compilecheck/internal/langutil"
+	"discovery-artifact-manager/tools/snippetgen/compilecheck/internal/langutil"
 )
 
 // writeTest generates the test file used to check generated snippets for client libraries.

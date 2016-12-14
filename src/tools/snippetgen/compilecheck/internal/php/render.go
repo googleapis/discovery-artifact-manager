@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"gapi-cmds/src/snippetgen/compilecheck/internal/filesys"
+	"discovery-artifact-manager/tools/snippetgen/compilecheck/internal/filesys"
 )
 
 // Names of the generated PHP files used for the compile check

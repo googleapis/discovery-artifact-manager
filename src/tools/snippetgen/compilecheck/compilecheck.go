@@ -10,8 +10,8 @@ import (
 	"sort"
 	"strings"
 
-	"gapi-cmds/src/common/errorlist"
-	"gapi-cmds/src/snippetgen/compilecheck/internal/checker"
+	"discovery-artifact-manager/tools/common/errorlist"
+	"discovery-artifact-manager/tools/snippetgen/compilecheck/internal/checker"
 )
 
 func main() {

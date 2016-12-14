@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"gapi-cmds/src/snippetgen/compilecheck/internal/filesys"
+	"discovery-artifact-manager/tools/snippetgen/compilecheck/internal/filesys"
 )
 
 func TestReadFileNotExist(t *testing.T) {
