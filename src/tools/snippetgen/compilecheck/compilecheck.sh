@@ -9,7 +9,7 @@
 # COMPILECHECK_DIR  # where to output the compilecheck-generated files
 # COMPILECHECK_GAPIDEV # path to the gapi-dev repo.
 #   # This is only used to set default value for:
-#   COMPILECHECK_GAPICMDS # location of the Git-on-Borg gapi-cmds repo
+#   COMPILECHECK_DARTMAN # location of the Git-on-Borg gapi-cmds repo
 #   COMPILECHECK_TOOLKIT # location of the Github toolkit repo
 #     # This sets the default value for:
 #     COMPILECHECK_DISCOVERY # directory of the discovery files to generate
@@ -25,7 +25,7 @@ PARENT_DIR="${COMPILECHECK_DIR:-${TMPDIR:-/tmp}}/compilecheck-${DATE}"
 COMPILECHECK_GOPATH="${COMPILECHECK_GOPATH:-${GOPATH}}"
 COMPILECHECK_GAPIDEV="${COMPILECHECK_GAPIDEV:-${HOME}/gapi-dev}"
 COMPILECHECK_TOOLKIT="${COMPILECHECK_TOOLKIT:-${COMPILECHECK_GAPIDEV}/toolkit}"
-COMPILECHECK_GAPICMDS="${COMPILECHECK_GAPICMDS:-${COMPILECHECK_GAPIDEV}/gapi-cmds}"
+COMPILECHECK_DARTMAN="${COMPILECHECK_DARTMAN:-${COMPILECHECK_GAPIDEV}/discovery-artifact-manager}"
 COMPILECHECK_DISCOVERY="${COMPILECHECK_DISCOVERY:-${COMPILECHECK_TOOLKIT}/src/test/java/com/google/api/codegen/testdata/discoveries}"
 COMPILECHECK_LANGUAGES="${COMPILECHECK_LANGUAGES:-java php csharp nodejs ruby go py}"
 CHECK_SCRIPT="${PARENT_DIR}/checker"
@@ -35,7 +35,7 @@ $0:
 Running compilecheck in $PARENT_DIR
 
     COMPILECHECK_TOOLKIT="${COMPILECHECK_TOOLKIT}"
-   COMPILECHECK_GAPICMDS="${COMPILECHECK_GAPICMDS}"
+   COMPILECHECK_DARTMAN="${COMPILECHECK_DARTMAN}"
   COMPILECHECK_DISCOVERY="${COMPILECHECK_DISCOVERY}"
      COMPILECHECK_GOPATH="${COMPILECHECK_GOPATH}"
 
@@ -71,13 +71,13 @@ find "${COMPILECHECK_DISCOVERY}" -type f -regex "${COMPILECHECK_DISCOVERY}/[^/]*
 
 popd  #  "${COMPILECHECK_TOOLKIT}"
 
-pushd "${COMPILECHECK_GAPICMDS}"
+pushd "${COMPILECHECK_DARTMAN}"
 
 echo "$0: Running compilecheck binary (generating compilecheck snippets)"
 go run ./src/snippetgen/compilecheck/compilecheck.go --tst "${CHECK_DIR}" --lib "${LIB_DIR}" "${SNIPPET_DIR}" > ${CHECK_SCRIPT} || terminate $?
 echo "$0: Compile-checking (running the generated compilecheck snippets)"
 { . ${CHECK_SCRIPT}; } || terminate $?
 
-popd  # "${COMPILECHECK_GAPICMDS}"
+popd  # "${COMPILECHECK_DARTMAN}"
 
 echo "$0: Success."

@@ -34,9 +34,9 @@ func New(gsutilPath string) (*GCS, error) {
 
 // TransferTree initiates a gsutil recursive upload of the contents of
 // the directory tree rooted at the 'src' path to the tree rooted at
-// tge 'dst' path, and returns the output of the command. One or both
+// the 'dst' path, and returns the output of the command. One or both
 // of these paths can begin with the "gs://" prefix to specify a GCS
-// location. Transfer to GCS are marked with content-type
+// location. Transfers to GCS are marked with content-type
 // "application/json", and are made world-readable iff
 // 'publiclyReadable' is set. Failures cause an error (with the
 // command output embedded) to be returned.
