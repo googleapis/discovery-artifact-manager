@@ -1,0 +1,85 @@
+#/bin/bash
+#
+# Copyright 2016 Google Inc
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Use this file to set up your Go environment to run the tools in this
+# repository. Usage:
+#
+# setup [PATH]
+#
+# Creates a symbolic link under PATH/src to this repository's source
+# directories. If not provided, PATH defaults to $GOPATH if the latter
+# contains a single path. Otherwise, or if the symlink cannot be
+# created, or if the symlink exists and points elsewhere, this issues
+# an error.
+
+# get_this_path
+#
+# Sets the global variables THIS_PATH to the full path from which this
+# file is being executed, and PARENT_DIRECTORY to the directory name
+# (not the full name) of this THIS_PATH's parent directory.
+get_this_path() {
+  local this_file="$(readlink -f $0)"
+  THIS_PATH="$(dirname $this_file)"
+  PARENT_DIRECTORY="$(basename $(dirname "${THIS_PATH}"))"
+}
+
+
+# get_gopath_location PATH
+#
+# Sets the global variable GOPATH_LOCATION. This uses the value of PATH if
+# provided. Otherwise, if $GOPATH contains a single path, this uses
+# that instead. If $GOPATH contains multiple paths, this issues an
+# error.
+get_gopath_location() {
+  GOPATH_LOCATION="$1"
+  if [ -z "${GOPATH_LOCATION}" ]; then
+    if [ $(echo ${GOPATH} | grep ":") ]; then
+         echo "\$GOPATH contains multiple paths. Select one and pass it as an argument to this command."
+         exit -1
+    fi
+    GOPATH_LOCATION="${GOPATH}"
+  fi
+}
+
+# create_symlink FROM TO
+# 
+# creates a symlink such that FROM points to TO. If the symlink
+# already exists, this does nothing. If the symlink exists but does
+# not point to the correct target, this generates an error.
+create_symlink() {
+  local from="${1}"
+  local to="${2}"
+  local existing_from="${from}"
+  local existing_to="$(readlink -f "${existing_from}")"
+  if [ ! -L "${from}" ]; then
+    ln -s "${to}" "${from}" || \
+      { echo "Could not create symlink ${from} -> ${to}"; exit -2; }
+  elif [ "${existing_to}" != "${to}" ]; then 
+    echo "Error: symlink exists and points elsewhere:"
+    echo "   ${from} -> ${existing_to}"
+    exit -3
+  fi  
+}
+
+
+# Main entry point.
+if [[ $_ != $0 ]]; then
+  echo "Please execute this command, rather than sourcing it."
+else
+  get_gopath_location "$1"
+  get_this_path
+  create_symlink "${GOPATH_LOCATION}/src/${PARENT_DIRECTORY}" "${THIS_PATH}"
+fi
