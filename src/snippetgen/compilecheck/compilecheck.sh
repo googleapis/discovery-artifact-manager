@@ -7,9 +7,8 @@
 #
 # COMPILECHECK_GOPATH # if different from ${GOPATH}
 # COMPILECHECK_DIR  # where to output the compilecheck-generated files
-# COMPILECHECK_GAPIDEV # path to the gapi-dev repo.
-#   # This is only used to set default value for:
-#   COMPILECHECK_DARTMAN # location of the Git-on-Borg gapi-cmds repo
+# COMPILECHECK_DARTMAN # path to the discovery-artifact-manager repo
+#   # This sets the default value for:
 #   COMPILECHECK_TOOLKIT # location of the Github toolkit repo
 #     # This sets the default value for:
 #     COMPILECHECK_DISCOVERY # directory of the discovery files to generate
@@ -23,9 +22,8 @@
 DATE="$(date '+%Y-%m-%d.%H%M%S')"
 PARENT_DIR="${COMPILECHECK_DIR:-${TMPDIR:-/tmp}}/compilecheck-${DATE}"
 COMPILECHECK_GOPATH="${COMPILECHECK_GOPATH:-${GOPATH}}"
-COMPILECHECK_GAPIDEV="${COMPILECHECK_GAPIDEV:-${HOME}/gapi-dev}"
-COMPILECHECK_TOOLKIT="${COMPILECHECK_TOOLKIT:-${COMPILECHECK_GAPIDEV}/toolkit}"
-COMPILECHECK_DARTMAN="${COMPILECHECK_DARTMAN:-${COMPILECHECK_GAPIDEV}/discovery-artifact-manager}"
+COMPILECHECK_DARTMAN="${COMPILECHECK_DARTMAN:-${HOME}/discovery-artifact-manager}"
+COMPILECHECK_TOOLKIT="${COMPILECHECK_TOOLKIT:-${COMPILECHECK_DARTMAN}/toolkit}"
 COMPILECHECK_DISCOVERY="${COMPILECHECK_DISCOVERY:-${COMPILECHECK_TOOLKIT}/src/test/java/com/google/api/codegen/testdata/discoveries}"
 COMPILECHECK_LANGUAGES="${COMPILECHECK_LANGUAGES:-java php csharp nodejs ruby go py}"
 CHECK_SCRIPT="${PARENT_DIR}/checker"
@@ -46,7 +44,7 @@ function terminate { echo "$0: Terminating ($1)" ; exit $1; }
 function allyamls() {
   echo "$@"
   export FILE="$1"
-  echo -n ${ALL_YAMLS} | xargs -d " " -t -IYAMLF java -jar ./build/libs/discoGen-0.0.2-SNAPSHOT.jar --discovery_doc="${FILE}" --gapic_yaml=YAMLF --overrides="${FILE}.overrides" --output="${SNIPPET_DIR}"  || terminate $?
+  echo -n ${ALL_YAMLS} | xargs -d " " -t -IYAMLF java -jar ./build/libs/discoGen-0.0.5-SNAPSHOT.jar --discovery_doc="${FILE}" --gapic_yaml=YAMLF --overrides="${FILE}.overrides" --output="${SNIPPET_DIR}"  || terminate $?
 }
 export -f terminate
 export -f allyamls
