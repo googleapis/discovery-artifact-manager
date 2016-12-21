@@ -2,6 +2,7 @@ package php
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -42,6 +43,9 @@ func parseLibs(libDir string, opener filesys.Opener) (ParsedLib, error) {
 // the given directory and parses containing files using `parseFile` method.
 func filesParser(parsedLib *ParsedLib, opener filesys.Opener) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
+		if info == nil {
+			return fmt.Errorf("unable to parse directory")
+		}
 		if !info.IsDir() {
 			return parseFile(parsedLib, path, opener)
 		}

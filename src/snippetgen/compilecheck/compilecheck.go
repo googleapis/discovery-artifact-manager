@@ -15,6 +15,13 @@ import (
 )
 
 func main() {
+	// TODO(vchudnov-g): Once all the client libraries are part of
+	// this repository, change this default value to point to the
+	// appropriate path, and add code to generate the correct
+	// library-specific paths. In the meantime, as we work through
+	// getting all the generators in, each language will
+	// temporarily hard-code the correct path to its client
+	// libraries.
 	libDir := flag.String("lib",
 		filepath.Join(os.TempDir(), "discovery", "lib"),
 		"directory in which to put client libraries that we are testing against")
@@ -22,9 +29,12 @@ func main() {
 		filepath.Join(os.TempDir(), "discovery", "tst"),
 		"directory in which to put the test program")
 
-	init := flag.Bool("init", true, "Whether to perform language-specific, API-independent initializations")
-	cleanInit := flag.Bool("clean", false, "Whether to perform a clean init even if it doesn't appear necessary. This flag has no effect if --init=false.")
-	runCheck := flag.Bool("check", true, "Whether to perform the compile check itself (assumes language initialization has been done via --init")
+	init := flag.Bool("init", true,
+		"Whether to perform language-specific, API-independent initializations")
+	cleanInit := flag.Bool("clean", false,
+		"Whether to perform a clean init even if it doesn't appear necessary. This flag has no effect if --init=false.")
+	runCheck := flag.Bool("check", true,
+		"Whether to perform the compile check itself (assumes language initialization has been done via --init")
 
 	profile := flag.String("pprof", "", "file to place CPU profiling")
 	flag.Parse()
