@@ -5,6 +5,8 @@ import (
 	"testing"
 )
 
+// This test case needs to pass when "go test" is invoked with a
+// relative path and when it is invoked with just the package name.
 func TestRepoRoot(t *testing.T) {
 	root, err := RepoRoot()
 	if err != nil {

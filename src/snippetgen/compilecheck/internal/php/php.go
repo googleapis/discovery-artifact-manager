@@ -114,7 +114,7 @@ const (
 func readFile(fname string, opener filesys.Opener) (Sample, error) {
 	file, err := opener.Open(fname)
 	if err != nil {
-		return Sample{}, err
+		return Sample{}, fmt.Errorf("error in readFile(%q): %q", fname, err)
 	}
 	defer file.Close()
 

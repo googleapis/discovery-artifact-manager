@@ -14,6 +14,9 @@ func RepoRoot() (string, error) {
 	if !ok {
 		return "", fmt.Errorf("could not determine the filesystem location of this repo")
 	}
-
-	return filepath.Abs(fmt.Sprintf("%s/../../..", filepath.Dir(file)))
+	srcDir, err := filepath.EvalSymlinks(fmt.Sprintf("%s/../..", filepath.Dir(file)))
+	if err != nil {
+		return "", fmt.Errorf("could not resolve symlinks from %q to determine location of this repo", file)
+	}
+	return filepath.Abs(fmt.Sprintf("%s/..", srcDir))
 }
