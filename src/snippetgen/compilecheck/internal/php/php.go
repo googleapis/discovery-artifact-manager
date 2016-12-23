@@ -8,10 +8,12 @@ package php
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
-	"discovery-artifact-manager/snippetgen/common/clientlib"
+	"discovery-artifact-manager/common/environment"
 	"discovery-artifact-manager/snippetgen/compilecheck/internal/filesys"
 )
 
@@ -30,10 +32,11 @@ type MethodSignature struct {
 	Params     []string
 }
 
-// Check sets up the enviroment, parses information from the PHP client library and generates the
-// PHP files that are used for the compile check.
+// Check sets up the environment, parses information from the PHP
+// client library and generates the PHP files that are used for the
+// compile check.
 func Check(files []string, libDir, testDir string) (string, error) {
-	if err := setup(libDir, testDir); err != nil {
+	if err := setup(testDir); err != nil {
 		return "", err
 	}
 
@@ -46,30 +49,50 @@ func Check(files []string, libDir, testDir string) (string, error) {
 		}
 	}
 
+	// For the time being, ignore the passed-in libDir and
+	// overwrite it with a path to this subrepo within this
+	// repository
+	//
+	// TODO(vchudnov-g): Use the passed in libDir once the default
+	// value for --lib has been changed in compilecheck.go
+	dartmanDir, err := environment.RepoRoot()
+	if err != nil {
+		return "", err
+	}
+	libDir = fmt.Sprintf("%s/clients/php/google-api-php-client-services", dartmanDir)
+
 	parsedLib, err := parseLibs(libDir, filesys.OS{})
 	if err != nil {
 		return "", err
 	}
 	filePath, _, err := render(testDir, filesys.OS{}, samples, parsedLib)
+
+	ioutil.WriteFile(filepath.Join(testDir, "composer.json"), []byte(fmt.Sprintf(`{
+    "repositories": [
+        {
+            "type": "path",
+            "url": "%s",
+            "options": {
+              "symlink": true
+            }
+        }
+    ],
+    "require": {
+        "google/apiclient-services": "*"
+    }
+}`, libDir)), os.ModePerm)
+
 	return fmt.Sprintf("(cd %s;composer require google/apiclient;"+
-		"composer require google/apiclient-services;php %s)\n",
+		"composer require;php %s)\n",
 		testDir, filePath), err
 }
 
 // setup sets up the enviroment for compile check.
-func setup(libDir, testDir string) error {
+func setup(testDir string) error {
 	if err := os.RemoveAll(testDir); err != nil {
 		return err
 	}
 	if err := os.MkdirAll(testDir, 0750); err != nil {
-		return err
-	}
-	url, err := clientlib.DownloadURL("PHP", "", "")
-	if err != nil {
-		return err
-	}
-	clientLib := []clientlib.Lib{clientlib.Lib{"php-client", url}}
-	if err := clientlib.DownloadUnzipIfMissing(clientLib, libDir); err != nil {
 		return err
 	}
 	return nil
@@ -91,7 +114,7 @@ const (
 func readFile(fname string, opener filesys.Opener) (Sample, error) {
 	file, err := opener.Open(fname)
 	if err != nil {
-		return Sample{}, err
+		return Sample{}, fmt.Errorf("error in readFile(%q): %q", fname, err)
 	}
 	defer file.Close()
 
