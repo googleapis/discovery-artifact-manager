@@ -12,14 +12,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.api.codegen.metadatagen;
+package com.google.api.codegen.viewmodel.metadata;
 
-import com.google.api.tools.framework.tools.ToolOptions;
-import java.io.IOException;
+import com.google.auto.value.AutoValue;
 
-/** Interface for the package copying phase of package metadata generation. */
-public interface PackageCopier {
+@AutoValue
+public abstract class IndexRequireView {
 
-  /** Returns a map of Docs to be output, as well any package metadata generated in this phase. */
-  public PackageCopierResult run(ToolOptions options) throws IOException;
+  public abstract String clientName();
+
+  public abstract String fileName();
+
+  public static Builder newBuilder() {
+    return new AutoValue_IndexRequireView.Builder();
+  }
+
+  @AutoValue.Builder
+  public abstract static class Builder {
+    public abstract Builder clientName(String val);
+
+    public abstract Builder fileName(String val);
+
+    public abstract IndexRequireView build();
+  }
 }
