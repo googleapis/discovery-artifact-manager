@@ -45,7 +45,8 @@ function terminate { echo "$0: Terminating ($1)" ; exit $1; }
 function allyamls() {
   echo "$@"
   export FILE="$1"
-  echo -n ${ALL_YAMLS} | xargs -d " " -t -IYAMLF java -jar ./build/libs/discoGen-0.0.5-SNAPSHOT.jar --discovery_doc="${FILE}" --gapic_yaml=YAMLF --overrides="${FILE}.overrides" --output="${SNIPPET_DIR}"  || terminate $?
+  # TODO(vchudnov-g): Obtain the version automatically form the toolkit/build.gradle
+  echo -n ${ALL_YAMLS} | xargs -d " " -t -IYAMLF java -jar ./build/libs/discoGen-0.0.5.jar --discovery_doc="${FILE}" --gapic_yaml=YAMLF --overrides="${FILE}.overrides" --output="${SNIPPET_DIR}"  || terminate $?
 }
 export -f terminate
 export -f allyamls

@@ -271,7 +271,7 @@
 
         @if longrunningMethods
 
-          var operationsClient = new gax.lro({
+          this.operationsClient = new gax.lro({
             auth: gaxGrpc.auth,
             grpc: gaxGrpc.grpc
           }).operationsClient({
@@ -283,11 +283,11 @@
             appVersion: appVersion
           });
           
-          var longrunningDescriptors = {
+          this.longrunningDescriptors = {
             @join method : longrunningMethods on {@", "}.add(BREAK)
               @let longrunningConfig = context.getApiConfig.getInterfaceConfig(service).getMethodConfig(method).getLongRunningConfig;
                 {@methodName(method)}: new gax.LongrunningDescriptor(
-                  operationsClient,
+                  this.operationsClient,
                   grpcClients.{@longrunningConfig.getReturnType}.decode,
                   grpcClients.{@longrunningConfig.getMetadataType}.decode)
               @end
@@ -298,6 +298,8 @@
 
       {@constructDefaults(service)}
 
+      var self = this;
+      
       @join stub : stubs on BREAK.add(BREAK)
         var {@stub.name} = gaxGrpc.createStub(
             servicePath,
@@ -310,13 +312,16 @@
           @end
         ];
         {@stub.stubMethodsArrayName}.forEach(function(methodName) {
-          this['_' + methodName] = gax.createApiCall(
+          self['_' + methodName] = gax.createApiCall(
             {@stub.name}.then(function({@stub.name}) {
-              return {@stub.name}[methodName].bind({@stub.name});
+              return function() {
+                var args = Array.prototype.slice.call(arguments, 0);
+                return {@stub.name}[methodName].apply({@stub.name}, args);
+              }
             }),
             defaults[methodName],
             {@getDescriptors(service)});
-        }.bind(this));
+        });
       @end
     }
   @end
