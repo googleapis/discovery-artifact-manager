@@ -24,13 +24,14 @@ var (
 	gsutilPath        = flag.String("gsutil", "gsutil", "Path to the gsutil command (if not in your $PATH)")
 	tmpDir            = flag.String("tmp", "", "Path under which to create temporary directories")
 	simpleMetadata    = flag.Bool("simple_metadata", false, "Whether to have simple metadata in the merged artifact rather than metadata that traces both merge sources")
+	currentOnly       = flag.Bool("current_only", false, "Whether to only merge API versions at the current revision")
 )
 
 func main() {
 	flag.Parse()
 	mrg := &snippet.Merger{}
 
-	mrg.Init(*gsutilPath, *primaryLocation, *secondaryLocation, *mergedLocation, *tmpDir, *simpleMetadata, flag.Args())
+	mrg.Init(*gsutilPath, *primaryLocation, *secondaryLocation, *mergedLocation, *tmpDir, *simpleMetadata, *currentOnly, flag.Args())
 	if err := mrg.Error(); err != nil {
 		log.Fatalf("initialization errors:\n%s", err)
 	}

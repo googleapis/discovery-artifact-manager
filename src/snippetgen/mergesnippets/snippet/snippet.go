@@ -66,13 +66,20 @@ type Merger struct {
 	// merged snipepts with simple revision numbers rather than
 	// the more complex ones that indicate their provenance.
 	simpleMetadata bool
+
+	// mergeCurrentRevisionOnly indicates whether we should only
+	// merge exactly the current revisions (indicated by
+	// metadata.CurrentRevision) of corresponding versioned APIs
+	// together, or the latest revisions of corresponding
+	// versioned APIs together.
+	mergeCurrentRevisionOnly bool
 }
 
 // Init initializes the Merger object with the provided 'gsutilPath'
 // to the "gsutil" utility, and the locations of the primary,
 // secondary, and merged fragments, and the temporary directory to
 // use. Any errors are accumulated and can be checked with Error().
-func (mrg *Merger) Init(gsutilPath, primaryLocation, secondaryLocation, mergedLocation, tmpDir string, simpleMetadata bool, apiVersions []string) {
+func (mrg *Merger) Init(gsutilPath, primaryLocation, secondaryLocation, mergedLocation, tmpDir string, simpleMetadata bool, mergeCurrentRevisionOnly bool, apiVersions []string) {
 	var err error
 	if mrg.gcs, err = gcs.New(gsutilPath); err != nil {
 		mrg.errorList.Add(err)
@@ -81,6 +88,7 @@ func (mrg *Merger) Init(gsutilPath, primaryLocation, secondaryLocation, mergedLo
 	mrg.simpleMetadata = simpleMetadata
 	mrg.tmpDir = tmpDir
 	mrg.RequestedAPIVersions = apiVersions
+	mrg.mergeCurrentRevisionOnly = mergeCurrentRevisionOnly
 
 	if err = mrg.createDirectories(primaryLocation, secondaryLocation, mergedLocation); err != nil {
 		mrg.errorList.Add(err)
@@ -207,6 +215,13 @@ func (mrg *Merger) readFragmentsFrom(directory string) (fragmentMap, error) {
 			errorList.Add(err)
 			return nil
 		}
+
+		key := fragmentInfo.Key()
+		if mrg.mergeCurrentRevisionOnly && fragmentInfo.Path.SnippetRevision != metadata.CurrentRevision {
+			// don't store this fragment
+			return nil
+		}
+
 		if lang, fragLang := fragmentInfo.Path.Lang, metadata.FragmentLanguage; lang != fragLang {
 			errorList.Add(fmt.Errorf("expected %q, found %q while reading %q", fragLang.Name, lang.Name, path))
 			return nil
@@ -219,7 +234,6 @@ func (mrg *Merger) readFragmentsFrom(directory string) (fragmentMap, error) {
 		}
 
 		// If we have multiple revisions, use the latest one.
-		key := fragmentInfo.Key()
 		if previous, ok := readFragments[key]; !ok || fragmentInfo.APIRevision() > previous.APIRevision() {
 			readFragments[key] = fragmentInfo
 		}
