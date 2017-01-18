@@ -327,9 +327,9 @@ func (mrg *Merger) PublishMergedFragments() {
 // transferWithGCS transfers 'src' to 'dst' using mrg.gcs. Either of
 // the two paths may be a GCS location. The output is logged, and any
 // errors are accumulated and are retrievable via Error(). If 'doAll'
-// is set, only the latest revision of mrg.RequestedAPIVersions found
-// under 'dst' is transferred; otherwise, all revisions under 'dst'
-// are transferred.
+// is not set, only the latest revision of mrg.RequestedAPIVersions
+// found under 'dst' is transferred; otherwise, all revisions under
+// 'dst' are transferred.
 func (mrg *Merger) transferWithGCS(src, dst string, doAll bool) {
 	apiPaths, err := mrg.gcs.ListTree(src, mrg.RequestedAPIVersions)
 	if err != nil {
@@ -378,7 +378,8 @@ func (mrg *Merger) getLatestRevisions(apiRevision []string) []string {
 		apiKey := filepath.Join(revisionInfo.APIName, revisionInfo.APIVersion)
 		thisRev := revisionInfo.SnippetRevision
 
-		if thisRev > revisions[apiKey].apiRevision {
+		if (mrg.mergeCurrentRevisionOnly && thisRev == metadata.CurrentRevision) ||
+			(!mrg.mergeCurrentRevisionOnly && thisRev > revisions[apiKey].apiRevision) {
 			revisions[apiKey] = revisionPath{thisRev, fullPath}
 		}
 	}
