@@ -78,6 +78,10 @@ public class SurfaceNamer extends NameFormatterDelegator {
     return packageName;
   }
 
+  public String getTestPackageName() {
+    return getNotImplementedString("SurfaceNamer.getTestPackageName");
+  }
+
   public String getNotImplementedString(String feature) {
     return "$ NOT IMPLEMENTED: " + feature + " $";
   }
@@ -89,7 +93,7 @@ public class SurfaceNamer extends NameFormatterDelegator {
 
   /** The name of the class that implements a particular proto interface. */
   public String getApiWrapperClassName(Interface interfaze) {
-    return publicClassName(Name.upperCamel(interfaze.getSimpleName(), "Api"));
+    return publicClassName(Name.upperCamel(interfaze.getSimpleName(), "Client"));
   }
 
   /** The name of the implementation class that implements a particular proto interface. */
@@ -188,7 +192,7 @@ public class SurfaceNamer extends NameFormatterDelegator {
 
   /** The name of the constructor for the service client. The client is VKit generated, not GRPC. */
   public String getApiWrapperClassConstructorName(Interface interfaze) {
-    return publicClassName(Name.upperCamel(interfaze.getSimpleName(), "Api"));
+    return publicClassName(Name.upperCamel(interfaze.getSimpleName(), "Client"));
   }
 
   /**
@@ -209,7 +213,7 @@ public class SurfaceNamer extends NameFormatterDelegator {
    * interface.
    */
   public String getApiWrapperVariableName(Interface interfaze) {
-    return localVarName(Name.upperCamel(interfaze.getSimpleName(), "Api"));
+    return localVarName(Name.upperCamel(interfaze.getSimpleName(), "Client"));
   }
 
   /**
@@ -290,6 +294,16 @@ public class SurfaceNamer extends NameFormatterDelegator {
     } else {
       return publicMethodName(Name.from("set").join(identifier));
     }
+  }
+
+  /** The function name to add an element to a map or repeated field. */
+  public String getFieldAddFunctionName(Field field) {
+    return getFieldAddFunctionName(field.getType(), Name.from(field.getSimpleName()));
+  }
+
+  /** The function name to add an element to a map or repeated field. */
+  public String getFieldAddFunctionName(TypeRef type, Name identifier) {
+    return getNotImplementedString("SurfaceNamer.getFieldAddFunctionName");
   }
 
   /** The function name to set a field that is a resource name class. */
@@ -574,12 +588,38 @@ public class SurfaceNamer extends NameFormatterDelegator {
 
   /** The name of the surface method which can call the given API method. */
   public String getApiMethodName(Method method, VisibilityConfig visibility) {
-    return visibility.methodName(this, Name.upperCamel(method.getSimpleName()));
+    return getApiMethodName(Name.upperCamel(method.getSimpleName()), visibility);
   }
 
   /** The name of the async surface method which can call the given API method. */
   public String getAsyncApiMethodName(Method method, VisibilityConfig visibility) {
-    return visibility.methodName(this, Name.upperCamel(method.getSimpleName()).join("async"));
+    return getApiMethodName(Name.upperCamel(method.getSimpleName()).join("async"), visibility);
+  }
+
+  protected String getApiMethodName(Name name, VisibilityConfig visibility) {
+    switch (visibility) {
+      case PUBLIC:
+        return publicMethodName(name);
+      case PACKAGE:
+      case PRIVATE:
+        return privateMethodName(name);
+      default:
+        throw new IllegalArgumentException("cannot name method with visibility: " + visibility);
+    }
+  }
+
+  /** The keyword controlling the visiblity, eg "public", "protected". */
+  public String getVisiblityKeyword(VisibilityConfig visibility) {
+    switch (visibility) {
+      case PUBLIC:
+        return "public";
+      case PACKAGE:
+        return "/* package-private */";
+      case PRIVATE:
+        return "private";
+      default:
+        throw new IllegalArgumentException("invalid visibility: " + visibility);
+    }
   }
 
   /** The name of the example for the method. */
