@@ -8,6 +8,9 @@
 //
 // where APISUBPATHS are specific subpaths under both PATH1 and PATH2
 // that identify the content to merge.
+//
+// Note that since this is a general tool, it does not delete the
+// contents of PATH3 before writing to it.
 package main
 
 import (

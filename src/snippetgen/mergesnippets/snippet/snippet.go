@@ -328,8 +328,8 @@ func (mrg *Merger) PublishMergedFragments() {
 // the two paths may be a GCS location. The output is logged, and any
 // errors are accumulated and are retrievable via Error(). If 'doAll'
 // is not set, only the latest revision of mrg.RequestedAPIVersions
-// found under 'dst' is transferred; otherwise, all revisions under
-// 'dst' are transferred.
+// found under 'src' is transferred; otherwise, all revisions under
+// 'src' are transferred.
 func (mrg *Merger) transferWithGCS(src, dst string, doAll bool) {
 	apiPaths, err := mrg.gcs.ListTree(src, mrg.RequestedAPIVersions)
 	if err != nil {
