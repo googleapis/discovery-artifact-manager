@@ -66,13 +66,20 @@ type Merger struct {
 	// merged snipepts with simple revision numbers rather than
 	// the more complex ones that indicate their provenance.
 	simpleMetadata bool
+
+	// mergeCurrentRevisionOnly indicates whether we should only
+	// merge exactly the current revisions (indicated by
+	// metadata.CurrentRevision) of corresponding versioned APIs
+	// together, or the latest revisions of corresponding
+	// versioned APIs together.
+	mergeCurrentRevisionOnly bool
 }
 
 // Init initializes the Merger object with the provided 'gsutilPath'
 // to the "gsutil" utility, and the locations of the primary,
 // secondary, and merged fragments, and the temporary directory to
 // use. Any errors are accumulated and can be checked with Error().
-func (mrg *Merger) Init(gsutilPath, primaryLocation, secondaryLocation, mergedLocation, tmpDir string, simpleMetadata bool, apiVersions []string) {
+func (mrg *Merger) Init(gsutilPath, primaryLocation, secondaryLocation, mergedLocation, tmpDir string, simpleMetadata bool, mergeCurrentRevisionOnly bool, apiVersions []string) {
 	var err error
 	if mrg.gcs, err = gcs.New(gsutilPath); err != nil {
 		mrg.errorList.Add(err)
@@ -81,6 +88,7 @@ func (mrg *Merger) Init(gsutilPath, primaryLocation, secondaryLocation, mergedLo
 	mrg.simpleMetadata = simpleMetadata
 	mrg.tmpDir = tmpDir
 	mrg.RequestedAPIVersions = apiVersions
+	mrg.mergeCurrentRevisionOnly = mergeCurrentRevisionOnly
 
 	if err = mrg.createDirectories(primaryLocation, secondaryLocation, mergedLocation); err != nil {
 		mrg.errorList.Add(err)
@@ -207,6 +215,13 @@ func (mrg *Merger) readFragmentsFrom(directory string) (fragmentMap, error) {
 			errorList.Add(err)
 			return nil
 		}
+
+		key := fragmentInfo.Key()
+		if mrg.mergeCurrentRevisionOnly && fragmentInfo.Path.SnippetRevision != metadata.CurrentRevision {
+			// don't store this fragment
+			return nil
+		}
+
 		if lang, fragLang := fragmentInfo.Path.Lang, metadata.FragmentLanguage; lang != fragLang {
 			errorList.Add(fmt.Errorf("expected %q, found %q while reading %q", fragLang.Name, lang.Name, path))
 			return nil
@@ -219,7 +234,6 @@ func (mrg *Merger) readFragmentsFrom(directory string) (fragmentMap, error) {
 		}
 
 		// If we have multiple revisions, use the latest one.
-		key := fragmentInfo.Key()
 		if previous, ok := readFragments[key]; !ok || fragmentInfo.APIRevision() > previous.APIRevision() {
 			readFragments[key] = fragmentInfo
 		}
@@ -313,9 +327,9 @@ func (mrg *Merger) PublishMergedFragments() {
 // transferWithGCS transfers 'src' to 'dst' using mrg.gcs. Either of
 // the two paths may be a GCS location. The output is logged, and any
 // errors are accumulated and are retrievable via Error(). If 'doAll'
-// is set, only the latest revision of mrg.RequestedAPIVersions found
-// under 'dst' is transferred; otherwise, all revisions under 'dst'
-// are transferred.
+// is not set, only the latest revision of mrg.RequestedAPIVersions
+// found under 'src' is transferred; otherwise, all revisions under
+// 'src' are transferred.
 func (mrg *Merger) transferWithGCS(src, dst string, doAll bool) {
 	apiPaths, err := mrg.gcs.ListTree(src, mrg.RequestedAPIVersions)
 	if err != nil {
@@ -364,7 +378,8 @@ func (mrg *Merger) getLatestRevisions(apiRevision []string) []string {
 		apiKey := filepath.Join(revisionInfo.APIName, revisionInfo.APIVersion)
 		thisRev := revisionInfo.SnippetRevision
 
-		if thisRev > revisions[apiKey].apiRevision {
+		if (mrg.mergeCurrentRevisionOnly && thisRev == metadata.CurrentRevision) ||
+			(!mrg.mergeCurrentRevisionOnly && thisRev > revisions[apiKey].apiRevision) {
 			revisions[apiKey] = revisionPath{thisRev, fullPath}
 		}
 	}

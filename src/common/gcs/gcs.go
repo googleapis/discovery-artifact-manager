@@ -62,8 +62,7 @@ func IsGCS(filePath string) bool {
 
 // ListTree returns all the subdirectories specified in `dirList` that
 // exist as top-level subdirectories under `root`. If none of these
-// exist but `root` exists, it returns an empty list. If `root` also
-// does not exist, it returns an error.
+// exist or if `root` does not exist, it returns an empty list.
 func (gcs *GCS) ListTree(root string, dirList []string) ([]string, error) {
 	dirs := []string{}
 
@@ -84,24 +83,15 @@ func (gcs *GCS) ListTree(root string, dirList []string) ([]string, error) {
 				}
 			}
 		}
-		if len(dirs) > 0 {
-			return dirs, nil
-		}
-
-		cmd := exec.Command(gcs.gsutil, strings.Fields(fmt.Sprintf("-q ls %s", root))...)
-		cmd.Stdout = &contents
-		cmd.Run()
-		if contents.Len() == 0 {
-			return nil, fmt.Errorf("location does not exist: %q", root)
-		}
-		return nil, nil
+		return dirs, nil
 	}
 
 	for _, dir := range dirList {
 		fullDir := path.Join(root, dir)
 		entries, err := ioutil.ReadDir(fullDir)
 		if err != nil {
-			return nil, fmt.Errorf("could not read local directory %q", fullDir)
+			// fullDir does not exist
+			continue
 		}
 		for _, entry := range entries {
 			if entry.IsDir() {
@@ -134,7 +124,7 @@ func scanGCSTree(contents *bytes.Buffer) ([]string, error) {
 // `src` to the same paths rooted at `dst`.
 func (gcs *GCS) TransferTreePaths(src, dst string, publiclyReadable bool, trees []string) (string, error) {
 	if len(trees) == 0 {
-		return gcs.TransferTree(src, dst, publiclyReadable)
+		return "", nil
 	}
 	var output bytes.Buffer
 	for _, srcPath := range trees {
