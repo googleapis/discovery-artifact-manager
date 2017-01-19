@@ -45,12 +45,12 @@ var (
 	// 	}
 	//
 	initRequestPattern = regexp.MustCompile(
-		`\w+ = {\n    # TODO: Add desired entries of the request body\.( Only assigned entries\n    # will be changed:)?\n}`)
+		`\w+ = {\n    # TODO: Add desired entries to the request body\.( Only assigned entries\n    # will be changed\.| All existing entries\n    # will be replaced\.)?\n}`)
 
 	// initRequestGeneric uses the generic name 'body' for the request object (used in Python
 	// client libraries) in place of the request object name in initRequestPattern
 	initRequestGeneric = `body = {
-    # TODO: Add desired entries of the request body.$1
+    # TODO: Add desired entries to the request body.$1
 }`
 )
 
