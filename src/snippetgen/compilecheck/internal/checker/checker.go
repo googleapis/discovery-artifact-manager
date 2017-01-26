@@ -7,6 +7,7 @@ import (
 	"discovery-artifact-manager/snippetgen/compilecheck/internal/csharp"
 	"discovery-artifact-manager/snippetgen/compilecheck/internal/golang"
 	"discovery-artifact-manager/snippetgen/compilecheck/internal/java"
+	"discovery-artifact-manager/snippetgen/compilecheck/internal/js"
 	"discovery-artifact-manager/snippetgen/compilecheck/internal/nodejs"
 	"discovery-artifact-manager/snippetgen/compilecheck/internal/php"
 	"discovery-artifact-manager/snippetgen/compilecheck/internal/py"
@@ -37,6 +38,7 @@ var Checkers = map[string]struct {
 }{
 	"go":   {Fn: golang.Check},
 	"java": {Fn: java.Check},
+	"js":   {Fn: js.Check},
 	"njs":  {Fn: nodejs.Check},
 	"php":  {Fn: php.Check},
 	"rb":   {Fn: ruby.Check},
