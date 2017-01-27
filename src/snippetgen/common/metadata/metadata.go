@@ -64,9 +64,9 @@ var (
 		{"Dart", "dart", false},
 		{"Go", "go", false},
 		{"Google Web Toolkit", "gwt", false},
-		{"JavaScript", "js", false},
 		{"Objective-C", "m", false},
 		{"Node.js", "njs", false},
+		{"Web", "js", false},
 		FragmentLanguage,
 	}
 

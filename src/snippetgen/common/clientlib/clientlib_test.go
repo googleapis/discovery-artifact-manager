@@ -18,6 +18,7 @@ func TestDownloadURL(t *testing.T) {
 		"PHP":     "https://github.com/google/google-api-php-client-services/archive/master.zip",
 		"Python":  "https://github.com/google/google-api-python-client/archive/master.zip",
 		"Ruby":    "https://github.com/google/google-api-ruby-client/archive/master.zip",
+		"Web":     "",
 	}
 	for key, val := range expect {
 		got, err := DownloadURL(key, name, version)
@@ -46,6 +47,7 @@ func TestLandingPage(t *testing.T) {
 		"Ruby":    "https://github.com/google/google-api-ruby-client",
 		"Go":      "https://github.com/google/google-api-go-client",
 		"Node.js": "https://github.com/google/google-api-nodejs-client",
+		"Web":     "",
 	}
 	for key, val := range expect {
 		got, err := LandingPage(key, name, version)
