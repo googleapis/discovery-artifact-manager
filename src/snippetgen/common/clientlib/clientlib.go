@@ -26,6 +26,8 @@ func DownloadURL(language, name, version string) (string, error) {
 	switch language {
 	case "Java":
 		return fmt.Sprintf("https://developers.google.com/resources/api-libraries/download/%s/%s/java", name, version), nil
+	case "JavaScript":
+		return "", nil
 	case "Node.js":
 		return "https://github.com/google/google-api-nodejs-client/archive/master.zip", nil
 	case "PHP":
@@ -34,8 +36,6 @@ func DownloadURL(language, name, version string) (string, error) {
 		return "https://github.com/google/google-api-python-client/archive/master.zip", nil
 	case "Ruby":
 		return "https://github.com/google/google-api-ruby-client/archive/master.zip", nil
-	case "Web":
-		return "", nil
 	default: // The other languages don't require or use an archive URL.
 		return "", fmt.Errorf("unexpected language: %q", language)
 	}
@@ -48,6 +48,8 @@ func LandingPage(language, name, version string) (string, error) {
 	switch language {
 	case "Java":
 		return fmt.Sprintf("https://developers.google.com/api-client-library/java/apis/%s/%s", name, version), nil
+	case "JavaScript":
+		return "", nil
 	case ".NET":
 		return fmt.Sprintf("https://developers.google.com/api-client-library/dotnet/apis/%s/%s", name, version), nil
 	case "PHP":
@@ -60,8 +62,6 @@ func LandingPage(language, name, version string) (string, error) {
 		return "https://github.com/google/google-api-go-client", nil
 	case "Node.js":
 		return "https://github.com/google/google-api-nodejs-client", nil
-	case "Web":
-		return "", nil
 	default:
 		return "", fmt.Errorf("unexpected language: %q", language)
 	}

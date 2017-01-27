@@ -13,12 +13,12 @@ func TestDownloadURL(t *testing.T) {
 	name := "service"
 	version := "v1"
 	expect := map[string]string{
-		"Java":    "https://developers.google.com/resources/api-libraries/download/service/v1/java",
-		"Node.js": "https://github.com/google/google-api-nodejs-client/archive/master.zip",
-		"PHP":     "https://github.com/google/google-api-php-client-services/archive/master.zip",
-		"Python":  "https://github.com/google/google-api-python-client/archive/master.zip",
-		"Ruby":    "https://github.com/google/google-api-ruby-client/archive/master.zip",
-		"Web":     "",
+		"Java":       "https://developers.google.com/resources/api-libraries/download/service/v1/java",
+		"JavaScript": "",
+		"Node.js":    "https://github.com/google/google-api-nodejs-client/archive/master.zip",
+		"PHP":        "https://github.com/google/google-api-php-client-services/archive/master.zip",
+		"Python":     "https://github.com/google/google-api-python-client/archive/master.zip",
+		"Ruby":       "https://github.com/google/google-api-ruby-client/archive/master.zip",
 	}
 	for key, val := range expect {
 		got, err := DownloadURL(key, name, version)
@@ -40,14 +40,14 @@ func TestLandingPage(t *testing.T) {
 	name := "service"
 	version := "v1"
 	expect := map[string]string{
-		"Java":    "https://developers.google.com/api-client-library/java/apis/service/v1",
-		".NET":    "https://developers.google.com/api-client-library/dotnet/apis/service/v1",
-		"PHP":     "https://github.com/google/google-api-php-client-services",
-		"Python":  "https://github.com/google/google-api-python-client",
-		"Ruby":    "https://github.com/google/google-api-ruby-client",
-		"Go":      "https://github.com/google/google-api-go-client",
-		"Node.js": "https://github.com/google/google-api-nodejs-client",
-		"Web":     "",
+		"Java":       "https://developers.google.com/api-client-library/java/apis/service/v1",
+		"JavaScript": "",
+		".NET":       "https://developers.google.com/api-client-library/dotnet/apis/service/v1",
+		"PHP":        "https://github.com/google/google-api-php-client-services",
+		"Python":     "https://github.com/google/google-api-python-client",
+		"Ruby":       "https://github.com/google/google-api-ruby-client",
+		"Go":         "https://github.com/google/google-api-go-client",
+		"Node.js":    "https://github.com/google/google-api-nodejs-client",
 	}
 	for key, val := range expect {
 		got, err := LandingPage(key, name, version)
