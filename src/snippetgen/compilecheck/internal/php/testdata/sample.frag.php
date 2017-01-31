@@ -27,7 +27,10 @@ $service = new Google_Service_Appengine($client);
 // Part of `name`. Name of the application to get. For example: "apps/myapp".
 $appsId = '';
 
+$myFoo = 0;
+
 $requestBody = object();
+$requestBody->setMyFoo($myFoo);
 
 // TODO: To download media content, use:
 //

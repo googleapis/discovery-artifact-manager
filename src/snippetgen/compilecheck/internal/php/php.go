@@ -121,6 +121,7 @@ func readFile(fname string, opener filesys.Opener) (Sample, error) {
 	var initLines []string
 	var inInit bool
 	var paramNames, path []string
+	var requestBodyParamNameMap = make(map[string]bool)
 	var service, method string
 	scanner := bufio.NewScanner(file)
 
@@ -148,14 +149,34 @@ func readFile(fname string, opener filesys.Opener) (Sample, error) {
 			inInit = false
 			path, method = parseMethodSignature(lineParts)
 		}
+		if strings.HasPrefix(line, "$postBody->") {
+			i := strings.Index(line[1:], "$")
+			j := strings.LastIndex(line, ")")
+			paramName := line[i+2 : j]
+			requestBodyParamNameMap[paramName] = true
+		}
 		if inInit {
 			initLines = append(initLines, line)
 			if paramName := parseParamName(lineParts); paramName != "" &&
 				paramName != serviceVarName && paramName != clientVarName {
+				// Skip optional parameters and assignments to the `optParams` map.
+				if paramName == "optParams" || strings.HasPrefix(paramName, "optParams[") {
+					continue
+				}
+
 				paramNames = append(paramNames, paramName)
 			}
 		}
 	}
+
+	// Remake the `paramNames` array to exclude variables that are only part of the request body.
+	var tmpParamNames []string
+	for i := 0; i < len(paramNames); i++ {
+		if !requestBodyParamNameMap[paramNames[i]] {
+			tmpParamNames = append(tmpParamNames, paramNames[i])
+		}
+	}
+	paramNames = tmpParamNames
 
 	methodSignature := MethodSignature{
 		Identifier: service + strings.Join(path, "") + method,

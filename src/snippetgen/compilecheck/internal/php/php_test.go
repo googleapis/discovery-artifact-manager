@@ -42,7 +42,9 @@ func TestReadFile(t *testing.T) {
 		"$client->addScope('https://www.googleapis.com/auth/cloud-platform');",
 		"$service = new Google_Service_Appengine($client);",
 		"$appsId = '';",
+		"$myFoo = 0;",
 		"$postBody = object();",
+		"$postBody->setMyFoo($myFoo);",
 	}
 	if !reflect.DeepEqual(expectedInitLines, sample.InitLines) {
 		t.Errorf("Incorrect init lines.\nExpected: %s\nActual: %s\n", expectedInitLines,

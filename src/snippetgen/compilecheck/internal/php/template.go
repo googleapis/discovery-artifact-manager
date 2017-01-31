@@ -43,10 +43,7 @@ function {{$sample.MethodSignature.Identifier}}($parsedLib)
 		}
 	}
 	{{range $param := $sample.MethodSignature.Params}}
-	// Skip $optParams - every method has this parameter and it's not required.
-	if ('{{$param}}' != 'optParams') {
-		array_push($providedArgs, '{{$param}}');
-	}
+	array_push($providedArgs, '{{$param}}');
 	{{end}}
 	if ((!empty($requiredArgs) || !empty($providedArgs)) && $requiredArgs !== $providedArgs) {
 		throw new Exception('Incorrect parameters provided for method'
