@@ -56,17 +56,17 @@ var (
 	// after merging, but bear in mind we may not have any snippets
 	// for a language at all.
 	AllowedLanguages = [...]Language{
-		{"Java", "java", false},
-		{".NET", "cs", false},
-		{"PHP", "php", false},
-		{"Python", "py", false},
-		{"Ruby", "rb", false},
 		{"Dart", "dart", false},
 		{"Go", "go", false},
 		{"Google Web Toolkit", "gwt", false},
+		{"Java", "java", false},
 		{"JavaScript", "js", false},
-		{"Objective-C", "m", false},
+		{".NET", "cs", false},
 		{"Node.js", "njs", false},
+		{"Objective-C", "m", false},
+		{"PHP", "php", false},
+		{"Python", "py", false},
+		{"Ruby", "rb", false},
 		FragmentLanguage,
 	}
 

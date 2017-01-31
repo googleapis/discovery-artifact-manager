@@ -26,6 +26,8 @@ func DownloadURL(language, name, version string) (string, error) {
 	switch language {
 	case "Java":
 		return fmt.Sprintf("https://developers.google.com/resources/api-libraries/download/%s/%s/java", name, version), nil
+	case "JavaScript":
+		return "", nil
 	case "Node.js":
 		return "https://github.com/google/google-api-nodejs-client/archive/master.zip", nil
 	case "PHP":
@@ -46,6 +48,8 @@ func LandingPage(language, name, version string) (string, error) {
 	switch language {
 	case "Java":
 		return fmt.Sprintf("https://developers.google.com/api-client-library/java/apis/%s/%s", name, version), nil
+	case "JavaScript":
+		return "", nil
 	case ".NET":
 		return fmt.Sprintf("https://developers.google.com/api-client-library/dotnet/apis/%s/%s", name, version), nil
 	case "PHP":

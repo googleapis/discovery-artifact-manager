@@ -1,8 +1,8 @@
 package java
 
 import (
-	"fmt"
 	"discovery-artifact-manager/snippetgen/common/clientlib"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
