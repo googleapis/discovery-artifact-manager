@@ -64,6 +64,7 @@ var testTmpl = template.Must(template.New("test").Funcs(template.FuncMap{
 	},
 }).Option("missingkey=error").Parse(`
 from __future__ import print_function
+import keyword
 import sys
 
 tests = []
@@ -78,14 +79,24 @@ def {{$test_name}}():
 {{- end}}
 
 {{- range $param := (index $.MethodParamSets .)}}
-  if not (
+  if keyword.iskeyword('{{$param.Name}}') or '{{$param.Name}}' in dir(__builtins__):
+    if not (
+{{- range $j, $type := pyTypes .Type -}}
+{{if ne $j 0}} or {{end -}}
+{{if eq $type "long" -}}sys.version_info[0] < 3 and {{end}}isinstance({{$param.Name}}_, {{$type}})
+{{- end -}}
+):
+      print("In {{$test_name}}, expected {{.Name}}_ to be {{.Type}}, found %s" % type({{.Name}}_))
+      top_errors += 1
+  else:
+    if not (
 {{- range $j, $type := pyTypes .Type -}}
 {{if ne $j 0}} or {{end -}}
 {{if eq $type "long" -}}sys.version_info[0] < 3 and {{end}}isinstance({{$param.Name}}, {{$type}})
 {{- end -}}
 ):
-    print("In {{$test_name}}, expected {{.Name}} to be {{.Type}}, found %s" % type({{.Name}}))
-    top_errors += 1
+      print("In {{$test_name}}, expected {{.Name}} to be {{.Type}}, found %s" % type({{.Name}}))
+      top_errors += 1
 {{- end}}
 
 tests.append({{$test_name}})
