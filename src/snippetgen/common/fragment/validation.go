@@ -20,10 +20,27 @@ func (info *Info) HasConsistentMetadata() error {
 
 // CheckLanguages returns an error if the languages for the code
 // fragments in 'info' are incorrect. This can happen if a required
-// language is missing, or if an unrecognized language is present.
+// language is missing, or if an unrecognized language is present. It
+// also normalizes the languages in 'info': if any are indexed by
+// their 'DisplayName', they are re-keyed by their 'Name'.
 func (info *Info) CheckLanguages() error {
 	allErrors := errorlist.Errors{}
-	for language := range info.File.CodeFragment {
+
+	// Create a reverse map of Language.DisplayName to
+	// Language.Name.
+	displayLanguages := map[string]string{}
+	for _, lang := range metadata.AllowedLanguages {
+		if len(lang.DisplayName) != 0 {
+			displayLanguages[lang.DisplayName] = lang.Name
+		}
+	}
+
+	for language, s := range info.File.CodeFragment {
+		if n, ok := displayLanguages[language]; ok {
+			info.File.CodeFragment[n] = s
+			delete(info.File.CodeFragment, language)
+			continue
+		}
 		if _, ok := metadata.GetLanguage(language); !ok {
 			allErrors.Add(fmt.Errorf("invalid language in %q: %q", info.Key(), language))
 		}

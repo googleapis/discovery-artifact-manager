@@ -73,13 +73,20 @@ type Merger struct {
 	// together, or the latest revisions of corresponding
 	// versioned APIs together.
 	mergeCurrentRevisionOnly bool
+
+	// renameLanguages, if true, indicates that the language names
+	// for the merged fragments generated should used their
+	// corresponding Language.DisplayName, if provided.
+	renameLanguages bool
 }
 
 // Init initializes the Merger object with the provided 'gsutilPath'
 // to the "gsutil" utility, and the locations of the primary,
 // secondary, and merged fragments, and the temporary directory to
 // use. Any errors are accumulated and can be checked with Error().
-func (mrg *Merger) Init(gsutilPath, primaryLocation, secondaryLocation, mergedLocation, tmpDir string, simpleMetadata bool, mergeCurrentRevisionOnly bool, apiVersions []string) {
+func (mrg *Merger) Init(gsutilPath, primaryLocation, secondaryLocation, mergedLocation, tmpDir string,
+	simpleMetadata, mergeCurrentRevisionOnly, renameLanguages bool,
+	apiVersions []string) {
 	var err error
 	if mrg.gcs, err = gcs.New(gsutilPath); err != nil {
 		mrg.errorList.Add(err)
@@ -89,6 +96,7 @@ func (mrg *Merger) Init(gsutilPath, primaryLocation, secondaryLocation, mergedLo
 	mrg.tmpDir = tmpDir
 	mrg.RequestedAPIVersions = apiVersions
 	mrg.mergeCurrentRevisionOnly = mergeCurrentRevisionOnly
+	mrg.renameLanguages = renameLanguages
 
 	if err = mrg.createDirectories(primaryLocation, secondaryLocation, mergedLocation); err != nil {
 		mrg.errorList.Add(err)
@@ -257,8 +265,30 @@ func (mrg *Merger) readFragmentsFrom(directory string) (fragmentMap, error) {
 // MergeFragments merges the primary and secondary fragments, writes them to the appropriate local directory, and performs a basic validity check. Failures in any of these steps are accumulated and can be checked via Error().
 func (mrg *Merger) MergeFragments() {
 	mrg.computeMergedFragments()
+	mrg.renameFragmentLanguages()
 	mrg.writeMergedFragments()
 	mrg.validateMergedFragments()
+}
+
+// renameFragmentlanguages renames the languages used as keys in the
+// fragments to be Language.DisplayName, if provided, rather than
+// Language.Name.
+func (mrg *Merger) renameFragmentLanguages() {
+	if !mrg.renameLanguages {
+		return
+	}
+	for _, l := range metadata.AllowedLanguages {
+		if len(l.DisplayName) == 0 {
+			continue
+		}
+		for _, frag := range mrg.mergedFragments {
+			s, ok := frag.File.CodeFragment[l.Name]
+			if ok {
+				frag.File.CodeFragment[l.DisplayName] = s
+				delete(frag.File.CodeFragment, l.Name)
+			}
+		}
+	}
 }
 
 // computeMergedFragments merges the fragments in mrg.primaryFragments

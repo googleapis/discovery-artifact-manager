@@ -28,13 +28,14 @@ var (
 	tmpDir            = flag.String("tmp", "", "Path under which to create temporary directories")
 	simpleMetadata    = flag.Bool("simple_metadata", false, "Whether to have simple metadata in the merged artifact rather than metadata that traces both merge sources")
 	currentOnly       = flag.Bool("current_only", false, "Whether to only merge API versions at the current revision")
+	renameLanguages   = flag.Bool("rename_languages", false, "Whether to rename languages to their canonical display names that will be displayed to users.")
 )
 
 func main() {
 	flag.Parse()
 	mrg := &snippet.Merger{}
 
-	mrg.Init(*gsutilPath, *primaryLocation, *secondaryLocation, *mergedLocation, *tmpDir, *simpleMetadata, *currentOnly, flag.Args())
+	mrg.Init(*gsutilPath, *primaryLocation, *secondaryLocation, *mergedLocation, *tmpDir, *simpleMetadata, *currentOnly, *renameLanguages, flag.Args())
 	if err := mrg.Error(); err != nil {
 		log.Fatalf("initialization errors:\n%s", err)
 	}

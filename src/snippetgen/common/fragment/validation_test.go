@@ -14,7 +14,7 @@ func TestCheckLanguages(t *testing.T) {
 	defer func(saved []metadata.Language) {
 		metadata.RequiredLanguages = saved
 	}(metadata.RequiredLanguages)
-	metadata.RequiredLanguages = []metadata.Language{{"Java", "java", true}}
+	metadata.RequiredLanguages = []metadata.Language{{"Java", "", "java", true}}
 
 	// No languages should fail validation.
 	if got, want := info.CheckLanguages() == nil, false; got != want {
@@ -53,6 +53,13 @@ func TestCheckLanguages(t *testing.T) {
 	// Having all the required languages only should pass validation
 	if got, want := info.CheckLanguages() == nil, true; got != want {
 		t.Errorf("having just the required languages passes CheckLanguages: got: %v, want: %v", got, want)
+	}
+
+	// Having all the required languages and a language with a different display name should pass validation
+	info.File.CodeFragment["Web"] = &CodeFragment{Fragment: "sample"}
+	info.File.CodeFragment["C#"] = &CodeFragment{Fragment: "sample"}
+	if err := info.CheckLanguages(); err != nil {
+		t.Errorf("having the required languages plus a language with a different display name passes CheckLanguages: got error: %q", err)
 	}
 
 	// Having all the required languages and an unknown language should fail validation

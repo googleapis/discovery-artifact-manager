@@ -8,14 +8,14 @@ import (
 
 func TestInfoCloneIncludesAllFields(t *testing.T) {
 	info := Info{}
-	if got, want := fmt.Sprintf("%#v", *info.Clone()), `fragment.Info{Path:fragment.Path{APIName:"", APIVersion:"", SnippetRevision:"", FragmentName:"", Lang:metadata.Language{Name:"", Ext:"", Required:false}}, File:fragment.File{Format:"", APIName:"", APIVersion:"", APIRevision:"", ID:"", CodeFragment:map[string]*fragment.CodeFragment(nil)}}`; got != want {
+	if got, want := fmt.Sprintf("%#v", *info.Clone()), `fragment.Info{Path:fragment.Path{APIName:"", APIVersion:"", SnippetRevision:"", FragmentName:"", Lang:metadata.Language{Name:"", DisplayName:"", Ext:"", Required:false}}, File:fragment.File{Format:"", APIName:"", APIVersion:"", APIRevision:"", ID:"", CodeFragment:map[string]*fragment.CodeFragment(nil)}}`; got != want {
 		t.Errorf("clone did not copy all fields:\n  got:  `%s`\n  want: `%s`\n", got, want)
 	}
 }
 
 func TestPathCloneIncludesAllFields(t *testing.T) {
 	path := Path{}
-	if got, want := fmt.Sprintf("%#v", *path.Clone()), `fragment.Path{APIName:"", APIVersion:"", SnippetRevision:"", FragmentName:"", Lang:metadata.Language{Name:"", Ext:"", Required:false}}`; got != want {
+	if got, want := fmt.Sprintf("%#v", *path.Clone()), `fragment.Path{APIName:"", APIVersion:"", SnippetRevision:"", FragmentName:"", Lang:metadata.Language{Name:"", DisplayName:"", Ext:"", Required:false}}`; got != want {
 		t.Errorf("clone did not copy all fields:\n  got:  `%s`\n  want: `%s`\n", got, want)
 	}
 }

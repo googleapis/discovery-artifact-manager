@@ -1,6 +1,7 @@
 package snippet
 
 import (
+	"fmt"
 	"testing"
 
 	"discovery-artifact-manager/snippetgen/common/fragment"
@@ -24,7 +25,7 @@ func TestValidateMerged(t *testing.T) {
 			valid:     true,
 		},
 		{
-			languages: []metadata.Language{{"foo language", "foo", true}},
+			languages: []metadata.Language{{"foo language", "", "foo", true}},
 			valid:     false,
 		},
 		{
@@ -32,7 +33,7 @@ func TestValidateMerged(t *testing.T) {
 			valid:     true,
 		},
 		{
-			languages: append(metadata.RequiredLanguages, metadata.Language{"foo language", "foo", true}),
+			languages: append(metadata.RequiredLanguages, metadata.Language{"foo language", "", "foo", true}),
 			valid:     false,
 		},
 		{
@@ -40,7 +41,7 @@ func TestValidateMerged(t *testing.T) {
 			valid:     true,
 		},
 		{
-			languages: []metadata.Language{{"Python", "py", true}},
+			languages: []metadata.Language{{"Python", "", "py", true}},
 			valid:     true,
 		},
 	}
@@ -59,6 +60,56 @@ func TestValidateMerged(t *testing.T) {
 			t.Errorf("%d: validateMergedFragments: got: %v, want: %v\nlanguages: %#v", idx, got, want, test.languages)
 		}
 	}
+}
+
+func TestRenameLanguages(t *testing.T) {
+	displayLanguages := []string{
+		"Java",
+		"C#",
+		"PHP",
+		"Python",
+		"Ruby",
+		"Dart",
+		"Go",
+		"Google Web Toolkit",
+		"Web",
+		"Objective-C",
+		"Node.js",
+		"Code Fragment",
+	}
+
+	mrg := &Merger{}
+	frag := &fragment.Info{Path: fragment.Path{}, File: fragment.File{}}
+	key := frag.Key()
+
+	mrg.mergedFragments = make(fragmentMap)
+	mrg.mergedFragments[key] = frag
+	frag.File.CodeFragment = make(map[string]*fragment.CodeFragment)
+
+	for _, lang := range metadata.AllowedLanguages {
+		frag.File.CodeFragment[lang.Name] = &fragment.CodeFragment{Fragment: fmt.Sprintf("/* sample in %q */", lang.Name)}
+	}
+
+	if got, want := mrg.Error() == nil, true; got != want {
+		t.Errorf("initial error is nil: got: %v, want: %v\n%s", got, want, mrg.Error())
+	}
+
+	mrg.renameLanguages = true
+	mrg.renameFragmentLanguages()
+
+	if got, want := mrg.Error() == nil, true; got != want {
+		t.Errorf("final error is nil: got: %v, want: %v\n%s", got, want, mrg.Error())
+	}
+
+	if got, want := len(frag.File.CodeFragment), len(displayLanguages); got != want {
+		t.Errorf("unexpected number of languages: got: %d, want %d", got, want)
+	}
+	for _, d := range displayLanguages {
+		if _, exist := frag.File.CodeFragment[d]; !exist {
+			t.Errorf("language %q expected but not seen", d)
+		}
+	}
+
 }
 
 func TestGetLatestRevision(t *testing.T) {
