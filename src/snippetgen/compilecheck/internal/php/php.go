@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"discovery-artifact-manager/common/environment"
@@ -109,6 +110,8 @@ const (
 	clientVarName  = "client"
 )
 
+var requestBodyParamPattern = regexp.MustCompile(`\$postBody->\w+\(\$(\w+)\);`)
+
 // readFile reads a single code sample file `fname` using `opener`
 // Returns a Sample which presents the sample PHP code and the error (if any).
 func readFile(fname string, opener filesys.Opener) (Sample, error) {
@@ -149,12 +152,6 @@ func readFile(fname string, opener filesys.Opener) (Sample, error) {
 			inInit = false
 			path, method = parseMethodSignature(lineParts)
 		}
-		if strings.HasPrefix(line, "$postBody->") {
-			i := strings.Index(line[1:], "$")
-			j := strings.LastIndex(line, ")")
-			paramName := line[i+2 : j]
-			requestBodyParamNameMap[paramName] = true
-		}
 		if inInit {
 			initLines = append(initLines, line)
 			if paramName := parseParamName(lineParts); paramName != "" &&
@@ -165,6 +162,14 @@ func readFile(fname string, opener filesys.Opener) (Sample, error) {
 				}
 
 				paramNames = append(paramNames, paramName)
+			}
+			// If it's a request body param assignment, add it to
+			// the `requestBodyParamNameMap` so we can remove it
+			// from `paramNames` later.
+			if m := requestBodyParamPattern.FindStringSubmatch(line); m != nil {
+				fmt.Println(m)
+				requestBodyParamNameMap[m[1]] = true
+				continue
 			}
 		}
 	}
