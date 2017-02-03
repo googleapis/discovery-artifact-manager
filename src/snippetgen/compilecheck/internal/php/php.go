@@ -101,13 +101,14 @@ func setup(testDir string) error {
 
 // Patterns to identify various types of lines in the snippets.
 const (
-	clientLine     = "$client ="
-	serviceLine    = "$service ="
-	methodCallLine = "$service->"
-	commentLine    = "//"
-	endTagLine     = "?>"
-	serviceVarName = "service"
-	clientVarName  = "client"
+	clientLine       = "$client ="
+	serviceLine      = "$service ="
+	methodCallLine   = "$service->"
+	commentLine      = "//"
+	endTagLine       = "?>"
+	serviceVarName   = "service"
+	clientVarName    = "client"
+	optParamsVarName = "optParams"
 )
 
 var requestBodyParamPattern = regexp.MustCompile(`\$postBody->\w+\(\$(\w+)\);`)
@@ -155,22 +156,18 @@ func readFile(fname string, opener filesys.Opener) (Sample, error) {
 		if inInit {
 			initLines = append(initLines, line)
 			if paramName := parseParamName(lineParts); paramName != "" &&
-				paramName != serviceVarName && paramName != clientVarName {
+				paramName != serviceVarName && paramName != clientVarName &&
+				paramName != optParamsVarName && !strings.Contains(paramName, "[") {
 				// Skip optional parameters and assignments to the `optParams` map.
-				if paramName == "optParams" || strings.HasPrefix(paramName, "optParams[") {
-					continue
-				}
-
 				paramNames = append(paramNames, paramName)
 			}
-			// If it's a request body param assignment, add it to
-			// the `requestBodyParamNameMap` so we can remove it
-			// from `paramNames` later.
-			if m := requestBodyParamPattern.FindStringSubmatch(line); m != nil {
-				fmt.Println(m)
-				requestBodyParamNameMap[m[1]] = true
-				continue
-			}
+		}
+		// If it's a request body param assignment, add it to
+		// the `requestBodyParamNameMap` so we can remove it
+		// from `paramNames` later.
+		if m := requestBodyParamPattern.FindStringSubmatch(line); m != nil {
+			fmt.Println(m)
+			requestBodyParamNameMap[m[1]] = true
 		}
 	}
 
