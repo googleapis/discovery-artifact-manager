@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"discovery-artifact-manager/common/environment"
@@ -100,14 +101,17 @@ func setup(testDir string) error {
 
 // Patterns to identify various types of lines in the snippets.
 const (
-	clientLine     = "$client ="
-	serviceLine    = "$service ="
-	methodCallLine = "$service->"
-	commentLine    = "//"
-	endTagLine     = "?>"
-	serviceVarName = "service"
-	clientVarName  = "client"
+	clientLine       = "$client ="
+	serviceLine      = "$service ="
+	methodCallLine   = "$service->"
+	commentLine      = "//"
+	endTagLine       = "?>"
+	serviceVarName   = "service"
+	clientVarName    = "client"
+	optParamsVarName = "optParams"
 )
+
+var requestBodyParamPattern = regexp.MustCompile(`\$postBody->\w+\(\$(\w+)\);`)
 
 // readFile reads a single code sample file `fname` using `opener`
 // Returns a Sample which presents the sample PHP code and the error (if any).
@@ -121,6 +125,7 @@ func readFile(fname string, opener filesys.Opener) (Sample, error) {
 	var initLines []string
 	var inInit bool
 	var paramNames, path []string
+	var requestBodyParamNameMap = make(map[string]bool)
 	var service, method string
 	scanner := bufio.NewScanner(file)
 
@@ -151,11 +156,29 @@ func readFile(fname string, opener filesys.Opener) (Sample, error) {
 		if inInit {
 			initLines = append(initLines, line)
 			if paramName := parseParamName(lineParts); paramName != "" &&
-				paramName != serviceVarName && paramName != clientVarName {
+				paramName != serviceVarName && paramName != clientVarName &&
+				paramName != optParamsVarName && !strings.Contains(paramName, "[") {
+				// Skip optional parameters and assignments to the `optParams` map.
 				paramNames = append(paramNames, paramName)
 			}
 		}
+		// If it's a request body param assignment, add it to
+		// the `requestBodyParamNameMap` so we can remove it
+		// from `paramNames` later.
+		if m := requestBodyParamPattern.FindStringSubmatch(line); m != nil {
+			fmt.Println(m)
+			requestBodyParamNameMap[m[1]] = true
+		}
 	}
+
+	// Remake the `paramNames` array to exclude variables that are only part of the request body.
+	var tmpParamNames []string
+	for i := 0; i < len(paramNames); i++ {
+		if !requestBodyParamNameMap[paramNames[i]] {
+			tmpParamNames = append(tmpParamNames, paramNames[i])
+		}
+	}
+	paramNames = tmpParamNames
 
 	methodSignature := MethodSignature{
 		Identifier: service + strings.Join(path, "") + method,
