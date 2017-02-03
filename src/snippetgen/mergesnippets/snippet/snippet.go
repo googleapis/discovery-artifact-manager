@@ -84,6 +84,11 @@ type Merger struct {
 // to the "gsutil" utility, and the locations of the primary,
 // secondary, and merged fragments, and the temporary directory to
 // use. Any errors are accumulated and can be checked with Error().
+//
+// TODO(vchudnov-g): Collapse all these parameters into a struct that
+// is passed in, or simply expose the corresponding fields in Merger
+// and have Init just do any needed validation, adjustments, and
+// initialization.
 func (mrg *Merger) Init(gsutilPath, primaryLocation, secondaryLocation, mergedLocation, tmpDir string,
 	simpleMetadata, mergeCurrentRevisionOnly, renameLanguages bool,
 	apiVersions []string) {
@@ -270,7 +275,7 @@ func (mrg *Merger) MergeFragments() {
 	mrg.validateMergedFragments()
 }
 
-// renameFragmentlanguages renames the languages used as keys in the
+// renameFragmentLanguages renames the languages used as keys in the
 // fragments to be Language.DisplayName, if provided, rather than
 // Language.Name.
 func (mrg *Merger) renameFragmentLanguages() {
