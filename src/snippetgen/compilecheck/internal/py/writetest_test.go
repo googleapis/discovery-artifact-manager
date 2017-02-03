@@ -43,6 +43,7 @@ body = {
 	got := mapFS["path/to/tst/check.py"]
 	want := `
 from __future__ import print_function
+import keyword
 import sys
 
 tests = []
@@ -60,12 +61,22 @@ def test_pubsub_v1_projects_subscriptions_create():
   }
 
 
-  if not (isinstance(name, basestring)):
-    print("In test_pubsub_v1_projects_subscriptions_create, expected name to be string, found %s" % type(name))
-    top_errors += 1
-  if not (isinstance(body, dict)):
-    print("In test_pubsub_v1_projects_subscriptions_create, expected body to be object, found %s" % type(body))
-    top_errors += 1
+  if keyword.iskeyword('name') or 'name' in dir(__builtins__):
+    if not (isinstance(name_, basestring)):
+      print("In test_pubsub_v1_projects_subscriptions_create, expected name_ to be string, found %s" % type(name_))
+      top_errors += 1
+  else:
+    if not (isinstance(name, basestring)):
+      print("In test_pubsub_v1_projects_subscriptions_create, expected name to be string, found %s" % type(name))
+      top_errors += 1
+  if keyword.iskeyword('body') or 'body' in dir(__builtins__):
+    if not (isinstance(body_, dict)):
+      print("In test_pubsub_v1_projects_subscriptions_create, expected body_ to be object, found %s" % type(body_))
+      top_errors += 1
+  else:
+    if not (isinstance(body, dict)):
+      print("In test_pubsub_v1_projects_subscriptions_create, expected body to be object, found %s" % type(body))
+      top_errors += 1
 
 tests.append(test_pubsub_v1_projects_subscriptions_create)
 
