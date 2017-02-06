@@ -3,11 +3,13 @@ package metadata
 
 import "time"
 
-// Language contains details about a programming language:
-// its name, filename extension, and whether it is one of the required snippet languages.
+// Language contains details about a programming language: its name,
+// its display name (non-empty only if it differs from its name), its
+// filename extension, and whether it is one of the required snippet
+// languages.
 type Language struct {
-	Name, Ext string
-	Required  bool
+	Name, DisplayName, Ext string
+	Required               bool
 }
 
 const (
@@ -56,22 +58,22 @@ var (
 	// after merging, but bear in mind we may not have any snippets
 	// for a language at all.
 	AllowedLanguages = [...]Language{
-		{"Dart", "dart", false},
-		{"Go", "go", false},
-		{"Google Web Toolkit", "gwt", false},
-		{"Java", "java", false},
-		{"JavaScript", "js", false},
-		{".NET", "cs", false},
-		{"Node.js", "njs", false},
-		{"Objective-C", "m", false},
-		{"PHP", "php", false},
-		{"Python", "py", false},
-		{"Ruby", "rb", false},
+		{"Dart", "", "dart", false},
+		{"Go", "", "go", false},
+		{"Google Web Toolkit", "", "gwt", false},
+		{"Java", "", "java", false},
+		{"JavaScript", "Web", "js", false},
+		{".NET", "C#", "cs", false},
+		{"Node.js", "", "njs", false},
+		{"Objective-C", "", "m", false},
+		{"PHP", "", "php", false},
+		{"Python", "", "py", false},
+		{"Ruby", "", "rb", false},
 		FragmentLanguage,
 	}
 
 	// FragmentLanguage is the pseudo-language used for storing code fragments in GCS.
-	FragmentLanguage = Language{"Code Fragment", "json", false}
+	FragmentLanguage = Language{"Code Fragment", "", "json", false}
 
 	// RequiredLanguages contains languages that must be present in the published snippets.
 	// The slice is not guaranteed to be in any order.
