@@ -44,4 +44,12 @@ git push origin ${LOCAL_BRANCH}:${REVIEW_BRANCH}
 
 1. On Github, issue a Pull Request against the `master` branch.
 
+# Updating local discovery doc cache
 
+To aid hermetic testing of client libraries and samples (avoiding synchronization issues), the `discoveries` directory hosts a local cache of discovery docs from API explorer. This cache may be updated from current live versions by running
+
+``` shell
+./src/main/updatedisco/updatedisco
+```
+
+from any subdirectory. **This cache is not yet used for testing by other tools.**
