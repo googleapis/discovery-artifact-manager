@@ -1,7 +1,7 @@
 # Introduction
 
 The Discovery Artifact Manager is intended to facilitate testing, publishing,
-and synchronization of Toolkit, discovery docs from API explorer, and discovery
+and synchronization of Toolkit, Discovery docs from the Discovery service, and Discovery
 based Google client libraries.
 
 # Local machine setup
@@ -44,9 +44,9 @@ git push origin ${LOCAL_BRANCH}:${REVIEW_BRANCH}
 
 1. On Github, issue a Pull Request against the `master` branch.
 
-# Updating local discovery doc cache
+# Updating local Discovery doc cache
 
-To aid hermetic testing of client libraries and samples (avoiding synchronization issues), the `discoveries` directory hosts a local cache of discovery docs from API explorer. This cache may be updated from current live versions by running
+To aid hermetic testing of client libraries and samples (avoiding synchronization issues), the `discoveries` directory hosts a local cache of Discovery docs from the Discovery service. This cache may be updated from current live versions by running
 
 ``` shell
 ./src/main/updatedisco/updatedisco
