@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"sync"
 
 	"discovery-artifact-manager/common/environment"
 )
@@ -60,14 +61,25 @@ func UpdateDiscos() error {
 	}
 
 	fmt.Println(fmt.Sprintf("Updating local Discovery docs in %v:", discoPath))
-	var failed []apiInfo
 	// Make Discovery doc file permissions like parent directory (no execute)
 	perm &= 0666
+	var update sync.WaitGroup
+	failedc := make(chan apiInfo, len(index.Items))
 	for _, api := range index.Items {
-		if err := UpdateAPI(api, discoPath, perm); err != nil {
-			failed = append(failed, api)
-			fmt.Println(err)
-		}
+		update.Add(1)
+		go func(api apiInfo) {
+			defer update.Done()
+			if err := UpdateAPI(api, discoPath, perm); err != nil {
+				failedc <- api
+				fmt.Println(err)
+			}
+		}(api)
+	}
+	update.Wait()
+	close(failedc)
+	var failed []apiInfo
+	for api := range failedc {
+		failed = append(failed, api)
 	}
 	if len(failed) > 0 {
 		return errors.New(fmt.Sprintf("Error updating some APIs: %v", failed))
