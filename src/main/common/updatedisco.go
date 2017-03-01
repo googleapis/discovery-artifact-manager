@@ -2,7 +2,6 @@ package common
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -12,6 +11,7 @@ import (
 	"sync"
 
 	"discovery-artifact-manager/common/environment"
+	"discovery-artifact-manager/common/errorlist"
 )
 
 // discoURL specifies a URL for the live Discovery service index.
@@ -64,27 +64,24 @@ func UpdateDiscos() error {
 	// Make Discovery doc file permissions like parent directory (no execute)
 	perm &= 0666
 	var update sync.WaitGroup
-	failedc := make(chan apiInfo, len(index.Items))
+	errc := make(chan error, len(index.Items))
 	for _, api := range index.Items {
 		update.Add(1)
 		go func(api apiInfo) {
 			defer update.Done()
 			if err := UpdateAPI(api, discoPath, perm); err != nil {
-				failedc <- api
 				fmt.Println(err)
+				errc <- fmt.Errorf("Error updating %v %v: %v", api.Name, api.Version, err)
 			}
 		}(api)
 	}
 	update.Wait()
-	close(failedc)
-	var failed []apiInfo
-	for api := range failedc {
-		failed = append(failed, api)
+	close(errc)
+	var errs errorlist.Errors
+	for err := range errc {
+		errs.Add(err)
 	}
-	if len(failed) > 0 {
-		return errors.New(fmt.Sprintf("Error updating some APIs: %v", failed))
-	}
-	return nil
+	return errs.Error()
 }
 
 // UpdateAPI updates the local Discovery doc file for an API indexed by the live Discovery service.
@@ -102,6 +99,7 @@ func UpdateAPI(api apiInfo, discoPath string, perm os.FileMode) error {
 		return fmt.Errorf("Error creating local discovery doc file: %v", filename)
 	}
 	defer disco.Close()
+
 	if _, err := io.Copy(disco, response.Body); err != nil {
 		return fmt.Errorf("Error writing local Discovery doc file: %v", filename)
 	}
