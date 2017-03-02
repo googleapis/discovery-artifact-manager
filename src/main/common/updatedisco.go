@@ -21,8 +21,6 @@ type apiInfo struct {
 	Name, Version, DiscoveryRestUrl string
 }
 
-type files map[string]bool
-
 // UpdateDiscos updates local Discovery doc files for all APIs indexed by the live Discovery
 // service, in a top-level directory 'discoveries', which must exist.
 func UpdateDiscos() error {
@@ -35,13 +33,9 @@ func UpdateDiscos() error {
 	if os.IsNotExist(err) {
 		return fmt.Errorf("Error finding path for Discovery docs: %v", discoPath)
 	}
-	olds, err := ioutil.ReadDir(discoPath)
+	previous, err := ioutil.ReadDir(discoPath)
 	if err != nil {
 		return fmt.Errorf("Error reading path for Discovery docs: %v", discoPath)
-	}
-	old := make(map[string]bool, len(olds))
-	for _, file := range olds {
-		old[file.Name()] = true
 	}
 
 	fmt.Printf("Fetching Discovery doc index from %v ...\n", discoURL)
@@ -62,6 +56,7 @@ func UpdateDiscos() error {
 	if err := json.Unmarshal(body, &index); err != nil {
 		return fmt.Errorf("Error parsing Discovery doc index: %v", err)
 	}
+	size := len(index.Items)
 
 	fmt.Printf("Updating local Discovery docs in %v:\n", discoPath)
 	// Make Discovery doc file permissions like parent directory (no execute)
@@ -69,7 +64,7 @@ func UpdateDiscos() error {
 
 	var collect sync.WaitGroup
 	var errs errorlist.Errors
-	errc := make(chan error, len(index.Items))
+	errc := make(chan error, size)
 	collect.Add(1)
 	go func() {
 		defer collect.Done()
@@ -79,12 +74,13 @@ func UpdateDiscos() error {
 		}
 	}()
 
-	newc := make(chan string, len(index.Items))
+	updated := make(map[string]bool, size)
+	updatec := make(chan string, size)
 	collect.Add(1)
 	go func() {
 		defer collect.Done()
-		for new := range newc {
-			delete(old, new)
+		for file := range updatec {
+			updated[file] = true
 		}
 	}()
 
@@ -93,35 +89,39 @@ func UpdateDiscos() error {
 		update.Add(1)
 		go func(api apiInfo) {
 			defer update.Done()
-			if err := UpdateAPI(api, discoPath, perm, newc); err != nil {
+			if err := UpdateAPI(api, discoPath, perm, updatec); err != nil {
 				errc <- fmt.Errorf("Error updating %v %v: %v", api.Name, api.Version, err)
 			}
 		}(api)
 	}
 	update.Wait()
 	close(errc)
-	close(newc)
+	close(updatec)
 	collect.Wait()
-	for filename := range old {
-		filepath := path.Join(discoPath, filename)
-		if err := os.Remove(filepath); err != nil {
-			errs.Add(fmt.Errorf("Error deleting expired Discovery doc %v: %v", filepath, err))
+	for _, file := range previous {
+		filename := file.Name()
+		if !updated[filename] {
+			filepath := path.Join(discoPath, filename)
+			if err := os.Remove(filepath); err != nil {
+				errs.Add(fmt.Errorf("Error deleting expired Discovery doc %v: %v", filepath, err))
+			}
 		}
 	}
 	return errs.Error()
 }
 
-// UpdateAPI updates the local Discovery doc file for an API indexed by the live Discovery service.
-func UpdateAPI(api apiInfo, discoPath string, perm os.FileMode, newc chan string) error {
+// UpdateAPI updates the local Discovery doc file for an API indexed by the live Discovery service,
+// sending the intended file name to a channel regardless of any error in the update.
+func UpdateAPI(api apiInfo, discoPath string, perm os.FileMode, updatec chan string) error {
 	filename := api.Name + "." + api.Version + ".json"
-	newc <- filename
+	updatec <- filename
 	filepath := path.Join(discoPath, filename)
 
-	disco, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE, perm)
+	file, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE, perm)
 	if err != nil {
 		return fmt.Errorf("Error creating local discovery doc file: %v", filepath)
 	}
-	defer disco.Close()
+	defer file.Close()
 
 	fmt.Printf("Updating API: %v %v ...\n", api.Name, api.Version)
 	response, err := http.Get(api.DiscoveryRestUrl)
@@ -130,7 +130,7 @@ func UpdateAPI(api apiInfo, discoPath string, perm os.FileMode, newc chan string
 	}
 	defer response.Body.Close()
 
-	if _, err := io.Copy(disco, response.Body); err != nil {
+	if _, err := io.Copy(file, response.Body); err != nil {
 		return fmt.Errorf("Error writing local Discovery doc file: %v", filepath)
 	}
 	return nil
