@@ -64,22 +64,22 @@ func UpdateDiscos() error {
 
 	var collect sync.WaitGroup
 	var errs errorlist.Errors
-	errc := make(chan error, size)
+	errChan := make(chan error, size)
 	collect.Add(1)
 	go func() {
 		defer collect.Done()
-		for err := range errc {
+		for err := range errChan {
 			fmt.Println(err)
 			errs.Add(err)
 		}
 	}()
 
 	updated := make(map[string]bool, size)
-	updatec := make(chan string, size)
+	updateChan := make(chan string, size)
 	collect.Add(1)
 	go func() {
 		defer collect.Done()
-		for file := range updatec {
+		for file := range updateChan {
 			updated[file] = true
 		}
 	}()
@@ -89,14 +89,14 @@ func UpdateDiscos() error {
 		update.Add(1)
 		go func(api apiInfo) {
 			defer update.Done()
-			if err := UpdateAPI(api, discoPath, perm, updatec); err != nil {
-				errc <- fmt.Errorf("Error updating %v %v: %v", api.Name, api.Version, err)
+			if err := UpdateAPI(api, discoPath, perm, updateChan); err != nil {
+				errChan <- fmt.Errorf("Error updating %v %v: %v", api.Name, api.Version, err)
 			}
 		}(api)
 	}
 	update.Wait()
-	close(errc)
-	close(updatec)
+	close(errChan)
+	close(updateChan)
 	collect.Wait()
 	for _, file := range previous {
 		filename := file.Name()
@@ -112,9 +112,9 @@ func UpdateDiscos() error {
 
 // UpdateAPI updates the local Discovery doc file for an API indexed by the live Discovery service,
 // sending the intended file name to a channel regardless of any error in the update.
-func UpdateAPI(api apiInfo, discoPath string, perm os.FileMode, updatec chan string) error {
+func UpdateAPI(api apiInfo, discoPath string, perm os.FileMode, updateChan chan string) error {
 	filename := api.Name + "." + api.Version + ".json"
-	updatec <- filename
+	updateChan <- filename
 	filepath := path.Join(discoPath, filename)
 
 	file, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE, perm)
