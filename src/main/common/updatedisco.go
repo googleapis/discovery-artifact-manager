@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"reflect"
 	"sync"
 
 	"discovery-artifact-manager/common/environment"
@@ -112,26 +113,50 @@ func UpdateDiscos() error {
 
 // UpdateAPI updates the local Discovery doc file for an API indexed by the live Discovery service,
 // sending the intended file name to a channel regardless of any error in the update.
+//
+// To avoid unnecessary updates due to nondeterministic JSON field ordering from live Discovery docs
+// for some APIs, UpdateAPI updates only files with meaningful changes, as determined by deep
+// equality of parsed data structures.
 func UpdateAPI(api apiInfo, discoPath string, perm os.FileMode, updateChan chan string) error {
+	fmt.Printf("Updating API: %v %v ...\n", api.Name, api.Version)
 	filename := api.Name + "." + api.Version + ".json"
 	updateChan <- filename
 	filepath := path.Join(discoPath, filename)
 
-	file, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE, perm)
+	file, err := os.OpenFile(filepath, os.O_RDWR|os.O_CREATE, perm)
 	if err != nil {
-		return fmt.Errorf("Error creating local discovery doc file: %v", filepath)
+		return fmt.Errorf("Error opening local Discovery doc file: %v", filepath)
 	}
 	defer file.Close()
+	var oldDisco interface{}
+	if err := json.NewDecoder(file).Decode(&oldDisco); err != nil && err != io.EOF {
+		return fmt.Errorf("Error parsing existing Discovery doc file: %v", filepath)
+	}
 
-	fmt.Printf("Updating API: %v %v ...\n", api.Name, api.Version)
 	response, err := http.Get(api.DiscoveryRestUrl)
 	if err != nil {
 		return fmt.Errorf("Error downloading Discovery doc from %v: %v", api.DiscoveryRestUrl, err)
 	}
 	defer response.Body.Close()
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return fmt.Errorf("Error reading Discovery doc from %v: %v", api.DiscoveryRestUrl, err)
+	}
+	var newDisco interface{}
+	if err := json.Unmarshal(body, &newDisco); err != nil {
+		return fmt.Errorf("Error parsing Discovery doc from %v: %v", api.DiscoveryRestUrl, err)
+	}
 
-	if _, err := io.Copy(file, response.Body); err != nil {
-		return fmt.Errorf("Error writing local Discovery doc file: %v", filepath)
+	if !reflect.DeepEqual(oldDisco, newDisco) {
+		if err := file.Truncate(0); err != nil {
+			return fmt.Errorf("Error erasing local Discovery doc file: %v", filepath)
+		}
+		if _, err := file.Seek(0, 0); err != nil {
+			return fmt.Errorf("Error initializing local Discovery doc file: %v", filepath)
+		}
+		if _, err := file.Write(body); err != nil {
+			return fmt.Errorf("Error writing local Discovery doc file: %v", filepath)
+		}
 	}
 	return nil
 }
