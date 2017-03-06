@@ -129,6 +129,7 @@ func UpdateAPI(api apiInfo, discoPath string, perm os.FileMode, updateChan chan 
 	}
 	defer file.Close()
 	var oldDisco map[string]interface{}
+	// With no existing local Discovery doc file, oldDisco remains nil
 	if err := json.NewDecoder(file).Decode(&oldDisco); err != nil && err != io.EOF {
 		return fmt.Errorf("Error parsing existing Discovery doc file: %v", filepath)
 	}
@@ -147,7 +148,7 @@ func UpdateAPI(api apiInfo, discoPath string, perm os.FileMode, updateChan chan 
 		return fmt.Errorf("Error parsing Discovery doc from %v: %v", api.DiscoveryRestUrl, err)
 	}
 
-	if !sameAPI(oldDisco, newDisco) {
+	if oldDisco == nil || !sameAPI(oldDisco, newDisco) {
 		if err := file.Truncate(0); err != nil {
 			return fmt.Errorf("Error erasing local Discovery doc file: %v", filepath)
 		}
