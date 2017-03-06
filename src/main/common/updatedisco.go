@@ -116,7 +116,7 @@ func UpdateDiscos() error {
 //
 // To avoid unnecessary updates due to nondeterministic JSON field ordering from live Discovery docs
 // for some APIs, UpdateAPI updates only files with meaningful changes, as determined by deep
-// equality of parsed data structures.
+// equality of maps parsed from JSON, ignoring changes to top-level `etag` and `revision` fields.
 func UpdateAPI(api apiInfo, discoPath string, perm os.FileMode, updateChan chan string) error {
 	fmt.Printf("Updating API: %v %v ...\n", api.Name, api.Version)
 	filename := api.Name + "." + api.Version + ".json"
@@ -128,7 +128,7 @@ func UpdateAPI(api apiInfo, discoPath string, perm os.FileMode, updateChan chan 
 		return fmt.Errorf("Error opening local Discovery doc file: %v", filepath)
 	}
 	defer file.Close()
-	var oldDisco interface{}
+	var oldDisco map[string]interface{}
 	if err := json.NewDecoder(file).Decode(&oldDisco); err != nil && err != io.EOF {
 		return fmt.Errorf("Error parsing existing Discovery doc file: %v", filepath)
 	}
@@ -142,12 +142,12 @@ func UpdateAPI(api apiInfo, discoPath string, perm os.FileMode, updateChan chan 
 	if err != nil {
 		return fmt.Errorf("Error reading Discovery doc from %v: %v", api.DiscoveryRestUrl, err)
 	}
-	var newDisco interface{}
+	var newDisco map[string]interface{}
 	if err := json.Unmarshal(body, &newDisco); err != nil {
 		return fmt.Errorf("Error parsing Discovery doc from %v: %v", api.DiscoveryRestUrl, err)
 	}
 
-	if !reflect.DeepEqual(oldDisco, newDisco) {
+	if !sameAPI(oldDisco, newDisco) {
 		if err := file.Truncate(0); err != nil {
 			return fmt.Errorf("Error erasing local Discovery doc file: %v", filepath)
 		}
@@ -159,4 +159,20 @@ func UpdateAPI(api apiInfo, discoPath string, perm os.FileMode, updateChan chan 
 		}
 	}
 	return nil
+}
+
+func sameAPI(discoA, discoB map[string]interface{}) bool {
+	if len(discoA) != len(discoB) {
+		return false
+	}
+	for field, valueA := range discoA {
+		if field == "etag" || field == "revision" {
+			continue
+		}
+		valueB, inB := discoB[field]
+		if !inB || !reflect.DeepEqual(valueA, valueB) {
+			return false
+		}
+	}
+	return true
 }
