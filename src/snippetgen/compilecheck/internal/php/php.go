@@ -166,7 +166,6 @@ func readFile(fname string, opener filesys.Opener) (Sample, error) {
 		// the `requestBodyParamNameMap` so we can remove it
 		// from `paramNames` later.
 		if m := requestBodyParamPattern.FindStringSubmatch(line); m != nil {
-			fmt.Println(m)
 			requestBodyParamNameMap[m[1]] = true
 		}
 	}
