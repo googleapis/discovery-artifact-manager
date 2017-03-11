@@ -3,7 +3,6 @@ package common
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -19,7 +18,7 @@ import (
 const discoURL = "https://www.googleapis.com/discovery/v1/apis"
 
 type apiInfo struct {
-	Name, Version, DiscoveryRestUrl string
+	Name, Version, DiscoveryRestURL string
 }
 
 // UpdateDiscos updates local Discovery doc files for all APIs indexed by the live Discovery
@@ -34,7 +33,7 @@ func UpdateDiscos() error {
 	if os.IsNotExist(err) {
 		return fmt.Errorf("Error finding path for Discovery docs: %v", discoPath)
 	}
-	previous, err := ioutil.ReadDir(discoPath)
+	oldFiles, err := ioutil.ReadDir(discoPath)
 	if err != nil {
 		return fmt.Errorf("Error reading path for Discovery docs: %v", discoPath)
 	}
@@ -99,7 +98,7 @@ func UpdateDiscos() error {
 	close(errChan)
 	close(updateChan)
 	collect.Wait()
-	for _, file := range previous {
+	for _, file := range oldFiles {
 		filename := file.Name()
 		if !updated[filename] {
 			filepath := path.Join(discoPath, filename)
@@ -123,55 +122,76 @@ func UpdateAPI(api apiInfo, discoPath string, perm os.FileMode, updateChan chan 
 	updateChan <- filename
 	filepath := path.Join(discoPath, filename)
 
-	file, err := os.OpenFile(filepath, os.O_RDWR|os.O_CREATE, perm)
+	oldDisco, err := discoFromFile(filepath)
 	if err != nil {
-		return fmt.Errorf("Error opening local Discovery doc file: %v", filepath)
+		return err
 	}
-	defer file.Close()
-	var oldDisco map[string]interface{}
-	// With no existing local Discovery doc file, oldDisco remains nil
-	if err := json.NewDecoder(file).Decode(&oldDisco); err != nil && err != io.EOF {
-		return fmt.Errorf("Error parsing existing Discovery doc file: %v", filepath)
+	oldAPI, err := parseAPI(oldDisco)
+	if err != nil {
+		return fmt.Errorf("Error parsing Discovery doc from %v: %v", filepath, err)
 	}
 
-	response, err := http.Get(api.DiscoveryRestUrl)
+	newDisco, err := discoFromURL(api.DiscoveryRestURL)
 	if err != nil {
-		return fmt.Errorf("Error downloading Discovery doc from %v: %v", api.DiscoveryRestUrl, err)
+		return err
 	}
-	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
+	newAPI, err := parseAPI(newDisco)
 	if err != nil {
-		return fmt.Errorf("Error reading Discovery doc from %v: %v", api.DiscoveryRestUrl, err)
-	}
-	var newDisco map[string]interface{}
-	if err := json.Unmarshal(body, &newDisco); err != nil {
-		return fmt.Errorf("Error parsing Discovery doc from %v: %v", api.DiscoveryRestUrl, err)
+		return fmt.Errorf("Error parsing Discovery doc from %v: %v", api.DiscoveryRestURL, err)
 	}
 
-	if oldDisco == nil || !sameAPI(oldDisco, newDisco) {
-		if err := file.Truncate(0); err != nil {
-			return fmt.Errorf("Error erasing local Discovery doc file: %v", filepath)
-		}
-		if _, err := file.Seek(0, 0); err != nil {
-			return fmt.Errorf("Error initializing local Discovery doc file: %v", filepath)
-		}
-		if _, err := file.Write(body); err != nil {
-			return fmt.Errorf("Error writing local Discovery doc file: %v", filepath)
+	if oldAPI == nil || !sameAPI(oldAPI, newAPI) {
+		if err := ioutil.WriteFile(filepath, newDisco, perm); err != nil {
+			return fmt.Errorf("Error writing Discovery doc to %v: %v", filepath, err)
 		}
 	}
 	return nil
 }
 
-func sameAPI(discoA, discoB map[string]interface{}) bool {
-	if len(discoA) != len(discoB) {
+func discoFromFile(filepath string) ([]byte, error) {
+	if _, err := os.Stat(filepath); os.IsNotExist(err) {
+		return nil, nil
+	}
+	disco, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading Discovery doc from %v: %v", filepath, err)
+	}
+	return disco, nil
+}
+
+func discoFromURL(discoURL string) ([]byte, error) {
+	response, err := http.Get(discoURL)
+	if err != nil {
+		return nil, fmt.Errorf("Error downloading Discovery doc from %v: %v", discoURL, err)
+	}
+	defer response.Body.Close()
+	disco, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Error reading Discovery doc from %v: %v", discoURL, err)
+	}
+	return disco, nil
+}
+
+func parseAPI(disco []byte) (map[string]interface{}, error) {
+	if disco == nil {
+		return nil, nil
+	}
+	var api map[string]interface{}
+	if err := json.Unmarshal(disco, &api); err != nil {
+		return nil, err
+	}
+	return api, nil
+}
+
+// sameAPI returns true if the given maps, representing APIs parsed from Discovery docs (and assumed
+// non-nil), are deeply equal, ignoring differences in top-level `etag` and `revision` fields.
+func sameAPI(apiA, apiB map[string]interface{}) bool {
+	if len(apiA) != len(apiB) {
 		return false
 	}
-	for field, valueA := range discoA {
-		if field == "etag" || field == "revision" {
-			continue
-		}
-		valueB, inB := discoB[field]
-		if !inB || !reflect.DeepEqual(valueA, valueB) {
+	for field, valueA := range apiA {
+		valueB, inB := apiB[field]
+		if !(inB && reflect.DeepEqual(valueA, valueB) || field == "etag" || field == "revision") {
 			return false
 		}
 	}
