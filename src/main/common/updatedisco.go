@@ -21,49 +21,80 @@ type apiInfo struct {
 	Name, Version, DiscoveryRestURL string
 }
 
+type apiIndex struct {
+	Items []apiInfo
+}
+
 // UpdateDiscos updates local Discovery doc files for all APIs indexed by the live Discovery
 // service, in a top-level directory 'discoveries', which must exist.
 func UpdateDiscos() error {
-	root, err := environment.RepoRoot()
+	discoPath, discoDir, discoFiles, err := readDiscoCache()
 	if err != nil {
-		return fmt.Errorf("Error finding repository root directory: %v", err)
-	}
-	discoPath := path.Join(root, "discoveries")
-	info, err := os.Stat(discoPath)
-	if os.IsNotExist(err) {
-		return fmt.Errorf("Error finding path for Discovery docs: %v", discoPath)
-	}
-	oldFiles, err := ioutil.ReadDir(discoPath)
-	if err != nil {
-		return fmt.Errorf("Error reading path for Discovery docs: %v", discoPath)
+		return err
 	}
 
+	index, err := readDiscoIndex()
+	if err != nil {
+		return err
+	}
+
+	live, errs := writeDiscoCache(index, discoPath, discoDir)
+
+	cleanDiscoCache(discoPath, discoFiles, live, &errs)
+
+	return errs.Error()
+}
+
+func readDiscoCache() (discoPath string, discoDir os.FileInfo, discoFiles []os.FileInfo, err error) {
+	root, err := environment.RepoRoot()
+	if err != nil {
+		err = fmt.Errorf("Error finding repository root directory: %v", err)
+		return
+	}
+	discoPath = path.Join(root, "discoveries")
+	discoDir, err = os.Stat(discoPath)
+	if os.IsNotExist(err) {
+		err = fmt.Errorf("Error finding path for Discovery docs: %v", discoPath)
+		return
+	}
+	discoFiles, err = ioutil.ReadDir(discoPath)
+	if err != nil {
+		err = fmt.Errorf("Error reading path for Discovery docs: %v", discoPath)
+	}
+	return
+}
+
+func readDiscoIndex() (index *apiIndex, err error) {
 	fmt.Printf("Fetching Discovery doc index from %v ...\n", discoURL)
 	response, err := http.Get(discoURL)
 	if err != nil {
-		return fmt.Errorf("Error fetching Discovery doc index: %v", err)
+		err = fmt.Errorf("Error fetching Discovery doc index: %v", err)
+		return
 	}
 	defer response.Body.Close()
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return fmt.Errorf("Error reading Discovery doc index: %v", err)
+		err = fmt.Errorf("Error reading Discovery doc index: %v", err)
+		return
 	}
 
 	fmt.Println("Parsing Discovery doc index ...")
-	var index struct {
-		Items []apiInfo
+	index = &apiIndex{}
+	err = json.Unmarshal(body, index)
+	if err != nil {
+		err = fmt.Errorf("Error parsing Discovery doc index: %v", err)
+		return
 	}
-	if err := json.Unmarshal(body, &index); err != nil {
-		return fmt.Errorf("Error parsing Discovery doc index: %v", err)
-	}
-	size := len(index.Items)
+	return
+}
 
+func writeDiscoCache(index *apiIndex, discoPath string, discoDir os.FileInfo) (live map[string]bool, errs errorlist.Errors) {
 	fmt.Printf("Updating local Discovery docs in %v:\n", discoPath)
+	size := len(index.Items)
 	// Make Discovery doc file permissions like parent directory (no execute)
-	perm := info.Mode() & 0666
+	perm := discoDir.Mode() & 0666
 
 	var collect sync.WaitGroup
-	var errs errorlist.Errors
 	errChan := make(chan error, size)
 	collect.Add(1)
 	go func() {
@@ -74,13 +105,13 @@ func UpdateDiscos() error {
 		}
 	}()
 
-	updated := make(map[string]bool, size)
+	live = make(map[string]bool, size)
 	updateChan := make(chan string, size)
 	collect.Add(1)
 	go func() {
 		defer collect.Done()
 		for file := range updateChan {
-			updated[file] = true
+			live[file] = true
 		}
 	}()
 
@@ -98,16 +129,19 @@ func UpdateDiscos() error {
 	close(errChan)
 	close(updateChan)
 	collect.Wait()
-	for _, file := range oldFiles {
+	return
+}
+
+func cleanDiscoCache(discoPath string, discoFiles []os.FileInfo, live map[string]bool, errs *errorlist.Errors) {
+	for _, file := range discoFiles {
 		filename := file.Name()
-		if !updated[filename] {
+		if !live[filename] {
 			filepath := path.Join(discoPath, filename)
 			if err := os.Remove(filepath); err != nil {
 				errs.Add(fmt.Errorf("Error deleting expired Discovery doc %v: %v", filepath, err))
 			}
 		}
 	}
-	return errs.Error()
 }
 
 // UpdateAPI updates the local Discovery doc file for an API indexed by the live Discovery service,
