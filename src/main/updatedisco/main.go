@@ -12,7 +12,7 @@ import (
 
 func main() {
 	if err := common.UpdateDiscos(); err != nil {
-		fmt.Println("Error updating some APIs:")
+		fmt.Println("Error updating APIs:")
 		fmt.Println(err)
 	}
 }
