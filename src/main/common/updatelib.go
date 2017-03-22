@@ -17,7 +17,8 @@ import (
 // constants are specific to machine-independent types.)
 const MaxInt = int(^uint(0) >> 1)
 
-// Major, Minor, and Patch define group indices of corresponding version number components in versionNumber.
+// Major, Minor, and Patch define group indices of corresponding version number components in
+// versionNumber. Indices are one-based to match subgroup indices in regexp capture.
 const (
 	_ = iota
 	Major
@@ -53,8 +54,9 @@ func Bump(versioned string, component int) (bumped string, err error) {
 	return
 }
 
-// UpdateFile rewrites the named file by applying the given function to its contents, returning the
-// modified contents along with any auxiliary information.
+// UpdateFile rewrites the named file by applying the given update function to its contents,
+// returning the modified contents along with any auxiliary information returned by the update
+// function.
 func UpdateFile(name string, update func([]byte) ([]byte, interface{}, error)) (info interface{}, err error) {
 	stat, err := os.Stat(name)
 	if err != nil {
