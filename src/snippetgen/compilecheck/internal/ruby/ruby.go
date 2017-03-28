@@ -25,8 +25,8 @@ var (
 	checkFileName = "check.rb"
 
 	// performCallRegex matches the first line of the method call.
-	// ex: "result = service.foo_bar()"
-	performCallRegex = regexp.MustCompile(`\s([a-z0-9_]+ = )?[a-z0-9_]+\.[a-z0-9_]+\(.*\)`)
+	// ex: "result = service.foo_bar()" or "items = service.fetch_all"
+	performCallRegex = regexp.MustCompile(`\s([a-z0-9_]+ = )?[a-z0-9_]+\.([a-z0-9_]+\(.*\)|fetch_all)`)
 )
 
 type checkContext struct {

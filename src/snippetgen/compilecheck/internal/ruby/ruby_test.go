@@ -74,7 +74,20 @@ resource = Pubsub::AcknowledgeRequest.new
 			},
 			content: `init code here
 
-  foos = service.fetch_all()
+foos = service.fetch_all
+`,
+			initText: "init code here",
+		},
+		{
+			path: "/path/to/foo/v2/20151103/bar.zip.zap.frag.rb",
+			id: langutil.MethodID{
+				APIName:      "foo",
+				APIVersion:   "v2",
+				FragmentName: "bar.zip.zap",
+			},
+			content: `init code here
+
+foos = service.fetch_all()
 `,
 			initText: "init code here",
 		},
