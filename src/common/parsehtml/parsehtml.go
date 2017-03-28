@@ -3,7 +3,6 @@
 package parsehtml
 
 import (
-	"fmt"
 	"strings"
 
 	"golang.org/x/net/html"
@@ -22,13 +21,15 @@ type Attribute struct {
 // NodeP represents a boolean predicate function on HTML nodes.
 type NodeP func(Node) bool
 
-// Text returns contents of first HTML text child node of the given node.
-func (node Node) Text() (string, error) {
-	c := node.FindChildNode(IsText)
-	if c.Node == nil {
-		return "", fmt.Errorf("found no text under HTML node: %v", node)
-	}
-	return c.Data, nil
+// Text returns the concatenation of the contents of all HTML text child nodes
+// of the given node.
+func (node Node) Text() string {
+	data := ""
+	node.OnEachChildNode(IsText, func(n Node) error {
+		data = data + n.Data
+		return nil
+	})
+	return data
 }
 
 // IsText returns true if the given HTML node is a text node.

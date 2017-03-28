@@ -136,10 +136,7 @@ func parseFile(ctx *checkContext, apiName, apiVersion, filename string) error {
 		if signature.Node == nil {
 			return fmt.Errorf("method signature not found: %v", methodDiv)
 		}
-		signatureText, err := signature.Text()
-		if err != nil {
-			return err
-		}
+		signatureText := signature.Text()
 		signatureMethodParams := signaturePattern.FindStringSubmatch(signatureText)
 		if signatureMethodParams == nil {
 			return fmt.Errorf("method signature has unexpected form: %v", signatureText)
@@ -155,10 +152,7 @@ func parseFile(ctx *checkContext, apiName, apiVersion, filename string) error {
 			APIVersion:   apiVersion,
 			FragmentName: prefix + methodName,
 		}
-		description, err := signature.FindNextNode(isDescription).Text()
-		if err != nil {
-			return err
-		}
+		description := signature.FindNextNode(isDescription).Text()
 		paramsSection := parsehtml.InBetween(description, paramsHeadPattern, returnsHeadPattern)
 		paramNameTypes := paramPattern.FindAllStringSubmatch(paramsSection, -1)
 		paramDefs := make([]langutil.MethodParam, len(paramNameTypes))
