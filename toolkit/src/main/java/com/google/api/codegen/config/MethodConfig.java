@@ -14,12 +14,13 @@
  */
 package com.google.api.codegen.config;
 
-import com.google.api.codegen.BundlingConfigProto;
+import com.google.api.codegen.BatchingConfigProto;
 import com.google.api.codegen.FlatteningConfigProto;
 import com.google.api.codegen.FlatteningGroupProto;
 import com.google.api.codegen.LongRunningConfigProto;
 import com.google.api.codegen.MethodConfigProto;
 import com.google.api.codegen.PageStreamingConfigProto;
+import com.google.api.codegen.ReleaseLevel;
 import com.google.api.codegen.ResourceNameTreatment;
 import com.google.api.codegen.SurfaceTreatmentProto;
 import com.google.api.codegen.VisibilityProto;
@@ -29,6 +30,7 @@ import com.google.api.tools.framework.model.DiagCollector;
 import com.google.api.tools.framework.model.Field;
 import com.google.api.tools.framework.model.MessageType;
 import com.google.api.tools.framework.model.Method;
+import com.google.api.tools.framework.model.Oneof;
 import com.google.api.tools.framework.model.SimpleLocation;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Strings;
@@ -71,7 +73,7 @@ public abstract class MethodConfig {
   public abstract ResourceNameTreatment getDefaultResourceNameTreatment();
 
   @Nullable
-  public abstract BundlingConfig getBundling();
+  public abstract BatchingConfig getBatching();
 
   public abstract boolean hasRequestObjectMethod();
 
@@ -83,6 +85,8 @@ public abstract class MethodConfig {
   public abstract String getRerouteToGrpcInterface();
 
   public abstract VisibilityConfig getVisibility();
+
+  public abstract ReleaseLevel getReleaseLevel();
 
   @Nullable
   public abstract LongRunningConfig getLongRunningConfig();
@@ -140,11 +144,11 @@ public abstract class MethodConfig {
       }
     }
 
-    BundlingConfig bundling = null;
-    if (!BundlingConfigProto.getDefaultInstance().equals(methodConfigProto.getBundling())) {
-      bundling =
-          BundlingConfig.createBundling(diagCollector, methodConfigProto.getBundling(), method);
-      if (bundling == null) {
+    BatchingConfig batching = null;
+    if (!BatchingConfigProto.getDefaultInstance().equals(methodConfigProto.getBatching())) {
+      batching =
+          BatchingConfig.createBatching(diagCollector, methodConfigProto.getBatching(), method);
+      if (batching == null) {
         error = true;
       }
     }
@@ -219,12 +223,16 @@ public abstract class MethodConfig {
         Strings.emptyToNull(methodConfigProto.getRerouteToGrpcInterface());
 
     VisibilityConfig visibility = VisibilityConfig.PUBLIC;
+    ReleaseLevel releaseLevel = ReleaseLevel.GA;
     for (SurfaceTreatmentProto treatment : methodConfigProto.getSurfaceTreatmentsList()) {
       if (!treatment.getIncludeLanguagesList().contains(language)) {
         continue;
       }
-      if (treatment.getVisibility() != VisibilityProto.UNSET) {
+      if (treatment.getVisibility() != VisibilityProto.UNSET_VISIBILITY) {
         visibility = VisibilityConfig.fromProto(treatment.getVisibility());
+      }
+      if (treatment.getReleaseLevel() != ReleaseLevel.UNSET_RELEASE_LEVEL) {
+        releaseLevel = treatment.getReleaseLevel();
       }
     }
 
@@ -252,12 +260,13 @@ public abstract class MethodConfig {
           requiredFieldConfigs,
           optionalFieldConfigs,
           defaultResourceNameTreatment,
-          bundling,
+          batching,
           hasRequestObjectMethod,
           fieldNamePatterns,
           sampleCodeInitFields,
           rerouteToGrpcInterface,
           visibility,
+          releaseLevel,
           longRunningConfig);
     }
   }
@@ -380,9 +389,9 @@ public abstract class MethodConfig {
     return getFlatteningConfigs() != null;
   }
 
-  /** Returns true if this method has bundling configured. */
-  public boolean isBundling() {
-    return getBundling() != null;
+  /** Returns true if this method has batching configured. */
+  public boolean isBatching() {
+    return getBatching() != null;
   }
 
   public boolean isLongRunningOperation() {
@@ -395,5 +404,19 @@ public abstract class MethodConfig {
 
   public Iterable<Field> getOptionalFields() {
     return FieldConfig.toFieldIterable(getOptionalFieldConfigs());
+  }
+
+  /** Return the list of "one of" instances associated with the fields. */
+  public Iterable<Oneof> getOneofs() {
+    ImmutableSet.Builder<Oneof> answer = ImmutableSet.builder();
+
+    for (Field field : getOptionalFields()) {
+      if (field.getOneof() == null) {
+        continue;
+      }
+      answer.add(field.getOneof());
+    }
+
+    return answer.build();
   }
 }

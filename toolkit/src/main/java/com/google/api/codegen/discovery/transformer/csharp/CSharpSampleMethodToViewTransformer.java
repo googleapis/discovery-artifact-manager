@@ -27,7 +27,7 @@ import com.google.api.codegen.discovery.viewmodel.SampleAuthView;
 import com.google.api.codegen.discovery.viewmodel.SampleFieldView;
 import com.google.api.codegen.discovery.viewmodel.SamplePageStreamingView;
 import com.google.api.codegen.discovery.viewmodel.SampleView;
-import com.google.api.codegen.transformer.StandardImportTypeTransformer;
+import com.google.api.codegen.transformer.StandardImportSectionTransformer;
 import com.google.api.codegen.util.Name;
 import com.google.api.codegen.util.SymbolTable;
 import com.google.api.codegen.util.TypedValue;
@@ -49,8 +49,8 @@ public class CSharpSampleMethodToViewTransformer implements SampleMethodToViewTr
 
   private static final String TEMPLATE_FILENAME = "csharp/sample.snip";
 
-  private final StandardImportTypeTransformer importTypeTransformer =
-      new StandardImportTypeTransformer();
+  private final StandardImportSectionTransformer importSectionTransformer =
+      new StandardImportSectionTransformer();
 
   @Override
   public ViewModel transform(Method method, SampleConfig sampleConfig) {
@@ -110,6 +110,8 @@ public class CSharpSampleMethodToViewTransformer implements SampleMethodToViewTr
       }
     }
 
+    // The page streaming view model is generated close to last to avoid taking naming precedence in
+    // the symbol table.
     if (methodInfo.isPageStreaming()) {
       builder.pageStreaming(createSamplePageStreamingView(context, symbolTable));
     }
@@ -152,7 +154,7 @@ public class CSharpSampleMethodToViewTransformer implements SampleMethodToViewTr
         .hasMediaDownload(methodInfo.hasMediaDownload())
         .dataNamespace(dataNamespace)
         .namespaceName(CSharpSampleNamer.getNamespaceName(config.apiCanonicalName()))
-        .imports(importTypeTransformer.generateImports(typeTable.getImports()))
+        .importSection(importSectionTransformer.generateImportSection(typeTable.getImports()))
         .build();
   }
 

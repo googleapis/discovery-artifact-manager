@@ -18,6 +18,7 @@ import com.google.api.codegen.InterfaceView;
 import com.google.api.codegen.config.ApiConfig;
 import com.google.api.codegen.metacode.InitCodeContext;
 import com.google.api.codegen.metacode.InitCodeContext.InitCodeOutputType;
+import com.google.api.codegen.transformer.DefaultFeatureConfig;
 import com.google.api.codegen.transformer.FeatureConfig;
 import com.google.api.codegen.transformer.FileHeaderTransformer;
 import com.google.api.codegen.transformer.InitCodeTransformer;
@@ -29,9 +30,11 @@ import com.google.api.codegen.transformer.SurfaceNamer;
 import com.google.api.codegen.transformer.SurfaceTransformerContext;
 import com.google.api.codegen.transformer.TestCaseTransformer;
 import com.google.api.codegen.util.SymbolTable;
-import com.google.api.codegen.util.testing.GoValueProducer;
+import com.google.api.codegen.util.testing.StandardValueProducer;
 import com.google.api.codegen.util.testing.TestValueGenerator;
+import com.google.api.codegen.util.testing.ValueProducer;
 import com.google.api.codegen.viewmodel.ClientMethodType;
+import com.google.api.codegen.viewmodel.ImportSectionView;
 import com.google.api.codegen.viewmodel.ViewModel;
 import com.google.api.codegen.viewmodel.testing.ClientTestClassView;
 import com.google.api.codegen.viewmodel.testing.MockCombinedView;
@@ -49,11 +52,13 @@ import java.util.List;
 public class GoGapicSurfaceTestTransformer implements ModelToViewTransformer {
   private static final String MOCK_SERVICE_TEMPLATE_FILE = "go/mock.snip";
 
-  private final GoValueProducer valueProducer = new GoValueProducer();
+  private final ValueProducer valueProducer = new StandardValueProducer();
+  private final GoImportSectionTransformer importSectionTransformer =
+      new GoImportSectionTransformer();
   private final FileHeaderTransformer fileHeaderTransformer =
-      new FileHeaderTransformer(new GoImportTransformer());
+      new FileHeaderTransformer(importSectionTransformer);
   private final MockServiceTransformer mockServiceTransformer = new MockServiceTransformer();
-  private final FeatureConfig featureConfig = new GoFeatureConfig();
+  private final FeatureConfig featureConfig = new DefaultFeatureConfig();
   private final TestValueGenerator valueGenerator = new TestValueGenerator(valueProducer);
   private final InitCodeTransformer initCodeTransformer = new InitCodeTransformer();
   private final TestCaseTransformer testCaseTransformer = new TestCaseTransformer(valueProducer);
@@ -96,7 +101,7 @@ public class GoGapicSurfaceTestTransformer implements ModelToViewTransformer {
               .apiSettingsClassName(
                   namer.getNotImplementedString(
                       "GoGapicSurfaceTestTransformer.generateMockServiceView - apiSettingsClassName"))
-              .apiClassName(namer.getApiWrapperClassName(service))
+              .apiClassName(namer.getApiWrapperClassName(context.getInterfaceConfig()))
               .name(
                   namer.getNotImplementedString(
                       "GoGapicSurfaceTestTransformer.generateMockServiceView - name"))
@@ -106,13 +111,14 @@ public class GoGapicSurfaceTestTransformer implements ModelToViewTransformer {
               .build());
     }
 
+    ImportSectionView importSection =
+        importSectionTransformer.generateImportSection(typeTable.getImports());
     return MockCombinedView.newBuilder()
         .outputPath(apiConfig.getPackageName() + File.separator + "mock_test.go")
         .serviceImpls(impls)
         .testClasses(testClasses)
         .templateFileName(MOCK_SERVICE_TEMPLATE_FILE)
-        .fileHeader(
-            fileHeaderTransformer.generateFileHeader(apiConfig, typeTable.getImports(), namer))
+        .fileHeader(fileHeaderTransformer.generateFileHeader(apiConfig, importSection, namer))
         .mockServices(mockServiceTransformer.createMockServices(namer, model, apiConfig))
         .build();
   }

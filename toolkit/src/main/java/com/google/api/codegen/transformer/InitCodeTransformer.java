@@ -34,6 +34,8 @@ import com.google.api.codegen.viewmodel.InitValueView;
 import com.google.api.codegen.viewmodel.ListInitCodeLineView;
 import com.google.api.codegen.viewmodel.MapEntryView;
 import com.google.api.codegen.viewmodel.MapInitCodeLineView;
+import com.google.api.codegen.viewmodel.OneofConfigView;
+import com.google.api.codegen.viewmodel.RepeatedResourceNameInitValueView;
 import com.google.api.codegen.viewmodel.ResourceNameInitValueView;
 import com.google.api.codegen.viewmodel.ResourceNameOneofInitValueView;
 import com.google.api.codegen.viewmodel.SimpleInitCodeLineView;
@@ -52,6 +54,16 @@ import java.util.Map;
  * view object which can be rendered by a template engine.
  */
 public class InitCodeTransformer {
+  private final ImportSectionTransformer importSectionTransformer;
+
+  public InitCodeTransformer() {
+    this(new StandardImportSectionTransformer());
+  }
+
+  public InitCodeTransformer(ImportSectionTransformer importSectionTransformer) {
+    this.importSectionTransformer = importSectionTransformer;
+  }
+
   /**
    * Generates initialization code from the given MethodTransformerContext and InitCodeContext
    * objects.
@@ -133,7 +145,7 @@ public class InitCodeTransformer {
       SingleResourceNameConfig resourceNameConfig =
           context.getSingleResourceNameConfig(fieldNamePattern.getValue());
       String apiWrapperClassName =
-          context.getNamer().getApiWrapperClassName(context.getInterface());
+          context.getNamer().getApiWrapperClassName(context.getInterfaceConfig());
       InitValueConfig initValueConfig =
           InitValueConfig.create(apiWrapperClassName, resourceNameConfig);
       mapBuilder.put(fieldNamePattern.getKey(), initValueConfig);
@@ -170,21 +182,21 @@ public class InitCodeTransformer {
       MethodTransformerContext context,
       Iterable<InitCodeNode> orderedItems,
       Iterable<InitCodeNode> argItems) {
-    StandardImportTypeTransformer importTypeTransformer = new StandardImportTypeTransformer();
     ModelTypeTable typeTable = context.getTypeTable();
     SurfaceNamer namer = context.getNamer();
 
     // Initialize the type table with the apiClassName since each sample will be using the
     // apiClass.
     typeTable.getAndSaveNicknameFor(
-        namer.getFullyQualifiedApiWrapperClassName(context.getInterface()));
+        namer.getFullyQualifiedApiWrapperClassName(context.getInterfaceConfig()));
 
     return InitCodeView.newBuilder()
         .lines(generateSurfaceInitCodeLines(context, orderedItems))
         .topLevelLines(generateSurfaceInitCodeLines(context, argItems))
         .fieldSettings(getFieldSettings(context, argItems))
-        .imports(importTypeTransformer.generateImports(typeTable.getImports()))
-        .apiFileName(namer.getServiceFileName(context.getInterface()))
+        .importSection(importSectionTransformer.generateImportSection(context, orderedItems))
+        .versionIndexFileImportName(namer.getVersionIndexFileImportName())
+        .apiFileName(namer.getServiceFileName(context.getInterfaceConfig()))
         .build();
   }
 
@@ -326,13 +338,17 @@ public class InitCodeTransformer {
     InitValueConfig initValueConfig = item.getInitValueConfig();
     FieldConfig fieldConfig = item.getFieldConfig();
 
-    if (context.getFeatureConfig().useResourceNameFormatOption(fieldConfig)
-        && !item.getType().isRepeated()) {
-      // For a repeated type, we want to use a SimpleInitValueView
+    if (context.getFeatureConfig().useResourceNameFormatOption(fieldConfig)) {
       if (!context.isFlattenedMethodContext()) {
         // In a non-flattened context, we always use the resource name type set on the message
         // instead of set on the flattened method
         fieldConfig = fieldConfig.getMessageFieldConfig();
+      }
+      if (item.getType().isRepeated()) {
+        return RepeatedResourceNameInitValueView.newBuilder()
+            .resourceTypeName(
+                namer.getAndSaveElementResourceTypeName(context.getTypeTable(), fieldConfig))
+            .build();
       }
       SingleResourceNameConfig singleResourceNameConfig;
       switch (fieldConfig.getResourceNameType()) {
@@ -364,11 +380,12 @@ public class InitCodeTransformer {
         default:
           throw new UnsupportedOperationException("unexpected entity name type");
       }
-    } else if (initValueConfig.hasFormattingConfig()) {
+    } else if (initValueConfig.hasFormattingConfig() && !item.getType().isRepeated()) {
       if (context.getFeatureConfig().enableStringFormatFunctions()) {
         FormattedInitValueView.Builder initValue = FormattedInitValueView.newBuilder();
 
-        initValue.apiWrapperName(context.getNamer().getApiWrapperClassName(context.getInterface()));
+        initValue.apiWrapperName(
+            context.getNamer().getApiWrapperClassName(context.getInterfaceConfig()));
         initValue.formatFunctionName(
             context
                 .getNamer()
@@ -411,7 +428,7 @@ public class InitCodeTransformer {
         initValue.initialValue(value);
       } else {
         initValue.initialValue(
-            context.getTypeTable().getZeroValueAndSaveNicknameFor(item.getType()));
+            context.getTypeTable().getSnippetZeroValueAndSaveNicknameFor(item.getType()));
         initValue.isRepeated(item.getType().isRepeated());
       }
 
@@ -436,7 +453,8 @@ public class InitCodeTransformer {
       MethodTransformerContext context, List<String> varList, InitValueConfig initValueConfig) {
     List<String> formatFunctionArgs = new ArrayList<>();
     for (String entityName : varList) {
-      String entityValue = "\"[" + Name.from(entityName).toUpperUnderscore() + "]\"";
+      String entityValue =
+          context.getNamer().quoted("[" + Name.from(entityName).toUpperUnderscore() + "]");
       if (initValueConfig.hasFormattingConfigInitialValues()
           && initValueConfig.getResourceNameBindingValues().containsKey(entityName)) {
         InitValue initValue = initValueConfig.getResourceNameBindingValues().get(entityName);
@@ -483,6 +501,13 @@ public class InitCodeTransformer {
       fieldSetting.isMap(item.getType().isMap());
       fieldSetting.isArray(!item.getType().isMap() && item.getType().isRepeated());
       fieldSetting.elementTypeName(context.getTypeTable().getFullNameFor(item.getType()));
+      if (item.getOneofConfig() != null) {
+        fieldSetting.oneofConfig(
+            OneofConfigView.newBuilder()
+                .groupName(namer.publicFieldName(item.getOneofConfig().groupName()))
+                .variantType(namer.getOneofVariantTypeName(item.getOneofConfig()))
+                .build());
+      }
 
       allSettings.add(fieldSetting.build());
     }

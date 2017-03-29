@@ -16,11 +16,16 @@ package com.google.api.codegen.transformer;
 
 import com.google.api.codegen.ReleaseLevel;
 import com.google.api.codegen.config.FieldConfig;
+import com.google.api.codegen.config.GrpcStreamingConfig;
+import com.google.api.codegen.config.InterfaceConfig;
 import com.google.api.codegen.config.MethodConfig;
+import com.google.api.codegen.config.OneofConfig;
+import com.google.api.codegen.config.PageStreamingConfig;
 import com.google.api.codegen.config.ResourceNameConfig;
 import com.google.api.codegen.config.ResourceNameType;
 import com.google.api.codegen.config.SingleResourceNameConfig;
 import com.google.api.codegen.config.VisibilityConfig;
+import com.google.api.codegen.util.CommentReformatter;
 import com.google.api.codegen.util.CommonRenderingUtil;
 import com.google.api.codegen.util.Name;
 import com.google.api.codegen.util.NameFormatter;
@@ -30,13 +35,18 @@ import com.google.api.codegen.util.SymbolTable;
 import com.google.api.codegen.util.TypeNameConverter;
 import com.google.api.codegen.viewmodel.ServiceMethodType;
 import com.google.api.tools.framework.aspects.documentation.model.DocumentationUtil;
+import com.google.api.tools.framework.model.EnumType;
 import com.google.api.tools.framework.model.Field;
 import com.google.api.tools.framework.model.Interface;
+import com.google.api.tools.framework.model.MessageType;
 import com.google.api.tools.framework.model.Method;
 import com.google.api.tools.framework.model.ProtoElement;
+import com.google.api.tools.framework.model.ProtoFile;
 import com.google.api.tools.framework.model.TypeRef;
+import com.google.common.collect.ImmutableList;
 import io.grpc.Status;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -53,16 +63,19 @@ import java.util.List;
 public class SurfaceNamer extends NameFormatterDelegator {
   private final ModelTypeFormatter modelTypeFormatter;
   private final TypeNameConverter typeNameConverter;
+  private final CommentReformatter commentReformatter;
   private final String packageName;
 
   public SurfaceNamer(
       NameFormatter languageNamer,
       ModelTypeFormatter modelTypeFormatter,
       TypeNameConverter typeNameConverter,
+      CommentReformatter commentReformatter,
       String packageName) {
     super(languageNamer);
     this.modelTypeFormatter = modelTypeFormatter;
     this.typeNameConverter = typeNameConverter;
+    this.commentReformatter = commentReformatter;
     this.packageName = packageName;
   }
 
@@ -139,6 +152,11 @@ public class SurfaceNamer extends NameFormatterDelegator {
   public String getNamespace(Interface service) {
     NamePath namePath = typeNameConverter.getNamePath(modelTypeFormatter.getFullNameFor(service));
     return qualifiedName(namePath.withoutHead());
+  }
+
+  /** The modules of the package. */
+  public ImmutableList<String> getApiModules() {
+    return ImmutableList.<String>of();
   }
 
   /////////////////////////////////// Protos methods /////////////////////////////////////////////
@@ -428,6 +446,10 @@ public class SurfaceNamer extends NameFormatterDelegator {
     return getAsyncApiMethodName(method, visibility);
   }
 
+  public String getByteLengthFunctionName(TypeRef typeRef) {
+    return getNotImplementedString("SurfaceNamer.getByteLengthFunctionName");
+  }
+
   /////////////////////////////////////// Variable names //////////////////////////////////////////
 
   /**
@@ -442,24 +464,24 @@ public class SurfaceNamer extends NameFormatterDelegator {
    * The name of a variable that holds an instance of the class that implements a particular proto
    * interface.
    */
-  public String getApiWrapperVariableName(Interface interfaze) {
-    return localVarName(Name.upperCamel(interfaze.getSimpleName(), "Client"));
+  public String getApiWrapperVariableName(InterfaceConfig interfaceConfig) {
+    return localVarName(Name.upperCamel(getInterfaceName(interfaceConfig), "Client"));
   }
 
   /**
    * The name of a variable that holds the settings class for a particular proto interface; not used
    * in most languages.
    */
-  public String getApiSettingsVariableName(Interface interfaze) {
-    return localVarName(Name.upperCamel(interfaze.getSimpleName(), "Settings"));
+  public String getApiSettingsVariableName(InterfaceConfig interfaceConfig) {
+    return localVarName(Name.upperCamel(getInterfaceName(interfaceConfig), "Settings"));
   }
 
   /**
    * The name of the builder class for the settings class for a particular proto interface; not used
    * in most languages.
    */
-  public String getApiSettingsBuilderVarName(Interface interfaze) {
-    return localVarName(Name.upperCamel(interfaze.getSimpleName(), "SettingsBuilder"));
+  public String getApiSettingsBuilderVarName(InterfaceConfig interfaceConfig) {
+    return localVarName(Name.upperCamel(getInterfaceName(interfaceConfig), "SettingsBuilder"));
   }
 
   /** The variable name for the given identifier that is formatted. */
@@ -516,11 +538,22 @@ public class SurfaceNamer extends NameFormatterDelegator {
     return privateFieldName(Name.upperCamel(method.getSimpleName(), "PagedListResponseFactory"));
   }
 
+  /** The variable name of the gRPC request object. */
+  public String getRequestVariableName(Method method) {
+    return getNotImplementedString("SurfaceNamer.getRequestVariableName");
+  }
+
   /////////////////////////////////////// Type names /////////////////////////////////////////////
 
+  protected String getInterfaceName(InterfaceConfig interfaceConfig) {
+    return interfaceConfig.hasInterfaceNameOverride()
+        ? interfaceConfig.getInterfaceNameOverride()
+        : interfaceConfig.getInterface().getSimpleName();
+  }
+
   /** The name of the class that implements a particular proto interface. */
-  public String getApiWrapperClassName(Interface interfaze) {
-    return publicClassName(Name.upperCamel(interfaze.getSimpleName(), "Client"));
+  public String getApiWrapperClassName(InterfaceConfig interfaceConfig) {
+    return publicClassName(Name.upperCamel(getInterfaceName(interfaceConfig), "Client"));
   }
 
   /** The name of the implementation class that implements a particular proto interface. */
@@ -536,8 +569,8 @@ public class SurfaceNamer extends NameFormatterDelegator {
   /**
    * The name of the settings class for a particular proto interface; not used in most languages.
    */
-  public String getApiSettingsClassName(Interface interfaze) {
-    return publicClassName(Name.upperCamel(interfaze.getSimpleName(), "Settings"));
+  public String getApiSettingsClassName(InterfaceConfig interfaceConfig) {
+    return publicClassName(Name.upperCamel(getInterfaceName(interfaceConfig), "Settings"));
   }
 
   /** The name of the class that contains paged list response wrappers. */
@@ -562,7 +595,7 @@ public class SurfaceNamer extends NameFormatterDelegator {
    * The fully qualified class name of a an API service. TODO: Support the general pattern of
    * package + class name in NameFormatter.
    */
-  public String getFullyQualifiedApiWrapperClassName(Interface interfaze) {
+  public String getFullyQualifiedApiWrapperClassName(InterfaceConfig interfaceConfig) {
     return getNotImplementedString("SurfaceNamer.getFullyQualifiedApiWrapperClassName");
   }
 
@@ -629,6 +662,11 @@ public class SurfaceNamer extends NameFormatterDelegator {
     String publicClassName =
         publicClassName(Name.upperCamelKeepUpperAcronyms(namePath.getHead(), "Grpc"));
     return qualifiedName(namePath.withHead(publicClassName));
+  }
+
+  /** The type name for the method param */
+  public String getParamTypeName(ModelTypeTable typeTable, TypeRef type) {
+    return getNotImplementedString("SurfaceNamer.getParamTypeName");
   }
 
   /** The type name for retry settings. */
@@ -708,7 +746,7 @@ public class SurfaceNamer extends NameFormatterDelegator {
 
   /**
    * The generic-aware response type name for the given type. For example, in Java, this will be the
-   * type used for RpcFuture&lt;...&gt;.
+   * type used for Future&lt;...&gt;.
    */
   public String getGenericAwareResponseTypeName(TypeRef outputType) {
     return getNotImplementedString("SurfaceNamer.getGenericAwareResponseType");
@@ -781,6 +819,36 @@ public class SurfaceNamer extends NameFormatterDelegator {
     return getNotImplementedString("SurfaceNamer.getApiCallableTypeName");
   }
 
+  /** Return the type name used to discriminate oneof variants. */
+  public String getOneofVariantTypeName(OneofConfig oneof) {
+    return getNotImplementedString("SurfaceNamer.getOneofVariantTypeName");
+  }
+
+  /**
+   * The formatted name of a type used in long running operations, i.e. the operation payload and
+   * metadata,
+   */
+  public String getLongRunningOperationTypeName(ModelTypeTable typeTable, TypeRef type) {
+    return getNotImplementedString("SurfaceNamer.getLongRunningOperationTypeName");
+  }
+
+  /** The type name for the gPRC request. */
+  public String getRequestTypeName(ModelTypeTable typeTable, TypeRef type) {
+    return getNotImplementedString("SurfaceNamer.getRequestTypeName");
+  }
+
+  public String getMessageTypeName(ModelTypeTable typeTable, MessageType message) {
+    return typeTable.getNicknameFor(TypeRef.of(message));
+  }
+
+  public String getEnumTypeName(ModelTypeTable typeTable, EnumType enumType) {
+    return typeTable.getNicknameFor(TypeRef.of(enumType));
+  }
+
+  public String getStreamTypeName(GrpcStreamingConfig.GrpcStreamingType type) {
+    return getNotImplementedString("SurfaceNamer.getStreamTypeName");
+  }
+
   /////////////////////////////////////// Resource names //////////////////////////////////////////
 
   public String getResourceParameterName(ResourceNameConfig resourceNameConfig) {
@@ -848,16 +916,43 @@ public class SurfaceNamer extends NameFormatterDelegator {
     return localVarName(Name.from(resourceNameConfig.getEntityName(), "name"));
   }
 
+  /////////////////////////////////////// Page Streaming ////////////////////////////////////////
+
+  /** The formatted field name of a page streaming request token. */
+  public String getRequestTokenFieldName(PageStreamingConfig pageStreaming) {
+    return keyName(Name.from(pageStreaming.getRequestTokenField().getSimpleName()));
+  }
+
+  /** The formatted name of a page streaming page size field. */
+  public String getPageSizeFieldName(PageStreamingConfig pageStreaming) {
+    return keyName(Name.from(pageStreaming.getPageSizeField().getSimpleName()));
+  }
+
+  /** The formatted field name of a page streaming response token. */
+  public String getResponseTokenFieldName(PageStreamingConfig pageStreaming) {
+    return keyName(Name.from(pageStreaming.getResponseTokenField().getSimpleName()));
+  }
+
+  /** The formatted name of a page streaming resources field. */
+  public String getResourcesFieldName(PageStreamingConfig pageStreaming) {
+    return keyName(Name.from(pageStreaming.getResourcesFieldName()));
+  }
+
   ///////////////////////////////////// Constant & Keyword ////////////////////////////////////////
 
-  /** The name of the constant to hold the bundling descriptor for the given method. */
-  public String getBundlingDescriptorConstName(Method method) {
+  /** The name of the constant to hold the batching descriptor for the given method. */
+  public String getBatchingDescriptorConstName(Method method) {
     return inittedConstantName(Name.upperCamel(method.getSimpleName()).join("bundling_desc"));
   }
 
   /** The key to use in a dictionary for the given method. */
   public String getMethodKey(Method method) {
     return keyName(Name.upperCamel(method.getSimpleName()));
+  }
+
+  /** The key to use in a dictionary for the given field. */
+  public String getFieldKey(Field field) {
+    return keyName(Name.from(field.getSimpleName()));
   }
 
   /** The path to the client config for the given interface. */
@@ -932,17 +1027,21 @@ public class SurfaceNamer extends NameFormatterDelegator {
     return true;
   }
 
-  public String getServiceFileImportFromService(Interface service) {
-    return getNotImplementedString("SurfaceNamer.getServiceFileImportFromService");
+  public String getServiceFileImportName(String filename) {
+    return getNotImplementedString("SurfaceNamer.getServiceFileImportName");
   }
 
-  public String getProtoFileImportFromService(Interface service) {
-    return getNotImplementedString("SurfaceNamer.getProtoFileImportFromService");
+  public String getProtoFileImportName(String filename) {
+    return getNotImplementedString("SurfaceNamer.getProtoFileImportName");
   }
 
   /** The name of the import for a specific grpcClient */
   public String getGrpcClientImportName(Interface service) {
     return getNotImplementedString("SurfaceNamer.getGrpcClientImportName");
+  }
+
+  public String getVersionIndexFileImportName() {
+    return getNotImplementedString("SurfaceNamer.getVersionIndexFileImportName");
   }
 
   /////////////////////////////////// Docs & Annotations //////////////////////////////////////////
@@ -954,12 +1053,17 @@ public class SurfaceNamer extends NameFormatterDelegator {
 
   /** Converts the given text to doc lines in the format of the current language. */
   public List<String> getDocLines(String text) {
-    return CommonRenderingUtil.getDocLines(text);
+    return CommonRenderingUtil.getDocLines(commentReformatter.reformat(text));
   }
 
   /** Provides the doc lines for the given proto element in the current language. */
   public List<String> getDocLines(ProtoElement element) {
-    return getDocLines(DocumentationUtil.getDescription(element));
+    return getDocLines(DocumentationUtil.getScopedDescription(element));
+  }
+
+  /** Provides the doc lines for the given field in the current language. */
+  public List<String> getDocLines(Field field) {
+    return getDocLines(DocumentationUtil.getScopedDescription(field));
   }
 
   /** Provides the doc lines for the given method element in the current language. */
@@ -975,22 +1079,42 @@ public class SurfaceNamer extends NameFormatterDelegator {
   /** The doc lines that describe the return value for an API method. */
   public List<String> getReturnDocLines(
       SurfaceTransformerContext context, MethodConfig methodConfig, Synchronicity synchronicity) {
-    return new ArrayList<>();
+    return Collections.singletonList(getNotImplementedString("SurfaceNamer.getReturnDocLines"));
   }
 
   public String getReleaseAnnotation(ReleaseLevel releaseLevel) {
     return getNotImplementedString("SurfaceNamer.getReleaseAnnotation");
   }
 
+  /** The name of a type with with qualifying articles and descriptions. */
+  public String getTypeNameDoc(ModelTypeTable typeTable, TypeRef type) {
+    return getNotImplementedString("SurfaceNamer.getTypeNameDoc");
+  }
+
+  /** Get the url to the protobuf file located in github. */
+  public String getFileUrl(ProtoFile file) {
+    String filePath = file.getSimpleName();
+    if (filePath.startsWith("google/protobuf")) {
+      return "https://github.com/google/protobuf/blob/master/src/" + filePath;
+    } else {
+      return "https://github.com/googleapis/googleapis/blob/master/" + filePath;
+    }
+  }
+
   //////////////////////////////////////// File names ////////////////////////////////////////////
 
   /** The file name for an API service. */
-  public String getServiceFileName(Interface service) {
+  public String getServiceFileName(InterfaceConfig interfaceConfig) {
     return getNotImplementedString("SurfaceNamer.getServiceFileName");
   }
 
   public String getSourceFilePath(String path, String publicClassName) {
     return getNotImplementedString("SurfaceNamer.getSourceFilePath");
+  }
+
+  /** The language-specific file name for a proto file. */
+  public String getProtoFileName(ProtoFile file) {
+    return getNotImplementedString("SurfaceNamer.getProtoFileName");
   }
 
   ////////////////////////////////////////// Test /////////////////////////////////////////////
@@ -1013,13 +1137,13 @@ public class SurfaceNamer extends NameFormatterDelegator {
   }
 
   /** The unit test class name for the given API service. */
-  public String getUnitTestClassName(Interface service) {
-    return publicClassName(Name.upperCamel(service.getSimpleName(), "Client", "Test"));
+  public String getUnitTestClassName(InterfaceConfig interfaceConfig) {
+    return publicClassName(Name.upperCamel(getInterfaceName(interfaceConfig), "Client", "Test"));
   }
 
   /** The smoke test class name for the given API service. */
-  public String getSmokeTestClassName(Interface service) {
-    return publicClassName(Name.upperCamel(service.getSimpleName(), "Smoke", "Test"));
+  public String getSmokeTestClassName(InterfaceConfig interfaceConfig) {
+    return publicClassName(Name.upperCamel(getInterfaceName(interfaceConfig), "Smoke", "Test"));
   }
 
   /** The class name of the mock gRPC service for the given API service. */
@@ -1123,5 +1247,26 @@ public class SurfaceNamer extends NameFormatterDelegator {
       original = original.substring(0, original.length() - suffix.length());
     }
     return original;
+  }
+
+  /** Converts the given text to a quoted string. */
+  public String quoted(String text) {
+    return "\"" + text + "\"";
+  }
+
+  /** Make the given type name able to accept nulls, if it is a primitive type */
+  public String makePrimitiveTypeNullable(String typeName, TypeRef type) {
+    return typeName;
+  }
+
+  /** Is this type a primitive, according to target language. */
+  public boolean isPrimitive(TypeRef type) {
+    return type.isPrimitive();
+  }
+
+  /** The default value for an optional field, null if no default value required. */
+  public String getOptionalFieldDefaultValue(
+      FieldConfig fieldConfig, MethodTransformerContext context) {
+    return getNotImplementedString("SurfaceNamer.getOptionalFieldDefaultValue");
   }
 }

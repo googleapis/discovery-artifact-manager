@@ -15,6 +15,7 @@
 package com.google.api.codegen.metacode;
 
 import com.google.api.codegen.config.FieldConfig;
+import com.google.api.codegen.config.OneofConfig;
 import com.google.api.codegen.metacode.InitCodeContext.InitCodeOutputType;
 import com.google.api.codegen.util.Name;
 import com.google.api.codegen.util.SymbolTable;
@@ -46,10 +47,7 @@ public class InitCodeNode {
   private TypeRef typeRef;
   private FieldConfig nodeFieldConfig;
   private Name identifier;
-
-  // TODO(michaelbausor): delete this field once DocConfig is no longer used (when python converts
-  // to MVVM)
-  private InitCodeLine initCodeLine;
+  private OneofConfig oneofConfig;
 
   /*
    * Get the key associated with the node. For InitCodeNode objects that are not a root object, they
@@ -111,13 +109,8 @@ public class InitCodeNode {
     return identifier;
   }
 
-  /*
-   * Get the InitCodeLine object.
-   * TODO(michaelbausor): delete this method once DocConfig is no longer used (when python converts
-   * to MVVM)
-   */
-  public InitCodeLine getInitCodeLine() {
-    return initCodeLine;
+  public OneofConfig getOneofConfig() {
+    return oneofConfig;
   }
 
   public static InitCodeNode create(String key) {
@@ -154,7 +147,6 @@ public class InitCodeNode {
     List<InitCodeNode> subTrees = buildSubTrees(context);
     InitCodeNode root = createWithChildren("root", InitCodeLineType.StructureInitLine, subTrees);
     root.resolveNamesAndTypes(context, context.initObjectType(), context.suggestedName(), null);
-    root.createInitCodeLines();
     return root;
   }
 
@@ -259,6 +251,9 @@ public class InitCodeNode {
           getChildType(type, child.key),
           getChildSuggestedName(suggestedName, lineType, child),
           getChildFieldConfig(context.fieldConfigMap(), fieldConfig, type, child.key));
+      if (type.isMessage()) {
+        child.oneofConfig = OneofConfig.of(type.getMessageType(), child.key);
+      }
     }
 
     SymbolTable table = context.symbolTable();
@@ -283,57 +278,6 @@ public class InitCodeNode {
         String newValue = valueGenerator.getAndStoreValue(type, identifier);
         initValueConfig = InitValueConfig.createWithValue(InitValue.createLiteral(newValue));
       }
-    }
-  }
-
-  /**
-   * TODO(michaelbausor): delete this method once DocConfig is no longer used (when python converts
-   * to MVVM)
-   */
-  private void createInitCodeLines() {
-    if (children.size() == 0) {
-      initCodeLine = SimpleInitCodeLine.create(typeRef, identifier, initValueConfig);
-      return;
-    }
-    for (InitCodeNode childItem : children.values()) {
-      childItem.createInitCodeLines();
-    }
-    switch (lineType) {
-      case StructureInitLine:
-        List<FieldSetting> fieldSettings = new ArrayList<>();
-        for (InitCodeNode childItem : children.values()) {
-          FieldSetting fieldSetting =
-              FieldSetting.create(
-                  childItem.typeRef,
-                  childItem.identifier,
-                  childItem.initCodeLine.getIdentifier(),
-                  childItem.initCodeLine.getInitValueConfig());
-          fieldSettings.add(fieldSetting);
-        }
-        initCodeLine = StructureInitCodeLine.create(typeRef, identifier, fieldSettings);
-        break;
-      case ListInitLine:
-        List<Name> elementIdentifiers = new ArrayList<>();
-        for (InitCodeNode childItem : children.values()) {
-          elementIdentifiers.add(childItem.initCodeLine.getIdentifier());
-        }
-        initCodeLine = ListInitCodeLine.create(typeRef, identifier, elementIdentifiers);
-        break;
-      case MapInitLine:
-        Map<String, Name> elementIdentifierMap = new LinkedHashMap<>();
-        for (InitCodeNode childItem : children.values()) {
-          elementIdentifierMap.put(childItem.key, childItem.initCodeLine.getIdentifier());
-        }
-        initCodeLine =
-            MapInitCodeLine.create(
-                typeRef.getMapKeyField().getType(),
-                typeRef.getMapValueField().getType(),
-                typeRef,
-                identifier,
-                elementIdentifierMap);
-        break;
-      default:
-        throw new IllegalArgumentException("Unexpected ParsedNodeType: " + lineType);
     }
   }
 

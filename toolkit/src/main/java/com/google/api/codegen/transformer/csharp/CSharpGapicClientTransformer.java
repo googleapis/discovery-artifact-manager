@@ -23,8 +23,7 @@ import com.google.api.codegen.config.MethodConfig;
 import com.google.api.codegen.config.ServiceConfig;
 import com.google.api.codegen.gapic.GapicCodePathMapper;
 import com.google.api.codegen.transformer.ApiCallableTransformer;
-import com.google.api.codegen.transformer.ApiMethodTransformer;
-import com.google.api.codegen.transformer.BundlingTransformer;
+import com.google.api.codegen.transformer.BatchingTransformer;
 import com.google.api.codegen.transformer.FileHeaderTransformer;
 import com.google.api.codegen.transformer.MethodTransformerContext;
 import com.google.api.codegen.transformer.ModelToViewTransformer;
@@ -34,7 +33,8 @@ import com.google.api.codegen.transformer.ParamWithSimpleDoc;
 import com.google.api.codegen.transformer.PathTemplateTransformer;
 import com.google.api.codegen.transformer.RetryDefinitionsTransformer;
 import com.google.api.codegen.transformer.ServiceTransformer;
-import com.google.api.codegen.transformer.StandardImportTypeTransformer;
+import com.google.api.codegen.transformer.StandardImportSectionTransformer;
+import com.google.api.codegen.transformer.StaticLangApiMethodTransformer;
 import com.google.api.codegen.transformer.SurfaceNamer;
 import com.google.api.codegen.transformer.SurfaceTransformerContext;
 import com.google.api.codegen.util.csharp.CSharpTypeTable;
@@ -68,14 +68,15 @@ public class CSharpGapicClientTransformer implements ModelToViewTransformer {
   private static final String RESOURCENAMES_TEMPLATE_FILENAME = "csharp/gapic_resourcenames.snip";
 
   private final GapicCodePathMapper pathMapper;
-  private final ApiMethodTransformer apiMethodTransformer = new CSharpApiMethodTransformer();
+  private final StaticLangApiMethodTransformer apiMethodTransformer =
+      new CSharpApiMethodTransformer();
   private final ServiceTransformer serviceTransformer = new ServiceTransformer();
   private final PathTemplateTransformer pathTemplateTransformer = new PathTemplateTransformer();
   private final ApiCallableTransformer apiCallableTransformer = new ApiCallableTransformer();
   private final FileHeaderTransformer fileHeaderTransformer =
-      new FileHeaderTransformer(new StandardImportTypeTransformer());
+      new FileHeaderTransformer(new StandardImportSectionTransformer());
   private final PageStreamingTransformer pageStreamingTransformer = new PageStreamingTransformer();
-  private final BundlingTransformer bundlingTransformer = new BundlingTransformer();
+  private final BatchingTransformer batchingTransformer = new BatchingTransformer();
   private final RetryDefinitionsTransformer retryDefinitionsTransformer =
       new RetryDefinitionsTransformer();
   private final CSharpCommonTransformer csharpCommonTransformer = new CSharpCommonTransformer();
@@ -148,7 +149,7 @@ public class CSharpGapicClientTransformer implements ModelToViewTransformer {
     fileView.settings(generateSettingsClass(context));
 
     String outputPath = pathMapper.getOutputPath(context.getInterface(), context.getApiConfig());
-    String name = context.getNamer().getApiWrapperClassName(context.getInterface());
+    String name = context.getNamer().getApiWrapperClassName(context.getInterfaceConfig());
     fileView.outputPath(outputPath + File.separator + name + ".cs");
 
     // must be done as the last step to catch all imports
@@ -165,15 +166,16 @@ public class CSharpGapicClientTransformer implements ModelToViewTransformer {
 
     apiClass.doc(serviceTransformer.generateServiceDoc(context, null));
 
-    apiClass.name(namer.getApiWrapperClassName(context.getInterface()));
+    apiClass.name(namer.getApiWrapperClassName(context.getInterfaceConfig()));
     apiClass.implName(namer.getApiWrapperClassImplName(context.getInterface()));
     apiClass.grpcServiceName(namer.getGrpcContainerTypeName(context.getInterface()));
     apiClass.grpcTypeName(namer.getGrpcServiceClassName(context.getInterface()));
-    apiClass.settingsClassName(context.getNamer().getApiSettingsClassName(context.getInterface()));
+    apiClass.settingsClassName(
+        context.getNamer().getApiSettingsClassName(context.getInterfaceConfig()));
     List<ApiCallableView> callables = new ArrayList<>();
     for (ApiCallableView call : apiCallableTransformer.generateStaticLangApiCallables(context)) {
       if (call.type() == ApiCallableImplType.SimpleApiCallable
-          || call.type() == ApiCallableImplType.BundlingApiCallable
+          || call.type() == ApiCallableImplType.BatchingApiCallable
           || call.type() == ApiCallableImplType.InitialOperationApiCallable
           || (call.type() == ApiCallableImplType.StreamingApiCallable
               && call.grpcStreamingType() == GrpcStreamingType.BidiStreaming)) {
@@ -219,7 +221,7 @@ public class CSharpGapicClientTransformer implements ModelToViewTransformer {
   private StaticLangSettingsView generateSettingsClass(SurfaceTransformerContext context) {
     StaticLangSettingsView.Builder settingsClass = StaticLangSettingsView.newBuilder();
     settingsClass.doc(generateSettingsDoc(context));
-    String name = context.getNamer().getApiSettingsClassName(context.getInterface());
+    String name = context.getNamer().getApiSettingsClassName(context.getInterfaceConfig());
     settingsClass.name(name);
     ServiceConfig serviceConfig = new ServiceConfig();
     settingsClass.serviceAddress(serviceConfig.getServiceAddress(context.getInterface()));
@@ -230,7 +232,7 @@ public class CSharpGapicClientTransformer implements ModelToViewTransformer {
         pageStreamingTransformer.generateDescriptorClasses(context));
     settingsClass.pagedListResponseFactories(
         pageStreamingTransformer.generateFactoryClasses(context));
-    settingsClass.bundlingDescriptors(bundlingTransformer.generateDescriptorClasses(context));
+    settingsClass.batchingDescriptors(batchingTransformer.generateDescriptorClasses(context));
     settingsClass.retryCodesDefinitions(
         retryDefinitionsTransformer.generateRetryCodesDefinitions(context));
     settingsClass.retryParamsDefinitions(
@@ -369,13 +371,13 @@ public class CSharpGapicClientTransformer implements ModelToViewTransformer {
                 apiMethodTransformer.generateFlattenedMethod(
                     methodContext, csharpCommonTransformer.callSettingsParam()));
           }
-          apiMethods.add(
-              apiMethodTransformer.generateRequestObjectAsyncMethod(
-                  requestMethodContext, csharpCommonTransformer.callSettingsParam()));
-          apiMethods.add(
-              apiMethodTransformer.generateRequestObjectMethod(
-                  requestMethodContext, csharpCommonTransformer.callSettingsParam()));
         }
+        apiMethods.add(
+            apiMethodTransformer.generateRequestObjectAsyncMethod(
+                requestMethodContext, csharpCommonTransformer.callSettingsParam()));
+        apiMethods.add(
+            apiMethodTransformer.generateRequestObjectMethod(
+                requestMethodContext, csharpCommonTransformer.callSettingsParam()));
       }
     }
 
@@ -390,10 +392,11 @@ public class CSharpGapicClientTransformer implements ModelToViewTransformer {
     settingsDoc.servicePort(serviceConfig.getServicePort());
     settingsDoc.exampleApiMethodName(""); // Unused in C#
     settingsDoc.exampleApiMethodSettingsGetter(""); // Unused in C#
-    settingsDoc.apiClassName(namer.getApiWrapperClassName(context.getInterface()));
-    settingsDoc.settingsVarName(namer.getApiSettingsVariableName(context.getInterface()));
-    settingsDoc.settingsClassName(namer.getApiSettingsClassName(context.getInterface()));
-    settingsDoc.settingsBuilderVarName(namer.getApiSettingsBuilderVarName(context.getInterface()));
+    settingsDoc.apiClassName(namer.getApiWrapperClassName(context.getInterfaceConfig()));
+    settingsDoc.settingsVarName(namer.getApiSettingsVariableName(context.getInterfaceConfig()));
+    settingsDoc.settingsClassName(namer.getApiSettingsClassName(context.getInterfaceConfig()));
+    settingsDoc.settingsBuilderVarName(
+        namer.getApiSettingsBuilderVarName(context.getInterfaceConfig()));
     settingsDoc.hasDefaultInstance(context.getInterfaceConfig().hasDefaultInstance());
     return settingsDoc.build();
   }

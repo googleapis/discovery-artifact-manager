@@ -15,23 +15,25 @@
 package com.google.api.codegen.transformer.php;
 
 import com.google.api.codegen.ServiceMessages;
+import com.google.api.codegen.config.InterfaceConfig;
 import com.google.api.codegen.config.MethodConfig;
+import com.google.api.codegen.config.PageStreamingConfig;
 import com.google.api.codegen.config.SingleResourceNameConfig;
 import com.google.api.codegen.config.VisibilityConfig;
 import com.google.api.codegen.transformer.ModelTypeFormatterImpl;
+import com.google.api.codegen.transformer.ModelTypeTable;
 import com.google.api.codegen.transformer.SurfaceNamer;
 import com.google.api.codegen.util.Name;
 import com.google.api.codegen.util.NamePath;
+import com.google.api.codegen.util.php.PhpCommentReformatter;
 import com.google.api.codegen.util.php.PhpNameFormatter;
 import com.google.api.codegen.util.php.PhpPackageUtil;
-import com.google.api.codegen.util.php.PhpRenderingUtil;
 import com.google.api.codegen.util.php.PhpTypeTable;
 import com.google.api.tools.framework.model.Field;
 import com.google.api.tools.framework.model.Interface;
 import com.google.api.tools.framework.model.Method;
 import com.google.api.tools.framework.model.TypeRef;
 import java.util.ArrayList;
-import java.util.List;
 
 /** The SurfaceNamer for PHP. */
 public class PhpSurfaceNamer extends SurfaceNamer {
@@ -40,6 +42,7 @@ public class PhpSurfaceNamer extends SurfaceNamer {
         new PhpNameFormatter(),
         new ModelTypeFormatterImpl(new PhpModelTypeNameConverter(packageName)),
         new PhpTypeTable(packageName),
+        new PhpCommentReformatter(),
         packageName);
   }
 
@@ -77,11 +80,6 @@ public class PhpSurfaceNamer extends SurfaceNamer {
   }
 
   @Override
-  public List<String> getDocLines(String text) {
-    return PhpRenderingUtil.getDocLines(text);
-  }
-
-  @Override
   public String getRetrySettingsTypeName() {
     return "\\Google\\GAX\\RetrySettings";
   }
@@ -116,8 +114,8 @@ public class PhpSurfaceNamer extends SurfaceNamer {
   }
 
   @Override
-  public String getFullyQualifiedApiWrapperClassName(Interface service) {
-    return getPackageName() + "\\" + getApiWrapperClassName(service);
+  public String getFullyQualifiedApiWrapperClassName(InterfaceConfig interfaceConfig) {
+    return getPackageName() + "\\" + getApiWrapperClassName(interfaceConfig);
   }
 
   @Override
@@ -131,6 +129,16 @@ public class PhpSurfaceNamer extends SurfaceNamer {
     String publicClassName =
         publicClassName(Name.upperCamelKeepUpperAcronyms(namePath.getHead(), suffix));
     return namePath.withHead(publicClassName);
+  }
+
+  @Override
+  public String getLongRunningOperationTypeName(ModelTypeTable typeTable, TypeRef type) {
+    return typeTable.getAndSaveNicknameFor(type);
+  }
+
+  @Override
+  public String getRequestTypeName(ModelTypeTable typeTable, TypeRef type) {
+    return typeTable.getAndSaveNicknameFor(type);
   }
 
   @Override
@@ -170,5 +178,29 @@ public class PhpSurfaceNamer extends SurfaceNamer {
   @Override
   public boolean methodHasRetrySettings(MethodConfig methodConfig) {
     return !methodConfig.isGrpcStreaming();
+  }
+
+  public String getRequestTokenFieldName(PageStreamingConfig pageStreaming) {
+    // Not using keyName since PHP maps the string "requestPageTokenField" to the raw request token
+    // field name from the page streaming config.
+    return pageStreaming.getRequestTokenField().getSimpleName();
+  }
+
+  public String getPageSizeFieldName(PageStreamingConfig pageStreaming) {
+    // Not using keyName since PHP maps the string "requestPageSizeField" to the raw page size
+    // field name from the page streaming config.
+    return pageStreaming.getPageSizeField().getSimpleName();
+  }
+
+  public String getResponseTokenFieldName(PageStreamingConfig pageStreaming) {
+    // Not using keyName since PHP maps the string "responsePageTokenField" to the raw response
+    // token field name from the page streaming config.
+    return pageStreaming.getResponseTokenField().getSimpleName();
+  }
+
+  public String getResourcesFieldName(PageStreamingConfig pageStreaming) {
+    // Not using keyName since PHP maps the string "resourceField" to the raw resource field
+    // from name the page streaming config.
+    return pageStreaming.getResourcesFieldName();
   }
 }

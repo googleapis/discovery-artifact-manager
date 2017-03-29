@@ -15,13 +15,16 @@
 package com.google.api.codegen.transformer.go;
 
 import com.google.api.codegen.config.FieldConfig;
+import com.google.api.codegen.config.InterfaceConfig;
 import com.google.api.codegen.config.MethodConfig;
+import com.google.api.codegen.config.OneofConfig;
 import com.google.api.codegen.config.SingleResourceNameConfig;
 import com.google.api.codegen.config.VisibilityConfig;
 import com.google.api.codegen.transformer.ModelTypeFormatterImpl;
 import com.google.api.codegen.transformer.ModelTypeTable;
 import com.google.api.codegen.transformer.SurfaceNamer;
 import com.google.api.codegen.util.Name;
+import com.google.api.codegen.util.PassThroughCommentReformatter;
 import com.google.api.codegen.util.SymbolTable;
 import com.google.api.codegen.util.go.GoNameFormatter;
 import com.google.api.codegen.util.go.GoTypeTable;
@@ -47,6 +50,7 @@ public class GoSurfaceNamer extends SurfaceNamer {
         new GoNameFormatter(),
         new ModelTypeFormatterImpl(converter),
         new GoTypeTable(),
+        new PassThroughCommentReformatter(),
         packageName);
     this.converter = converter;
   }
@@ -80,6 +84,11 @@ public class GoSurfaceNamer extends SurfaceNamer {
   }
 
   @Override
+  public String getLongRunningOperationTypeName(ModelTypeTable typeTable, TypeRef type) {
+    return valueType(typeTable.getAndSaveNicknameFor(type));
+  }
+
+  @Override
   public List<String> getDocLines(Method method, MethodConfig methodConfig) {
     String text = DocumentationUtil.getDescription(method);
     text = lowerFirstLetter(text);
@@ -110,12 +119,7 @@ public class GoSurfaceNamer extends SurfaceNamer {
   @Override
   public String getAndSaveOperationResponseTypeName(
       Method method, ModelTypeTable typeTable, MethodConfig methodConfig) {
-    String typeName =
-        converter
-            .getTypeNameForElementType(methodConfig.getLongRunningConfig().getReturnType())
-            .getNickname();
-    typeName = unqualifyTypeName(typeName);
-    return publicClassName(Name.anyCamel(typeName).join("operation"));
+    return publicClassName(Name.upperCamel(method.getSimpleName()).join("operation"));
   }
 
   @Override
@@ -174,8 +178,8 @@ public class GoSurfaceNamer extends SurfaceNamer {
   }
 
   @Override
-  public String getApiWrapperClassName(Interface service) {
-    return publicClassName(clientNamePrefix(service).join("client"));
+  public String getApiWrapperClassName(InterfaceConfig interfaceConfig) {
+    return publicClassName(clientNamePrefix(interfaceConfig.getInterface()).join("client"));
   }
 
   @Override
@@ -230,7 +234,11 @@ public class GoSurfaceNamer extends SurfaceNamer {
 
   @Override
   public String getStatusCodeName(Status.Code code) {
-    return publicFieldName(Name.upperUnderscore(code.toString()));
+    String codeString = code.toString();
+    if (code.equals(Status.Code.CANCELLED)) {
+      codeString = "CANCELED";
+    }
+    return publicFieldName(Name.upperUnderscore(codeString));
   }
 
   @Override
@@ -247,8 +255,8 @@ public class GoSurfaceNamer extends SurfaceNamer {
   }
 
   @Override
-  public String getServiceFileName(Interface service) {
-    return classFileNameBase(getReducedServiceName(service).join("client"));
+  public String getServiceFileName(InterfaceConfig interfaceConfig) {
+    return classFileNameBase(getReducedServiceName(interfaceConfig.getInterface()).join("client"));
   }
 
   @Override
@@ -341,5 +349,13 @@ public class GoSurfaceNamer extends SurfaceNamer {
   @Override
   public String getFieldGetFunctionName(TypeRef type, Name identifier) {
     return publicMethodName(identifier);
+  }
+
+  @Override
+  public String getOneofVariantTypeName(OneofConfig oneof) {
+    return String.format(
+        "%s_%s",
+        converter.getTypeName(oneof.parentType(), false).getNickname(),
+        publicFieldName(Name.from(oneof.field().getSimpleName())));
   }
 }

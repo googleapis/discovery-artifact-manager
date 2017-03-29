@@ -34,8 +34,7 @@ public class RubyCodeGeneratorTest {
         String packageConfigFileName,
         String snippetName) {
       super(name, idForFactory, gapicConfigFileNames, packageConfigFileName, snippetName);
-      getTestDataLocator()
-          .addTestDataSource(com.google.api.codegen.ruby.RubyGapicContext.class, "");
+      getTestDataLocator().addTestDataSource(getClass(), "ruby");
     }
 
     /**
@@ -45,7 +44,9 @@ public class RubyCodeGeneratorTest {
     @Parameters(name = "{0}")
     public static List<Object[]> testedConfigs() {
       return GapicTestBase.createTestedConfigs(
-          MainGapicProviderFactory.RUBY, new String[] {"ruby_gapic.yaml", "library_gapic.yaml"});
+          MainGapicProviderFactory.RUBY,
+          new String[] {"ruby_gapic.yaml", "library_gapic.yaml"},
+          "library_pkg.yaml");
     }
 
     // Tests
@@ -67,8 +68,7 @@ public class RubyCodeGeneratorTest {
         String packageConfigFileName,
         String snippetName) {
       super(name, idForFactory, gapicConfigFileNames, packageConfigFileName, snippetName);
-      getTestDataLocator()
-          .addTestDataSource(com.google.api.codegen.ruby.RubyGapicContext.class, "");
+      getTestDataLocator().addTestDataSource(getClass(), "ruby");
     }
 
     /**
@@ -79,7 +79,8 @@ public class RubyCodeGeneratorTest {
     public static List<Object[]> testedConfigs() {
       return GapicTestBase.createTestedConfigs(
           MainGapicProviderFactory.RUBY_DOC,
-          new String[] {"ruby_gapic.yaml", "library_gapic.yaml"});
+          new String[] {"ruby_gapic.yaml", "library_gapic.yaml"},
+          "library_pkg.yaml");
     }
 
     // Tests

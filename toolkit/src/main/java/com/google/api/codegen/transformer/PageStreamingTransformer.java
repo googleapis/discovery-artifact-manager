@@ -17,7 +17,6 @@ package com.google.api.codegen.transformer;
 import com.google.api.codegen.config.FieldConfig;
 import com.google.api.codegen.config.MethodConfig;
 import com.google.api.codegen.config.PageStreamingConfig;
-import com.google.api.codegen.util.Name;
 import com.google.api.codegen.viewmodel.PageStreamingDescriptorClassView;
 import com.google.api.codegen.viewmodel.PageStreamingDescriptorView;
 import com.google.api.codegen.viewmodel.PagedListResponseFactoryClassView;
@@ -39,13 +38,14 @@ public class PageStreamingTransformer {
 
       PageStreamingDescriptorView.Builder descriptor = PageStreamingDescriptorView.newBuilder();
       descriptor.varName(context.getNamer().getPageStreamingDescriptorName(method));
-      descriptor.requestTokenFieldName(pageStreaming.getRequestTokenField().getSimpleName());
+      descriptor.requestTokenFieldName(context.getNamer().getRequestTokenFieldName(pageStreaming));
       if (pageStreaming.hasPageSizeField()) {
-        descriptor.requestPageSizeFieldName(pageStreaming.getPageSizeField().getSimpleName());
+        descriptor.requestPageSizeFieldName(context.getNamer().getPageSizeFieldName(pageStreaming));
       }
-      descriptor.responseTokenFieldName(pageStreaming.getResponseTokenField().getSimpleName());
-      descriptor.resourcesFieldName(pageStreaming.getResourcesFieldName());
-      descriptor.methodName(Name.upperCamel(method.getSimpleName()).toLowerCamel());
+      descriptor.responseTokenFieldName(
+          context.getNamer().getResponseTokenFieldName(pageStreaming));
+      descriptor.resourcesFieldName(context.getNamer().getResourcesFieldName(pageStreaming));
+      descriptor.methodName(context.getNamer().getMethodKey(method));
 
       descriptors.add(descriptor.build());
     }
@@ -85,7 +85,7 @@ public class PageStreamingTransformer {
 
     TypeRef tokenType = pageStreaming.getResponseTokenField().getType();
     desc.tokenTypeName(typeTable.getAndSaveNicknameFor(tokenType));
-    desc.defaultTokenValue(context.getTypeTable().getZeroValueAndSaveNicknameFor(tokenType));
+    desc.defaultTokenValue(context.getTypeTable().getSnippetZeroValueAndSaveNicknameFor(tokenType));
 
     desc.requestTokenSetFunction(
         namer.getFieldSetFunctionName(pageStreaming.getRequestTokenField()));

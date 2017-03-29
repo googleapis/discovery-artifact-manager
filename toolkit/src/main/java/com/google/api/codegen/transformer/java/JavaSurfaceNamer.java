@@ -17,6 +17,7 @@ package com.google.api.codegen.transformer.java;
 import com.google.api.codegen.ReleaseLevel;
 import com.google.api.codegen.ServiceMessages;
 import com.google.api.codegen.config.FieldConfig;
+import com.google.api.codegen.config.InterfaceConfig;
 import com.google.api.codegen.config.MethodConfig;
 import com.google.api.codegen.config.ResourceNameType;
 import com.google.api.codegen.metacode.InitFieldConfig;
@@ -25,6 +26,7 @@ import com.google.api.codegen.transformer.ModelTypeTable;
 import com.google.api.codegen.transformer.SurfaceNamer;
 import com.google.api.codegen.util.CommonRenderingUtil;
 import com.google.api.codegen.util.Name;
+import com.google.api.codegen.util.java.JavaCommentReformatter;
 import com.google.api.codegen.util.java.JavaNameFormatter;
 import com.google.api.codegen.util.java.JavaRenderingUtil;
 import com.google.api.codegen.util.java.JavaTypeTable;
@@ -47,6 +49,7 @@ public class JavaSurfaceNamer extends SurfaceNamer {
         new JavaNameFormatter(),
         new ModelTypeFormatterImpl(new JavaModelTypeNameConverter(packageName)),
         new JavaTypeTable(packageName),
+        new JavaCommentReformatter(),
         packageName);
   }
 
@@ -137,8 +140,8 @@ public class JavaSurfaceNamer extends SurfaceNamer {
   }
 
   @Override
-  public String getFullyQualifiedApiWrapperClassName(Interface service) {
-    return getPackageName() + "." + getApiWrapperClassName(service);
+  public String getFullyQualifiedApiWrapperClassName(InterfaceConfig interfaceConfig) {
+    return getPackageName() + "." + getApiWrapperClassName(interfaceConfig);
   }
 
   @Override
@@ -178,14 +181,19 @@ public class JavaSurfaceNamer extends SurfaceNamer {
 
   @Override
   public String getReleaseAnnotation(ReleaseLevel releaseLevel) {
-    String annotation = "";
     switch (releaseLevel) {
       case UNSET_RELEASE_LEVEL:
       case ALPHA:
-        annotation = "@ExperimentalApi";
-        break;
+        return "@ExperimentalApi";
+      case DEPRECATED:
+        return "@Deprecated";
       default:
+        return "";
     }
-    return annotation;
+  }
+
+  @Override
+  public String getBatchingDescriptorConstName(Method method) {
+    return inittedConstantName(Name.upperCamel(method.getSimpleName()).join("batching_desc"));
   }
 }

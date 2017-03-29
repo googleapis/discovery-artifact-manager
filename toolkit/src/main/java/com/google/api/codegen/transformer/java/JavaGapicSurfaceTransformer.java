@@ -23,8 +23,7 @@ import com.google.api.codegen.config.MethodConfig;
 import com.google.api.codegen.config.ServiceConfig;
 import com.google.api.codegen.gapic.GapicCodePathMapper;
 import com.google.api.codegen.transformer.ApiCallableTransformer;
-import com.google.api.codegen.transformer.ApiMethodTransformer;
-import com.google.api.codegen.transformer.BundlingTransformer;
+import com.google.api.codegen.transformer.BatchingTransformer;
 import com.google.api.codegen.transformer.FileHeaderTransformer;
 import com.google.api.codegen.transformer.MethodTransformerContext;
 import com.google.api.codegen.transformer.ModelToViewTransformer;
@@ -33,14 +32,15 @@ import com.google.api.codegen.transformer.PageStreamingTransformer;
 import com.google.api.codegen.transformer.PathTemplateTransformer;
 import com.google.api.codegen.transformer.RetryDefinitionsTransformer;
 import com.google.api.codegen.transformer.ServiceTransformer;
-import com.google.api.codegen.transformer.StandardImportTypeTransformer;
+import com.google.api.codegen.transformer.StandardImportSectionTransformer;
+import com.google.api.codegen.transformer.StaticLangApiMethodTransformer;
 import com.google.api.codegen.transformer.SurfaceNamer;
 import com.google.api.codegen.transformer.SurfaceTransformerContext;
-import com.google.api.codegen.util.TypeAlias;
 import com.google.api.codegen.util.java.JavaTypeTable;
 import com.google.api.codegen.viewmodel.ApiCallSettingsView;
 import com.google.api.codegen.viewmodel.ApiMethodView;
 import com.google.api.codegen.viewmodel.ClientMethodType;
+import com.google.api.codegen.viewmodel.ImportSectionView;
 import com.google.api.codegen.viewmodel.PackageInfoView;
 import com.google.api.codegen.viewmodel.PagedResponseIterateMethodView;
 import com.google.api.codegen.viewmodel.ServiceDocView;
@@ -60,7 +60,6 @@ import com.google.api.tools.framework.model.Model;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 /** The ModelToViewTransformer to transform a Model into the standard GAPIC surface in Java. */
@@ -69,11 +68,14 @@ public class JavaGapicSurfaceTransformer implements ModelToViewTransformer {
   private final ServiceTransformer serviceTransformer = new ServiceTransformer();
   private final PathTemplateTransformer pathTemplateTransformer = new PathTemplateTransformer();
   private final ApiCallableTransformer apiCallableTransformer = new ApiCallableTransformer();
-  private final ApiMethodTransformer apiMethodTransformer = new ApiMethodTransformer();
+  private final StaticLangApiMethodTransformer apiMethodTransformer =
+      new StaticLangApiMethodTransformer();
   private final PageStreamingTransformer pageStreamingTransformer = new PageStreamingTransformer();
-  private final BundlingTransformer bundlingTransformer = new BundlingTransformer();
+  private final BatchingTransformer batchingTransformer = new BatchingTransformer();
+  private final StandardImportSectionTransformer importSectionTransformer =
+      new StandardImportSectionTransformer();
   private final FileHeaderTransformer fileHeaderTransformer =
-      new FileHeaderTransformer(new StandardImportTypeTransformer());
+      new FileHeaderTransformer(importSectionTransformer);
   private final RetryDefinitionsTransformer retryDefinitionsTransformer =
       new RetryDefinitionsTransformer();
 
@@ -158,7 +160,7 @@ public class JavaGapicSurfaceTransformer implements ModelToViewTransformer {
     apiFile.api(generateApiClass(context));
 
     String outputPath = pathMapper.getOutputPath(context.getInterface(), context.getApiConfig());
-    String className = context.getNamer().getApiWrapperClassName(context.getInterface());
+    String className = context.getNamer().getApiWrapperClassName(context.getInterfaceConfig());
     apiFile.outputPath(outputPath + File.separator + className + ".java");
 
     // must be done as the last step to catch all imports
@@ -177,11 +179,12 @@ public class JavaGapicSurfaceTransformer implements ModelToViewTransformer {
     ApiMethodView exampleApiMethod = getExampleApiMethod(methods);
     xapiClass.doc(serviceTransformer.generateServiceDoc(context, exampleApiMethod));
 
-    String name = context.getNamer().getApiWrapperClassName(context.getInterface());
+    String name = context.getNamer().getApiWrapperClassName(context.getInterfaceConfig());
     xapiClass.releaseAnnotation(
         context.getNamer().getReleaseAnnotation(context.getApiConfig().getReleaseLevel()));
     xapiClass.name(name);
-    xapiClass.settingsClassName(context.getNamer().getApiSettingsClassName(context.getInterface()));
+    xapiClass.settingsClassName(
+        context.getNamer().getApiSettingsClassName(context.getInterfaceConfig()));
     xapiClass.apiCallableMembers(apiCallableTransformer.generateStaticLangApiCallables(context));
     xapiClass.pathTemplates(pathTemplateTransformer.generatePathTemplates(context));
     xapiClass.formatResourceFunctions(
@@ -237,8 +240,10 @@ public class JavaGapicSurfaceTransformer implements ModelToViewTransformer {
     pagedResponseWrappers.pagedResponseWrapperList(pagedResponseWrappersList);
 
     // must be done as the last step to catch all imports
+    ImportSectionView importSection =
+        importSectionTransformer.generateImportSection(typeTable.getImports());
     pagedResponseWrappers.fileHeader(
-        fileHeaderTransformer.generateFileHeader(apiConfig, typeTable.getImports(), namer));
+        fileHeaderTransformer.generateFileHeader(apiConfig, importSection, namer));
 
     Interface firstInterface = new InterfaceView().getElementIterable(model).iterator().next();
     String outputPath = pathMapper.getOutputPath(firstInterface, apiConfig);
@@ -331,7 +336,7 @@ public class JavaGapicSurfaceTransformer implements ModelToViewTransformer {
     settingsFile.templateFileName(XSETTINGS_TEMPLATE_FILENAME);
 
     String outputPath = pathMapper.getOutputPath(context.getInterface(), context.getApiConfig());
-    String className = context.getNamer().getApiSettingsClassName(context.getInterface());
+    String className = context.getNamer().getApiSettingsClassName(context.getInterfaceConfig());
     settingsFile.outputPath(outputPath + "/" + className + ".java");
 
     // must be done as the last step to catch all imports
@@ -346,7 +351,7 @@ public class JavaGapicSurfaceTransformer implements ModelToViewTransformer {
 
     StaticLangSettingsView.Builder xsettingsClass = StaticLangSettingsView.newBuilder();
     xsettingsClass.doc(generateSettingsDoc(context, exampleApiMethod));
-    String name = context.getNamer().getApiSettingsClassName(context.getInterface());
+    String name = context.getNamer().getApiSettingsClassName(context.getInterfaceConfig());
     xsettingsClass.name(name);
     ServiceConfig serviceConfig = new ServiceConfig();
     xsettingsClass.serviceAddress(serviceConfig.getServiceAddress(context.getInterface()));
@@ -360,7 +365,7 @@ public class JavaGapicSurfaceTransformer implements ModelToViewTransformer {
         pageStreamingTransformer.generateDescriptorClasses(context));
     xsettingsClass.pagedListResponseFactories(
         pageStreamingTransformer.generateFactoryClasses(context));
-    xsettingsClass.bundlingDescriptors(bundlingTransformer.generateDescriptorClasses(context));
+    xsettingsClass.batchingDescriptors(batchingTransformer.generateDescriptorClasses(context));
     xsettingsClass.retryCodesDefinitions(
         retryDefinitionsTransformer.generateRetryCodesDefinitions(context));
     xsettingsClass.retryParamsDefinitions(
@@ -385,7 +390,7 @@ public class JavaGapicSurfaceTransformer implements ModelToViewTransformer {
 
     packageInfo.fileHeader(
         fileHeaderTransformer.generateFileHeader(
-            apiConfig, Collections.<String, TypeAlias>emptyMap(), namer));
+            apiConfig, ImportSectionView.newBuilder().build(), namer));
 
     Interface firstInterface = new InterfaceView().getElementIterable(model).iterator().next();
     String outputPath = pathMapper.getOutputPath(firstInterface, apiConfig);
@@ -422,6 +427,7 @@ public class JavaGapicSurfaceTransformer implements ModelToViewTransformer {
     typeTable.saveNicknameFor("com.google.api.gax.core.CredentialsProvider");
     typeTable.saveNicknameFor("com.google.api.gax.core.GoogleCredentialsProvider");
     typeTable.saveNicknameFor("com.google.api.gax.core.RetrySettings");
+    typeTable.saveNicknameFor("com.google.api.gax.core.PropertiesProvider");
     typeTable.saveNicknameFor("com.google.api.gax.grpc.ChannelProvider");
     typeTable.saveNicknameFor("com.google.api.gax.grpc.ClientSettings");
     typeTable.saveNicknameFor("com.google.api.gax.grpc.ExecutorProvider");
@@ -452,10 +458,15 @@ public class JavaGapicSurfaceTransformer implements ModelToViewTransformer {
       typeTable.saveNicknameFor("com.google.api.gax.grpc.PagedListResponseFactory");
       typeTable.saveNicknameFor("com.google.api.gax.grpc.UnaryCallable");
     }
-    if (interfaceConfig.hasBundlingMethods()) {
-      typeTable.saveNicknameFor("com.google.api.gax.grpc.BundlingCallSettings");
-      typeTable.saveNicknameFor("com.google.api.gax.grpc.BundlingDescriptor");
-      typeTable.saveNicknameFor("com.google.api.gax.grpc.BundlingSettings");
+    if (interfaceConfig.hasBatchingMethods()) {
+      typeTable.saveNicknameFor("com.google.api.gax.batching.BatchingSettings");
+      typeTable.saveNicknameFor("com.google.api.gax.batching.RequestBuilder");
+      typeTable.saveNicknameFor("com.google.api.gax.core.FlowController");
+      typeTable.saveNicknameFor("com.google.api.gax.core.FlowController.LimitExceededBehavior");
+      typeTable.saveNicknameFor("com.google.api.gax.core.FlowControlSettings");
+      typeTable.saveNicknameFor("com.google.api.gax.grpc.BatchingCallSettings");
+      typeTable.saveNicknameFor("com.google.api.gax.grpc.BatchedRequestIssuer");
+      typeTable.saveNicknameFor("com.google.api.gax.grpc.BatchingDescriptor");
       typeTable.saveNicknameFor("com.google.api.gax.grpc.RequestIssuer");
       typeTable.saveNicknameFor("java.util.ArrayList");
       typeTable.saveNicknameFor("java.util.Collection");
@@ -488,10 +499,11 @@ public class JavaGapicSurfaceTransformer implements ModelToViewTransformer {
     settingsDoc.servicePort(serviceConfig.getServicePort());
     settingsDoc.exampleApiMethodName(exampleApiMethod.name());
     settingsDoc.exampleApiMethodSettingsGetter(exampleApiMethod.settingsGetterName());
-    settingsDoc.apiClassName(namer.getApiWrapperClassName(context.getInterface()));
-    settingsDoc.settingsVarName(namer.getApiSettingsVariableName(context.getInterface()));
-    settingsDoc.settingsClassName(namer.getApiSettingsClassName(context.getInterface()));
-    settingsDoc.settingsBuilderVarName(namer.getApiSettingsBuilderVarName(context.getInterface()));
+    settingsDoc.apiClassName(namer.getApiWrapperClassName(context.getInterfaceConfig()));
+    settingsDoc.settingsVarName(namer.getApiSettingsVariableName(context.getInterfaceConfig()));
+    settingsDoc.settingsClassName(namer.getApiSettingsClassName(context.getInterfaceConfig()));
+    settingsDoc.settingsBuilderVarName(
+        namer.getApiSettingsBuilderVarName(context.getInterfaceConfig()));
     settingsDoc.hasDefaultInstance(context.getInterfaceConfig().hasDefaultInstance());
     return settingsDoc.build();
   }

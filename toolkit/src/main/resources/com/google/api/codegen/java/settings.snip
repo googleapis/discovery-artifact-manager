@@ -4,7 +4,11 @@
   {@renderFileHeader(settingsFile.fileHeader)}
 
   {@settingsDoc(settingsFile.settings.doc)}
-  @@Generated("by GAPIC")
+  @if settingsFile.fileHeader.hasGeneratorVersion
+    @@Generated("by GAPIC v{@settingsFile.fileHeader.generatorVersion}")
+  @else
+    @@Generated("by GAPIC")
+  @end
   @@ExperimentalApi
   public class {@settingsFile.settings.name} extends ClientSettings {
     {@constants(settingsFile.settings)}
@@ -72,6 +76,14 @@
         .build();
     {@""}
   @end
+
+  private static final String DEFAULT_GAPIC_NAME = "gapic";
+  private static final String DEFAULT_GAPIC_VERSION = "";
+
+  private static final String PROPERTIES_FILE = "/project.properties";
+  private static final String META_VERSION_KEY = "artifact.version";
+
+  private static String gapicVersion;
   {@""}
 @end
 
@@ -123,16 +135,24 @@
         ;
   }
 
-  /**
-   * Returns a builder for the default ChannelProvider for this service.
-   */
+  /** Returns a builder for the default ChannelProvider for this service. */
   public static InstantiatingChannelProvider.Builder defaultChannelProviderBuilder() {
     return InstantiatingChannelProvider.newBuilder()
         @if xsettingsClass.hasDefaultServiceAddress
             .setServiceAddress(DEFAULT_SERVICE_ADDRESS)
         @end
         .setPort(DEFAULT_SERVICE_PORT)
+        .setGeneratorHeader(DEFAULT_GAPIC_NAME, getGapicVersion())
         .setCredentialsProvider(defaultCredentialsProviderBuilder().build());
+  }
+
+  private static String getGapicVersion() {
+    if (gapicVersion == null) {
+      gapicVersion = PropertiesProvider.loadProperty(
+          {@xsettingsClass.name}.class, PROPERTIES_FILE, META_VERSION_KEY);
+      gapicVersion = gapicVersion == null ? DEFAULT_GAPIC_VERSION : gapicVersion;
+    }
+    return gapicVersion;
   }
 
   /**
@@ -168,8 +188,8 @@
       private final PagedCallSettings<{@settings.requestTypeName}, \
           {@settings.responseTypeName}, \
           {@settings.pagedListResponseTypeName}> {@settings.memberName};
-    @case "BundlingApiCallable"
-      private final BundlingCallSettings<{@settings.requestTypeName}, \
+    @case "BatchingApiCallable"
+      private final BatchingCallSettings<{@settings.requestTypeName}, \
           {@settings.responseTypeName}> {@settings.memberName};
     @case "StreamingApiCallable"
       private final StreamingCallSettings<{@settings.requestTypeName}, \
@@ -201,8 +221,8 @@
           {@settings.pagedListResponseTypeName}> {@settings.settingsGetFunction}() {
         return {@settings.memberName};
       }
-    @case "BundlingApiCallable"
-      public BundlingCallSettings<{@settings.requestTypeName}, \
+    @case "BatchingApiCallable"
+      public BatchingCallSettings<{@settings.requestTypeName}, \
           {@settings.responseTypeName}> {@settings.settingsGetFunction}() {
         return {@settings.memberName};
       }
@@ -238,7 +258,7 @@
 @private descriptors(xsettingsClass)
   {@pageStreamingDescriptors(xsettingsClass)}
   {@pagedListResponseFactories(xsettingsClass)}
-  {@bundlingDescriptors(xsettingsClass)}
+  {@batchingDescriptors(xsettingsClass)}
 @end
 
 @private pageStreamingDescriptors(xsettingsClass)
@@ -304,47 +324,53 @@
   @end
 @end
 
-@private bundlingDescriptors(xsettingsClass)
-  @join desc : xsettingsClass.bundlingDescriptors
-    private static final BundlingDescriptor<{@desc.requestTypeName}, {@desc.responseTypeName}> {@desc.name} =
-        new BundlingDescriptor<{@desc.requestTypeName}, {@desc.responseTypeName}>() {
+@private batchingDescriptors(xsettingsClass)
+  @join desc : xsettingsClass.batchingDescriptors
+    private static final BatchingDescriptor<{@desc.requestTypeName}, {@desc.responseTypeName}> {@desc.name} =
+        new BatchingDescriptor<{@desc.requestTypeName}, {@desc.responseTypeName}>() {
           @@Override
-          public String getBundlePartitionKey({@desc.requestTypeName} request) {
+          public String getBatchPartitionKey({@desc.requestTypeName} request) {
             return {@partitionKeyCode(desc)};
           }
 
           @@Override
-          public {@desc.requestTypeName} mergeRequests(Collection<{@desc.requestTypeName}> requests) {
-            {@desc.requestTypeName} firstRequest = requests.iterator().next();
-
-            {@desc.bundledFieldTypeName} elements = new ArrayList<>();
-            for ({@desc.requestTypeName} request : requests) {
-              elements.addAll(request.{@desc.bundledFieldGetFunction}());
-            }
-
-            {@desc.requestTypeName} bundleRequest =
-                {@desc.requestTypeName}.newBuilder()
-                    {@fieldCopyCalls(desc.discriminatorFieldCopies)}
-                    .{@desc.bundledFieldSetFunction}(elements)
-                    .build();
-            return bundleRequest;
+          public RequestBuilder<{@desc.requestTypeName}> getRequestBuilder() {
+            return new RequestBuilder<{@desc.requestTypeName}>() {
+              private {@desc.requestTypeName}.Builder builder;
+              @@Override
+              public void appendRequest({@desc.requestTypeName} request) {
+                if (builder == null) {
+                  builder = request.toBuilder();
+                } else {
+                  builder.{@desc.batchedFieldSetFunction}(request.{@desc.batchedFieldGetFunction}());
+                }
+              }
+              @@Override
+              public {@desc.requestTypeName} build() {
+                return builder.build();
+              }
+            };
           }
 
           @@Override
           public void splitResponse(
-              {@desc.responseTypeName} bundleResponse,
-              Collection<? extends RequestIssuer<{@desc.requestTypeName}, {@desc.responseTypeName}>> bundle) {
-            # TODO(garrettjones) support case of no subresponse_field (e.g. Logging)
-            int bundleMessageIndex = 0;
-            for (RequestIssuer<{@desc.requestTypeName}, {@desc.responseTypeName}> responder : bundle) {
-              {@desc.subresponseTypeName} subresponseElements = new ArrayList<>();
-              int subresponseCount = responder.getRequest().{@desc.bundledFieldCountGetFunction}();
-              for (int i = 0; i < subresponseCount; i++) {
-                subresponseElements.add(bundleResponse.{@desc.subresponseByIndexGetFunction}(bundleMessageIndex));
-                bundleMessageIndex += 1;
-              }
-              {@desc.responseTypeName} response =
-                  {@desc.responseTypeName}.newBuilder().{@desc.subresponseSetFunction}(subresponseElements).build();
+              {@desc.responseTypeName} batchResponse,
+              Collection<? extends BatchedRequestIssuer<{@desc.responseTypeName}>> batch) {
+            int batchMessageIndex = 0;
+            for (BatchedRequestIssuer<{@desc.responseTypeName}> responder : batch) {
+              @if desc.hasSubresponse
+                {@desc.subresponseTypeName} subresponseElements = new ArrayList<>();
+                long subresponseCount = responder.getMessageCount();
+                for (int i = 0; i < subresponseCount; i++) {
+                  subresponseElements.add(batchResponse.{@desc.subresponseByIndexGetFunction}(batchMessageIndex));
+                  batchMessageIndex += 1;
+                }
+                {@desc.responseTypeName} response =
+                    {@desc.responseTypeName}.newBuilder().{@desc.subresponseSetFunction}(subresponseElements).build();
+              @else
+                {@desc.responseTypeName} response =
+                    {@desc.responseTypeName}.newBuilder().build();
+              @end
               responder.setResponse(response);
             }
           }
@@ -352,15 +378,15 @@
           @@Override
           public void splitException(
               Throwable throwable,
-              Collection<? extends RequestIssuer<{@desc.requestTypeName}, {@desc.responseTypeName}>> bundle) {
-            for (RequestIssuer<{@desc.requestTypeName}, {@desc.responseTypeName}> responder : bundle) {
+              Collection<? extends BatchedRequestIssuer<{@desc.responseTypeName}>> batch) {
+            for (BatchedRequestIssuer<{@desc.responseTypeName}> responder : batch) {
               responder.setException(throwable);
             }
           }
 
           @@Override
           public long countElements({@desc.requestTypeName} request) {
-            return request.{@desc.bundledFieldCountGetFunction}();
+            return request.{@desc.batchedFieldCountGetFunction}();
           }
 
           @@Override
@@ -372,8 +398,8 @@
   @end
 @end
 
-@private partitionKeyCode(bundlingDesc)
-  @join partitionKey : bundlingDesc.partitionKeys on " + "
+@private partitionKeyCode(batchingDesc)
+  @join partitionKey : batchingDesc.partitionKeys on " + "
     request.{@partitionKey.fieldGetFunction}() + {@partitionKey.separatorLiteral}
   @end
 @end
@@ -411,8 +437,8 @@
       private final PagedCallSettings.Builder<{@settings.requestTypeName}, \
           {@settings.responseTypeName}, \
           {@settings.pagedListResponseTypeName}> {@settings.memberName};
-    @case "BundlingApiCallable"
-      private final BundlingCallSettings.Builder<{@settings.requestTypeName}, \
+    @case "BatchingApiCallable"
+      private final BatchingCallSettings.Builder<{@settings.requestTypeName}, \
           {@settings.responseTypeName}> {@settings.memberName};
     @case "StreamingApiCallable"
       private final StreamingCallSettings.Builder<{@settings.requestTypeName}, \
@@ -481,11 +507,11 @@
         {@settings.memberName} = PagedCallSettings.newBuilder(
             {@settings.grpcTypeName}.{@settings.grpcMethodConstant},
             {@settings.pagedListResponseFactoryName});
-      @case "BundlingApiCallable"
-        {@settings.memberName} = BundlingCallSettings.newBuilder(
+      @case "BatchingApiCallable"
+        {@settings.memberName} = BatchingCallSettings.newBuilder(
             {@settings.grpcTypeName}.{@settings.grpcMethodConstant},
-            {@settings.bundlingDescriptorName})
-                .setBundlingSettingsBuilder(BundlingSettings.newBuilder());
+            {@settings.batchingDescriptorName})
+                .setBatchingSettingsBuilder(BatchingSettings.newBuilder());
       @case "StreamingApiCallable"
         {@settings.memberName} = StreamingCallSettings.newBuilder({@settings.grpcTypeName}.{@settings.grpcMethodConstant});
       @case "OperationApiCallable"
@@ -512,13 +538,23 @@
     Builder builder = new Builder();
     @join settings : xsettingsClass.unaryCallSettings
       {@""}
-      # bundling settings
+      # batching settings
       @switch settings.type
-      @case "BundlingApiCallable"
-        builder.{@settings.settingsGetFunction}().getBundlingSettingsBuilder()
-            .setElementCountThreshold({@settings.bundlingConfig.elementCountThreshold})
-            .setRequestByteThreshold({@settings.bundlingConfig.requestByteThreshold})
-            .setDelayThreshold(Duration.millis({@settings.bundlingConfig.delayThresholdMillis}));
+      @case "BatchingApiCallable"
+        builder.{@settings.settingsGetFunction}().getBatchingSettingsBuilder()
+            .setElementCountThreshold({@settings.batchingConfig.elementCountThreshold})
+            .setRequestByteThreshold({@settings.batchingConfig.requestByteThreshold})
+            .setDelayThreshold(Duration.millis({@settings.batchingConfig.delayThresholdMillis}))
+            .setFlowControlSettings(
+              FlowControlSettings.newBuilder()
+                @if settings.batchingConfig.hasFlowControlElementLimit
+                  .setMaxOutstandingElementCount({@settings.batchingConfig.flowControlElementLimit})
+                @end
+                @if settings.batchingConfig.hasFlowControlByteLimit
+                  .setMaxOutstandingRequestBytes({@settings.batchingConfig.flowControlByteLimit})
+                @end
+                .setLimitExceededBehavior(LimitExceededBehavior.{@settings.batchingConfig.flowControlLimitExceededBehavior})
+                .build());
       @default
       @end
       # retry settings
@@ -590,8 +626,8 @@
           {@settings.responseTypeName}, {@settings.pagedListResponseTypeName}> {@settings.settingsGetFunction}() {
         return {@settings.memberName};
       }
-    @case "BundlingApiCallable"
-      public BundlingCallSettings.Builder<{@settings.requestTypeName}, \
+    @case "BatchingApiCallable"
+      public BatchingCallSettings.Builder<{@settings.requestTypeName}, \
           {@settings.responseTypeName}> {@settings.settingsGetFunction}() {
         return {@settings.memberName};
       }

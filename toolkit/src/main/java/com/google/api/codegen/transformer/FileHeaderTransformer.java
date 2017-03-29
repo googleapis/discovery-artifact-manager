@@ -14,26 +14,28 @@
  */
 package com.google.api.codegen.transformer;
 
+import com.google.api.codegen.GeneratorVersionProvider;
 import com.google.api.codegen.config.ApiConfig;
-import com.google.api.codegen.util.TypeAlias;
 import com.google.api.codegen.viewmodel.FileHeaderView;
-import java.util.Map;
+import com.google.api.codegen.viewmodel.ImportSectionView;
 
 public class FileHeaderTransformer {
 
-  private final ImportTypeTransformer importTypeTransformer;
+  private final ImportSectionTransformer importSectionTransformer;
 
-  public FileHeaderTransformer(ImportTypeTransformer importTypeTransformer) {
-    this.importTypeTransformer = importTypeTransformer;
+  public FileHeaderTransformer(ImportSectionTransformer importSectionTransformer) {
+    this.importSectionTransformer = importSectionTransformer;
   }
 
   public FileHeaderView generateFileHeader(SurfaceTransformerContext context) {
     return generateFileHeader(
-        context.getApiConfig(), context.getTypeTable().getImports(), context.getNamer());
+        context.getApiConfig(),
+        importSectionTransformer.generateImportSection(context),
+        context.getNamer());
   }
 
   public FileHeaderView generateFileHeader(
-      ApiConfig apiConfig, Map<String, TypeAlias> imports, SurfaceNamer namer) {
+      ApiConfig apiConfig, ImportSectionView importSection, SurfaceNamer namer) {
     FileHeaderView.Builder fileHeader = FileHeaderView.newBuilder();
 
     fileHeader.copyrightLines(apiConfig.getCopyrightLines());
@@ -42,8 +44,10 @@ public class FileHeaderTransformer {
     fileHeader.examplePackageName(namer.getExamplePackageName());
     fileHeader.localPackageName(namer.getLocalPackageName());
     fileHeader.localExamplePackageName(namer.getLocalExamplePackageName());
-    fileHeader.imports(importTypeTransformer.generateImports(imports));
+    fileHeader.importSection(importSection);
     fileHeader.version(namer.getApiWrapperModuleVersion());
+    fileHeader.generatorVersion(GeneratorVersionProvider.getGeneratorVersion());
+    fileHeader.modules(namer.getApiModules());
 
     return fileHeader.build();
   }

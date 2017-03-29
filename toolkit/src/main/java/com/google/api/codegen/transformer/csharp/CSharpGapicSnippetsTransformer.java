@@ -21,13 +21,13 @@ import com.google.api.codegen.config.FlatteningConfig;
 import com.google.api.codegen.config.MethodConfig;
 import com.google.api.codegen.config.PageStreamingConfig;
 import com.google.api.codegen.gapic.GapicCodePathMapper;
-import com.google.api.codegen.transformer.ApiMethodTransformer;
 import com.google.api.codegen.transformer.FileHeaderTransformer;
 import com.google.api.codegen.transformer.MethodTransformerContext;
 import com.google.api.codegen.transformer.ModelToViewTransformer;
 import com.google.api.codegen.transformer.ModelTypeTable;
 import com.google.api.codegen.transformer.ParamWithSimpleDoc;
-import com.google.api.codegen.transformer.StandardImportTypeTransformer;
+import com.google.api.codegen.transformer.StandardImportSectionTransformer;
+import com.google.api.codegen.transformer.StaticLangApiMethodTransformer;
 import com.google.api.codegen.transformer.SurfaceNamer;
 import com.google.api.codegen.transformer.SurfaceTransformerContext;
 import com.google.api.codegen.util.csharp.CSharpTypeTable;
@@ -52,8 +52,9 @@ public class CSharpGapicSnippetsTransformer implements ModelToViewTransformer {
 
   private final GapicCodePathMapper pathMapper;
   private final FileHeaderTransformer fileHeaderTransformer =
-      new FileHeaderTransformer(new StandardImportTypeTransformer());
-  private final ApiMethodTransformer apiMethodTransformer = new CSharpApiMethodTransformer();
+      new FileHeaderTransformer(new StandardImportSectionTransformer());
+  private final StaticLangApiMethodTransformer apiMethodTransformer =
+      new CSharpApiMethodTransformer();
   private final CSharpCommonTransformer csharpCommonTransformer = new CSharpCommonTransformer();
 
   public CSharpGapicSnippetsTransformer(GapicCodePathMapper pathMapper) {
@@ -162,9 +163,9 @@ public class CSharpGapicSnippetsTransformer implements ModelToViewTransformer {
             methods.add(generateFlattenedAsyncMethod(methodContextFlat, nameSuffix));
             methods.add(generateFlattenedMethod(methodContextFlat, nameSuffix));
           }
-          methods.add(generateRequestAsyncMethod(methodContext));
-          methods.add(generateRequestMethod(methodContext));
         }
+        methods.add(generateRequestAsyncMethod(methodContext));
+        methods.add(generateRequestMethod(methodContext));
       }
     }
 
@@ -183,7 +184,7 @@ public class CSharpGapicSnippetsTransformer implements ModelToViewTransformer {
         .callerResponseTypeName(callerResponseTypeName)
         .apiClassName(
             namer.getApiWrapperClassName(
-                methodContext.getSurfaceTransformerContext().getInterface()))
+                methodContext.getSurfaceTransformerContext().getInterfaceConfig()))
         .apiVariableName(method.apiVariableName())
         .build();
   }
@@ -204,7 +205,7 @@ public class CSharpGapicSnippetsTransformer implements ModelToViewTransformer {
         .callerResponseTypeName(callerResponseTypeName)
         .apiClassName(
             namer.getApiWrapperClassName(
-                methodContext.getSurfaceTransformerContext().getInterface()))
+                methodContext.getSurfaceTransformerContext().getInterfaceConfig()))
         .apiVariableName(method.apiVariableName())
         .build();
   }
@@ -222,7 +223,7 @@ public class CSharpGapicSnippetsTransformer implements ModelToViewTransformer {
         .callerResponseTypeName(callerResponseTypeName)
         .apiClassName(
             namer.getApiWrapperClassName(
-                methodContext.getSurfaceTransformerContext().getInterface()))
+                methodContext.getSurfaceTransformerContext().getInterfaceConfig()))
         .apiVariableName(method.apiVariableName())
         .build();
   }
@@ -240,7 +241,7 @@ public class CSharpGapicSnippetsTransformer implements ModelToViewTransformer {
         .callerResponseTypeName(callerResponseTypeName)
         .apiClassName(
             namer.getApiWrapperClassName(
-                methodContext.getSurfaceTransformerContext().getInterface()))
+                methodContext.getSurfaceTransformerContext().getInterfaceConfig()))
         .apiVariableName(method.apiVariableName())
         .build();
   }
@@ -257,7 +258,7 @@ public class CSharpGapicSnippetsTransformer implements ModelToViewTransformer {
         .callerResponseTypeName(callerResponseTypeName)
         .apiClassName(
             namer.getApiWrapperClassName(
-                methodContext.getSurfaceTransformerContext().getInterface()))
+                methodContext.getSurfaceTransformerContext().getInterfaceConfig()))
         .apiVariableName(method.apiVariableName())
         .build();
   }
@@ -279,7 +280,7 @@ public class CSharpGapicSnippetsTransformer implements ModelToViewTransformer {
         .callerResponseTypeName(callerResponseTypeName)
         .apiClassName(
             namer.getApiWrapperClassName(
-                methodContext.getSurfaceTransformerContext().getInterface()))
+                methodContext.getSurfaceTransformerContext().getInterfaceConfig()))
         .apiVariableName(method.apiVariableName())
         .build();
   }
@@ -301,7 +302,7 @@ public class CSharpGapicSnippetsTransformer implements ModelToViewTransformer {
         .callerResponseTypeName(callerResponseTypeName)
         .apiClassName(
             namer.getApiWrapperClassName(
-                methodContext.getSurfaceTransformerContext().getInterface()))
+                methodContext.getSurfaceTransformerContext().getInterfaceConfig()))
         .apiVariableName(method.apiVariableName())
         .build();
   }
@@ -323,7 +324,7 @@ public class CSharpGapicSnippetsTransformer implements ModelToViewTransformer {
         .callerResponseTypeName(callerResponseTypeName)
         .apiClassName(
             namer.getApiWrapperClassName(
-                methodContext.getSurfaceTransformerContext().getInterface()))
+                methodContext.getSurfaceTransformerContext().getInterfaceConfig()))
         .apiVariableName(method.apiVariableName())
         .build();
   }
@@ -345,7 +346,7 @@ public class CSharpGapicSnippetsTransformer implements ModelToViewTransformer {
         .callerResponseTypeName(callerResponseTypeName)
         .apiClassName(
             namer.getApiWrapperClassName(
-                methodContext.getSurfaceTransformerContext().getInterface()))
+                methodContext.getSurfaceTransformerContext().getInterfaceConfig()))
         .apiVariableName(method.apiVariableName())
         .build();
   }
@@ -368,7 +369,7 @@ public class CSharpGapicSnippetsTransformer implements ModelToViewTransformer {
         .callerResponseTypeName(callerResponseTypeName)
         .apiClassName(
             namer.getApiWrapperClassName(
-                methodContext.getSurfaceTransformerContext().getInterface()))
+                methodContext.getSurfaceTransformerContext().getInterfaceConfig()))
         .apiVariableName(method.apiVariableName())
         .build();
   }
@@ -389,7 +390,7 @@ public class CSharpGapicSnippetsTransformer implements ModelToViewTransformer {
         .callerResponseTypeName(callerResponseTypeName)
         .apiClassName(
             namer.getApiWrapperClassName(
-                methodContext.getSurfaceTransformerContext().getInterface()))
+                methodContext.getSurfaceTransformerContext().getInterfaceConfig()))
         .apiVariableName(method.apiVariableName())
         .build();
   }
@@ -411,7 +412,7 @@ public class CSharpGapicSnippetsTransformer implements ModelToViewTransformer {
         .callerResponseTypeName(callerResponseTypeName)
         .apiClassName(
             namer.getApiWrapperClassName(
-                methodContext.getSurfaceTransformerContext().getInterface()))
+                methodContext.getSurfaceTransformerContext().getInterfaceConfig()))
         .apiVariableName(method.apiVariableName())
         .build();
   }
@@ -433,7 +434,7 @@ public class CSharpGapicSnippetsTransformer implements ModelToViewTransformer {
         .callerResponseTypeName(callerResponseTypeName)
         .apiClassName(
             namer.getApiWrapperClassName(
-                methodContext.getSurfaceTransformerContext().getInterface()))
+                methodContext.getSurfaceTransformerContext().getInterfaceConfig()))
         .apiVariableName(method.apiVariableName())
         .build();
   }
