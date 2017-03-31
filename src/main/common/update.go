@@ -1,6 +1,10 @@
 package common
 
 import (
+	"discovery-artifact-manager/common/environment"
+	"discovery-artifact-manager/common/errorlist"
+	"discovery-artifact-manager/main/common"
+
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -11,7 +15,131 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 )
+
+// timeFormat modifies the standard RFC3339 format string to make legal for git branch names
+const timeFormat = strings.Replace(time.RFC3339, ":", ".")
+
+// update functions receive an absolute path to the repository root directory, a relative path from
+// there to the subdirectory (used by git-subrepo) for the corresponding language's client library,
+// and mutex for operations dependent on the process's current working directory (e.g., spawning
+// external commands), and a read/write mutex for operations dependent on the file system state
+// (e.g., Git commands). They return a function to execute to release the updated client library
+// following a repository-wide commit updating all regenerated libraries. See: Update.
+type update func(rootDir, subDir string, cwdops *sync.Mutex, fileops *sync.RWMutex) (func() error, error)
+
+type updater *struct {
+	Lib     string
+	SubDir  string
+	Update  update
+	Release func() error
+	Error   error
+}
+
+// updaters maps language library names to the relative path from the repository root to its
+// subdirectory, a function regenerating the client library from the local Discovery doc cache, and
+// a function thence returned releasing the updated client library. See: Update.
+var updaters = []updater{
+	{Lib: "nodejs", SubDir: "clients/nodejs/google-api-nodejs-client", Update: nodejs.Update},
+}
+
+// Update updates the local Discovery doc cache, if indicated; then invokes the sample generators
+// and the client library Update functions for all languages in updaters; then, if indicated,
+// performs a single repository commit updating all client libraries and runs the client library
+// release functions returned by the Update functions for all languages. It requires a clean initial
+// working directory for the repository.
+func Update(updateDisco, releaseLib bool) error {
+	if err := checkClean(); err != nil {
+		return err
+	}
+
+	var now string
+	if updateDisco {
+		now = time.Now().Format(timeFormat)
+		if err := common.UpdateDiscos(); err != nil {
+			return fmt.Errorf("Error updating APIs:\n%v", err)
+		}
+	}
+
+	updateLibs(updaters)
+
+	// TODO(tcoffee): invoke sample generation and test
+
+	if releaseLib {
+		err = os.Chdir(rootDir)
+		if err != nil {
+			return fmt.Errorf("Error switching to root directory %s: %v", rootDir, err)
+		}
+
+		// TODO(tcoffee): git commit
+
+		releaseLibs(updaters)
+
+		// TODO(tcoffee): invoke sample push
+	}
+
+	var errs errorlist.Errors
+	for _, up := range updaters {
+		if up.Error != nil {
+			errs.Add(up.Error)
+		}
+	}
+	return errs.Error()
+}
+
+// checkClean verifies that the repository working directory contains no uncommitted changes.
+func checkClean() error {
+	diff, err := exec.Command("git", "diff-index", "--quiet", "HEAD").Output()
+	if err != nil {
+		return fmt.Errorf("Error verifying local repository is clean: %v", err)
+	}
+	if diff.Len() != 0 {
+		return errors.New("Local repository contains uncommitted changes")
+	}
+	return nil
+}
+
+// updateLibs invokes the client library Update functions for all languages in updaters.
+func updateLibs() {
+	rootDir, err := environment.RepoRoot()
+	if err != nil {
+		return fmt.Errorf("Error locating repository root directory: %v", err)
+	}
+	var cwdOps = &sync.Mutex{}
+	var fileOps = &sync.RWMutex{}
+
+	var lang sync.WaitGroup
+	for _, up := range updaters {
+		lang.Add(1)
+		go func(up updater) {
+			defer lang.Done()
+			up.Release, err = up.Update(rootDir, up.SubDir, cwdOps, fileOps)
+			if err != nil {
+				up.Error = fmt.Errorf("Error updating %v client library: %v", up.Lib, err)
+			}
+		}(up)
+	}
+	lang.Wait()
+}
+
+// releaseLibs invokes the client library Release functions for all languages in updaters.
+func releaseLibs() {
+	var lang sync.WaitGroup
+	for _, up := range updaters {
+		lang.Add(1)
+		go func(up updater) {
+			defer lang.Done()
+			if up.Release != nil {
+				if err := up.Release(); err != nil {
+					up.Error = fmt.Errorf("Error releasing %v client library: %v", up.Lib, err)
+				}
+			}
+		}(up)
+	}
+	lang.Wait()
+}
 
 // MaxInt gives the maximum value of the machine-dependent default integer type. (Standard library
 // constants are specific to machine-independent types.)
