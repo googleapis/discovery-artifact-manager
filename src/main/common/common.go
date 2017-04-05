@@ -1,144 +1,40 @@
 package common
 
 import (
-	"discovery-artifact-manager/common/environment"
-	"discovery-artifact-manager/common/errorlist"
-	"discovery-artifact-manager/main/common"
-
 	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
+
 	"os"
+	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
-	"time"
+
+	"path"
 )
 
-// timeFormat modifies the standard RFC3339 format string to make legal for git branch names
-const timeFormat = strings.Replace(time.RFC3339, ":", ".")
-
-// update functions receive an absolute path to the repository root directory, a relative path from
-// there to the subdirectory (used by git-subrepo) for the corresponding language's client library,
-// and mutex for operations dependent on the process's current working directory (e.g., spawning
-// external commands), and a read/write mutex for operations dependent on the file system state
-// (e.g., Git commands). They return a function to execute to release the updated client library
-// following a repository-wide commit updating all regenerated libraries. See: Update.
-type update func(rootDir, subDir string, cwdops *sync.Mutex, fileops *sync.RWMutex) (func() error, error)
-
-type updater *struct {
-	Lib     string
-	SubDir  string
-	Update  update
-	Release func() error
-	Error   error
+// CommandIn returns the exec.Cmd struct to execute the named program with the given arguments in
+// the specified working directory.
+func CommandIn(dir, name string, arg ...string) *exec.Cmd {
+	cmd := exec.Command(name, arg...)
+	cmd.Dir = dir
+	return cmd
 }
 
-// updaters maps language library names to the relative path from the repository root to its
-// subdirectory, a function regenerating the client library from the local Discovery doc cache, and
-// a function thence returned releasing the updated client library. See: Update.
-var updaters = []updater{
-	{Lib: "nodejs", SubDir: "clients/nodejs/google-api-nodejs-client", Update: nodejs.Update},
-}
-
-// Update updates the local Discovery doc cache, if indicated; then invokes the sample generators
-// and the client library Update functions for all languages in updaters; then, if indicated,
-// performs a single repository commit updating all client libraries and runs the client library
-// release functions returned by the Update functions for all languages. It requires a clean initial
-// working directory for the repository.
-func Update(updateDisco, releaseLib bool) error {
-	if err := checkClean(); err != nil {
-		return err
-	}
-
-	var now string
-	if updateDisco {
-		now = time.Now().Format(timeFormat)
-		if err := common.UpdateDiscos(); err != nil {
-			return fmt.Errorf("Error updating APIs:\n%v", err)
-		}
-	}
-
-	updateLibs(updaters)
-
-	// TODO(tcoffee): invoke sample generation and test
-
-	if releaseLib {
-		err = os.Chdir(rootDir)
-		if err != nil {
-			return fmt.Errorf("Error switching to root directory %s: %v", rootDir, err)
-		}
-
-		// TODO(tcoffee): git commit
-
-		releaseLibs(updaters)
-
-		// TODO(tcoffee): invoke sample push
-	}
-
-	var errs errorlist.Errors
-	for _, up := range updaters {
-		if up.Error != nil {
-			errs.Add(up.Error)
-		}
-	}
-	return errs.Error()
-}
-
-// checkClean verifies that the repository working directory contains no uncommitted changes.
-func checkClean() error {
-	diff, err := exec.Command("git", "diff-index", "--quiet", "HEAD").Output()
+// CheckClean verifies that the given repository working directory contains no uncommitted changes.
+func CheckClean(rootDir string) error {
+	diff, err := CommandIn(rootDir, "git", "diff-index", "--quiet", "HEAD").Output()
 	if err != nil {
 		return fmt.Errorf("Error verifying local repository is clean: %v", err)
 	}
-	if diff.Len() != 0 {
+	if len(diff) != 0 {
 		return errors.New("Local repository contains uncommitted changes")
 	}
 	return nil
-}
-
-// updateLibs invokes the client library Update functions for all languages in updaters.
-func updateLibs() {
-	rootDir, err := environment.RepoRoot()
-	if err != nil {
-		return fmt.Errorf("Error locating repository root directory: %v", err)
-	}
-	var cwdOps = &sync.Mutex{}
-	var fileOps = &sync.RWMutex{}
-
-	var lang sync.WaitGroup
-	for _, up := range updaters {
-		lang.Add(1)
-		go func(up updater) {
-			defer lang.Done()
-			up.Release, err = up.Update(rootDir, up.SubDir, cwdOps, fileOps)
-			if err != nil {
-				up.Error = fmt.Errorf("Error updating %v client library: %v", up.Lib, err)
-			}
-		}(up)
-	}
-	lang.Wait()
-}
-
-// releaseLibs invokes the client library Release functions for all languages in updaters.
-func releaseLibs() {
-	var lang sync.WaitGroup
-	for _, up := range updaters {
-		lang.Add(1)
-		go func(up updater) {
-			defer lang.Done()
-			if up.Release != nil {
-				if err := up.Release(); err != nil {
-					up.Error = fmt.Errorf("Error releasing %v client library: %v", up.Lib, err)
-				}
-			}
-		}(up)
-	}
-	lang.Wait()
 }
 
 // MaxInt gives the maximum value of the machine-dependent default integer type. (Standard library
@@ -182,28 +78,29 @@ func Bump(versioned string, component int) (bumped string, err error) {
 	return
 }
 
-// UpdateFile rewrites the named file by applying the given update function to its contents,
-// returning the modified contents along with any auxiliary information returned by the update
-// function.
-func UpdateFile(name string, update func([]byte) ([]byte, interface{}, error)) (info interface{}, err error) {
-	stat, err := os.Stat(name)
+// UpdateFile rewrites the named file in the given directory by applying the given update function
+// to its contents, returning the modified contents along with any auxiliary information returned by
+// the update function.
+func UpdateFile(dir, name string, update func([]byte) ([]byte, interface{}, error)) (info interface{}, err error) {
+	pathname := path.Join(dir, name)
+	stat, err := os.Stat(pathname)
 	if err != nil {
-		err = fmt.Errorf("Error finding file %s: %v", name, err)
+		err = fmt.Errorf("Error finding file %s: %v", pathname, err)
 		return
 	}
-	contents, err := ioutil.ReadFile(name)
+	contents, err := ioutil.ReadFile(pathname)
 	if err != nil {
-		err = fmt.Errorf("Error reading file %s: %v", name, err)
+		err = fmt.Errorf("Error reading file %s: %v", pathname, err)
 		return
 	}
 	changed, info, err := update(contents)
 	if err != nil {
-		err = fmt.Errorf("Error updating file %s: %v", name, err)
+		err = fmt.Errorf("Error updating file %s: %v", pathname, err)
 		return
 	}
-	err = ioutil.WriteFile(name, changed, stat.Mode())
+	err = ioutil.WriteFile(pathname, changed, stat.Mode())
 	if err != nil {
-		err = fmt.Errorf("Error writing file %s: %v", name, err)
+		err = fmt.Errorf("Error writing file %s: %v", pathname, err)
 		return
 	}
 	return

@@ -26,23 +26,33 @@ type apiIndex struct {
 }
 
 // UpdateDiscos updates local Discovery doc files for all APIs indexed by the live Discovery
-// service, in a top-level directory 'discoveries', which must exist.
-func UpdateDiscos() error {
+// service, in a top-level directory 'discoveries', which must exist; and returns the absolute names
+// of updated files.
+func UpdateDiscos() (discos []string, err error) {
 	discoPath, discoDir, discoFiles, err := readDiscoCache()
 	if err != nil {
-		return err
+		return
 	}
 
 	index, err := readDiscoIndex()
 	if err != nil {
-		return err
+		return
 	}
 
 	updated, errs := writeDiscoCache(index, discoPath, discoDir)
 
 	cleanDiscoCache(discoPath, discoFiles, updated, &errs)
+	err = errs.Error()
+	if err != nil {
+		return
+	}
 
-	return errs.Error()
+	discos = make([]string, 0, len(updated))
+	for filename, _ := range updated {
+		filepath := path.Join(discoPath, filename)
+		discos = append(discos, filepath)
+	}
+	return
 }
 
 // readDiscoCache returns the absolute path to and attributes of the top-level 'discoveries'
