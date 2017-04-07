@@ -71,6 +71,10 @@ func updateIndex(path, version string) (err error) {
 	return
 }
 
+// discovery-artifact-manager branch `gh-pages` corresponds to google-api-nodejs-client branch
+// `gh-pages` used for docs
+const docBranch = "gh-pages"
+
 func Update(discos []string, rootDir, subDir string, repo *sync.RWMutex) (release func() error, err error) {
 	defer repo.Unlock()
 	pull := common.CommandIn(rootDir, "git", "subrepo", "pull", subDir)
@@ -134,10 +138,12 @@ func Update(discos []string, rootDir, subDir string, repo *sync.RWMutex) (releas
 		repo.Lock()
 		defer repo.Unlock()
 
-		// TODO(tcoffee): git subrepo push to google-api-nodejs-client
-
 		if err := common.CheckClean(rootDir); err != nil {
 			return err
+		}
+		err = common.CommandIn(rootDir, "git", "subrepo", "push", subDir).Run()
+		if err != nil {
+			return fmt.Errorf("Error pushing to client library repository (may result from conflicting changes to remote): %v", err)
 		}
 
 		docDir := path.Join(subPath, "doc")
@@ -150,11 +156,13 @@ func Update(discos []string, rootDir, subDir string, repo *sync.RWMutex) (releas
 			return fmt.Errorf("Error regenerating library docs: %v", err)
 		}
 
-		// discovery-artifact-manager branch `gh-pages` corresponds to google-api-nodejs-client branch
-		// `gh-pages` used for docs
-		err = common.CommandIn(subPath, "git", "checkout", "gh-pages").Run()
+		err = common.CommandIn(rootDir, "git", "checkout", docBranch).Run()
 		if err != nil {
-			return fmt.Errorf("Error switching to doc branch `gh-pages`: %v", err)
+			return fmt.Errorf("Error switching to doc branch `%s`: %v", docBranch, err)
+		}
+		err = common.CommandIn(rootDir, "git", "subrepo", "pull", subDir, "-b", docBranch).Run()
+		if err != nil {
+			return fmt.Errorf("Error pulling remote doc branch `%s` (may result from conflicting changes to remote): %v", docBranch, err)
 		}
 
 		latestDir := path.Join(subPath, "latest")
@@ -179,20 +187,24 @@ func Update(discos []string, rootDir, subDir string, repo *sync.RWMutex) (releas
 			return err
 		}
 
-		err = common.CommandIn(subPath, "git", "add", "-A").Run()
+		err = common.CommandIn(rootDir, "git", "add", "-A").Run()
 		if err != nil {
-			return fmt.Errorf("Error staging regenerated docs: %v")
+			return fmt.Errorf("Error staging regenerated docs: %v", err)
 		}
-		err = common.CommandIn(subPath, "git", "commit", "-m", `"`+version+`"`).Run()
+		err = common.CommandIn(rootDir, "git", "commit", "-m", `"`+version+`"`).Run()
 		if err != nil {
-			return fmt.Errorf("Error committing regenerated docs: %v")
+			return fmt.Errorf("Error committing regenerated docs: %v", err)
 		}
-		err = common.CommandIn(subPath, "git", "push", "origin", "gh-pages").Run()
+		err = common.CommandIn(rootDir, "git", "subrepo", "push", subDir, docBranch, "-b", docBranch).Run()
 		if err != nil {
-			return fmt.Errorf("Error pushing regenerated docs: %v")
+			return fmt.Errorf("Error pushing regenerated docs to client library repository (may result from unexpected changes to remote): %v", err)
+		}
+		err = common.CommandIn(rootDir, "git", "push", "origin", docBranch).Run()
+		if err != nil {
+			return fmt.Errorf("Error pushing regenerated docs to global repository: %v", err)
 		}
 
-		err = common.CommandIn(subPath, "git", "checkout", "master").Run()
+		err = common.CommandIn(rootDir, "git", "checkout", "master").Run()
 		if err != nil {
 			return fmt.Errorf("Error switching to master branch: %v", err)
 		}

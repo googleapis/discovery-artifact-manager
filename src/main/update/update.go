@@ -3,7 +3,6 @@ package update
 import (
 	"fmt"
 	"log"
-	"strings"
 	"sync"
 	"time"
 
@@ -22,9 +21,6 @@ func init() {
 		log.Fatal("Error locating repository root directory: %v", err)
 	}
 }
-
-// timeFormat modifies the standard RFC3339 format string to make legal for git branch names
-var timeFormat = strings.Replace(time.RFC3339, ":", ".", -1)
 
 // update functions receive a slice of absolute file names of Discovery docs from which to update
 // client libraries, an absolute path to the repository root directory, a relative path from there
@@ -65,7 +61,7 @@ func Update(updateDisco, releaseLib bool) error {
 	var now string
 	var discos []string
 	if updateDisco {
-		now = time.Now().Format(timeFormat)
+		now = time.Now().Format(time.RFC3339)
 		var err error
 		if discos, err = common.UpdateDiscos(); err != nil {
 			return fmt.Errorf("Error updating APIs:\n%v", err)
@@ -78,7 +74,14 @@ func Update(updateDisco, releaseLib bool) error {
 
 	if releaseLib {
 		// TODO(tcoffee): git commit from rootDir
-		_ = now // placeholder for branch naming
+		err := common.CommandIn(rootDir, "git", "commit", "-m", `"Regenerate from Discovery at `+now+`"`).Run()
+		if err != nil {
+			return fmt.Errorf("Error committing to global repository: %v", err)
+		}
+		err = common.CommandIn(rootDir, "git", "push", "origin").Run()
+		if err != nil {
+			return fmt.Errorf("Error pushing to global repository: %v", err)
+		}
 
 		releaseLibs(updaters)
 
