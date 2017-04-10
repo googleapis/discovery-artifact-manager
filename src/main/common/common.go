@@ -41,7 +41,7 @@ func CheckClean(rootDir string) error {
 // repository at the given root directory, using the git-subrepo tool. It should not be run
 // concurrently with other operations modifying files in the repository.
 func PullSubrepo(rootDir, subDir string) error {
-	if err := common.CommandIn(rootDir, "git", "subrepo", "pull", subDir).Run(); err != nil {
+	if err := CommandIn(rootDir, "git", "subrepo", "pull", subDir).Run(); err != nil {
 		return fmt.Errorf("Error pulling upstream library: %v", err)
 	}
 	return nil
@@ -130,7 +130,7 @@ func ReplacePattern(in []byte, format, change string) (out []byte, inserted stri
 		err = fmt.Errorf("No match found for pattern `%s`", format)
 		return
 	}
-	insert := string(pattern.ExpandString(nil, format, in, match))
+	insert := pattern.Expand(nil, []byte(format), in, match)
 	left, right := match[0], match[1]
 	out = append(in[:left], append(insert, in[right:]...)...)
 	inserted = string(insert)
