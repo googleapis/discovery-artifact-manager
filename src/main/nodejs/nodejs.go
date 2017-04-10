@@ -24,8 +24,9 @@ const (
 `
 )
 
-func updateLog(path string) (version string, err error) {
-	bumped, err := common.UpdateFile(path, logFile, func(log []byte) (changed []byte, bumped interface{}, err error) {
+// updateLog updates the change log file on the given path with a new version entry, and returns the version number.
+func updateLog(path string) (string, error) {
+	return common.UpdateFile(path, logFile, func(log []byte) (changed []byte, bumped string, err error) {
 		bumped, err = common.Bump(string(log), common.Minor)
 		if err != nil {
 			return
@@ -34,14 +35,13 @@ func updateLog(path string) (version string, err error) {
 		changed = append([]byte(fmt.Sprintf(logUpdate, bumped, today)), log...)
 		return
 	})
-	version = bumped.(string)
-	return
 }
 
 const packageFile = "package.json"
 
+// updatePackage updates the package file on the given path with the given version number.
 func updatePackage(path, version string) (err error) {
-	_, err = common.UpdateFile(path, packageFile, func(config []byte) (changed []byte, _ interface{}, err error) {
+	_, err = common.UpdateFile(path, packageFile, func(config []byte) (changed []byte, _ string, err error) {
 		changed, err = common.ReplaceValue(config, "version", version)
 		return
 	})
@@ -54,18 +54,12 @@ const (
 `
 )
 
-// docLinkPattern matches entries in the doc index, plus an unconstrained suffix to allow regexp
-// replacement using standard library functions, which do not support single replacement.
-var docLinkPattern = regexp.MustCompile(strings.Replace(regexp.QuoteMeta(docLinkFormat), "%s", "(.*?)", -1) + `([\s\S]*)`)
-
+// updateIndex updates the documentation index on the given path with the given version number.
 func updateIndex(path, version string) (err error) {
-	_, err = common.UpdateFile(path, indexFile, func(index []byte) (changed []byte, _ interface{}, err error) {
-		changed = docLinkPattern.ReplaceAll(index, []byte(
+	_, err = common.UpdateFile(path, indexFile, func(index []byte) (changed []byte, _ string, err error) {
+		changed, _, err = common.ReplacePattern(index, docLinkFormat,
 			fmt.Sprintf(docLinkFormat, version, "$2", version)+
-				fmt.Sprintf(docLinkFormat, "$1", "", "$3")))
-		if bytes.Equal(changed, index) {
-			err = fmt.Errorf("No match found for doc link %s", docLinkFormat)
-		}
+				fmt.Sprintf(docLinkFormat, "$1", "", "$3"))
 		return
 	})
 	return
@@ -75,22 +69,7 @@ func updateIndex(path, version string) (err error) {
 // `gh-pages` used for docs
 const docBranch = "gh-pages"
 
-func Update(discos []string, rootDir, subDir string, repo *sync.RWMutex) (release func() error, err error) {
-	defer repo.Unlock()
-	pull := common.CommandIn(rootDir, "git", "subrepo", "pull", subDir)
-	repo.Lock()
-	err = pull.Start()
-	if err != nil {
-		err = fmt.Errorf("Error starting upstream library pull: %v", err)
-		return
-	}
-	err = pull.Wait()
-	repo.Unlock()
-	if err != nil {
-		err = fmt.Errorf("Error pulling upstream library: %v", err)
-		return
-	}
-
+func Update(discos []string, rootDir, subDir string) (release func() error, err error) {
 	subPath := path.Join(rootDir, subDir)
 	version, err := updateLog(subPath)
 	if err != nil {
@@ -135,9 +114,6 @@ func Update(discos []string, rootDir, subDir string, repo *sync.RWMutex) (releas
 	}
 
 	release = func() error {
-		repo.Lock()
-		defer repo.Unlock()
-
 		if err := common.CheckClean(rootDir); err != nil {
 			return err
 		}

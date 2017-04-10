@@ -22,13 +22,13 @@ func init() {
 	}
 }
 
-// update functions receive a slice of absolute file names of Discovery docs from which to update
-// client libraries, an absolute path to the repository root directory, a relative path from there
-// to the subdirectory (used by git-subrepo) for the corresponding language's client library, and a
-// read/write mutex for operations dependent on the repository file system state (e.g., Git
-// commands). They return functions to execute to release the updated client libraries
-// following a repository-wide commit updating all regenerated libraries. See: Update.
-type update func(discos []string, rootDir, subDir string, repo *sync.RWMutex) (func() error, error)
+// update functions, run concurrently, receive a slice of absolute file names of Discovery docs from
+// which to update client libraries, an absolute path to the repository root directory, and a
+// relative path from there to the subdirectory (used by git-subrepo) for the corresponding
+// language's client library. They return functions, to execute sequentially, to release the updated
+// client libraries following a repository-wide commit updating all regenerated libraries. See:
+// Update.
+type update func(discos []string, rootDir, subDir string) (func() error, error)
 
 type updater *struct {
 	Lib     string
@@ -45,9 +45,6 @@ var updaters = []updater{
 	{Lib: "nodejs", SubDir: "clients/nodejs/google-api-nodejs-client", Update: nodejs.Update},
 }
 
-var repo = &sync.RWMutex{}
-var lang sync.WaitGroup
-
 // Update updates the local Discovery doc cache, if indicated; then invokes the sample generators
 // and the client library Update functions for all languages in updaters; then, if indicated,
 // performs a single repository commit updating all client libraries and runs the client library
@@ -56,6 +53,13 @@ var lang sync.WaitGroup
 func Update(updateDisco, releaseLib bool) error {
 	if err := common.CheckClean(rootDir); err != nil {
 		return err
+	}
+
+	// Run external pulls sequentially to avoid conflicts
+	for _, up := range updaters {
+		if err := common.PullSubrepo(rootDir, up.SubDir); err != nil {
+			return fmt.Errorf("Error updating %v client library: %v", up.Lib, err)
+		}
 	}
 
 	var now string
@@ -73,7 +77,6 @@ func Update(updateDisco, releaseLib bool) error {
 	// TODO(tcoffee): invoke sample generation and test
 
 	if releaseLib {
-		// TODO(tcoffee): git commit from rootDir
 		err := common.CommandIn(rootDir, "git", "commit", "-m", `"Regenerate from Discovery at `+now+`"`).Run()
 		if err != nil {
 			return fmt.Errorf("Error committing to global repository: %v", err)
@@ -99,12 +102,13 @@ func Update(updateDisco, releaseLib bool) error {
 
 // updateLibs invokes the client library Update functions for all languages in updaters.
 func updateLibs(discos []string, updaters []updater) {
+	var lang sync.WaitGroup
 	for _, up := range updaters {
 		lang.Add(1)
 		go func(up updater) {
 			defer lang.Done()
 			var err error
-			up.Release, err = up.Update(discos, rootDir, up.SubDir, repo)
+			up.Release, err = up.Update(discos, rootDir, up.SubDir)
 			if err != nil {
 				up.Error = fmt.Errorf("Error updating %v client library: %v", up.Lib, err)
 			}
@@ -116,15 +120,10 @@ func updateLibs(discos []string, updaters []updater) {
 // releaseLibs invokes the client library Release functions for all languages in updaters.
 func releaseLibs(updaters []updater) {
 	for _, up := range updaters {
-		lang.Add(1)
-		go func(up updater) {
-			defer lang.Done()
-			if up.Release != nil {
-				if err := up.Release(); err != nil {
-					up.Error = fmt.Errorf("Error releasing %v client library: %v", up.Lib, err)
-				}
+		if up.Release != nil {
+			if err := up.Release(); err != nil {
+				up.Error = fmt.Errorf("Error releasing %v client library: %v", up.Lib, err)
 			}
-		}(up)
+		}
 	}
-	lang.Wait()
 }

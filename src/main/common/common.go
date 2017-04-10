@@ -37,6 +37,16 @@ func CheckClean(rootDir string) error {
 	return nil
 }
 
+// PullSubrepo pulls external changes for a subrepository in the given subdirectory of the
+// repository at the given root directory, using the git-subrepo tool. It should not be run
+// concurrently with other operations modifying files in the repository.
+func PullSubrepo(rootDir, subDir string) error {
+	if err := common.CommandIn(rootDir, "git", "subrepo", "pull", subDir).Run(); err != nil {
+		return fmt.Errorf("Error pulling upstream library: %v", err)
+	}
+	return nil
+}
+
 // MaxInt gives the maximum value of the machine-dependent default integer type. (Standard library
 // constants are specific to machine-independent types.)
 const MaxInt = int(^uint(0) >> 1)
@@ -81,7 +91,7 @@ func Bump(versioned string, component int) (bumped string, err error) {
 // UpdateFile rewrites the named file in the given directory by applying the given update function
 // to its contents, returning the modified contents along with any auxiliary information returned by
 // the update function.
-func UpdateFile(dir, name string, update func([]byte) ([]byte, interface{}, error)) (info interface{}, err error) {
+func UpdateFile(dir, name string, update func([]byte) ([]byte, string, error)) (info string, err error) {
 	pathname := path.Join(dir, name)
 	stat, err := os.Stat(pathname)
 	if err != nil {
@@ -103,6 +113,27 @@ func UpdateFile(dir, name string, update func([]byte) ([]byte, interface{}, erro
 		err = fmt.Errorf("Error writing file %s: %v", pathname, err)
 		return
 	}
+	return
+}
+
+// ReplacePattern replaces the first instance, in the input, of a pattern corresponding to a format
+// string by the given change string. It returns a non-nil error if no match appears, otherwise
+// returns the modified input and the modified portion inserted by expanding any template variables
+// in the change string (see: https://golang.org/pkg/regexp/).
+//
+// The format string is assumed to contain substitutions denoted by `%s`. The corresponding regexp
+// pattern is derived by quoting regexp metacharacters and matching substitutions to shortest substrings without newlines
+func ReplacePattern(in []byte, format, change string) (out []byte, inserted string, err error) {
+	var pattern = regexp.MustCompile(strings.Replace(regexp.QuoteMeta(format), "%s", "(.*?)", -1) + `([\s\S]*)`)
+	match := pattern.FindSubmatchIndex(in)
+	if match == nil {
+		err = fmt.Errorf("No match found for pattern `%s`", format)
+		return
+	}
+	insert := string(pattern.ExpandString(nil, format, in, match))
+	left, right := match[0], match[1]
+	out = append(in[:left], append(insert, in[right:]...)...)
+	inserted = string(insert)
 	return
 }
 
