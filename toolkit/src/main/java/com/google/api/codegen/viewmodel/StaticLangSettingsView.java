@@ -17,9 +17,13 @@ package com.google.api.codegen.viewmodel;
 import com.google.auto.value.AutoValue;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 
 @AutoValue
 public abstract class StaticLangSettingsView {
+
+  @Nullable
+  public abstract String releaseLevelAnnotation();
 
   public abstract SettingsDocView doc();
 
@@ -28,6 +32,9 @@ public abstract class StaticLangSettingsView {
   public abstract String serviceAddress();
 
   public abstract Integer servicePort();
+
+  @Nullable
+  public abstract String packagePath();
 
   public abstract Iterable<String> authScopes();
 
@@ -76,6 +83,8 @@ public abstract class StaticLangSettingsView {
   @AutoValue.Builder
   public abstract static class Builder {
 
+    public abstract Builder releaseLevelAnnotation(String releaseAnnotation);
+
     public abstract Builder doc(SettingsDocView generateSettingsDoc);
 
     public abstract Builder name(String val);
@@ -83,6 +92,8 @@ public abstract class StaticLangSettingsView {
     public abstract Builder serviceAddress(String val);
 
     public abstract Builder servicePort(Integer val);
+
+    public abstract Builder packagePath(String val);
 
     public abstract Builder authScopes(Iterable<String> val);
 

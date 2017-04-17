@@ -327,33 +327,42 @@
     @end
 @end
 
-@private methodComments(service, method)
-  @let descriptionComments = context.methodDescriptionComments(method), \
-       signatureComments = context.methodSignatureComments(service, method, importHandler)
+@private methodComments(apiMethod, apiMethodDoc)
     """
-    @join comment : descriptionComments
-      {@comment}
+    @join line : util.trimDocs(apiMethodDoc.mainDocLines)
+      {@line}
     @end
-    @if descriptionComments.isEmpty
-    @else
 
-
-    @end
-    @if method.getRequestStreaming()
+    @if apiMethod.hasRequestStreaming
       EXPERIMENTAL: This method interface might change in the future.
 
     @end
-    {@sampleCode(context.getApiMethodView(service, method))}
-    @if signatureComments.isEmpty
-    @else
+    {@sampleCode(apiMethod)}
 
+    Args:
+      @join paramDoc : apiMethodDoc.paramDocs
+          @if paramDoc.lines
+              {@paramDoc.paramName} ({@paramDoc.typeName}): {@paramDoc.firstLine}
+                @join line : paramDoc.remainingLines
+                    {@line}
+                @end
+          @else
+              {@paramDoc.paramName} ({@paramDoc.typeName})
+          @end
+      @end
+    @if apiMethodDoc.returnsDocLines
 
+        Returns:
+          @join line : apiMethodDoc.returnsDocLines
+                {@line}
+          @end
     @end
-    @join comment : signatureComments
-      {@comment}
-    @end
+
+    Raises:
+      @join line : apiMethodDoc.throwsDocLines
+          {@line}
+      @end
     """
-  @end
 @end
 
 @private serviceMethodsSection(service)
@@ -386,7 +395,7 @@
 
 @private flattenedMethod(service, method)
     @let methodInputElementPath = importHandler.elementPath(method.getInputMessage, FALSE), \
-             documentation = methodComments(service, method), \
+             methodView = context.getApiMethodView(service, method), \
              methodConfig = context.getApiConfig.getInterfaceConfig(service).getMethodConfig(method), \
              requiredParams = methodConfig.getRequiredFields(), \
              optionalParams = context.removePageTokenFromFields(methodConfig.getOptionalFields(), methodConfig), \
@@ -396,9 +405,7 @@
                     self,
                     requests,
                     options=None):
-                @if documentation
-                    {@documentation}
-                @end
+                {@methodComments(methodView, methodView.doc)}
                 {@callLine(methodConfig, method, "requests")}
         @else
             @if or(requiredParams, optionalParams)
@@ -415,12 +422,7 @@
                             {@optionalParameterValues(optionalParams)},
                         @end
                         options=None):
-                    @if documentation
-                        {@documentation}
-                    @end
-                    @if {@defaultMutableValues(optionalParams)}
-                        {@defaultMutableValues(optionalParams)}
-                    @end
+                    {@methodComments(methodView, methodView.doc)}
                     @if oneOfParams
                         {@checkOneOfParams(oneOfParams)}
                     @end
@@ -443,9 +445,7 @@
                 def {@methodName(method)}(
                         self,
                         options=None):
-                    @if documentation
-                        {@documentation}
-                    @end
+                    {@methodComments(methodView, methodView.doc)}
                     # Create the request object.
                     request = {@methodInputElementPath}()
                     {@callLine(methodConfig, method, "request")}
@@ -463,20 +463,7 @@
 @private optionalParameterValues(params)
     @join field : params on ",".add(BREAK)
         @let paramName = {@context.python.wrapIfKeywordOrBuiltIn(field.getSimpleName())}
-            @if or(context.isDefaultValueMutable(field), context.isOneof(field))
-                {@paramName}=None
-            @else
-                {@paramName}={@context.defaultValue(field, importHandler)}
-            @end
-        @end
-    @end
-@end
-
-@private defaultMutableValues(params)
-    @join field : params if and(context.isDefaultValueMutable(field), not(context.isOneof(field))) on BREAK
-        @let paramName = {@context.python.wrapIfKeywordOrBuiltIn(field.getSimpleName())}
-            if {@paramName} is None:
-                {@paramName} = {@context.defaultValue(field, importHandler)}
+            {@paramName}=None
         @end
     @end
 @end
