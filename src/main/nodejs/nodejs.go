@@ -1,13 +1,10 @@
 package nodejs
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
 	"path"
-	"regexp"
-	"strings"
 	"sync"
 	"time"
 
@@ -65,11 +62,15 @@ func updateIndex(path, version string) (err error) {
 	return
 }
 
-// discovery-artifact-manager branch `gh-pages` corresponds to google-api-nodejs-client branch
-// `gh-pages` used for docs
-const docBranch = "gh-pages"
+const (
+	masterBranch = "master"
 
-func Update(discos []string, rootDir, subDir string) (release func() error, err error) {
+	// discovery-artifact-manager branch `gh-pages` corresponds to google-api-nodejs-client branch
+	// `gh-pages` used for docs, and must exist
+	docBranch = "gh-pages"
+)
+
+func Update(discos []string, rootDir, subDir, _ string) (release func() error, err error) {
 	subPath := path.Join(rootDir, subDir)
 	version, err := updateLog(subPath)
 	if err != nil {
@@ -167,7 +168,7 @@ func Update(discos []string, rootDir, subDir string) (release func() error, err 
 		if err != nil {
 			return fmt.Errorf("Error staging regenerated docs: %v", err)
 		}
-		err = common.CommandIn(rootDir, "git", "commit", "-m", `"`+version+`"`).Run()
+		err = common.CommandIn(rootDir, "git", "commit", "-m", fmt.Sprintf(`"%s"`, version)).Run()
 		if err != nil {
 			return fmt.Errorf("Error committing regenerated docs: %v", err)
 		}
@@ -180,9 +181,9 @@ func Update(discos []string, rootDir, subDir string) (release func() error, err 
 			return fmt.Errorf("Error pushing regenerated docs to global repository: %v", err)
 		}
 
-		err = common.CommandIn(rootDir, "git", "checkout", "master").Run()
+		err = common.CommandIn(rootDir, "git", "checkout", masterBranch).Run()
 		if err != nil {
-			return fmt.Errorf("Error switching to master branch: %v", err)
+			return fmt.Errorf("Error switching to master branch `%v`: %v", masterBranch, err)
 		}
 
 		return nil

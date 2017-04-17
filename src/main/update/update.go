@@ -13,6 +13,7 @@ import (
 	"discovery-artifact-manager/common/errorlist"
 	"discovery-artifact-manager/main/common"
 	"discovery-artifact-manager/main/nodejs"
+	"discovery-artifact-manager/main/ruby"
 )
 
 // update functions, run concurrently, receive a slice of absolute file names of Discovery docs from
