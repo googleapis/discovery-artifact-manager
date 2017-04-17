@@ -14,14 +14,20 @@
  */
 package com.google.api.codegen.grpcmetadatagen;
 
-import com.google.api.codegen.config.PackageMetadataConfig;
-import com.google.api.tools.framework.tools.ToolOptions;
-import java.io.IOException;
+/** Indicates the type of the package */
+public enum PackageType {
 
-/** Interface for the package copying phase of package metadata generation. */
-public interface GrpcPackageCopier {
+  /** Common protos package generated from core protos */
+  GRPC_COMMON,
 
-  /** Returns a map of Docs to be output, as well any package metadata generated in this phase. */
-  public GrpcPackageCopierResult run(ToolOptions options, PackageMetadataConfig config)
-      throws IOException;
+  /** API client protos package generated from API protos e.g. pubsub */
+  GRPC_CLIENT;
+
+  public static PackageType of(String packageTypeString) {
+    if (packageTypeString != null) {
+      return PackageType.valueOf(packageTypeString.toUpperCase());
+    } else {
+      return null;
+    }
+  }
 }

@@ -16,6 +16,7 @@ package com.google.api.codegen.viewmodel.metadata;
 
 import com.google.api.codegen.SnippetSetRunner;
 import com.google.api.codegen.config.VersionBound;
+import com.google.api.codegen.grpcmetadatagen.PackageType;
 import com.google.api.codegen.viewmodel.FileHeaderView;
 import com.google.api.codegen.viewmodel.ViewModel;
 import com.google.auto.value.AutoValue;
@@ -37,6 +38,12 @@ public abstract class PackageMetadataView implements ViewModel {
   public abstract String outputPath();
 
   @Nullable
+  public abstract PackageType packageType();
+
+  @Nullable
+  public abstract String gapicConfigName();
+
+  @Nullable
   public abstract String identifier();
 
   public abstract VersionBound packageVersionBound();
@@ -46,6 +53,9 @@ public abstract class PackageMetadataView implements ViewModel {
   public abstract VersionBound grpcVersionBound();
 
   public abstract VersionBound protoVersionBound();
+
+  @Nullable
+  public abstract VersionBound apiCommonVersionBound();
 
   @Nullable
   public abstract List<PackageDependencyView> protoPackageDependencies();
@@ -109,6 +119,10 @@ public abstract class PackageMetadataView implements ViewModel {
 
     public abstract Builder identifier(String val);
 
+    public abstract Builder gapicConfigName(String val);
+
+    public abstract Builder packageType(PackageType val);
+
     public abstract Builder packageVersionBound(VersionBound val);
 
     public abstract Builder gaxVersionBound(VersionBound val);
@@ -116,6 +130,8 @@ public abstract class PackageMetadataView implements ViewModel {
     public abstract Builder grpcVersionBound(VersionBound val);
 
     public abstract Builder protoVersionBound(VersionBound val);
+
+    public abstract Builder apiCommonVersionBound(VersionBound val);
 
     public abstract Builder protoPackageDependencies(List<PackageDependencyView> val);
 
