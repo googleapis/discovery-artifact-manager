@@ -1,3 +1,5 @@
+// Package update provides the top-level Update function to refresh and regenerate artifacts in
+// discovery-artifact-manager
 package update
 
 import (
@@ -42,10 +44,11 @@ var rootDir string
 
 const (
 	// subDirFormat prescribes the subdirectory path pattern for client library subrepos in
-	// discovery-artifact-manager
+	// discovery-artifact-manager, based on the library's canonical name
 	subDirFormat = "clients/%s/google-api-%s-client"
 
-	// repoURLFormat prescribes the remote URL pattern for client library repositories on GitHub
+	// repoURLFormat prescribes the remote URL pattern for client library repositories on GitHub,
+	// based on the library's canonical name
 	repoURLFormat = "https://github.com/google/google-api-%s-client"
 )
 
