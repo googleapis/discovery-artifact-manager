@@ -1,13 +1,15 @@
-from subprocess import call
+import glob
 import json
 import os
+import subprocess
+from subprocess import call
 
 call(['./gradlew', 'discoJar'], cwd='toolkit')
 
 call(['mkdir', '-p', 'discoveries'])
 
-ddoc_file = 'discoveries/translate.v2.json'
-ddoc_url = 'https://content.googleapis.com/discovery/v1/apis/translate/v2/rest'
+ddoc_file = 'discoveries/compute.v1.json'
+ddoc_url = 'https://content.googleapis.com/discovery/v1/apis/compute/v1/rest'
 
 call(['wget', '-O', ddoc_file, ddoc_url])
 
@@ -22,13 +24,13 @@ if not os.path.exists(dir_):
     os.makedirs(dir_)
 
 ovr_arg = ''
-dv_ovr_path = '{}/translate.v2.override1.json'.format(dir_)
-call(['python', 'gen_ovr.py', 'discoveries/translate.v2.json',
+dv_ovr_path = '{}/compute.v1.override1.json'.format(dir_)
+call(['python', 'gen_ovr.py', 'discoveries/compute.v1.json',
       '--output', dv_ovr_path])
 ovr_arg += dv_ovr_path + ','
 
-ovr_path = 'discoveries/translate.v2.override.json'
-orig_ovr_path = '{}/translate.v2.override2.json'.format(dir_)
+ovr_path = 'discoveries/compute.v1.override.json'
+orig_ovr_path = '{}/compute.v1.override2.json'.format(dir_)
 ovr_suffix = '2'
 if os.path.isfile(ovr_path):
     call(['cp', ovr_path, orig_ovr_path])
@@ -40,22 +42,45 @@ auth_ovr = {
     'authType': 'NONE'
   },
   'js|python': {
-    'discoveryDocUrl': 'http://localhost:5000/static/compute.v1.json'
+    'discoveryDocUrl': 'http://localhost:5000/static/{}.{}.json'.format(name, version)
   }
 }
-auth_ovr_path = '{}/translate.v2.override{}.json'.format(dir_, ovr_suffix)
+auth_ovr_path = '{}/compute.v1.override{}.json'.format(dir_, ovr_suffix)
 with open(auth_ovr_path, 'w') as file_:
     file_.write(json.dumps(auth_ovr, sort_keys=True, indent=2))
     ovr_arg += auth_ovr_path
 
-print ovr_arg
-
 resources = 'toolkit/src/main/resources/com/google/api/codegen'
 call(['java', '-jar', 'toolkit/build/libs/discoGen-0.0.5.jar',
-      '--discovery_doc', 'discoveries/translate.v2.json',
+      '--discovery_doc', 'discoveries/compute.v1.json',
       '--gapic_yaml',
       '{}/py/python_discovery.yaml'.format(resources),
       '--overrides', ovr_arg])
 
-call(['python', 'gen_mocks.py', 'discoveries/translate.v2.json',
+call(['python', 'gen_mocks.py', 'discoveries/compute.v1.json',
       '--directory', dir_])
+
+
+
+
+
+
+DEVNULL = open(os.devnull, 'w')
+
+for path in glob.glob('{}/*.mock.py'.format(dir_)):
+    print 'testing {}'.format(path)
+
+    # print '... python {}'.format(path)
+    proc = subprocess.Popen(['python', path], stdout=DEVNULL, stderr=subprocess.PIPE)
+    while not proc.stderr.readline():
+        pass
+
+    script = path[0:-len('.mock.py')] + '.frag.py'
+    print '... python {}'.format(script)
+    code = call(['python', script], stdout=DEVNULL, stderr=DEVNULL)
+    if code:
+        print '    fail!!!'
+
+    proc.terminate()
+    proc.wait()
+

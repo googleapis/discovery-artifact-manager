@@ -70,15 +70,28 @@ class Generator(object):
         w('')
         w('app = Flask(__name__)')
         w('')
-
+        w('class BadRequest(Exception):')
+        w('    code = 400')
+        w('    message = ""')
+        w('')
+        w('    def __init__(self, msg):')
+        w('        self.message = msg')
+        w('')
+        w('    def to_dict(self):')
+        w("""        return {"error": {
+            "code": self.code,
+            "message": self.message,
+            "details": []
+        }}""")
+        w('')
         self._emit_method(method)
-
         w('')
-        w('def error(code, msg):')
-        payload = '{"error": {"code": code, "message": msg, "details": []}}'
-        w('    return code, {}'.format(payload))
+        w('@app.errorhandler(BadRequest)')
+        w('def handle_bad_request(error):')
+        w('    response = jsonify(error.to_dict())')
+        w('    response.status_code = error.code')
+        w('    return response')
         w('')
-
         w('if __name__ == "__main__":')
         w('    app.run()')
 
@@ -115,13 +128,13 @@ class Generator(object):
 
         if 'request' in method:
             w('    if not request.data:')
-            w('        return error(400, "expected a request body")')
+            w('        raise BadRqeuest("expected a request body")')
             w('    if not isinstance(request.get_json(), dict):')
             msg = 'expected the request body to be an instance of \\"dict\\"'
-            w('        return error(400, "{}")'.format(msg))
+            w('        raise BadRequest("{}")'.format(msg))
         else:
             w('    if request.data:')
-            w('        return error(400, "unexpected request body")')
+            w('        raise BadRequest("unexpected request body")')
 
         if 'response' in method:
             ref = method['response']['$ref']
@@ -133,6 +146,15 @@ class Generator(object):
     def _emit_param_assert(self, name, param):
         w = self._w
 
+        # TODO(saicheems): Because the samples are generated with array fields
+        # initialized as empty arrays, client libraries may interpret the value
+        # as null. As a result, they may not send anything for the field, which
+        # results in a 400 error.
+        # This has to be fixed in the samples by initializing each array with a
+        # single entry of its type (ex: [''] instead of []).
+        if param.get('repeated'):
+            return
+
         # The only way that 'type' is not a property of param is if it contains
         # a reference to another schema. In that case we assume it's an object.
         type_ = param.get('type', 'object')
@@ -143,14 +165,14 @@ class Generator(object):
         if location == 'query':
             w('    if "{}" not in request.args:'.format(name))
             msg = 'query parameter \\"{}\\" not found'.format(name)
-            w('        return error(400, "{}")'.format(msg))
+            w('        raise BadRequest("{}")'.format(msg))
             w('    try:')
             cast_func = self._CAST_FUNC[type_]
             w('        {}(request.args.get("{}"))'.format(cast_func, name))
             w('    except:')
             msg = 'expected \\"{}\\" to be an instance of \\"{}\\"'
             msg = msg.format(name, instance)
-            w('        return error(400, "{}")'.format(msg))
+            w('        raise BadRequest("{}")'.format(msg))
         else: # location == 'path'
             # Path params are accessed as variables passed into the function.
             # The variable name is reconstructed here from the param name.
@@ -158,7 +180,7 @@ class Generator(object):
             w('    if not isinstance({}, {}):'.format(var, instance))
             msg = 'expected \\"{}\\" to be an instance of \\"{}\\"'
             msg = msg.format(name, instance)
-            w('        return error(400, "{}")'.format(msg))
+            w('        raise BadRequest("{}")'.format(msg))
 
     def _gen_type(self, schema, visited=None):
         if visited is None:
