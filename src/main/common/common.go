@@ -7,14 +7,12 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-
 	"os"
 	"os/exec"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
-
-	"path"
 )
 
 // CommandIn returns the exec.Cmd struct to execute the named program with the given arguments in
