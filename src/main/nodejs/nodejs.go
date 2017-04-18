@@ -70,6 +70,7 @@ const (
 	docBranch = "gh-pages"
 )
 
+// Update provides the client library update function for Node.js: see update.update.
 func Update(discos []string, rootDir, subDir, _ string) (release func() error, err error) {
 	subPath := path.Join(rootDir, subDir)
 	version, err := updateLog(subPath)

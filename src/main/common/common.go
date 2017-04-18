@@ -35,9 +35,9 @@ func CheckClean(rootDir string) error {
 	return nil
 }
 
-// PullSubrepo pulls external changes for a subrepository in the given subdirectory of the
-// repository at the given root directory, using the git-subrepo tool. It should not be run
-// concurrently with other operations modifying files in the repository.
+// PullSubrepo pulls external changes for the given subrepository subdirectory in the given
+// repository root directory, using the git-subrepo tool. It should not be run concurrently with
+// other operations modifying files in the repository.
 func PullSubrepo(rootDir, subDir string) error {
 	if err := CommandIn(rootDir, "git", "subrepo", "pull", subDir).Run(); err != nil {
 		return fmt.Errorf("Error pulling upstream library: %v", err)
@@ -89,8 +89,8 @@ func Bump(versioned string, component int) (bumped string, err error) {
 // UpdateFile rewrites the named file in the given directory by applying the given update function
 // to its contents, returning the modified contents along with any auxiliary information returned by
 // the update function.
-func UpdateFile(dir, name string, update func([]byte) ([]byte, string, error)) (info string, err error) {
-	pathname := path.Join(dir, name)
+func UpdateFile(dir, filename string, update func([]byte) ([]byte, string, error)) (info string, err error) {
+	pathname := path.Join(dir, filename)
 	stat, err := os.Stat(pathname)
 	if err != nil {
 		err = fmt.Errorf("Error finding file %s: %v", pathname, err)
@@ -114,23 +114,23 @@ func UpdateFile(dir, name string, update func([]byte) ([]byte, string, error)) (
 	return
 }
 
-// ReplacePattern replaces the first instance, in the input, of a pattern corresponding to a format
-// string by the given change string. It returns a non-nil error if no match appears, otherwise
-// returns the modified input and the modified portion inserted by expanding any template variables
-// in the change string (see: https://golang.org/pkg/regexp/).
+// ReplacePattern replaces the first instance, in the input sequence, of a pattern corresponding to a
+// format string, by the given change string. It returns a non-nil error if no match appears,
+// otherwise returns the modified input and the modified portion inserted by expanding any template
+// variables in the change string (see: https://golang.org/pkg/regexp/).
 //
 // The format string is assumed to contain substitutions denoted by `%s`. The corresponding regexp
 // pattern is derived by quoting regexp metacharacters and matching substitutions to shortest substrings without newlines
-func ReplacePattern(in []byte, format, change string) (out []byte, inserted string, err error) {
+func ReplacePattern(input []byte, format, change string) (out []byte, inserted string, err error) {
 	var pattern = regexp.MustCompile(strings.Replace(regexp.QuoteMeta(format), "%s", "(.*?)", -1) + `([\s\S]*)`)
-	match := pattern.FindSubmatchIndex(in)
+	match := pattern.FindSubmatchIndex(input)
 	if match == nil {
 		err = fmt.Errorf("No match found for pattern `%s`", format)
 		return
 	}
-	insert := pattern.Expand(nil, []byte(format), in, match)
+	insert := pattern.Expand(nil, []byte(format), input, match)
 	left, right := match[0], match[1]
-	out = append(in[:left], append(insert, in[right:]...)...)
+	out = append(input[:left], append(insert, input[right:]...)...)
 	inserted = string(insert)
 	return
 }

@@ -54,6 +54,7 @@ const (
 	releaseBranch = "ruby_release"
 )
 
+// Update provides the client library update function for Ruby: see update.update.
 func Update(discos []string, rootDir, subDir, repoURL string) (release func() error, err error) {
 	subPath := path.Join(rootDir, subDir)
 	version, err := updateLog(subPath)
