@@ -21,7 +21,7 @@ const (
 `
 )
 
-// updateLog updates the change log file on the given path with a new version entry, and returns the version number.
+// updateLog updates the change log file on `path` with a new version entry, and returns the version number.
 func updateLog(path string) (string, error) {
 	return common.UpdateFile(path, logFile, func(log []byte) (changed []byte, bumped string, err error) {
 		bumped, err = common.Bump(string(log), common.Minor)
@@ -36,7 +36,7 @@ func updateLog(path string) (string, error) {
 
 const packageFile = "package.json"
 
-// updatePackage updates the package file on the given path with the given version number.
+// updatePackage updates the package file on `path` with a new `version` number.
 func updatePackage(path, version string) (err error) {
 	_, err = common.UpdateFile(path, packageFile, func(config []byte) (changed []byte, _ string, err error) {
 		changed, err = common.ReplaceValue(config, "version", version)
@@ -51,7 +51,7 @@ const (
 `
 )
 
-// updateIndex updates the documentation index on the given path with the given version number.
+// updateIndex updates the documentation index on `path` with a new `version` number.
 func updateIndex(path, version string) (err error) {
 	_, err = common.UpdateFile(path, indexFile, func(index []byte) (changed []byte, _ string, err error) {
 		changed, _, err = common.ReplacePattern(index, docLinkFormat,
@@ -70,8 +70,8 @@ const (
 	docBranch = "gh-pages"
 )
 
-// Update provides the client library update function for Node.js: see update.update.
-func Update(discos []string, rootDir, subDir, _ string) (release func() error, err error) {
+// Update provides the client library update function for Node.js: see `update.update`.
+func Update(fileNames []string, rootDir, subDir, _ string) (release func() error, err error) {
 	subPath := path.Join(rootDir, subDir)
 	version, err := updateLog(subPath)
 	if err != nil {
@@ -83,7 +83,7 @@ func Update(discos []string, rootDir, subDir, _ string) (release func() error, e
 	}
 
 	var errs errorlist.Errors
-	errChan := make(chan error, len(discos))
+	errChan := make(chan error, len(fileNames))
 	done := make(chan bool)
 	go func() {
 		for err := range errChan {
@@ -92,7 +92,7 @@ func Update(discos []string, rootDir, subDir, _ string) (release func() error, e
 		done <- true
 	}()
 	var regen sync.WaitGroup
-	for _, disco := range discos {
+	for _, disco := range fileNames {
 		regen.Add(1)
 		go func(disco string) {
 			defer regen.Done()

@@ -19,7 +19,7 @@ const (
 `
 )
 
-// updateLog updates the change log file on the given path with a new version entry, and returns the version number.
+// updateLog updates the change log file on `path` with a new version entry, and returns the version number.
 func updateLog(path string) (string, error) {
 	return common.UpdateFile(path, logFile, func(log []byte) (changed []byte, bumped string, err error) {
 		bumped, err = common.Bump(string(log), common.Patch)
@@ -37,7 +37,7 @@ const (
 %sVERSION = '%s'`
 )
 
-// updateVersion updates the version file on the given path with the given version number.
+// updateVersion updates the version file on `path` with a new `version` number.
 func updateVersion(path, version string) (err error) {
 	_, err = common.UpdateFile(path, versionFile, func(file []byte) (changed []byte, _ string, err error) {
 		changed, _, err = common.ReplacePattern(file, versionFormat, fmt.Sprintf(versionFormat, "$1", version))
@@ -54,8 +54,8 @@ const (
 	releaseBranch = "ruby_release"
 )
 
-// Update provides the client library update function for Ruby: see update.update.
-func Update(discos []string, rootDir, subDir, repoURL string) (release func() error, err error) {
+// Update provides the client library update function for Ruby: see `update.update`.
+func Update(fileNames []string, rootDir, subDir, repoURL string) (release func() error, err error) {
 	subPath := path.Join(rootDir, subDir)
 	version, err := updateLog(subPath)
 	if err != nil {
@@ -80,7 +80,7 @@ func Update(discos []string, rootDir, subDir, repoURL string) (release func() er
 	generate := common.CommandIn(subPath, "bundle", "exec", "bin/generate-api",
 		"gen", "generated",
 		"--names_out", path.Join(subPath, "api_names_out.yaml"),
-		"--file", strings.Join(discos, " "))
+		"--file", strings.Join(fileNames, " "))
 	generate.Stdin, err = overwrite.StdoutPipe()
 	if err != nil {
 		err = fmt.Errorf("Error establishing pipe to library generator: %v", err)

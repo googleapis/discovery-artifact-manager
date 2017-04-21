@@ -1,4 +1,4 @@
-// Package update provides the top-level Update function to refresh and regenerate artifacts in
+// Package update provides the top-level `Update` function to refresh and regenerate artifacts in
 // discovery-artifact-manager
 package update
 
@@ -16,29 +16,30 @@ import (
 	"discovery-artifact-manager/main/ruby"
 )
 
-// update functions, run concurrently, receive a slice of absolute file names of Discovery docs from
-// which to update client libraries, an absolute path to the repository root directory, a relative
-// path from there to the subdirectory (used by git-subrepo) for the corresponding language's client
-// library, and a remote URL for the client library's external repository. They return functions, to
+// update functions, run concurrently, receive a slice of absolute `fileNames` of Discovery docs from
+// which to update client libraries, an absolute path to the repository `rootDirectory`, a relative
+// path from there to the `subDirectory` (used by git-subrepo) for the corresponding language's client
+// library, and a `remoteURL` for the client library's external repository. They return functions, to
 // execute sequentially, to release the updated client libraries following a repository-wide commit
 // updating all regenerated libraries. See: Update.
-type update func(discos []string, rootDir, subDir, repoURL string) (func() error, error)
+type update func(fileNames []string, rootDirectory, subDirectory, remoteURL string) (func() error, error)
 
+// updater records a language client library's `Name`, its subrepository `SubDirectory` relative
+// path from the repository root, the `RemoteURL` of its external repository, an `Update` function
+// to regenerate it, a `Release` function to publish it (returned by the `Update` function), and any
+// resulting `Error`.
 type updater *struct {
-	Lib     string
-	SubDir  string
-	RepoURL string
-	Update  update
-	Release func() error
-	Error   error
+	Name         string
+	SubDirectory string
+	RemoteURL    string
+	Update       update
+	Release      func() error
+	Error        error
 }
 
-// updaters maps language library names to the relative path from the repository root to its
-// subdirectory, a function regenerating the client library from the local Discovery doc cache, and
-// a function thence returned releasing the updated client library. See: Update.
 var updaters = []updater{
-	{Lib: "nodejs", Update: nodejs.Update},
-	{Lib: "ruby", Update: ruby.Update},
+	{Name: "nodejs", Update: nodejs.Update},
+	{Name: "ruby", Update: ruby.Update},
 }
 
 var rootDir string
@@ -61,31 +62,31 @@ func init() {
 	}
 
 	for _, up := range updaters {
-		up.SubDir = fmt.Sprintf(subDirFormat, up.Lib, up.Lib)
-		up.RepoURL = fmt.Sprintf(repoURLFormat, up.Lib)
+		up.SubDirectory = fmt.Sprintf(subDirFormat, up.Name, up.Name)
+		up.RemoteURL = fmt.Sprintf(repoURLFormat, up.Name)
 	}
 }
 
-// Update updates the local Discovery doc cache, if indicated; then invokes the sample generators
-// and the client library Update functions for all languages in updaters; then, if indicated,
-// performs a single repository commit updating all client libraries and runs the client library
-// release functions returned by the Update functions for all languages. It requires a clean initial
-// working directory for the repository.
-func Update(updateDisco, releaseLib bool) error {
+// Update handles regeneration of all client libraries. It may `updateDiscovery` docs in the local
+// cache; then invokes the sample generators and client library `Update` functions for all languages
+// in `updaters`; then may `releaseLibrary` updates by performing a single repository commit
+// and serially running the `Release` functions returned by the `Update` functions for all
+// languages. It requires a clean initial working directory for the repository.
+func Update(updateDiscovery, releaseLibrary bool) error {
 	if err := common.CheckClean(rootDir); err != nil {
 		return err
 	}
 
 	// Run external pulls sequentially to avoid conflicts
 	for _, up := range updaters {
-		if err := common.PullSubrepo(rootDir, up.SubDir); err != nil {
-			return fmt.Errorf("Error updating %v client library: %v", up.Lib, err)
+		if err := common.PullSubrepo(rootDir, up.SubDirectory); err != nil {
+			return fmt.Errorf("Error updating %v client library: %v", up.Name, err)
 		}
 	}
 
 	var now string
 	var discos []string
-	if updateDisco {
+	if updateDiscovery {
 		now = time.Now().Format(time.RFC3339)
 		var err error
 		if discos, err = common.UpdateDiscos(); err != nil {
@@ -97,7 +98,7 @@ func Update(updateDisco, releaseLib bool) error {
 
 	// TODO(tcoffee): invoke sample generation and test
 
-	if releaseLib {
+	if releaseLibrary {
 		err := common.CommandIn(rootDir, "git", "commit", "-m", fmt.Sprintf(`"Regenerate from Discovery at %s"`, now)).Run()
 		if err != nil {
 			return fmt.Errorf("Error committing to global repository: %v", err)
@@ -121,9 +122,10 @@ func Update(updateDisco, releaseLib bool) error {
 	return errs.Error()
 }
 
-// updateLibs invokes the client library Update functions for all languages in updaters.
-func updateLibs(discos []string, updaters []updater) {
-	// Ruby client library requires that created files be world-readable; setting process umask
+// updateLibs invokes the client library `Update` functions for all languages with defined
+// `updaters` for all APIs defined in Discovery `files`.
+func updateLibs(files []string, updaters []updater) {
+	// Ruby client library requires that created files be world-readable; setting the process umask
 	// globally for library updates avoids great additional complexity.
 	oldmask := syscall.Umask(0022)
 
@@ -133,9 +135,9 @@ func updateLibs(discos []string, updaters []updater) {
 		go func(up updater) {
 			defer lang.Done()
 			var err error
-			up.Release, err = up.Update(discos, rootDir, up.SubDir, up.RepoURL)
+			up.Release, err = up.Update(files, rootDir, up.SubDirectory, up.RemoteURL)
 			if err != nil {
-				up.Error = fmt.Errorf("Error updating %v client library: %v", up.Lib, err)
+				up.Error = fmt.Errorf("Error updating %v client library: %v", up.Name, err)
 			}
 		}(up)
 	}
@@ -144,13 +146,14 @@ func updateLibs(discos []string, updaters []updater) {
 	syscall.Umask(oldmask)
 }
 
-// releaseLibs invokes the client library Release functions for all languages in updaters.
+// releaseLibs invokes the client library `Release` functions for all languages with defined
+// `updaters`.
 func releaseLibs(updaters []updater) {
 	for _, up := range updaters {
 		if up.Release != nil {
-			fmt.Println("Releasing %v client library ...", up.Lib)
+			fmt.Println("Releasing %v client library ...", up.Name)
 			if err := up.Release(); err != nil {
-				up.Error = fmt.Errorf("Error releasing %v client library: %v", up.Lib, err)
+				up.Error = fmt.Errorf("Error releasing %v client library: %v", up.Name, err)
 			}
 		}
 	}

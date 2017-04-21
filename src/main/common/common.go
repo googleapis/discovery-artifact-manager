@@ -15,17 +15,16 @@ import (
 	"strings"
 )
 
-// CommandIn returns the exec.Cmd struct to execute the named program with the given arguments in
-// the specified working directory.
-func CommandIn(dir, name string, arg ...string) *exec.Cmd {
-	cmd := exec.Command(name, arg...)
-	cmd.Dir = dir
+// CommandIn returns the `exec.Cmd` struct to execute `program` with `arguments` in `workingDirectory`.
+func CommandIn(workingDirectory, program string, arguments ...string) *exec.Cmd {
+	cmd := exec.Command(program, arguments...)
+	cmd.Dir = workingDirectory
 	return cmd
 }
 
-// CheckClean verifies that the given repository working directory contains no uncommitted changes.
-func CheckClean(rootDir string) error {
-	diff, err := CommandIn(rootDir, "git", "diff-index", "--quiet", "HEAD").Output()
+// CheckClean verifies that the given repository `rootDirectory` contains no uncommitted changes.
+func CheckClean(rootDirectory string) error {
+	diff, err := CommandIn(rootDirectory, "git", "diff-index", "--quiet", "HEAD").Output()
 	if err != nil {
 		return fmt.Errorf("Error verifying local repository is clean: %v", err)
 	}
@@ -35,11 +34,11 @@ func CheckClean(rootDir string) error {
 	return nil
 }
 
-// PullSubrepo pulls external changes for the given subrepository subdirectory in the given
-// repository root directory, using the git-subrepo tool. It should not be run concurrently with
-// other operations modifying files in the repository.
-func PullSubrepo(rootDir, subDir string) error {
-	if err := CommandIn(rootDir, "git", "subrepo", "pull", subDir).Run(); err != nil {
+// PullSubrepo pulls external changes for the subrepository `subDirectory` in the repository
+// `rootDirectory`, using the git-subrepo tool. It should not be run concurrently with other
+// operations modifying files in the repository.
+func PullSubrepo(rootDirectory, subDirectory string) error {
+	if err := CommandIn(rootDirectory, "git", "subrepo", "pull", subDirectory).Run(); err != nil {
 		return fmt.Errorf("Error pulling upstream library: %v", err)
 	}
 	return nil
@@ -61,10 +60,10 @@ const (
 // versionNumber groups each of the three numbers of a three-part version number '#.#.#'.
 var versionNumber = regexp.MustCompile(`(\d+)\.(\d+)\.(\d+)`)
 
-// Bump increments the specified component of the first three-part version number '#.#.#' found in
-// the input, returning the incremented version string alone.
-func Bump(versioned string, component int) (bumped string, err error) {
-	nums := versionNumber.FindStringSubmatch(versioned)
+// Bump increments a `component` of the first three-part version number '#.#.#' found in `input`,
+// returning the `bumped` version string alone.
+func Bump(input string, component int) (bumped string, err error) {
+	nums := versionNumber.FindStringSubmatch(input)
 	if nums == nil {
 		err = errors.New("No existing version number '#.#.#' found")
 		return
@@ -86,11 +85,10 @@ func Bump(versioned string, component int) (bumped string, err error) {
 	return
 }
 
-// UpdateFile rewrites the named file in the given directory by applying the given update function
-// to its contents, returning the modified contents along with any auxiliary information returned by
-// the update function.
-func UpdateFile(dir, filename string, update func([]byte) ([]byte, string, error)) (info string, err error) {
-	pathname := path.Join(dir, filename)
+// UpdateFile rewrites the file `name` in `directory` by applying an `update` function to its
+// contents, returning any auxiliary `info` returned by the `update` function.
+func UpdateFile(directory, name string, update func([]byte) ([]byte, string, error)) (info string, err error) {
+	pathname := path.Join(directory, name)
 	stat, err := os.Stat(pathname)
 	if err != nil {
 		err = fmt.Errorf("Error finding file %s: %v", pathname, err)
@@ -114,14 +112,15 @@ func UpdateFile(dir, filename string, update func([]byte) ([]byte, string, error
 	return
 }
 
-// ReplacePattern replaces the first instance, in the input sequence, of a pattern corresponding to a
-// format string, by the given change string. It returns a non-nil error if no match appears,
-// otherwise returns the modified input and the modified portion inserted by expanding any template
-// variables in the change string (see: https://golang.org/pkg/regexp/).
+// ReplacePattern replaces the first instance in `input` of a pattern corresponding to a `format`
+// string, by a `change` string. It returns a non-nil error if no match appears; otherwise, it
+// returns the `modified` input and the `changed` portion obtained by expanding any template
+// variables in the `change` string (see: https://golang.org/pkg/regexp/).
 //
-// The format string is assumed to contain substitutions denoted by `%s`. The corresponding regexp
-// pattern is derived by quoting regexp metacharacters and matching substitutions to shortest substrings without newlines
-func ReplacePattern(input []byte, format, change string) (out []byte, inserted string, err error) {
+// The `format` string is assumed to contain substitutions denoted by `%s`. The corresponding regexp
+// pattern is derived by quoting regexp metacharacters and matching substitutions to shortest
+// substrings without newlines.
+func ReplacePattern(input []byte, format, change string) (modified []byte, changed string, err error) {
 	var pattern = regexp.MustCompile(strings.Replace(regexp.QuoteMeta(format), "%s", "(.*?)", -1) + `([\s\S]*)`)
 	match := pattern.FindSubmatchIndex(input)
 	if match == nil {
@@ -130,13 +129,13 @@ func ReplacePattern(input []byte, format, change string) (out []byte, inserted s
 	}
 	insert := pattern.Expand(nil, []byte(format), input, match)
 	left, right := match[0], match[1]
-	out = append(input[:left], append(insert, input[right:]...)...)
-	inserted = string(insert)
+	modified = append(input[:left], append(insert, input[right:]...)...)
+	changed = string(insert)
 	return
 }
 
-// ReplaceValue replaces the value of a top-level field in a JSON object with the given changed
-// value, returning the modified object.
+// ReplaceValue replaces the value of a top-level `field` in a JSON `object` with a `changed` value,
+// returning the `modified` object.
 //
 // This implementation works around the lack of order-preserving (un)marshaling in the standard
 // library `json` package, by the most straightforward means available for our purposes: It uses the
@@ -148,7 +147,7 @@ func ReplacePattern(input []byte, format, change string) (out []byte, inserted s
 // assertions that JSON is not a human-readable format (the standard library's support for
 // indentation notwithstanding). Compare the second sentence of http://www.json.org, which states
 // that "[JSON] is easy for humans to read and write."
-func ReplaceValue(in []byte, field string, changed interface{}) (out []byte, err error) {
+func ReplaceValue(object []byte, field string, changed interface{}) (modified []byte, err error) {
 	malformed := func(err error) error {
 		if err != nil {
 			return fmt.Errorf("Error parsing JSON object: %v", err)
@@ -164,7 +163,7 @@ func ReplaceValue(in []byte, field string, changed interface{}) (out []byte, err
 	}
 
 	var behind bytes.Buffer
-	ahead := io.TeeReader(bytes.NewReader(in), &behind)
+	ahead := io.TeeReader(bytes.NewReader(object), &behind)
 	parse := json.NewDecoder(ahead)
 
 	// Enter top-level object
@@ -192,9 +191,9 @@ func ReplaceValue(in []byte, field string, changed interface{}) (out []byte, err
 				err = fmt.Errorf("Error reading JSON decoder buffer: %v", err)
 				return
 			}
-			out = bytes.TrimSuffix(behind.Bytes(), buffer)
-			out = append(out, ": "...)
-			out = append(out, serial...)
+			modified = bytes.TrimSuffix(behind.Bytes(), buffer)
+			modified = append(modified, ": "...)
+			modified = append(modified, serial...)
 		}
 
 		// Read next top-level value
@@ -210,12 +209,12 @@ func ReplaceValue(in []byte, field string, changed interface{}) (out []byte, err
 				err = fmt.Errorf("Error encoding %#v to JSON: %v", changed, err)
 				return
 			}
-			out = append(out, buffer...)
+			modified = append(modified, buffer...)
 			tail, err = ioutil.ReadAll(ahead)
 			if err != nil {
 				err = fmt.Errorf("Error reading JSON object: %v", err)
 			}
-			out = append(out, tail...)
+			modified = append(modified, tail...)
 			return
 		}
 	}
