@@ -70,7 +70,15 @@ func readDiscoCache() (discoPath string, discoDir os.FileInfo, discoFiles []os.F
 // live Discovery service.
 func readDiscoIndex() (index *apiIndex, err error) {
 	fmt.Printf("Fetching Discovery doc index from %v ...\n", discoURL)
-	response, err := http.Get(discoURL)
+	client := &http.Client{}
+	request, err := http.NewRequest("GET", discoURL, nil)
+	if err != nil {
+		err = fmt.Errorf("Error forming request for Discovery doc index: %v", err)
+		return
+	}
+	// Use extra-Google IP header (RFC 5737 TEST-NET) to limit index results to public APIs
+	request.Header.Add("X-User-IP", "192.0.2.0")
+	response, err := client.Do(request)
 	if err != nil {
 		err = fmt.Errorf("Error fetching Discovery doc index: %v", err)
 		return
