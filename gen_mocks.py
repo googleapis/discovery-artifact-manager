@@ -64,13 +64,15 @@ class Generator(object):
     def emit(self, method):
         w = self._w
 
+        w('import gzip')
+        w('import io')
         w('from flask import Flask')
         w('from flask import jsonify')
         w('from flask import request')
         w('')
         w('app = Flask(__name__)')
         w('')
-        w('class BadRequest(Exception):')
+        w('class ApiError(Exception):')
         w('    code = 400')
         w('    message = ""')
         w('')
@@ -86,14 +88,24 @@ class Generator(object):
         w('')
         self._emit_method(method)
         w('')
-        w('@app.errorhandler(BadRequest)')
-        w('def handle_bad_request(error):')
+        w('@app.errorhandler(ApiError)')
+        w('def handle_api_error(error):')
         w('    response = jsonify(error.to_dict())')
         w('    response.status_code = error.code')
         w('    return response')
         w('')
+        # Got this idea from here:
+        # https://github.com/cralston0/gzip-encoding/blob/0b13fcc6381324239cb8ae0712516d90a7fb1ac0/flask/middleware.py
+        # TODO: Explain why this middleware is necessary.
+        w('@app.before_request')
+        w('def handle_gzip():')
+        w('    if request.headers.get("content-encoding", "") != "gzip":')
+        w('        return')
+        w('    file_ = gzip.GzipFile(fileobj=io.BytesIO(request.get_data()))')
+        w('    request._cached_data = file_.read()')
+        w('')
         w('if __name__ == "__main__":')
-        w('    app.run()')
+        w('    app.run(port=8000)')
 
     def _emit_method(self, method):
         w = self._w
@@ -128,17 +140,17 @@ class Generator(object):
 
         if 'request' in method:
             w('    if not request.data:')
-            w('        raise BadRqeuest("expected a request body")')
+            w('        raise ApiError("expected a request body")')
             w('    if not isinstance(request.get_json(), dict):')
             msg = 'expected the request body to be an instance of \\"dict\\"'
-            w('        raise BadRequest("{}")'.format(msg))
+            w('        raise ApiError("{}")'.format(msg))
         else:
             w('    if request.data:')
-            w('        raise BadRequest("unexpected request body")')
+            w('        raise ApiError("unexpected request body")')
 
         if 'response' in method:
             ref = method['response']['$ref']
-            obj = self._gen_type(self._schemas[ref])
+            obj = {'data': self._gen_type(self._schemas[ref])}
             w('    return jsonify({})'.format(obj))
         else:
             w('    return jsonify({})')
@@ -165,14 +177,14 @@ class Generator(object):
         if location == 'query':
             w('    if "{}" not in request.args:'.format(name))
             msg = 'query parameter \\"{}\\" not found'.format(name)
-            w('        raise BadRequest("{}")'.format(msg))
+            w('        raise ApiError("{}")'.format(msg))
             w('    try:')
             cast_func = self._CAST_FUNC[type_]
             w('        {}(request.args.get("{}"))'.format(cast_func, name))
             w('    except:')
             msg = 'expected \\"{}\\" to be an instance of \\"{}\\"'
             msg = msg.format(name, instance)
-            w('        raise BadRequest("{}")'.format(msg))
+            w('        raise ApiError("{}")'.format(msg))
         else: # location == 'path'
             # Path params are accessed as variables passed into the function.
             # The variable name is reconstructed here from the param name.
@@ -180,7 +192,7 @@ class Generator(object):
             w('    if not isinstance({}, {}):'.format(var, instance))
             msg = 'expected \\"{}\\" to be an instance of \\"{}\\"'
             msg = msg.format(name, instance)
-            w('        raise BadRequest("{}")'.format(msg))
+            w('        raise ApiError("{}")'.format(msg))
 
     def _gen_type(self, schema, visited=None):
         if visited is None:
@@ -264,7 +276,7 @@ def main():
         os.makedirs(static_dir)
 
     root_copy = root.copy()
-    root_copy['rootUrl'] = 'http://localhost:5000/'
+    root_copy['rootUrl'] = 'http://localhost:8000/'
     name, version = root['name'], root['version']
     ddoc_path = os.path.join(static_dir, '{}.{}.json'.format(name, version))
     # Write the modified discovery doc to the static directory.

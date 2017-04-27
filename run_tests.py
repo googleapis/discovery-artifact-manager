@@ -51,17 +51,21 @@ with open(auth_ovr_path, 'w') as file_:
     ovr_arg += auth_ovr_path
 
 resources = 'toolkit/src/main/resources/com/google/api/codegen'
-call(['java', '-jar', 'toolkit/build/libs/discoGen-0.0.5.jar',
-      '--discovery_doc', 'discoveries/compute.v1.json',
-      '--gapic_yaml',
-      '{}/py/python_discovery.yaml'.format(resources),
-      '--overrides', ovr_arg])
+
+GAPIC_YAMLS = [
+  'toolkit/src/main/resources/com/google/api/codegen/py/python_discovery.yaml',
+  'toolkit/src/main/resources/com/google/api/codegen/csharp/csharp_discovery.yaml'
+]
+
+for gapic_yaml in GAPIC_YAMLS:
+    call(['java', '-jar', 'toolkit/build/libs/discoGen-0.0.5.jar',
+          '--discovery_doc', 'discoveries/compute.v1.json',
+          '--gapic_yaml',
+          gapic_yaml,
+          '--overrides', ovr_arg])
 
 call(['python', 'gen_mocks.py', 'discoveries/compute.v1.json',
       '--directory', dir_])
-
-
-
 
 
 
