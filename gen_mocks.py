@@ -51,7 +51,7 @@ class Generator(object):
 
     def __init__(self, root):
         self._root = root
-
+        self._features = root.get('features', [])
         schemas = {}
         for schema in root.get('schemas', {}).itervalues():
             id_ = schema['id']
@@ -150,7 +150,9 @@ class Generator(object):
 
         if 'response' in method:
             ref = method['response']['$ref']
-            obj = {'data': self._gen_type(self._schemas[ref])}
+            obj = self._gen_type(self._schemas[ref])
+            if 'dataWrapper' in self._features:
+                obj = {'data': obj}
             w('    return jsonify({})'.format(obj))
         else:
             w('    return jsonify({})')

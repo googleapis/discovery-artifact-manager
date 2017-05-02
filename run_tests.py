@@ -42,7 +42,7 @@ auth_ovr = {
     'authType': 'NONE'
   },
   'js|python': {
-    'discoveryDocUrl': 'http://localhost:5000/static/{}.{}.json'.format(name, version)
+    'discoveryDocUrl': 'http://localhost:8000/static/{}.{}.json'.format(name, version)
   }
 }
 auth_ovr_path = '{}/compute.v1.override{}.json'.format(dir_, ovr_suffix)
@@ -78,10 +78,11 @@ for path in glob.glob('{}/*.mock.py'.format(dir_)):
     proc = subprocess.Popen(['python', path], stdout=DEVNULL, stderr=subprocess.PIPE)
     while not proc.stderr.readline():
         pass
+    time.sleep(0.1) # Sleep for a bit just to make sure the server is ready.
 
     script = path[0:-len('.mock.py')] + '.frag.py'
     print '... python {}'.format(script)
-    code = call(['python', script], stdout=DEVNULL, stderr=DEVNULL)
+    code = call(['python', script], stdout=DEVNULL)
     if code:
         print '    fail!!!'
 

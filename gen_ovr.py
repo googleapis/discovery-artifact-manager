@@ -24,6 +24,8 @@ def _gen_fields(method, quote='"'):
             continue
         pattern = param.get('pattern')
         if not pattern:
+            if param.get('type') == 'string':
+                fields[name] = {'defaultValue': quote + ' ' + quote}
             continue
         if pattern[0] == '^' and pattern[-1] == '$':
             continue
