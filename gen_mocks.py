@@ -153,6 +153,10 @@ class Generator(object):
             obj = self._gen_type(self._schemas[ref])
             if 'dataWrapper' in self._features:
                 obj = {'data': obj}
+            # TODO: Explain.
+            for key in ['pageToken', 'nextPageToken']:
+                if key in obj:
+                    obj[key] = None
             w('    return jsonify({})'.format(obj))
         else:
             w('    return jsonify({})')
@@ -191,7 +195,10 @@ class Generator(object):
             # Path params are accessed as variables passed into the function.
             # The variable name is reconstructed here from the param name.
             var = _esc_var(name)
-            w('    if not isinstance({}, {}):'.format(var, instance))
+            w('    try:')
+            cast_func = self._CAST_FUNC[type_]
+            w('        {}({})'.format(cast_func, var))
+            w('    except:')
             msg = 'expected \\"{}\\" to be an instance of \\"{}\\"'
             msg = msg.format(name, instance)
             w('        raise ApiError("{}")'.format(msg))
