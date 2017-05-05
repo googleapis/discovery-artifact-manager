@@ -1,6 +1,6 @@
 # Introduction
 
-The Discovery Artifact Manager is intended to facilitate testing, publishing, and synchronization of [Toolkit](https://github.com/googleapis/toolkit/).
+The Discovery Artifact Manager is intended to facilitate testing, publishing, and synchronization of Google API client libraries and samples generated for those libraries.
 
 This repo contains copies of the following:
 - Discovery files from the [Discovery service](https://developers.google.com/discovery/).
