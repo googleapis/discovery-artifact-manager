@@ -57,7 +57,7 @@ var typeConvert = map[string]string{
 // parseLib is a helper of parseLibs, parsing only one file. It updates `params` with the content of
 // the file.
 func parseLib(libDir, apiName, apiVersion string, params langutil.MethodParamSets, opener filesys.Opener) error {
-	file, err := opener.Open(filepath.Join(libDir, apiName, apiVersion+".js"))
+	file, err := opener.Open(filepath.Join(libDir, apiName, apiVersion+".ts"))
 	if err != nil {
 		return err
 	}
