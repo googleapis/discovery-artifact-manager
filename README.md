@@ -1,6 +1,11 @@
 # Introduction
 
-The Discovery Artifact Manager is intended to facilitate testing, publishing, and synchronization of [Toolkit](https://github.com/googleapis/toolkit/), Discovery files from the [Discovery service](https://developers.google.com/discovery/), and [Discovery-based Google API client libraries](https://developers.google.com/discovery/libraries).
+The Discovery Artifact Manager is intended to facilitate testing, publishing, and synchronization of [Toolkit](https://github.com/googleapis/toolkit/).
+
+This repo contains copies of the following:
+- Discovery files from the [Discovery service](https://developers.google.com/discovery/).
+- The Google API client library generator (used to generate the Java and PHP client libraries).
+- Some of the [Discovery-based Google API client libraries](https://developers.google.com/discovery/libraries).
 
 **NOTE**: This repo only contains a cache of the above items; it is not their source of truth. Changes to Toolkit and Discovery-based Google API client libraries should be directed to their respective repos. There is no guarantee that sources or Discovery files in this repo are up to date.
 
