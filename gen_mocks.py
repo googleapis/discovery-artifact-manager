@@ -83,7 +83,12 @@ class Generator(object):
         w("""        return {"error": {
             "code": self.code,
             "message": self.message,
-            "details": []
+            "details": [],
+            "errors": [{
+              "message": self.message,
+              "domain": "global",
+              "reason": "badRequest"
+            }]
         }}""")
         w('')
         self._emit_method(method)
@@ -128,8 +133,12 @@ class Generator(object):
         path = re.sub('{([^}]+)}', '<string:{}>', path)
         path = path.format(*url_vars)
 
-        http_method = method['httpMethod']
-        w('@app.route("/{}", methods=["{}"])'.format(path, http_method))
+        http_verbs = [ method['httpMethod'] ] # ex: [ "POST" ]
+        # TODO: For some reason, the Java client library sends PATCH requests
+        # as POST requests.
+        if http_verbs[0] == 'PATCH':
+            http_verbs.append('POST')
+        w('@app.route("/{}", methods={})'.format(path, json.dumps(http_verbs)))
         method_name = method['id'].replace('.', '_')
         w('def {}({}):'.format(method_name, ', '.join(url_vars)))
 
@@ -155,8 +164,7 @@ class Generator(object):
                 obj = {'data': obj}
             # TODO: Explain.
             for key in ['pageToken', 'nextPageToken']:
-                if key in obj:
-                    obj[key] = None
+                obj.pop(key, None)
             w('    return jsonify({})'.format(obj))
         else:
             w('    return jsonify({})')
@@ -217,9 +225,9 @@ class Generator(object):
         if type_ == 'boolean':
             return False
         if type_ == 'integer':
-            return 0
+            return { 'int32': 42, 'uint32': 42 }.get(schema.get('format', 42))
         if type_ == 'number':
-            return 0
+            return { 'double': 42, 'float': 42 }.get(schema.get('format', 42))
         if type_ == 'object':
             obj = {}
             id_ = schema.get('id')
@@ -233,15 +241,12 @@ class Generator(object):
             return obj
         if type_ == 'string':
             return {
-                'int32': 0,
-                'uint32': 0,
-                'double': 0.,
-                'float': 0.,
+                'byte': 'foo',
                 'date': '1970-01-01',
                 'date-time': '1970-01-01T00:00:00-07:00',
-                'int64': '0',
-                'uint64': '0',
-            }.get(schema.get('format'), '')
+                'int64': '42',
+                'uint64': '42',
+            }.get(schema.get('format'), 'foo')
         raise Exception('unexpected type: {}'.format(type_))
 
     def _w(self, data):
