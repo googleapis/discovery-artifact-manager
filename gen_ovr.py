@@ -29,6 +29,10 @@ def _gen_fields(method, quote='"'):
                 if param.get('enum'):
                     default_value = param.get('enum')[0]
                 fields[name] = {'defaultValue': quote + default_value + quote}
+            # In the Node.js client, required integers must be non-zero.
+            # TODO: Has to be int64(0) in Go :(
+            #elif param.get('type') == 'integer':
+            #    fields[name] = {'defaultValue': 1}
             continue
         if pattern[0] == '^' and pattern[-1] == '$':
             continue

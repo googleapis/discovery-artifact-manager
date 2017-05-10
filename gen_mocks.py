@@ -147,15 +147,29 @@ class Generator(object):
         for name in param_order:
             self._emit_param_assert(name, params[name])
 
-        if 'request' in method:
-            w('    if not request.data:')
-            w('        raise ApiError("expected a request body")')
-            w('    if not isinstance(request.get_json(), dict):')
-            msg = 'expected the request body to be an instance of \\"dict\\"'
-            w('        raise ApiError("{}")'.format(msg))
-        else:
-            w('    if request.data:')
-            w('        raise ApiError("unexpected request body")')
+        # TODO: It may be useful to reintroduce this check in the future.
+        # It verifies that a request body has or hasn't been sent based on
+        # whether or not the 'request' field of the method is specified.
+        #
+        # There are a few issues to sort first:
+        # - The Node.js client library will send an empty request body for POST
+        #   methods when the 'request' field of the method is not specified.
+        #   Some checks fail as a result when an unexpected request body is
+        #   observed.
+        # - The PHP client library won't send a request body if no fields of
+        #   the request body object are set in the calling code. Since no
+        #   request body fields are usually set in the samples, this check
+        #   can fail erroneously.
+        #
+        #if 'request' in method:
+        #    w('    if not request.data:')
+        #    w('        raise ApiError("expected a request body")')
+        #    w('    if not isinstance(request.get_json(), dict):')
+        #    msg = 'expected the request body to be an instance of \\"dict\\"'
+        #    w('        raise ApiError("{}")'.format(msg))
+        #else:
+        #    w('    if request.data:')
+        #    w('        raise ApiError("unexpected request body")')
 
         if 'response' in method:
             ref = method['response']['$ref']
