@@ -26,47 +26,57 @@ type apiIndex struct {
 }
 
 // UpdateDiscos updates local Discovery doc files for all APIs indexed by the live Discovery
-// service, in a top-level directory 'discoveries', which must exist.
-func UpdateDiscos() error {
-	discoPath, discoDir, discoFiles, err := readDiscoCache()
+// service, in a top-level directory 'discoveries', which must exist; and returns the absolute
+// `names` of updated files.
+func UpdateDiscos() (names []string, err error) {
+	absolutePath, dir, files, err := readDiscoCache()
 	if err != nil {
-		return err
+		return
 	}
 
 	index, err := readDiscoIndex()
 	if err != nil {
-		return err
+		return
 	}
 
-	updated, errs := writeDiscoCache(index, discoPath, discoDir)
+	updated, errs := writeDiscoCache(index, absolutePath, dir)
 
-	cleanDiscoCache(discoPath, discoFiles, updated, &errs)
+	cleanDiscoCache(absolutePath, files, updated, &errs)
+	err = errs.Error()
+	if err != nil {
+		return
+	}
 
-	return errs.Error()
+	names = make([]string, 0, len(updated))
+	for filename, _ := range updated {
+		filepath := path.Join(absolutePath, filename)
+		names = append(names, filepath)
+	}
+	return
 }
 
-// readDiscoCache returns the absolute path to and attributes of the top-level 'discoveries'
-// directory and attributes of each file therein.
-func readDiscoCache() (discoPath string, discoDir os.FileInfo, discoFiles []os.FileInfo, err error) {
+// readDiscoCache returns the `absolutePath` to the top-level 'discoveries' directory along with its
+// `directory` attributes and those of all discovery `files` therein.
+func readDiscoCache() (absolutePath string, directory os.FileInfo, files []os.FileInfo, err error) {
 	root, err := environment.RepoRoot()
 	if err != nil {
 		err = fmt.Errorf("Error finding repository root directory: %v", err)
 		return
 	}
-	discoPath = path.Join(root, "discoveries")
-	discoDir, err = os.Stat(discoPath)
+	absolutePath = path.Join(root, "discoveries")
+	directory, err = os.Stat(absolutePath)
 	if os.IsNotExist(err) {
-		err = fmt.Errorf("Error finding path for Discovery docs: %v", discoPath)
+		err = fmt.Errorf("Error finding path for Discovery docs: %v", absolutePath)
 		return
 	}
-	discoFiles, err = ioutil.ReadDir(discoPath)
+	files, err = ioutil.ReadDir(absolutePath)
 	if err != nil {
-		err = fmt.Errorf("Error reading path for Discovery docs: %v", discoPath)
+		err = fmt.Errorf("Error reading path for Discovery docs: %v", absolutePath)
 	}
 	return
 }
 
-// readDiscoIndex returns an index of API attributes extracted from the JSON index returned by the
+// readDiscoIndex returns an `index` of API attributes extracted from the JSON index returned by the
 // live Discovery service.
 func readDiscoIndex() (index *apiIndex, err error) {
 	fmt.Printf("Fetching Discovery doc index from %v ...\n", discoURL)
@@ -101,14 +111,14 @@ func readDiscoIndex() (index *apiIndex, err error) {
 }
 
 // writeDiscoCache updates (creates or replaces) Discovery doc files in the top-level 'discoveries'
-// directory as needed to update descriptions of APIs in the given index (assumed not to contain
-// duplicates). It returns a map containing updated file basenames corresponding to live APIs, and
-// accumulates errors from all updates.
-func writeDiscoCache(index *apiIndex, discoPath string, discoDir os.FileInfo) (updated map[string]bool, errs errorlist.Errors) {
-	fmt.Printf("Updating local Discovery docs in %v:\n", discoPath)
+// directory (given its `absolutePath` and `directory` attributes) as needed to update descriptions
+// of APIs in the `index` (assumed not to contain duplicates). It returns a map containing `updated`
+// file basenames corresponding to live APIs, and accumulates `errors` from all updates.
+func writeDiscoCache(index *apiIndex, absolutePath string, directory os.FileInfo) (updated map[string]bool, errors errorlist.Errors) {
+	fmt.Printf("Updating local Discovery docs in %v:\n", absolutePath)
 	size := len(index.Items)
 	// Make Discovery doc file permissions like parent directory (no execute)
-	perm := discoDir.Mode() & 0666
+	perm := directory.Mode() & 0666
 
 	var collect sync.WaitGroup
 	errChan := make(chan error, size)
@@ -117,7 +127,7 @@ func writeDiscoCache(index *apiIndex, discoPath string, discoDir os.FileInfo) (u
 		defer collect.Done()
 		for err := range errChan {
 			fmt.Println(err)
-			errs.Add(err)
+			errors.Add(err)
 		}
 	}()
 
@@ -136,7 +146,7 @@ func writeDiscoCache(index *apiIndex, discoPath string, discoDir os.FileInfo) (u
 		update.Add(1)
 		go func(api apiInfo) {
 			defer update.Done()
-			if err := UpdateAPI(api, discoPath, perm, updateChan); err != nil {
+			if err := UpdateAPI(api, absolutePath, perm, updateChan); err != nil {
 				errChan <- fmt.Errorf("Error updating %v %v: %v", api.Name, api.Version, err)
 			}
 		}(api)
@@ -148,31 +158,33 @@ func writeDiscoCache(index *apiIndex, discoPath string, discoDir os.FileInfo) (u
 	return
 }
 
-// cleanDiscoCache deletes files in the top-level 'discoveries' directory whose names do not appear
-// in the map of updated files, and accumulates any further errors.
-func cleanDiscoCache(discoPath string, discoFiles []os.FileInfo, updated map[string]bool, errs *errorlist.Errors) {
-	for _, file := range discoFiles {
+// cleanDiscoCache deletes those `files` in the top-level 'discoveries' directory at `absolutePath`
+// whose names do not appear in the map of `updated` files, and accumulates any further `errors`.
+func cleanDiscoCache(absolutePath string, files []os.FileInfo, updated map[string]bool, errors *errorlist.Errors) {
+	for _, file := range files {
 		filename := file.Name()
 		if !updated[filename] {
-			filepath := path.Join(discoPath, filename)
+			filepath := path.Join(absolutePath, filename)
 			if err := os.Remove(filepath); err != nil {
-				errs.Add(fmt.Errorf("Error deleting expired Discovery doc %v: %v", filepath, err))
+				errors.Add(fmt.Errorf("Error deleting expired Discovery doc %v: %v", filepath, err))
 			}
 		}
 	}
 }
 
-// UpdateAPI updates the local Discovery doc file for an API indexed by the live Discovery service,
-// sending the intended file name to a channel regardless of any error in the update.
+// UpdateAPI reads the Discovery doc for an `API` indexed by the live Discovery service and updates
+// the corresponding cached file in the top-level 'discoveries' directory at `absolutePath` with
+// `permissions`, sending the intended file name to an `updateChannel` regardless of any error in
+// the update.
 //
 // To avoid unnecessary updates due to nondeterministic JSON field ordering from live Discovery docs
 // for some APIs, UpdateAPI updates only files with meaningful changes, as determined by deep
 // equality of maps parsed from JSON, ignoring changes to top-level `etag` and `revision` fields.
-func UpdateAPI(api apiInfo, discoPath string, perm os.FileMode, updateChan chan string) error {
-	fmt.Printf("Updating API: %v %v ...\n", api.Name, api.Version)
-	filename := api.Name + "." + api.Version + ".json"
-	updateChan <- filename
-	filepath := path.Join(discoPath, filename)
+func UpdateAPI(API apiInfo, absolutePath string, permissions os.FileMode, updateChannel chan string) error {
+	fmt.Printf("Updating API: %v %v ...\n", API.Name, API.Version)
+	filename := API.Name + "." + API.Version + ".json"
+	updateChannel <- filename
+	filepath := path.Join(absolutePath, filename)
 
 	oldDisco, err := discoFromFile(filepath)
 	if err != nil {
@@ -183,66 +195,68 @@ func UpdateAPI(api apiInfo, discoPath string, perm os.FileMode, updateChan chan 
 		return fmt.Errorf("Error parsing Discovery doc from %v: %v", filepath, err)
 	}
 
-	newDisco, err := discoFromURL(api.DiscoveryRestURL)
+	newDisco, err := discoFromURL(API.DiscoveryRestURL)
 	if err != nil {
 		return err
 	}
 	newAPI, err := parseAPI(newDisco)
 	if err != nil {
-		return fmt.Errorf("Error parsing Discovery doc from %v: %v", api.DiscoveryRestURL, err)
+		return fmt.Errorf("Error parsing Discovery doc from %v: %v", API.DiscoveryRestURL, err)
 	}
 
 	if oldAPI == nil || !sameAPI(oldAPI, newAPI) {
-		if err := ioutil.WriteFile(filepath, newDisco, perm); err != nil {
+		if err := ioutil.WriteFile(filepath, newDisco, permissions); err != nil {
 			return fmt.Errorf("Error writing Discovery doc to %v: %v", filepath, err)
 		}
 	}
 	return nil
 }
 
-// discoFromFile returns the contents of the file at the given absolute path; nil if the file does
-// not exist.
-func discoFromFile(filepath string) (disco []byte, err error) {
-	_, err = os.Stat(filepath)
+// discoFromFile returns the Discovery `contents` of the file at `absolutePath`, or nil if the
+// file does not exist.
+func discoFromFile(absolutePath string) (contents []byte, err error) {
+	_, err = os.Stat(absolutePath)
 	if os.IsNotExist(err) {
 		err = nil
 		return
 	}
-	disco, err = ioutil.ReadFile(filepath)
+	contents, err = ioutil.ReadFile(absolutePath)
 	if err != nil {
-		err = fmt.Errorf("Error reading Discovery doc from %v: %v", filepath, err)
+		err = fmt.Errorf("Error reading Discovery doc from %v: %v", absolutePath, err)
 		return
 	}
 	return
 }
 
-// discoFromURL returns the contents at the given URL.
-func discoFromURL(discoURL string) (disco []byte, err error) {
-	response, err := http.Get(discoURL)
+// discoFromURL returns the Discovery `contents` at `URL`.
+func discoFromURL(URL string) (contents []byte, err error) {
+	response, err := http.Get(URL)
 	if err != nil {
-		err = fmt.Errorf("Error downloading Discovery doc from %v: %v", discoURL, err)
+		err = fmt.Errorf("Error downloading Discovery doc from %v: %v", URL, err)
 		return
 	}
 	defer response.Body.Close()
-	disco, err = ioutil.ReadAll(response.Body)
+	contents, err = ioutil.ReadAll(response.Body)
 	if err != nil {
-		err = fmt.Errorf("Error reading Discovery doc from %v: %v", discoURL, err)
+		err = fmt.Errorf("Error reading Discovery doc from %v: %v", URL, err)
 		return
 	}
 	return
 }
 
-// parseAPI returns a map comprising a nested data structure corresponding to the given JSON data.
-func parseAPI(disco []byte) (api map[string]interface{}, err error) {
-	if disco == nil {
+// parseAPI returns an `API` map comprising a nested data structure corresponding to JSON
+// `discovery` data.
+func parseAPI(discovery []byte) (API map[string]interface{}, err error) {
+	if discovery == nil {
 		return
 	}
-	err = json.Unmarshal(disco, &api)
+	err = json.Unmarshal(discovery, &API)
 	return
 }
 
-// sameAPI returns true if the given maps, representing APIs parsed from Discovery docs (and assumed
-// non-nil), are deeply equal, ignoring differences in top-level `etag` and `revision` field values.
+// sameAPI returns true if maps representing `apiA` and `apiB` are deeply equal, ignoring
+// differences in top-level `etag` and `revision` field values. Maps are expected to result from
+// `parseAPI` and assumed non-nil.
 func sameAPI(apiA, apiB map[string]interface{}) bool {
 	if len(apiA) != len(apiB) {
 		return false
