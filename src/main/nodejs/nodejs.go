@@ -23,13 +23,13 @@ const (
 
 // updateLog updates the change log file on `path` with a new version entry, and returns the version number.
 func updateLog(path string) (string, error) {
-	return common.UpdateFile(path, logFile, func(log []byte) (changed []byte, bumped string, err error) {
-		bumped, err = common.Bump(string(log), common.Minor)
+	return common.UpdateFile(path, logFile, func(log []byte) (modified []byte, bumped string, err error) {
+		bumped, err = common.Bump(string(log), 2)
 		if err != nil {
 			return
 		}
 		today := time.Now().Format("02 January 2006")
-		changed = append([]byte(fmt.Sprintf(logUpdate, bumped, today)), log...)
+		modified = append([]byte(fmt.Sprintf(logUpdate, bumped, today)), log...)
 		return
 	})
 }
@@ -38,8 +38,8 @@ const packageFile = "package.json"
 
 // updatePackage updates the package file on `path` with a new `version` number.
 func updatePackage(path, version string) (err error) {
-	_, err = common.UpdateFile(path, packageFile, func(config []byte) (changed []byte, _ string, err error) {
-		changed, err = common.ReplaceValue(config, "version", version)
+	_, err = common.UpdateFile(path, packageFile, func(config []byte) (modified []byte, _ string, err error) {
+		modified, err = common.ReplaceValue(config, "version", version)
 		return
 	})
 	return
@@ -47,16 +47,17 @@ func updatePackage(path, version string) (err error) {
 
 const (
 	indexFile     = "index.md"
-	docLinkFormat = `* [v%s%s](http://google.github.io/google-api-nodejs-client/%s/index.html)
+	docLinkFormat = `* [v%v.%v.%v%s](http://google.github.io/google-api-nodejs-client/%s/index.html)
 `
 )
 
 // updateIndex updates the documentation index on `path` with a new `version` number.
 func updateIndex(path, version string) (err error) {
-	_, err = common.UpdateFile(path, indexFile, func(index []byte) (changed []byte, _ string, err error) {
-		changed, _, err = common.ReplacePattern(index, docLinkFormat,
-			fmt.Sprintf(docLinkFormat, version, "$2", version)+
-				fmt.Sprintf(docLinkFormat, "$1", "", "$3"))
+	_, err = common.UpdateFile(path, indexFile, func(index []byte) (modified []byte, _ string, err error) {
+		num = common.Version(version)
+		modified, _, err = common.ReplacePattern(index, docLinkFormat,
+			fmt.Sprintf(docLinkFormat, num[1], num[2], num[3], "$4", version)+
+				fmt.Sprintf(docLinkFormat, "$1", "$2", "$3", "", "$5"))
 		return
 	})
 	return

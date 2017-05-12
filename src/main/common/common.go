@@ -48,40 +48,40 @@ func PullSubrepo(rootDirectory, subDirectory string) error {
 // constants are specific to machine-independent types.)
 const MaxInt = int(^uint(0) >> 1)
 
-// Major, Minor, and Patch define group indices of corresponding version number components in
-// versionNumber. Indices are one-based to match subgroup indices in regexp capture.
-const (
-	_ = iota
-	Major
-	Minor
-	Patch
-)
-
 // versionNumber groups each of the three numbers of a three-part version number '#.#.#'.
 var versionNumber = regexp.MustCompile(`(\d+)\.(\d+)\.(\d+)`)
+
+// Version finds the first three-part version number '#.#.#' in `input`, returning a slice of
+// `numbers` consisting of the complete version number followed by each individual component.
+func Version(input string) (numbers []string, err error) {
+	numbers = versionNumber.FindStringSubmatch(input)
+	if numbers == nil {
+		err = errors.New("No version number '#.#.#' found")
+	}
+	return
+}
 
 // Bump increments a `component` of the first three-part version number '#.#.#' found in `input`,
 // returning the `bumped` version string alone.
 func Bump(input string, component int) (bumped string, err error) {
-	nums := versionNumber.FindStringSubmatch(input)
-	if nums == nil {
-		err = errors.New("No existing version number '#.#.#' found")
-		return
-	}
-	if component < Major || component > Patch {
-		err = fmt.Errorf("Invalid component %v selected for increment of version %v", component, nums[0])
-		return
-	}
-	i, err := strconv.Atoi(nums[component])
+	num, err := Version(input)
 	if err != nil {
-		err = fmt.Errorf("Error parsing component %v of version %v: %v", component, nums[0], err)
+		return
+	}
+	if component < 1 || component > 3 {
+		err = fmt.Errorf("Invalid component %v selected for increment of version %v", component, num[0])
+		return
+	}
+	i, err := strconv.Atoi(num[component])
+	if err != nil {
+		err = fmt.Errorf("Error parsing component %v of version %v: %v", component, num[0], err)
 		return
 	}
 	if i == MaxInt {
-		err = fmt.Errorf("Integer overflow incrementing component %v of version %v", component, nums[0])
+		err = fmt.Errorf("Integer overflow incrementing component %v of version %v", component, num[0])
 	}
-	nums[component] = strconv.Itoa(i + 1)
-	bumped = strings.Join(nums[Major:], ".")
+	num[component] = strconv.Itoa(i + 1)
+	bumped = strings.Join(num[1:], ".")
 	return
 }
 
@@ -117,18 +117,24 @@ func UpdateFile(directory, name string, update func([]byte) ([]byte, string, err
 // returns the `modified` input and the `changed` portion obtained by expanding any template
 // variables in the `change` string (see: https://golang.org/pkg/regexp/).
 //
-// The `format` string is assumed to contain substitutions denoted by `%s`. The corresponding regexp
-// pattern is derived by quoting regexp metacharacters and matching substitutions to shortest
-// substrings without newlines.
+// The `format` string is assumed to contain string substitutions denoted by `%s` and numeric
+// substitutions denoted by `%v`. The corresponding regexp pattern is derived by quoting regexp
+// metacharacters, matching string substitutions to shortest corresponding substrings without
+// newlines, and matching integer substitutions to longest corresponding nonempty digit substrings.
 func ReplacePattern(input []byte, format, change string) (modified []byte, changed string, err error) {
-	var pattern = regexp.MustCompile(strings.Replace(regexp.QuoteMeta(format), "%s", "(.*?)", -1) + `([\s\S]*)`)
+	var pattern = regexp.MustCompile(strings.Replace(strings.Replace(regexp.QuoteMeta(format),
+		"%s", `(.*?)`, -1),
+		"%v", `(\d+)`, -1) +
+		// Capture remainder
+		`([\s\S]*)`)
 	match := pattern.FindSubmatchIndex(input)
 	if match == nil {
 		err = fmt.Errorf("No match found for pattern `%s`", format)
 		return
 	}
-	insert := pattern.Expand(nil, []byte(format), input, match)
-	left, right := match[0], match[1]
+	insert := pattern.Expand(nil, []byte(change), input, match)
+	// Find pattern boundaries ignoring remainder
+	left, right := match[0], match[len(match)-2]
 	modified = append(input[:left], append(insert, input[right:]...)...)
 	changed = string(insert)
 	return

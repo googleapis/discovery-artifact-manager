@@ -21,12 +21,12 @@ const (
 
 // updateLog updates the change log file on `path` with a new version entry, and returns the version number.
 func updateLog(path string) (string, error) {
-	return common.UpdateFile(path, logFile, func(log []byte) (changed []byte, bumped string, err error) {
-		bumped, err = common.Bump(string(log), common.Patch)
+	return common.UpdateFile(path, logFile, func(log []byte) (modified []byte, bumped string, err error) {
+		bumped, err = common.Bump(string(log), 3)
 		if err != nil {
 			return
 		}
-		changed = append([]byte(fmt.Sprintf(logUpdate, bumped)), log...)
+		modified = append([]byte(fmt.Sprintf(logUpdate, bumped)), log...)
 		return
 	})
 }
@@ -39,8 +39,8 @@ const (
 
 // updateVersion updates the version file on `path` with a new `version` number.
 func updateVersion(path, version string) (err error) {
-	_, err = common.UpdateFile(path, versionFile, func(file []byte) (changed []byte, _ string, err error) {
-		changed, _, err = common.ReplacePattern(file, versionFormat, fmt.Sprintf(versionFormat, "$1", version))
+	_, err = common.UpdateFile(path, versionFile, func(file []byte) (modified []byte, _ string, err error) {
+		modified, _, err = common.ReplacePattern(file, versionFormat, fmt.Sprintf(versionFormat, "$1", version))
 		return
 	})
 	return
