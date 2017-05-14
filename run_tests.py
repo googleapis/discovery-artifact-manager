@@ -276,7 +276,7 @@ args.extend(projargslist)
 print args
 call(args, cwd=cstestdir)
 call(['dotnet', 'restore'], cwd=cstestdir, stdout=DEVNULL)
-call(['dotnet', 'build'], cwd=cstestdir, stdout=DEVNULL)
+call(['dotnet', 'msbuild', '/m'], cwd=cstestdir, stdout=DEVNULL)
 
 # Python
 
@@ -289,7 +289,7 @@ call([pytestdir + '/venv/bin/pip', 'install', 'google-api-python-client'])
 
 for path in glob.glob('{}/*.mock.py'.format(dir_)):
     partname = path.split('/')[-1][0:-len('.mock.py')] # 'my/path/foo.bar.get.mock.py' -> 'foo.bar.get'
-    print 'testing {}'.format(partname)
+    print '{}'.format(partname)
 
     call(['cp', '{}'.format(path[0:-len('.mock.py')] + '.frag.py'), '{}'.format(pytestdir)])
 
@@ -299,48 +299,30 @@ for path in glob.glob('{}/*.mock.py'.format(dir_)):
         pass
     time.sleep(0.1) # Sleep for a bit just to make sure the server is ready.
 
-    print '... c#'
+    pslist = []
     curdir = '{}/{}'.format(cstestdir, partname)
-    code = call(['dotnet', 'bin/Debug/netcoreapp1.0/{}.dll'.format(partname)], cwd=curdir, stdout=DEVNULL)
-    if code:
-        print '    fail!!!'
+    pslist.append(subprocess.Popen(['dotnet', 'bin/Debug/netcoreapp1.0/{}.dll'.format(partname)], cwd=curdir, stdout=DEVNULL))
 
-    print '... go'
-    code = call(['/{}/bin/{}'.format(gotestdir, partname)], stdout=DEVNULL)
-    if code:
-        print '    fail!!!'
+    pslist.append(subprocess.Popen(['/{}/bin/{}'.format(gotestdir, partname)], stdout=DEVNULL))
 
-    print '... java'
-    code = call(['java', '-cp', 'target/app-1.0-jar-with-dependencies.jar', '{}.DfareportingExample'.format(partname)], cwd=javatestdir, stdout=DEVNULL)
-    if code:
-        print '    fail!!!'
+    pslist.append(subprocess.Popen(['java', '-cp', 'target/app-1.0-jar-with-dependencies.jar', '{}.DfareportingExample'.format(partname)], cwd=javatestdir, stdout=DEVNULL))
 
-    print '... node.js'
-    script = '{}/{}'.format(njstestdir, partname + '.frag.njs')
-    code = call(['node', script], stdout=DEVNULL)
-    if code:
-        print '    fail!!!'
+    pslist.append(subprocess.Popen(['node', '{}/{}'.format(njstestdir, partname + '.frag.njs')], stdout=DEVNULL))
 
-    print '... python'
-    script = '{}/{}'.format(pytestdir, partname + '.frag.py')
-    code = call(['{}/venv/bin/python'.format(pytestdir), script], stdout=DEVNULL)
-    if code:
-        print '    fail!!!'
+    pslist.append(subprocess.Popen(['{}/venv/bin/python'.format(pytestdir), '{}/{}'.format(pytestdir, partname + '.frag.py')], stdout=DEVNULL))
 
-    print '... ruby'
-    script = '{}/{}'.format(rubytestdir, partname + '.frag.rb')
-    code = call(['ruby', script], stdout=DEVNULL)
-    if code:
-        print '    fail!!!'
+    pslist.append(subprocess.Popen(['ruby', '{}/{}'.format(rubytestdir, partname + '.frag.rb')], stdout=DEVNULL))
 
-    print '... php'
-    script = '{}/{}'.format(phptestdir, partname + '.frag.php')
-    code = call(['php', script], stdout=DEVNULL)
-    if code:
-        print '    fail!!!'
+    pslist.append(subprocess.Popen(['php', '{}/{}'.format(phptestdir, partname + '.frag.php')], stdout=DEVNULL))
 
-    # call(['python', 'src/googleapis/codegen/generate_library.py', '--input=/Users/saicheems/Documents/workspace/discovery-artifact-manager/discoveries/dfareporting.v2.7.json', '--language=cpp', '--output_dir=../Src/Generated'], cwd='../google-api-dotnet-client/ClientGenerator')
+    for i, l in enumerate(['c#', 'go', 'java', 'node.js', 'python', 'ruby', 'php']):
+        code = pslist[i].wait()
+        if code or (l == 'node.js' and pslist[i].stderr.readline()):
+            print '{:7} ... fail'.format(l)
+        else:
+            print '{:7} ... ok'.format(l)
 
+    print ''
     proc.terminate()
     proc.wait()
 

@@ -303,13 +303,16 @@ def main():
     if not os.path.exists(static_dir):
         os.makedirs(static_dir)
 
-    root_copy = root.copy()
-    root_copy['rootUrl'] = 'http://localhost:8000/'
+    #root_copy = root.copy()
+    #root_copy['rootUrl'] = 'http://localhost:8000/'
     name, version = root['name'], root['version']
+    # TODO: Note that the Discovery doc written to the static directory is the
+    # same as the one passed in. The passed Discovery doc should already have
+    # been modified to point to localhost:8000.
     ddoc_path = os.path.join(static_dir, '{}.{}.json'.format(name, version))
-    # Write the modified discovery doc to the static directory.
+    # Write the Discovery doc to the static directory.
     with open(ddoc_path, 'w') as file_:
-        file_.write(json.dumps(root_copy, sort_keys=True, indent=2))
+        file_.write(json.dumps(root, sort_keys=True, indent=2))
     # Write proxy.html to the static directory.
     # proxy.html is required by the JavaScript client library.
     with open(os.path.join(static_dir, 'proxy.html'), 'w') as file_:

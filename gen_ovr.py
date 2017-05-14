@@ -24,7 +24,8 @@ def _gen_fields(method, quote='"'):
             continue
         pattern = param.get('pattern')
         if not pattern:
-            if param.get('type') == 'string' and not param.get('format'):
+            # TODO: Fix this whole thing.
+            if param.get('type') == 'string' and not param.get('format') and not param.get('repeated'):
                 default_value = ' '
                 if param.get('enum'):
                     default_value = param.get('enum')[0]
