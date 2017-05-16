@@ -1,3 +1,4 @@
+from __future__ import print_function
 import argparse
 import collections
 import glob
@@ -10,6 +11,11 @@ import subprocess
 import sys
 import time
 
+# Create a class
+# Store directory names as global variables
+
+_DEVNULL = open(os.devnull, 'w')
+
 _GAPIC_YAML_FILENAMES = {
     'csharp': 'toolkit/src/main/resources/com/google/api/codegen/csharp/csharp_discovery.yaml',
     'go': 'toolkit/src/main/resources/com/google/api/codegen/go/go_discovery.yaml',
@@ -19,6 +25,7 @@ _GAPIC_YAML_FILENAMES = {
     'python': 'toolkit/src/main/resources/com/google/api/codegen/py/python_discovery.yaml',
     'ruby': 'toolkit/src/main/resources/com/google/api/codegen/ruby/ruby_discovery.yaml'
 }
+
 
 def _init_csharp_lib(ctx):
     client_lib_dir = os.path.join(ctx.lib_dir, 'google-api-dotnet-client')
@@ -38,11 +45,50 @@ def _init_csharp_lib(ctx):
            ' --output_dir ../Src/Generated').format(ctx.discovery_doc_filename)
     subprocess.check_call(shlex.split(cmd), cwd=client_generator_dir)
 
+
+def _init_go_lib(ctx):
+    go_dir = os.path.join(ctx.lib_dir, 'go')
+    if not os.path.exists(go_dir):
+        os.makedirs(go_dir)
+    renamed_version = ctx.version
+    odd_version_prog = re.compile('^(.+)_(v[\d\.]+)$')
+    if ctx.version == 'alpha' or ctx.version == 'beta':
+        renamed_version = 'v0.' + ctx.version
+    match = odd_version_prog.match(ctx.version)
+    if match:
+        renamed_version = match.group(1) + '/' + match.group(2)
+    cmd = 'go get google.golang.org/api/{}/{}'.format(ctx.name, renamed_version)
+    env = os.environ
+    env['GOPATH'] = go_dir
+    print(cmd)
+    subprocess.call(shlex.split(cmd), env=env)
+
+
+def _init_go_env(ctx):
+    go_src_dir = os.path.join(ctx.src_dir, 'go')
+    if not os.path.exists(go_src_dir):
+        os.makedirs(go_src_dir)
+    go_bin_dir = os.path.join(go_src_dir, 'bin')
+    env = os.environ
+    env['GOBIN'] = go_bin_dir
+    go_path = os.path.join(ctx.lib_dir, 'go')
+    cmd = 'ln -s {} {}'.format(go_src_dir, os.path.join(go_path, '{}:{}'.format(ctx.name, ctx.version)))
+    print(cmd)
+    subprocess.call(shlex.split(cmd))
+    for filename in glob.glob('{}/*.frag.go'.format(ctx.autogen_src_dir)):
+        partname = os.path.split(filename)[1][:-len('.frag.go')]
+        cdir = os.path.join(go_src_dir, partname)
+        os.makedirs(cdir)
+        shutil.copy2(filename, '{}/{}.go'.format(cdir, partname))
+    cmd = 'go install -v ./...'
+    subprocess.call(shlex.split(cmd), cwd=go_src_dir, env=env)
+
+
 def _init_csharp_env(ctx):
     client_lib_dir = os.path.join(ctx.lib_dir, 'google-api-dotnet-client')
 
     title = lambda x: x[0].upper() + x[1:] if x else x
-    name = ctx.canonical_name
+    name = ctx.canonical_name.replace(' ', '')
     if not name:
         name = ctx.name
     service_name = ''.join([title(x) for x in re.compile(r'[\._/-]+').split(name)])
@@ -50,7 +96,6 @@ def _init_csharp_env(ctx):
     service_dir = os.path.join(client_lib_dir,
             'Src/Generated/Google.Apis.{}.{}'.format(service_name, version_name))
 
-    print service_dir
     cmd = 'dotnet migrate'
     subprocess.check_call(shlex.split(cmd), cwd=service_dir)
 
@@ -60,6 +105,7 @@ def _init_csharp_env(ctx):
     cmd = 'dotnet new sln -n app'
     subprocess.check_call(shlex.split(cmd), cwd=csharp_src_dir)
 
+    cmds = []
     csproj_filenames = []
     for filename in glob.glob('{}/*.frag.cs'.format(ctx.autogen_src_dir)):
         partname = os.path.split(filename)[1][:-len('.frag.cs')]
@@ -83,6 +129,8 @@ def _init_csharp_env(ctx):
 
 </Project>
 """.format('{}/Src/Generated/Google.Apis.{}.{}/Google.Apis.{}.{}.csproj'.format(client_lib_dir, service_name, version_name, service_name, version_name)))
+        cmds.append(('dotnet {}/bin/Debug/netcoreapp1.0/{}.dll'.format(partname, partname), csharp_src_dir, partname))
+
     cmd = 'dotnet sln app.sln add {}'.format(' '.join(csproj_filenames))
     subprocess.check_call(shlex.split(cmd), cwd=csharp_src_dir)
     cmd = 'dotnet restore'
@@ -90,17 +138,24 @@ def _init_csharp_env(ctx):
     cmd = 'dotnet msbuild /m'
     subprocess.check_call(shlex.split(cmd), cwd=csharp_src_dir)
 
+    return cmds
+
+
 def _init_lang_lib(lang, ctx):
     if lang == 'csharp':
         _init_csharp_lib(ctx)
+    if lang == 'go':
+        _init_go_lib(ctx)
     else:
         raise Exception('unknown language: {}'.format(lang))
 
 def _init_lang_env(lang, ctx):
     if lang == 'csharp':
-        _init_csharp_env(ctx)
-    else:
-        raise Exception('unknown language: {}'.format(lang))
+        return _init_csharp_env(ctx)
+    if lang == 'go':
+        _init_go_env(ctx)
+        raise Exception()
+    raise Exception('unknown language: {}'.format(lang))
 
 def _write_override_files(ctx):
     filenames = []
@@ -108,9 +163,9 @@ def _write_override_files(ctx):
     dv_override_filename = '{}.override1.json'.format(name_dot_version)
     dv_override_filename = os.path.join(ctx.src_dir, dv_override_filename)
     filenames.append(dv_override_filename)
-    cmd = 'python gen_ovr.py {} --output {}'.format(
+    cmd = 'python generate_default_value_override.py {} --output {}'.format(
             ctx.discovery_doc_filename, dv_override_filename)
-    subprocess.call(shlex.split(cmd))
+    subprocess.check_call(shlex.split(cmd))
 
     suffix = 2
     override_filename = os.path.splitext(ctx.discovery_doc_filename)[0]
@@ -192,13 +247,21 @@ def main():
         if not os.path.exists(src_dir):
             os.makedirs(src_dir)
 
-        with open('{}/{}.{}.json'.format(src_dir, name, version), 'w') as file_:
-            root['rootUrl'] = 'http://localhost:8080/'
-            file_.write(json.dumps(root, sort_keys=True, indent=2))
+        mock_discovery_doc_filename = '{}/{}.{}.json'.format(src_dir, name, version)
+        cmd = 'python generate_mock_discovery_document.py {} --output {}'.format(
+                discovery_doc_filename, mock_discovery_doc_filename)
+        subprocess.check_call(shlex.split(cmd))
+
+        cmd = 'python generate_mock_server.py {} --directory {}'.format(mock_discovery_doc_filename, src_dir)
+        subprocess.check_call(shlex.split(cmd))
+        cmd = 'virtualenv venv'
+        subprocess.check_call(shlex.split(cmd), cwd=src_dir)
+        cmd = 'venv/bin/pip install google-api-python-client'
+        subprocess.check_call(shlex.split(cmd), cwd=src_dir)
 
         ctxs.append(Context(name, canonical_name, version, revision,
-                '{}/{}.{}.json'.format(src_dir, name, version),
-                autogen_src_dir, src_dir, lib_dir))
+                mock_discovery_doc_filename, autogen_src_dir, src_dir,
+                lib_dir))
     if not ctxs:
         raise Exception('no IDs to test')
 
@@ -222,7 +285,27 @@ def main():
                                           temp_dir)
             subprocess.check_call(shlex.split(cmd))
 
-            _init_lang_env(lang, ctx)
+            cmds = _init_lang_env(lang, ctx)
+
+            cmd = 'python {}.{}.mock.py'.format(name, version)
+            proc = subprocess.Popen(shlex.split(cmd), cwd=src_dir, stderr=subprocess.PIPE)
+            while not proc.stderr.readline():
+                pass
+            time.sleep(0.1)
+            print('Running samples...')
+            start = time.time()
+            for cmd in cmds:
+                print('{:>64} ...'.format(cmd[2]), end='')
+                code = subprocess.call(shlex.split(cmd[0]), cwd=cmd[1], stderr=_DEVNULL, stdout=_DEVNULL)
+                if code:
+                    print(' fail')
+                else:
+                    print(' ok')
+            end = time.time()
+            print('Finished in {} seconds'.format(end - start))
+
+            proc.terminate()
+            proc.wait()
 
 
 if __name__ == '__main__':

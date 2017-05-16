@@ -61,7 +61,7 @@ class Generator(object):
     def set_file(self, file_):
         self._file = file_
 
-    def emit(self, method):
+    def emit(self, methods):
         w = self._w
 
         w('import gzip')
@@ -91,8 +91,9 @@ class Generator(object):
             }]
         }}""")
         w('')
-        self._emit_method(method)
-        w('')
+        for method in methods.itervalues():
+            self._emit_method(method)
+            w('')
         w('@app.errorhandler(ApiError)')
         w('def handle_api_error(error):')
         w('    response = jsonify(error.to_dict())')
@@ -318,12 +319,25 @@ def main():
     with open(os.path.join(static_dir, 'proxy.html'), 'w') as file_:
         file_.write(_PROXY_HTML)
 
-    for key, val in methods.iteritems():
-        path = os.path.join(args.directory, key + '.mock.py')
-        with open(path, 'w') as file_:
-            print path
-            gen.set_file(file_)
-            gen.emit(val)
+    # Verify that all paths are unique. Error if we encounter a conflict.
+    paths = {} # Map from reduced method paths to method IDs.
+    for id_, method in methods.iteritems():
+        # TODO: Check if flatPath is always specified.
+        path = method.get('flatPath', method['path']).strip()
+        path = re.sub(r'{[\+][^}]*}', '{+}', path)
+        path = re.sub(r'{[^\+][^}]*}', '{}', path)
+        path = path + ':' + method['httpMethod']
+        if path in paths:
+            msg = 'method "{}" and "{}" have the same path'
+            msg = msg.format(paths[path], id_)
+            raise Exception(msg)
+        paths[path] = id_
+
+    filename = os.path.join(args.directory,
+                            '{}.{}.mock.py'.format(name, version))
+    with open(filename, 'w') as file_:
+        gen.set_file(file_)
+        gen.emit(methods)
 
 
 if __name__ == '__main__':
