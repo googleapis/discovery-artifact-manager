@@ -14,7 +14,9 @@
  */
 package com.google.api.codegen.config;
 
+import com.google.api.codegen.ReleaseLevel;
 import com.google.api.codegen.TargetLanguage;
+import com.google.api.codegen.grpcmetadatagen.GenerationLayer;
 import com.google.api.codegen.grpcmetadatagen.PackageType;
 import com.google.auto.value.AutoValue;
 import com.google.common.annotations.VisibleForTesting;
@@ -39,7 +41,7 @@ public abstract class PackageMetadataConfig {
 
   private static final String CONFIG_KEY_DEFAULT = "default";
   private static final ImmutableMap<TargetLanguage, String> DEFAULT_PROTO_PACKAGE_PREFIX =
-      ImmutableMap.<TargetLanguage, String>builder().put(TargetLanguage.JAVA, "grpc-").build();
+      ImmutableMap.<TargetLanguage, String>builder().put(TargetLanguage.JAVA, "proto-").build();
 
   protected abstract Map<TargetLanguage, VersionBound> gaxVersionBound();
 
@@ -56,6 +58,8 @@ public abstract class PackageMetadataConfig {
   protected abstract Map<TargetLanguage, String> packageName();
 
   protected abstract Map<TargetLanguage, Map<String, VersionBound>> protoPackageDependencies();
+
+  protected abstract Map<TargetLanguage, ReleaseLevel> releaseLevel();
 
   /** The version of GAX that this package depends on. Configured per language. */
   public VersionBound gaxVersionBound(TargetLanguage language) {
@@ -95,6 +99,15 @@ public abstract class PackageMetadataConfig {
     return protoPackageDependencies().get(language);
   }
 
+  /** The development status of the client library. Configured per language. */
+  public ReleaseLevel releaseLevel(TargetLanguage language) {
+    ReleaseLevel level = releaseLevel().get(language);
+    if (level == null) {
+      level = ReleaseLevel.UNSET_RELEASE_LEVEL;
+    }
+    return level;
+  }
+
   /**
    * The base name of the client library package. E.g., "google-cloud-logging-v1". Configured per
    * language.
@@ -106,6 +119,9 @@ public abstract class PackageMetadataConfig {
   /** Returns the type of the package */
   @Nullable
   public abstract PackageType packageType();
+
+  @Nullable
+  public abstract GenerationLayer generationLayer();
 
   /** A single-word short name of the API. E.g., "logging". */
   public abstract String shortName();
@@ -154,9 +170,13 @@ public abstract class PackageMetadataConfig {
 
     abstract Builder protoPackageDependencies(Map<TargetLanguage, Map<String, VersionBound>> val);
 
+    abstract Builder releaseLevel(Map<TargetLanguage, ReleaseLevel> val);
+
     abstract Builder shortName(String val);
 
     abstract Builder packageType(PackageType val);
+
+    abstract Builder generationLayer(GenerationLayer val);
 
     abstract Builder apiVersion(String val);
 
@@ -187,8 +207,10 @@ public abstract class PackageMetadataConfig {
         .apiCommonVersionBound(ImmutableMap.<TargetLanguage, VersionBound>of())
         .generatedPackageVersionBound(ImmutableMap.<TargetLanguage, VersionBound>of())
         .protoPackageDependencies(ImmutableMap.<TargetLanguage, Map<String, VersionBound>>of())
+        .releaseLevel(ImmutableMap.<TargetLanguage, ReleaseLevel>of())
         .shortName("")
         .packageType(PackageType.GRPC_CLIENT)
+        .generationLayer(GenerationLayer.PROTO)
         .apiVersion("")
         .protoPath("")
         .author("")
@@ -219,10 +241,12 @@ public abstract class PackageMetadataConfig {
         .apiCommonVersionBound(
             createVersionMap(
                 (Map<String, Map<String, String>>) configMap.get("api_common_version")))
+        .releaseLevel(createReleaseLevelMap((Map<String, String>) configMap.get("release_level")))
         .protoPackageDependencies(createProtoPackageDependencies(configMap))
         .packageName(buildMapWithDefault((Map<String, String>) configMap.get("package_name")))
         .shortName((String) configMap.get("short_name"))
         .packageType(PackageType.of((String) configMap.get("package_type")))
+        .generationLayer(GenerationLayer.of((String) configMap.get("generation_layer")))
         .apiVersion((String) configMap.get("major_version"))
         .protoPath((String) configMap.get("proto_path"))
         .author((String) configMap.get("author"))
@@ -290,6 +314,24 @@ public abstract class PackageMetadataConfig {
               return null;
             }
             return VersionBound.create(versionMap.get("lower"), versionMap.get("upper"));
+          }
+        });
+  }
+
+  private static Map<TargetLanguage, ReleaseLevel> createReleaseLevelMap(
+      Map<String, String> inputMap) {
+    Map<TargetLanguage, String> intermediate = buildMapWithDefault(inputMap);
+    // Convert parsed YAML map into ReleaseLevel enum
+    return Maps.transformValues(
+        intermediate,
+        new Function<String, ReleaseLevel>() {
+          @Override
+          @Nullable
+          public ReleaseLevel apply(@Nullable String releaseLevelName) {
+            if (releaseLevelName == null) {
+              return null;
+            }
+            return Enum.valueOf(ReleaseLevel.class, releaseLevelName.toUpperCase());
           }
         });
   }
