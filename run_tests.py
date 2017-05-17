@@ -521,9 +521,7 @@ def main():
             start = time.time()
             for cmd in cmds:
                 print('{:>48} ...'.format(cmd[2]), end='')
-                env = os.environ
-                env['NODE_DEBUG'] = 'googleapis,google-auth-library,request'
-                code = subprocess.call(shlex.split(cmd[0]), cwd=cmd[1], env=env, stdout=_DEVNULL)
+                code = subprocess.call(shlex.split(cmd[0]), cwd=cmd[1], stdout=_DEVNULL)
                 if code:
                     print(' fail')
                 else:
