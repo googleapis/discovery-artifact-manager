@@ -98,7 +98,7 @@ def _init_go_lib(ctx):
     cmd = 'go get google.golang.org/api/google-api-go-generator golang.org/x/net/context'
     print(cmd)
     subprocess.call(shlex.split(cmd), env=env)
-    cmd = 'google-api-go-generator --api_json_file {}'.format(ctx.discovery_doc_filename)
+    cmd = '{}/bin/google-api-go-generator --api_json_file {}'.format(go_dir, ctx.discovery_doc_filename)
     print(cmd)
     subprocess.call(shlex.split(cmd), env=env)
 
