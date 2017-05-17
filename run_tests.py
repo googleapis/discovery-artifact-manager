@@ -520,7 +520,6 @@ def main():
             print('Running samples...')
             start = time.time()
             for cmd in cmds:
-                print(cmd)
                 print('{:>32} ...'.format(cmd[2]), end='')
                 code = subprocess.call(shlex.split(cmd[0]), cwd=cmd[1], stdout=_DEVNULL)
                 if code:
