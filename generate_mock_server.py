@@ -116,7 +116,8 @@ class Generator(object):
     def _emit_method(self, method):
         w = self._w
 
-        path = method['path'].strip('/')
+        # TODO: Explain this, verify that flatPath doesn't always appear.
+        path = method.get('flatPath', method['path']).strip('/')
         service_path = self._root['servicePath'].strip('/')
         # The full path is actually "{servicePath}/{path}".
         path = '/'.join([service_path, path]).strip('/')
@@ -146,6 +147,12 @@ class Generator(object):
         params = method.get('parameters', {})
         param_order = method.get('parameterOrder', {})
         for name in param_order:
+            location = params[name]['location']
+            # TODO: Explain that this condition indicates that name is a
+            # required path param that isn't in the url vars list. That means
+            # we can't test it, and that it's not really useful to test.
+            if location == 'path' and (name not in url_vars):
+                continue
             self._emit_param_assert(name, params[name])
 
         # TODO: It may be useful to reintroduce this check in the future.
