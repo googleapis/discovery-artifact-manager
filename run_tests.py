@@ -490,8 +490,8 @@ def main():
     if not ctxs:
         raise Exception('no IDs to test')
 
-    cmd = './gradlew discoJar'
-    subprocess.check_call(shlex.split(cmd), cwd='toolkit')
+    #cmd = './gradlew discoJar'
+    #subprocess.check_call(shlex.split(cmd), cwd='toolkit')
 
     for ctx in ctxs:
         for lang in langs:
@@ -500,7 +500,7 @@ def main():
     for ctx in ctxs:
         override_filenames = _write_override_files(ctx)
         for lang in langs:
-            cmd = ('java -jar toolkit/build/libs/discoGen-0.0.5.jar'
+            cmd = ('java -jar discoGen-0.0.5.jar'
                    ' --discovery_doc {}'
                    ' --gapic_yaml {}'
                    ' --overrides {}'
