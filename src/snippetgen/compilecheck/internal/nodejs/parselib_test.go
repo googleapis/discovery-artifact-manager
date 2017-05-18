@@ -14,7 +14,7 @@ func TestParseLibs(t *testing.T) {
 		params         langutil.MethodParamSets
 	}{
 		{
-			fname: "/lib/myservice/v2.js",
+			fname: "/lib/myservice/v2.ts",
 			params: langutil.MethodParamSets{
 				{"myservice", "v2", "myService.myMethod"}: {
 					{"foo", "string"},
@@ -35,7 +35,7 @@ func TestParseLibs(t *testing.T) {
 		 `,
 		},
 		{
-			fname: "/lib/myservice/v1.js",
+			fname: "/lib/myservice/v1.ts",
 			params: langutil.MethodParamSets{
 				{"myservice", "v1", "appengine.apps.get"}: {
 					{"appsId", "string"},
