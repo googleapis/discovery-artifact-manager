@@ -133,10 +133,11 @@ public class NodeJSGapicSurfaceTransformer implements ModelToViewTransformer {
     xapiClass.stubs(grpcStubTransformer.generateGrpcStubs(context));
 
     ProductServiceConfig productServiceConfig = new ProductServiceConfig();
-    xapiClass.serviceAddress(productServiceConfig.getServiceAddress(context.getInterface()));
+    xapiClass.serviceAddress(
+        productServiceConfig.getServiceAddress(context.getInterface().getModel()));
     xapiClass.servicePort(productServiceConfig.getServicePort());
-    xapiClass.serviceTitle(productServiceConfig.getTitle(context.getInterface()));
-    xapiClass.authScopes(productServiceConfig.getAuthScopes(context.getInterface()));
+    xapiClass.serviceTitle(productServiceConfig.getTitle(context.getInterface().getModel()));
+    xapiClass.authScopes(productServiceConfig.getAuthScopes(context.getInterface().getModel()));
     xapiClass.hasDefaultServiceAddress(context.getInterfaceConfig().hasDefaultServiceAddress());
     xapiClass.hasDefaultServiceScopes(context.getInterfaceConfig().hasDefaultServiceScopes());
 
@@ -267,6 +268,7 @@ public class NodeJSGapicSurfaceTransformer implements ModelToViewTransformer {
           VersionIndexRequireView.newBuilder()
               .clientName(
                   namer.getApiWrapperVariableName(productConfig.getInterfaceConfig(apiInterface)))
+              .serviceName(namer.getReducedServiceName(apiInterface).toLowerCamel())
               .fileName(namer.getClientFileName(apiInterface))
               .build());
     }
@@ -295,7 +297,8 @@ public class NodeJSGapicSurfaceTransformer implements ModelToViewTransformer {
           VersionIndexView.newBuilder()
               .templateFileName(VERSION_INDEX_TEMPLATE_FILE)
               .outputPath(versionIndexOutputPath)
-              .requireViews(new ArrayList<VersionIndexRequireView>())
+              .requireViews(requireViews)
+              .primaryService(requireViews.get(0))
               .apiVersion(version)
               .packageVersion(
                   packageConfig.generatedPackageVersionBound(TargetLanguage.NODEJS).lower())

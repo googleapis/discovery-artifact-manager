@@ -20,6 +20,7 @@ import com.google.api.codegen.transformer.GapicMethodContext;
 import com.google.api.codegen.transformer.ImportSectionTransformer;
 import com.google.api.codegen.transformer.InterfaceContext;
 import com.google.api.codegen.transformer.StandardImportSectionTransformer;
+import com.google.api.codegen.transformer.SurfaceNamer;
 import com.google.api.codegen.viewmodel.ImportFileView;
 import com.google.api.codegen.viewmodel.ImportSectionView;
 import com.google.api.codegen.viewmodel.ImportTypeView;
@@ -48,6 +49,16 @@ public class RubyImportSectionTransformer implements ImportSectionTransformer {
   public ImportSectionView generateImportSection(
       GapicMethodContext context, Iterable<InitCodeNode> specItemNodes) {
     return new StandardImportSectionTransformer().generateImportSection(context, specItemNodes);
+  }
+
+  public ImportSectionView generateTestImportSection(GapicInterfaceContext context) {
+    List<ImportFileView> none = ImmutableList.of();
+    ImportSectionView.Builder importSection = ImportSectionView.newBuilder();
+    importSection.standardImports(generateTestStandardImports());
+    importSection.externalImports(generateTestExternalImports());
+    importSection.appImports(generateTestAppImports(context));
+    importSection.serviceImports(none);
+    return importSection.build();
   }
 
   private List<ImportFileView> generateStandardImports() {
@@ -93,6 +104,27 @@ public class RubyImportSectionTransformer implements ImportSectionTransformer {
       filenames.add(targetInterface.getFile().getSimpleName());
     }
     return filenames;
+  }
+
+  private List<ImportFileView> generateTestStandardImports() {
+    return ImmutableList.of(createImport("minitest/autorun"), createImport("minitest/spec"));
+  }
+
+  private List<ImportFileView> generateTestExternalImports() {
+    return ImmutableList.of(createImport("google/gax"));
+  }
+
+  private List<ImportFileView> generateTestAppImports(GapicInterfaceContext context) {
+    ImmutableList.Builder<ImportFileView> imports = ImmutableList.builder();
+    SurfaceNamer namer = context.getNamer();
+    imports.add(createImport(namer.getServiceFileName(context.getInterfaceConfig())));
+    for (String filename : generateImportFilenames(context)) {
+      imports.add(createImport(namer.getServiceFileImportName(filename)));
+    }
+    if (context.getInterfaceConfig().hasLongRunningOperations()) {
+      imports.add(createImport("google/longrunning/operations_pb"));
+    }
+    return imports.build();
   }
 
   private ImportFileView createImport(String name) {

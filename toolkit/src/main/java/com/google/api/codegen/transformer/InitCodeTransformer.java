@@ -42,6 +42,7 @@ import com.google.api.codegen.viewmodel.SimpleInitCodeLineView;
 import com.google.api.codegen.viewmodel.SimpleInitValueView;
 import com.google.api.codegen.viewmodel.StructureInitCodeLineView;
 import com.google.api.codegen.viewmodel.testing.ClientTestAssertView;
+import com.google.api.tools.framework.model.TypeRef;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -126,8 +127,15 @@ public class InitCodeTransformer {
             namer.getResourceOneofCreateMethod(methodContext.getTypeTable(), fieldConfig);
       }
 
+      String enumTypeName = null;
+      TypeRef fieldType = fieldItemTree.getType();
+      if (fieldType.isEnum() && !fieldType.isRepeated()) {
+        enumTypeName = methodContext.getTypeTable().getNicknameFor(fieldType);
+      }
+
       assertViews.add(
-          createAssertView(expectedValueIdentifier, expectedTransformFunction, getterMethod));
+          createAssertView(
+              expectedValueIdentifier, expectedTransformFunction, getterMethod, enumTypeName));
     }
     return assertViews;
   }
@@ -153,11 +161,12 @@ public class InitCodeTransformer {
   }
 
   private ClientTestAssertView createAssertView(
-      String expected, String expectedTransformFunction, String actual) {
+      String expected, String expectedTransformFunction, String actual, String enumTypeName) {
     return ClientTestAssertView.newBuilder()
         .expectedValueIdentifier(expected)
         .expectedValueTransformFunction(expectedTransformFunction)
         .actualValueGetter(actual)
+        .enumTypeName(enumTypeName)
         .build();
   }
 
@@ -264,6 +273,7 @@ public class InitCodeTransformer {
 
     String typeName = typeTable.getAndSaveNicknameFor(item.getType());
     surfaceLine.typeName(typeName);
+    surfaceLine.fullyQualifiedTypeName(typeTable.getFullNameFor(item.getType()));
     surfaceLine.typeConstructor(namer.getTypeConstructor(typeName));
 
     surfaceLine.fieldSettings(getFieldSettings(context, item.getChildren().values()));
@@ -382,6 +392,8 @@ public class InitCodeTransformer {
 
         initValue.apiWrapperName(
             context.getNamer().getApiWrapperClassName(context.getInterfaceConfig()));
+        initValue.fullyQualifiedApiWrapperName(
+            context.getNamer().getFullyQualifiedApiWrapperClassName(context.getInterfaceConfig()));
         initValue.formatFunctionName(
             context
                 .getNamer()
