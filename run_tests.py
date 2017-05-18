@@ -72,8 +72,8 @@ def _init_csharp_lib(ctx):
         subprocess.check_call(shlex.split(cmd), cwd=client_generator_dir)
         cmd = 'venv/bin/python setup.py install'
         subprocess.check_call(shlex.split(cmd), cwd=client_generator_dir)
-        cmd = 'dotnet migrate Src/Support'
-        subprocess.check_call(shlex.split(cmd), cwd=client_lib_dir)
+        #cmd = 'dotnet migrate Src/Support'
+        #subprocess.check_call(shlex.split(cmd), cwd=client_lib_dir)
 
     cmd = ('venv/bin/python src/googleapis/codegen/generate_library.py'
            ' --input {}'
@@ -158,9 +158,9 @@ def _init_csharp_env(ctx):
     service_name = ''.join([title(x) for x in re.compile(r'[\._/-]+').split(name)])
     version_name = ctx.version.replace('.', '_').replace('-', '')
     service_dir = os.path.join(client_lib_dir,
-            'Src/Generated/Google.Apis.{}.{}'.format(service_name, version_name))
+            'Src/Generated/Google.Apis.{}.{}/NetStandard'.format(service_name, version_name))
 
-    cmd = 'dotnet migrate -s'
+    cmd = 'dotnet migrate'
     subprocess.check_call(shlex.split(cmd), cwd=service_dir)
 
     csharp_src_dir = '{}/csharp'.format(ctx.src_dir)
@@ -179,20 +179,19 @@ def _init_csharp_env(ctx):
         shutil.copy2(filename, '{}/Program.cs'.format(frag_dir))
         csproj_filename = '{}/{}.csproj'.format(frag_dir, partname)
         csproj_filenames.append('{}/{}.csproj'.format(partname, partname))
+        piece = '{}/Src/Generated/Google.Apis.{}.{}'.format(client_lib_dir, service_name, version_name)
         with open(csproj_filename, 'w') as file_:
             file_.write("""<Project Sdk="Microsoft.NET.Sdk">
-
   <ItemGroup>
-    <ProjectReference Include="{}" />
+    <ProjectReference Include="{}/NetStandard/NetStandard.csproj" />
+    <Compile Include="{}/*.cs"/>
   </ItemGroup>
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp1.0</TargetFramework>
   </PropertyGroup>
-
 </Project>
-""".format('{}/Src/Generated/Google.Apis.{}.{}/Google.Apis.{}.{}.csproj'.format(client_lib_dir, service_name, version_name, service_name, version_name)))
+""".format(piece, piece))
         cmds.append(('dotnet {}/bin/Debug/netcoreapp1.0/{}.dll'.format(partname, partname), csharp_src_dir, partname))
 
     cmd = 'dotnet sln app.sln add {}'.format(' '.join(csproj_filenames))
