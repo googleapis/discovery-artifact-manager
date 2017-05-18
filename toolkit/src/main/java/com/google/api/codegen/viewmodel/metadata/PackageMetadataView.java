@@ -16,7 +16,9 @@ package com.google.api.codegen.viewmodel.metadata;
 
 import com.google.api.codegen.SnippetSetRunner;
 import com.google.api.codegen.config.VersionBound;
+import com.google.api.codegen.grpcmetadatagen.GenerationLayer;
 import com.google.api.codegen.grpcmetadatagen.PackageType;
+import com.google.api.codegen.viewmodel.ApiMethodView;
 import com.google.api.codegen.viewmodel.FileHeaderView;
 import com.google.api.codegen.viewmodel.ViewModel;
 import com.google.auto.value.AutoValue;
@@ -39,6 +41,9 @@ public abstract class PackageMetadataView implements ViewModel {
 
   @Nullable
   public abstract PackageType packageType();
+
+  @Nullable
+  public abstract GenerationLayer generationLayer();
 
   @Nullable
   public abstract String gapicConfigName();
@@ -80,6 +85,9 @@ public abstract class PackageMetadataView implements ViewModel {
 
   public abstract String protoPath();
 
+  @Nullable
+  public abstract String versionPath();
+
   public abstract String author();
 
   public abstract String email();
@@ -88,9 +96,18 @@ public abstract class PackageMetadataView implements ViewModel {
 
   public abstract String licenseName();
 
+  @Nullable
+  public abstract String developmentStatus();
+
+  @Nullable
+  public abstract String developmentStatusTitle();
+
   public abstract boolean hasMultipleServices();
 
   public abstract boolean hasSmokeTests();
+
+  @Nullable
+  public abstract List<ApiMethodView> exampleMethods();
 
   // TODO(landrito) Currently only Ruby supports using fileHeaderView. Switch all metadata gen to
   // use this field.
@@ -107,6 +124,21 @@ public abstract class PackageMetadataView implements ViewModel {
   @Nullable
   public abstract List<String> typeModules();
 
+  @Nullable
+  public abstract String targetLanguage();
+
+  @Nullable
+  public abstract String mainReadmeLink();
+
+  @Nullable
+  public abstract String authDocumentationLink();
+
+  @Nullable
+  public abstract String libraryDocumentationLink();
+
+  @Nullable
+  public abstract String versioningDocumentationLink();
+
   public static Builder newBuilder() {
     return new AutoValue_PackageMetadataView.Builder().hasSmokeTests(false);
   }
@@ -122,6 +154,8 @@ public abstract class PackageMetadataView implements ViewModel {
     public abstract Builder gapicConfigName(String val);
 
     public abstract Builder packageType(PackageType val);
+
+    public abstract Builder generationLayer(GenerationLayer val);
 
     public abstract Builder packageVersionBound(VersionBound val);
 
@@ -160,6 +194,8 @@ public abstract class PackageMetadataView implements ViewModel {
     /** The path to the API protos in the googleapis repo. */
     public abstract Builder protoPath(String val);
 
+    public abstract Builder versionPath(String val);
+
     /** The author of the package. */
     public abstract Builder author(String val);
 
@@ -171,6 +207,12 @@ public abstract class PackageMetadataView implements ViewModel {
 
     /** The name of the license that the package is licensed under. */
     public abstract Builder licenseName(String val);
+
+    /** The developement status of the package. E.g., "alpha". */
+    public abstract Builder developmentStatus(String val);
+
+    /** The developement status of the package used in titles. E.g., "Alpha". */
+    public abstract Builder developmentStatusTitle(String s);
 
     /** Whether the package contains multiple service objects */
     public abstract Builder hasMultipleServices(boolean val);
@@ -189,6 +231,26 @@ public abstract class PackageMetadataView implements ViewModel {
 
     /** File header information such as copyright lines and license lines */
     public abstract Builder fileHeader(FileHeaderView val);
+
+    /** Methods to show smoke test examples for in the readme * */
+    public abstract Builder exampleMethods(List<ApiMethodView> vals);
+
+    /**
+     * The language that is being generated; primarily used in titles. First letter is uppercase.
+     */
+    public abstract Builder targetLanguage(String val);
+
+    /** Link to the main README of the metapackage. */
+    public abstract Builder mainReadmeLink(String s);
+
+    /** Link to authentication instructions on github.io. */
+    public abstract Builder authDocumentationLink(String s);
+
+    /** Link to the client library documentation on github.io. */
+    public abstract Builder libraryDocumentationLink(String s);
+
+    /** Link to the semantic versioning information of the metapackage. */
+    public abstract Builder versioningDocumentationLink(String s);
 
     public abstract PackageMetadataView build();
   }

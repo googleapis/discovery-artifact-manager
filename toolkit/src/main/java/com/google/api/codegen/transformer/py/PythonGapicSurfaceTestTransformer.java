@@ -17,6 +17,7 @@ package com.google.api.codegen.transformer.py;
 import com.google.api.codegen.InterfaceView;
 import com.google.api.codegen.config.FieldConfig;
 import com.google.api.codegen.config.GapicProductConfig;
+import com.google.api.codegen.config.PackageMetadataConfig;
 import com.google.api.codegen.gapic.GapicCodePathMapper;
 import com.google.api.codegen.metacode.InitCodeContext;
 import com.google.api.codegen.metacode.InitCodeContext.InitCodeOutputType;
@@ -48,6 +49,7 @@ import com.google.api.tools.framework.model.Interface;
 import com.google.api.tools.framework.model.Method;
 import com.google.api.tools.framework.model.Model;
 import com.google.common.collect.ImmutableList;
+import java.io.File;
 import java.util.List;
 
 /**
@@ -58,6 +60,7 @@ public class PythonGapicSurfaceTestTransformer implements ModelToViewTransformer
   private static final String TEST_TEMPLATE_FILE = "py/test.snip";
 
   private final GapicCodePathMapper pathMapper;
+  private final PackageMetadataConfig packageConfig;
   private final ValueProducer valueProducer = new PythonValueProducer();
   private final PythonImportSectionTransformer importSectionTransformer =
       new PythonImportSectionTransformer();
@@ -68,8 +71,10 @@ public class PythonGapicSurfaceTestTransformer implements ModelToViewTransformer
   private final MockServiceTransformer mockServiceTransformer = new MockServiceTransformer();
   private final FeatureConfig featureConfig = new DefaultFeatureConfig();
 
-  public PythonGapicSurfaceTestTransformer(GapicCodePathMapper pathMapper) {
+  public PythonGapicSurfaceTestTransformer(
+      GapicCodePathMapper pathMapper, PackageMetadataConfig packageConfig) {
     this.pathMapper = pathMapper;
+    this.packageConfig = packageConfig;
   }
 
   @Override
@@ -107,12 +112,18 @@ public class PythonGapicSurfaceTestTransformer implements ModelToViewTransformer
               .mockServices(ImmutableList.<MockServiceUsageView>of())
               .build();
 
-      String outputPath = pathMapper.getOutputPath(context.getInterface(), productConfig);
+      String version = packageConfig.apiVersion();
+      String outputDir = pathMapper.getOutputPath(context.getInterface(), productConfig);
+      String outputPath =
+          outputDir
+              + File.separator
+              + surfacePackageNamer.classFileNameBase(Name.upperCamel(testClassName).join(version))
+              + ".py";
       ImportSectionView importSection = importSectionTransformer.generateTestImportSection(context);
       models.add(
           ClientTestFileView.newBuilder()
               .templateFileName(TEST_TEMPLATE_FILE)
-              .outputPath(surfacePackageNamer.getSourceFilePath(outputPath, testClassName))
+              .outputPath(outputPath)
               .testClass(testClassView)
               .fileHeader(
                   fileHeaderTransformer.generateFileHeader(
@@ -132,12 +143,6 @@ public class PythonGapicSurfaceTestTransformer implements ModelToViewTransformer
     SymbolTable testNameTable = new SymbolTable();
     for (Method method : context.getSupportedMethods()) {
       GapicMethodContext methodContext = context.asRequestMethodContext(method);
-
-      if (methodContext.getMethodConfig().isGrpcStreaming()) {
-        // TODO(eoogbe): Remove this check once grpc streaming is supported by test
-        continue;
-      }
-
       ClientMethodType clientMethodType = ClientMethodType.OptionalArrayMethod;
       if (methodContext.getMethodConfig().isLongRunningOperation()) {
         clientMethodType = ClientMethodType.OperationOptionalArrayMethod;
@@ -147,6 +152,10 @@ public class PythonGapicSurfaceTestTransformer implements ModelToViewTransformer
 
       Iterable<FieldConfig> fieldConfigs =
           methodContext.getMethodConfig().getRequiredFieldConfigs();
+      InitCodeOutputType initCodeOutputType =
+          method.getRequestStreaming()
+              ? InitCodeOutputType.SingleObject
+              : InitCodeOutputType.FieldList;
       InitCodeContext initCodeContext =
           InitCodeContext.newBuilder()
               .initObjectType(methodContext.getMethod().getInputType())
@@ -154,7 +163,7 @@ public class PythonGapicSurfaceTestTransformer implements ModelToViewTransformer
               .initFieldConfigStrings(methodContext.getMethodConfig().getSampleCodeInitFields())
               .initValueConfigMap(InitCodeTransformer.createCollectionMap(methodContext))
               .initFields(FieldConfig.toFieldIterable(fieldConfigs))
-              .outputType(InitCodeOutputType.FieldList)
+              .outputType(initCodeOutputType)
               .fieldConfigMap(FieldConfig.toFieldConfigMap(fieldConfigs))
               .valueGenerator(valueGenerator)
               .build();

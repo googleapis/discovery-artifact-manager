@@ -45,7 +45,7 @@
      * {@doc.settingsClassName}.Builder {@doc.settingsBuilderVarName} =
      *     {@doc.settingsClassName}.defaultBuilder();
      * {@doc.settingsBuilderVarName}.{@doc.exampleApiMethodSettingsGetter}().getRetrySettingsBuilder()
-     *     .setTotalTimeout(Duration.standardSeconds(30));
+     *     .setTotalTimeout(Duration.ofSeconds(30));
      * {@doc.settingsClassName} {@doc.settingsVarName} = {@doc.settingsBuilderVarName}.build();
      * </code>
      * </pre>
@@ -73,7 +73,35 @@
   private static final String META_VERSION_KEY = "artifact.version";
 
   private static String gapicVersion;
+
+  @join settings : xsettingsClass.callSettings
+    {@grpcMethodStub(settings)}
+  @end
   {@""}
+@end
+
+@private grpcMethodStub(settings)
+  private static final io.grpc.MethodDescriptor<{@settings.requestTypeName}, {@settings.responseTypeName}> {@settings.grpcMethodConstant} =
+        io.grpc.MethodDescriptor.create(
+            {@streamingTypeEnum(settings.grpcStreamingType)},
+            "{@settings.fullServiceName}/{@settings.protoMethodName}",
+            io.grpc.protobuf.ProtoUtils.marshaller({@settings.requestTypeName}.getDefaultInstance()),
+            io.grpc.protobuf.ProtoUtils.marshaller({@settings.responseTypeName}.getDefaultInstance()));
+@end
+
+@private streamingTypeEnum(streamingType)
+  @switch streamingType
+  @case "NonStreaming"
+    io.grpc.MethodDescriptor.MethodType.UNARY
+  @case "ServerStreaming"
+    io.grpc.MethodDescriptor.MethodType.SERVER_STREAMING
+  @case "ClientStreaming"
+    io.grpc.MethodDescriptor.MethodType.CLIENT_STREAMING
+  @case "BidiStreaming"
+    io.grpc.MethodDescriptor.MethodType.BIDI_STREAMING
+  @default
+    $unhandledCase: {@streamingType}$
+  @end
 @end
 
 @private members(xsettingsClass)
@@ -101,7 +129,7 @@
     /**
      * Returns the default service scopes.
      */
-    public static ImmutableList<String> getDefaultServiceScopes() {
+    public static List<String> getDefaultServiceScopes() {
       return DEFAULT_SERVICE_SCOPES;
     }
 
@@ -457,13 +485,13 @@
     RetrySettings.Builder settingsBuilder = null;
     @join retryParamsDef : xsettingsClass.retryParamsDefinitions
       settingsBuilder = RetrySettings.newBuilder()
-          .setInitialRetryDelay(Duration.millis({@retryParamsDef.initialRetryDelay.getMillis}L))
+          .setInitialRetryDelay(Duration.ofMillis({@retryParamsDef.initialRetryDelay.getMillis}L))
           .setRetryDelayMultiplier({@retryParamsDef.retryDelayMultiplier})
-          .setMaxRetryDelay(Duration.millis({@retryParamsDef.maxRetryDelay.getMillis}L))
-          .setInitialRpcTimeout(Duration.millis({@retryParamsDef.initialRpcTimeout.getMillis}L))
+          .setMaxRetryDelay(Duration.ofMillis({@retryParamsDef.maxRetryDelay.getMillis}L))
+          .setInitialRpcTimeout(Duration.ofMillis({@retryParamsDef.initialRpcTimeout.getMillis}L))
           .setRpcTimeoutMultiplier({@retryParamsDef.rpcTimeoutMultiplier})
-          .setMaxRpcTimeout(Duration.millis({@retryParamsDef.maxRpcTimeout.getMillis}L))
-          .setTotalTimeout(Duration.millis({@retryParamsDef.totalTimeout.getMillis}L));
+          .setMaxRpcTimeout(Duration.ofMillis({@retryParamsDef.maxRpcTimeout.getMillis}L))
+          .setTotalTimeout(Duration.ofMillis({@retryParamsDef.totalTimeout.getMillis}L));
       definitions.put("{@retryParamsDef.key}", settingsBuilder);
     @end
     RETRY_PARAM_DEFINITIONS = definitions.build();
@@ -487,24 +515,24 @@
     @join settings : xsettingsClass.callSettings
       @switch settings.type.toString
       @case "SimpleApiCallable"
-        {@settings.memberName} = SimpleCallSettings.newBuilder({@settings.grpcTypeName}.{@settings.grpcMethodConstant});
+        {@settings.memberName} = SimpleCallSettings.newBuilder({@settings.grpcMethodConstant});
       @case "PagedApiCallable"
         {@settings.memberName} = PagedCallSettings.newBuilder(
-            {@settings.grpcTypeName}.{@settings.grpcMethodConstant},
+            {@settings.grpcMethodConstant},
             {@settings.pagedListResponseFactoryName});
       @case "BatchingApiCallable"
         {@settings.memberName} = BatchingCallSettings.newBuilder(
-            {@settings.grpcTypeName}.{@settings.grpcMethodConstant},
+            {@settings.grpcMethodConstant},
             {@settings.batchingDescriptorName})
                 .setBatchingSettingsBuilder(BatchingSettings.newBuilder());
       @case "StreamingApiCallable"
-        {@settings.memberName} = StreamingCallSettings.newBuilder({@settings.grpcTypeName}.{@settings.grpcMethodConstant});
+        {@settings.memberName} = StreamingCallSettings.newBuilder({@settings.grpcMethodConstant});
       @case "OperationApiCallable"
         {@settings.memberName} = OperationCallSettings.newBuilder(
-            {@settings.grpcTypeName}.{@settings.grpcMethodConstant},
+            {@settings.grpcMethodConstant},
             {@settings.operationResultTypeName}.class);
         @if settings.hasPollingInterval
-          {@settings.memberName}.setPollingInterval(Duration.millis({@settings.operationPollingIntervalMillis}));
+          {@settings.memberName}.setPollingInterval(Duration.ofMillis({@settings.operationPollingIntervalMillis}));
         @end
 
       @default
@@ -527,9 +555,9 @@
       @switch settings.type
       @case "BatchingApiCallable"
         builder.{@settings.settingsGetFunction}().getBatchingSettingsBuilder()
-            .setElementCountThreshold({@settings.batchingConfig.elementCountThreshold})
-            .setRequestByteThreshold({@settings.batchingConfig.requestByteThreshold})
-            .setDelayThreshold(Duration.millis({@settings.batchingConfig.delayThresholdMillis}))
+            .setElementCountThreshold({@settings.batchingConfig.elementCountThreshold}L)
+            .setRequestByteThreshold({@settings.batchingConfig.requestByteThreshold}L)
+            .setDelayThreshold(Duration.ofMillis({@settings.batchingConfig.delayThresholdMillis}))
             .setFlowControlSettings(
               FlowControlSettings.newBuilder()
                 @if settings.batchingConfig.hasFlowControlElementLimit

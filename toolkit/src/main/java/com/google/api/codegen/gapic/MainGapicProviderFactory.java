@@ -162,7 +162,8 @@ public class MainGapicProviderFactory
                 .setModel(model)
                 .setProductConfig(productConfig)
                 .setSnippetSetRunner(new CommonSnippetSetRunner(new JavaRenderingUtil()))
-                .setModelToViewTransformer(new JavaGapicSurfaceTransformer(javaPathMapper))
+                .setModelToViewTransformer(
+                    new JavaGapicSurfaceTransformer(javaPathMapper, packageConfig))
                 .build();
 
         providers.add(mainProvider);
@@ -363,7 +364,7 @@ public class MainGapicProviderFactory
                   .setProductConfig(productConfig)
                   .setSnippetSetRunner(new CommonSnippetSetRunner(new CommonRenderingUtil()))
                   .setModelToViewTransformer(
-                      new PythonGapicSurfaceTestTransformer(pythonTestPathMapper))
+                      new PythonGapicSurfaceTestTransformer(pythonTestPathMapper, packageConfig))
                   .build();
           providers.add(testProvider);
         }
@@ -429,26 +430,23 @@ public class MainGapicProviderFactory
                   .build();
           providers.add(messageProvider);
         }
-
-        if (generatorConfig.enableTestGenerator() && id.equals(RUBY)) {
-          GapicCodePathMapper rubyTestPathMapper =
-              CommonGapicCodePathMapper.newBuilder()
-                  .setPrefix("test")
-                  .setShouldAppendPackage(true)
-                  .setPackageFilePathNameFormatter(new RubyNameFormatter())
-                  .build();
-          GapicProvider<? extends Object> testProvider =
-              ViewModelGapicProvider.newBuilder()
-                  .setModel(model)
-                  .setProductConfig(productConfig)
-                  .setSnippetSetRunner(new CommonSnippetSetRunner(new CommonRenderingUtil()))
-                  .setModelToViewTransformer(
-                      new RubyGapicSurfaceTestTransformer(rubyTestPathMapper))
-                  .build();
-          providers.add(testProvider);
-        }
       }
-
+      if (generatorConfig.enableTestGenerator()) {
+        GapicCodePathMapper rubyTestPathMapper =
+            CommonGapicCodePathMapper.newBuilder()
+                .setPrefix("test")
+                .setShouldAppendPackage(true)
+                .setPackageFilePathNameFormatter(new RubyNameFormatter())
+                .build();
+        GapicProvider<? extends Object> testProvider =
+            ViewModelGapicProvider.newBuilder()
+                .setModel(model)
+                .setProductConfig(productConfig)
+                .setSnippetSetRunner(new CommonSnippetSetRunner(new CommonRenderingUtil()))
+                .setModelToViewTransformer(new RubyGapicSurfaceTestTransformer(rubyTestPathMapper))
+                .build();
+        providers.add(testProvider);
+      }
     } else {
       throw new NotImplementedException("GapicProviderFactory: invalid id \"" + id + "\"");
     }

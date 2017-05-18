@@ -14,6 +14,7 @@
  */
 package com.google.api.codegen.transformer.py;
 
+import com.google.api.codegen.ReleaseLevel;
 import com.google.api.codegen.ServiceMessages;
 import com.google.api.codegen.config.GapicInterfaceConfig;
 import com.google.api.codegen.config.GapicMethodConfig;
@@ -122,14 +123,22 @@ public class PythonSurfaceNamer extends SurfaceNamer {
   }
 
   @Override
+  public String getPathTemplateName(
+      Interface service, SingleResourceNameConfig resourceNameConfig) {
+    return "_"
+        + inittedConstantName(Name.from(resourceNameConfig.getEntityName(), "path", "template"));
+  }
+
+  @Override
   public String getFormatFunctionName(
       Interface apiInterface, SingleResourceNameConfig resourceNameConfig) {
     return staticFunctionName(Name.from(resourceNameConfig.getEntityName(), "path"));
   }
 
   @Override
-  public String getCreateStubFunctionName(Interface apiInterface) {
-    return getGrpcClientTypeName(apiInterface);
+  public String getParseFunctionName(String var, SingleResourceNameConfig resourceNameConfig) {
+    return staticFunctionName(
+        Name.from("match", var, "from", resourceNameConfig.getEntityName(), "name"));
   }
 
   @Override
@@ -235,5 +244,27 @@ public class PythonSurfaceNamer extends SurfaceNamer {
   @Override
   public String quoted(String text) {
     return "'" + text + "'";
+  }
+
+  /**
+   * Somewhat misleadingly named; in the Python case, this converts the ReleaseLevel to a Trove
+   * classifier, rather than an annotation.
+   */
+  @Override
+  public String getReleaseAnnotation(ReleaseLevel releaseLevel) {
+    switch (releaseLevel) {
+      case UNSET_RELEASE_LEVEL:
+        // fallthrough
+      case ALPHA:
+        return "3 - Alpha";
+      case BETA:
+        return "4 - Beta";
+      case GA:
+        return "5 - Production/Stable";
+      case DEPRECATED:
+        return "7 - Inactive";
+      default:
+        throw new IllegalStateException("Invalid development status");
+    }
   }
 }

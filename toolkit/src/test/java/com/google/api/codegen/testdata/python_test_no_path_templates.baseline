@@ -1,4 +1,4 @@
-============== file: test/example/test_no_templates_api_service_client.py ==============
+============== file: test/example/test_no_templates_api_service_client_v1.py ==============
 # Copyright 2017, Google Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,7 @@
 """Unit tests."""
 
 import mock
-import unittest2
+import unittest
 
 from google.gax import errors
 
@@ -29,12 +29,12 @@ class CustomException(Exception):
     pass
 
 
-class TestNoTemplatesAPIServiceClient(unittest2.TestCase):
+class TestNoTemplatesAPIServiceClient(unittest.TestCase):
 
     @mock.patch('google.gax.config.create_stub', spec=True)
     def test_increment(self, mock_create_stub):
         # Mock gRPC layer
-        grpc_stub = mock.Mock(spec=no_path_templates_pb2.NoTemplatesAPIServiceStub)
+        grpc_stub = mock.Mock()
         mock_create_stub.return_value = grpc_stub
 
         client = no_templates_api_service_client.NoTemplatesAPIServiceClient()
@@ -42,12 +42,20 @@ class TestNoTemplatesAPIServiceClient(unittest2.TestCase):
         client.increment()
 
         grpc_stub.Increment.assert_called_once()
+        args, kwargs = grpc_stub.Increment.call_args
+        self.assertEqual(len(args), 2)
+        self.assertEqual(len(kwargs), 1)
+        self.assertIn('metadata', kwargs)
+        actual_request = args[0]
+
+        expected_request = no_path_templates_pb2.IncrementRequest()
+        self.assertEqual(expected_request, actual_request)
 
     @mock.patch('google.gax.config.API_ERRORS', (CustomException,))
     @mock.patch('google.gax.config.create_stub', spec=True)
     def test_increment_exception(self, mock_create_stub):
         # Mock gRPC layer
-        grpc_stub = mock.Mock(spec=no_path_templates_pb2.NoTemplatesAPIServiceStub)
+        grpc_stub = mock.Mock()
         mock_create_stub.return_value = grpc_stub
 
         client = no_templates_api_service_client.NoTemplatesAPIServiceClient()

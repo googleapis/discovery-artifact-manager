@@ -1,4 +1,4 @@
-/* Copyright 2016 Google Inc
+/* Copyright 2017 Google Inc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,15 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.api.codegen.metacode;
+package com.google.api.codegen.grpcmetadatagen;
 
-import com.google.api.codegen.util.Name;
+public enum GenerationLayer {
+  GRPC,
+  PROTO;
 
-/** InitCodeLine represents the creation of a variable with an initialized value. */
-public interface InitCodeLine {
-  public Name getIdentifier();
-
-  public InitValueConfig getInitValueConfig();
-
-  public InitCodeLineType getLineType();
+  public static GenerationLayer of(String generationLayerString) {
+    if (generationLayerString != null) {
+      return GenerationLayer.valueOf(generationLayerString.toUpperCase());
+    } else {
+      return null;
+    }
+  }
 }
