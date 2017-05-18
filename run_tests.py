@@ -68,14 +68,14 @@ def _init_csharp_lib(ctx):
         cmd = ('git clone --depth 1'
                ' https://github.com/google/google-api-dotnet-client')
         subprocess.check_call(shlex.split(cmd), cwd=ctx.lib_dir)
-        cmd = 'virtualenv venv'
-        subprocess.check_call(shlex.split(cmd), cwd=client_generator_dir)
-        cmd = 'venv/bin/python setup.py install'
+        #cmd = 'virtualenv venv'
+        #subprocess.check_call(shlex.split(cmd), cwd=client_generator_dir)
+        cmd = 'python setup.py install'
         subprocess.check_call(shlex.split(cmd), cwd=client_generator_dir)
         #cmd = 'dotnet migrate Src/Support'
         #subprocess.check_call(shlex.split(cmd), cwd=client_lib_dir)
 
-    cmd = ('venv/bin/python src/googleapis/codegen/generate_library.py'
+    cmd = ('python src/googleapis/codegen/generate_library.py'
            ' --input {}'
            ' --language csharp'
            ' --output_dir ../Src/Generated').format(ctx.discovery_doc_filename)
@@ -150,6 +150,11 @@ def _init_ruby_lib(ctx):
 
 def _init_csharp_env(ctx):
     client_lib_dir = os.path.join(ctx.lib_dir, 'google-api-dotnet-client')
+    for filename in glob.glob(os.path.join(client_lib_dir, 'DiscoveryJson', '*')):
+        os.remove(filename)
+    shutil.copy2(ctx.discovery_doc_filename, os.path.join(client_lib_dir, 'DiscoveryJson'))
+    cmd = 'bash BuildGenerated.sh --skipdownload'
+    subprocess.check_call(shlex.split(cmd), cwd=client_lib_dir)
 
     title = lambda x: x[0].upper() + x[1:] if x else x
     name = ctx.canonical_name.replace(' ', '')
@@ -158,16 +163,16 @@ def _init_csharp_env(ctx):
     service_name = ''.join([title(x) for x in re.compile(r'[\._/-]+').split(name)])
     version_name = ctx.version.replace('.', '_').replace('-', '')
     service_dir = os.path.join(client_lib_dir,
-            'Src/Generated/Google.Apis.{}.{}/NetStandard'.format(service_name, version_name))
+            'Src/Generated/Google.Apis.{}.{}'.format(service_name, version_name))
 
-    cmd = 'dotnet migrate'
-    subprocess.check_call(shlex.split(cmd), cwd=service_dir)
+    #cmd = 'dotnet migrate'
+    #subprocess.check_call(shlex.split(cmd), cwd=service_dir)
 
     csharp_src_dir = '{}/csharp'.format(ctx.src_dir)
     if not os.path.exists(csharp_src_dir):
         os.makedirs(csharp_src_dir)
     cmd = 'dotnet new sln -n app'
-    subprocess.check_call(shlex.split(cmd), cwd=csharp_src_dir)
+    subprocess.call(shlex.split(cmd), cwd=csharp_src_dir)
 
     cmds = []
     csproj_filenames = []
@@ -179,19 +184,18 @@ def _init_csharp_env(ctx):
         shutil.copy2(filename, '{}/Program.cs'.format(frag_dir))
         csproj_filename = '{}/{}.csproj'.format(frag_dir, partname)
         csproj_filenames.append('{}/{}.csproj'.format(partname, partname))
-        piece = '{}/Src/Generated/Google.Apis.{}.{}'.format(client_lib_dir, service_name, version_name)
+        piece = '{}/Src/Generated/Google.Apis.{}.{}/Google.Apis.{}.{}'.format(client_lib_dir, service_name, version_name, service_name, version_name)
         with open(csproj_filename, 'w') as file_:
             file_.write("""<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <ProjectReference Include="{}/NetStandard/NetStandard.csproj" />
-    <Compile Include="{}/*.cs"/>
+    <ProjectReference Include="{}.csproj" />
   </ItemGroup>
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp1.0</TargetFramework>
   </PropertyGroup>
 </Project>
-""".format(piece, piece))
+""".format(piece))
         cmds.append(('dotnet {}/bin/Debug/netcoreapp1.0/{}.dll'.format(partname, partname), csharp_src_dir, partname))
 
     cmd = 'dotnet sln app.sln add {}'.format(' '.join(csproj_filenames))
