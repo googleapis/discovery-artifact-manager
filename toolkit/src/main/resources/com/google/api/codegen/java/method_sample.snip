@@ -1,0 +1,153 @@
+@extends "java/common.snip"
+@extends "java/initcode.snip"
+
+@snippet decorateSampleCode(apiMethod, coreSampleCode)
+  try ({@apiMethod.apiClassName} {@apiMethod.apiVariableName} = \
+      {@apiMethod.apiClassName}.create()) {
+    {@coreSampleCode}
+  }
+@end
+
+@snippet pagedIterableMethodSampleCode(apiMethod)
+  {@initCode(apiMethod.initCode)}
+  for ({@apiMethod.listMethod.resourceTypeName} element : {@sampleSyncMethodCall(apiMethod)}.{@apiMethod.listMethod.iterateMethodName}()) {
+    // doThingsWith(element);
+  }
+@end
+
+@snippet pagedCallableMethodSampleCode(apiMethod)
+  {@initCode(apiMethod.initCode)}
+  ApiFuture<{@apiMethod.responseTypeName}> future = {@sampleFutureMethodCall(apiMethod)};
+  // Do something
+  for ({@apiMethod.listMethod.resourceTypeName} element : future.get().{@apiMethod.listMethod.iterateMethodName}()) {
+    // doThingsWith(element);
+  }
+@end
+
+@snippet unpagedListCallableMethodSampleCode(apiMethod)
+  {@initCode(apiMethod.initCode)}
+  while (true) {
+    {@apiMethod.responseTypeName} response = \
+        {@apiMethod.apiVariableName}.{@apiMethod.name}().call(\
+        {@sampleMethodCallArgList(apiMethod.initCode.fieldSettings)});
+    for ({@apiMethod.listMethod.resourceTypeName} element : \
+        response.{@apiMethod.unpagedListCallableMethod.resourceListGetFunction}()) {
+      // doThingsWith(element);
+    }
+    String nextPageToken = response.getNextPageToken();
+    if (!Strings.isNullOrEmpty(nextPageToken)) {
+      request = request.toBuilder().setPageToken(nextPageToken).build();
+    } else {
+      break;
+    }
+  }
+@end
+
+@snippet syncMethodSampleCode(apiMethod)
+  {@initCode(apiMethod.initCode)}
+  @if apiMethod.hasReturnValue
+    {@apiMethod.responseTypeName} response = {@sampleSyncMethodCall(apiMethod)};
+  @else
+    {@sampleSyncMethodCall(apiMethod)};
+  @end
+@end
+
+@snippet asyncOperationMethodSampleCode(apiMethod)
+  {@initCode(apiMethod.initCode)}
+  {@apiMethod.responseTypeName} response = {@apiMethod.apiVariableName}.{@apiMethod.name}(\
+      {@sampleMethodCallArgList(apiMethod.initCode.fieldSettings)}).get();
+@end
+
+@snippet callableMethodSampleCode(apiMethod)
+  {@initCode(apiMethod.initCode)}
+  ApiFuture<{@apiMethod.callableMethod.genericAwareResponseType}> future = {@sampleFutureMethodCall(apiMethod)};
+  // Do something
+  @if apiMethod.hasReturnValue
+    {@apiMethod.responseTypeName} response = future.get();
+  @else
+    future.get();
+  @end
+@end
+
+@snippet asyncOperationCallableMethodSampleCode(apiMethod)
+  {@initCode(apiMethod.initCode)}
+  OperationFuture<{@apiMethod.callableMethod.genericAwareResponseType}> future = {@sampleFutureMethodCall(apiMethod)};
+  // Do something
+  {@apiMethod.responseTypeName} response = future.get();
+@end
+
+@snippet streamingCallableMethodSampleCode(apiMethod)
+  @switch apiMethod.grpcStreamingType
+  @case "BidiStreaming"
+    {@bidiStreamingCallableSampleCode(apiMethod)}
+  @case "ServerStreaming"
+    {@serverStreamingCallableSampleCode(apiMethod)}
+  @case "ClientStreaming"
+    {@clientStreamingCallableSampleCode(apiMethod)}
+  @default
+    $unhandledCase: {@apiMethod.grpcStreamingType}$
+  @end
+@end
+
+@private bidiStreamingCallableSampleCode(apiMethod)
+  {@responseObserver(apiMethod)}
+  ApiStreamObserver<StreamingRecognizeRequest> requestObserver =
+      {@apiMethod.apiVariableName}.{@apiMethod.name}().bidiStreamingCall(responseObserver)});
+
+  {@initCode(apiMethod.initCode)}
+  requestObserver.onNext(request);
+@end
+
+@private serverStreamingCallableSampleCode(apiMethod)
+  {@responseObserver(apiMethod)}
+
+  {@initCode(apiMethod.initCode)}
+
+  {@apiMethod.apiVariableName}.{@apiMethod.name}().serverStreamingCall(\
+      {@sampleMethodCallArgList(apiMethod.initCode.fieldSettings)}, responseObserver)});
+@end
+
+@private clientStreamingCallableSampleCode(apiMethod)
+  {@responseObserver(apiMethod)}
+  ApiStreamObserver<StreamingRecognizeRequest> requestObserver =
+      {@apiMethod.apiVariableName}.{@apiMethod.name}().clientStreamingCall(responseObserver)});
+
+  {@initCode(apiMethod.initCode)}
+  requestObserver.onNext(request);
+@end
+
+@private responseObserver(apiMethod)
+  ApiStreamObserver<{@apiMethod.callableMethod.genericAwareResponseType}> responseObserver =
+      new ApiStreamObserver<{@apiMethod.callableMethod.genericAwareResponseType}>() {
+        @@Override
+        public void onNext({@apiMethod.callableMethod.genericAwareResponseType} response) {
+          // Do something when receive a response
+        }
+
+        @@Override
+        public void onError(Throwable t) {
+          // Add error-handling
+        }
+
+        @@Override
+        public void onCompleted() {
+          // Do something when complete.
+        }
+      };
+@end
+
+@private sampleFutureMethodCall(apiMethod)
+  {@apiMethod.apiVariableName}.{@apiMethod.name}().futureCall(\
+      {@sampleMethodCallArgList(apiMethod.initCode.fieldSettings)})
+@end
+
+@private sampleSyncMethodCall(apiMethod)
+  {@apiMethod.apiVariableName}.{@apiMethod.name}(\
+      {@sampleMethodCallArgList(apiMethod.initCode.fieldSettings)})
+@end
+
+@snippet sampleMethodCallArgList(fieldSettings)
+  @join fieldSetting : fieldSettings on ", "
+    {@fieldSetting.identifier}
+  @end
+@end

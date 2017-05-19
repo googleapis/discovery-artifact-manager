@@ -1,0 +1,139 @@
+@extends "nodejs/common.snip"
+
+@snippet generate(doc)
+  {@licenseSection(doc.fileHeader)}
+
+  @join elementDoc : doc.elementDocs on BREAK.add(BREAK)
+    @if doc.isExternalFile
+      {@documentExternalElement(elementDoc)}
+    @else
+      {@documentElement(elementDoc, toplevelHeader(elementDoc), semicolon())}
+    @end
+  @end
+@end
+
+@private licenseSection(fileHeader)
+  /*
+   {@comments(fileHeader.copyrightLines)}
+   *
+   {@comments(fileHeader.licenseLines)}
+   */
+
+  /*
+   * Note: this file is purely for documentation. Any contents are not expected
+   * to be loaded as the JS file.
+   */
+@end
+
+@private toplevelHeader(elementDoc)
+  var {@elementDoc.name} = {
+@end
+
+@private semicolon()
+  ;
+@end
+
+@private empty()
+
+@end
+
+@private subHeader(elementDoc)
+  {@elementDoc.name}: {
+@end
+
+@private documentMessage(message, header, footer)
+  /**
+   @if message.lines
+     {@comments(message.lines)}
+     @if message.properties
+       *
+     @end
+   @end
+   @if properties(message)
+     {@properties(message)}
+   @end
+   * @@class
+   * @@see [{@message.fullName} definition in proto format]{@@link {@message.fileUrl}}
+   */
+  {@header}
+    // This is for documentation. Actual contents will be loaded by gRPC.
+    @join child : message.elementDocs on ",".add(BREAK)
+
+      {@documentElement(child, subHeader(child), empty())}
+    @end
+  # Note that the opening brace should be included in the header.
+  }{@footer}
+@end
+
+@private documentEnum(enum, header, footer)
+  /**
+   @if enum.lines
+     {@comments(enum.lines)}
+     *
+   @end
+   * @@enum {number}
+   */
+  {@header}
+    @join value : enum.values() on ",".add(BREAK)
+      @if value.lines
+
+        /**
+         {@comments(value.lines)}
+         */
+      
+      @end
+      {@value.name}: {@value.number}
+    @end
+  }{@footer}
+@end
+
+@private documentExternalMessage(message)
+  /**
+   @if message.lines
+     {@comments(message.lines)}
+     *
+   @end
+   * @@external "{@message.fullName}"
+   @if properties(message)
+     {@properties(message)}
+   @end
+   * @@see [{@message.fullName} definition in proto format]{@@link {@message.fileUrl}}
+   */
+@end
+
+@private properties(message)
+  @join property : message.properties
+    * @@property {{@property.typeName}} {@property.paramName}
+    @if propertyComments(property)
+      {@propertyComments(property)}
+    @end
+    *
+  @end
+@end
+
+@private propertyComments(property)
+  @join line : property.lines
+    *   {@line}
+  @end
+@end
+
+@private documentElement(doc, header, footer)
+  @switch doc.type
+  @case "GrpcMessageDocView"
+    {@documentMessage(doc, header, footer)}
+  @case "GrpcEnumDocView"
+    {@documentEnum(doc, header, footer)}
+  @default
+    {@unhandledCase()}
+  @end
+@end
+
+@private documentExternalElement(doc)
+  @switch doc.type
+  @case "GrpcMessageDocView"
+    {@documentExternalMessage(doc)}
+  @case "GrpcEnumDocView"
+  @default
+    {@unhandledCase()}
+  @end
+@end

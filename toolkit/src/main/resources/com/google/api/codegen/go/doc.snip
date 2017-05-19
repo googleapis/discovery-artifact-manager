@@ -1,0 +1,37 @@
+@extends "go/header.snip"
+
+@snippet generate(view)
+    {@headerComment(view.fileHeader)}
+
+    // Package {@view.fileHeader.localPackageName} is an experimental, auto-generated package for the
+    // {@view.fileHeader.localPackageName} API.
+    //
+    @join line : view.packageDoc
+        // {@line}
+    @end
+    @if view.domainLayerLocation
+        //
+        // Use the client at {@view.domainLayerLocation} in preference to this.
+    @end
+    package {@view.fileHeader.localPackageName} // import "{@view.importPath}"
+
+    import (
+        "golang.org/x/net/context"
+        "google.golang.org/grpc/metadata"
+    )
+
+    func insertXGoog(ctx context.Context, val []string) context.Context {
+        md, _ := metadata.FromOutgoingContext(ctx)
+        md = md.Copy()
+        md["x-goog-api-client"] = val
+        return metadata.NewOutgoingContext(ctx, md)
+    }
+
+    func DefaultAuthScopes() []string {
+      return []string{
+        @join scope : view.authScopes
+          "{@scope}",
+        @end
+      }
+    }
+@end

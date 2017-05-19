@@ -1,0 +1,56 @@
+@extends "java/common.snip"
+@extends "java/method_sample.snip"
+
+@snippet generate(packageInfo)
+  {@license(packageInfo.fileHeader)}
+
+  /**
+   * A client to {@packageInfo.serviceTitle}.
+   *
+   * The interfaces provided are listed below, along with usage samples.
+   *
+  @join xapiClassDoc : packageInfo.serviceDocs
+    {@serviceShortDoc(xapiClassDoc)}
+  @end
+   */
+
+  package {@packageInfo.fileHeader.packageName};
+@end
+
+@private serviceShortDoc(xapiClassDoc)
+  @let coreSampleCode = syncMethodSampleCode(xapiClassDoc.exampleApiMethod), \
+       decoratedSampleCode = decorateSampleCode(xapiClassDoc.exampleApiMethod, coreSampleCode)
+    {@renderServiceShortDoc(xapiClassDoc, decoratedSampleCode)}
+  @end
+@end
+
+@private renderServiceShortDoc(xapiClassDoc, exampleMethodSampleCode)
+  @join commentLine : util.getMultilineHeading(xapiClassDoc.apiClassName)
+    {@""} * {@commentLine}
+  @end
+  # The join above doesn't properly add a newline on the end, so we need to force it
+  {@""}
+   *
+  @if xapiClassDoc.lines
+    {@""} * Service Description: {@xapiClassDoc.firstLine}
+    @if xapiClassDoc.remainingLines
+      @join commentLine : xapiClassDoc.remainingLines
+        {@""} * {@commentLine}
+      @end
+    @end
+  @else
+    {@""} * Service Description:
+  @end
+  @if xapiClassDoc.hasDefaultInstance
+    {@""} *
+     * Sample for {@xapiClassDoc.apiClassName}:
+     * <pre>
+     * <code>
+    @join sampleLine : util.getDocLines(exampleMethodSampleCode)
+      {@""} * {@sampleLine}
+    @end
+     * </code>
+     * </pre>
+     *
+  @end
+@end
