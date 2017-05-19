@@ -65,17 +65,19 @@ def _init_csharp_lib(ctx):
     client_lib_dir = os.path.join(ctx.lib_dir, 'google-api-dotnet-client')
     client_generator_dir = os.path.join(client_lib_dir, 'ClientGenerator')
     if not os.path.exists(client_lib_dir):
-        cmd = ('git clone --depth 1'
+        cmd = ('git clone --depth 4'
                ' https://github.com/google/google-api-dotnet-client')
         subprocess.check_call(shlex.split(cmd), cwd=ctx.lib_dir)
-        #cmd = 'virtualenv venv'
-        #subprocess.check_call(shlex.split(cmd), cwd=client_generator_dir)
-        cmd = 'python setup.py install'
+        cmd = 'git reset --hard 65c178a116fa29c9945c9f9c6b8cfd457706f1ef'
+        subprocess.check_call(shlex.split(cmd), cwd=client_lib_dir)
+        cmd = 'virtualenv venv'
         subprocess.check_call(shlex.split(cmd), cwd=client_generator_dir)
-        #cmd = 'dotnet migrate Src/Support'
-        #subprocess.check_call(shlex.split(cmd), cwd=client_lib_dir)
+        cmd = 'venv/bin/python setup.py install'
+        subprocess.check_call(shlex.split(cmd), cwd=client_generator_dir)
+        cmd = 'dotnet migrate Src/Support'
+        subprocess.check_call(shlex.split(cmd), cwd=client_lib_dir)
 
-    cmd = ('python src/googleapis/codegen/generate_library.py'
+    cmd = ('venv/bin/python src/googleapis/codegen/generate_library.py'
            ' --input {}'
            ' --language csharp'
            ' --output_dir ../Src/Generated').format(ctx.discovery_doc_filename)
@@ -153,8 +155,12 @@ def _init_csharp_env(ctx):
     for filename in glob.glob(os.path.join(client_lib_dir, 'DiscoveryJson', '*')):
         os.remove(filename)
     shutil.copy2(ctx.discovery_doc_filename, os.path.join(client_lib_dir, 'DiscoveryJson'))
-    cmd = 'bash BuildGenerated.sh --skipdownload'
-    subprocess.check_call(shlex.split(cmd), cwd=client_lib_dir)
+    # TODO: Switch back to this system once 1.26 is released.
+    #env = os.environ
+    #env['PATH'] = '{}/ClientGenerator/venv/bin'.format(client_lib_dir) + ':' + env['PATH']
+    #print(env['PATH'])
+    #cmd = 'bash BuildGenerated.sh --onlygenerate'
+    #subprocess.check_call(shlex.split(cmd), cwd=client_lib_dir, env=env)
 
     title = lambda x: x[0].upper() + x[1:] if x else x
     name = ctx.canonical_name.replace(' ', '')
@@ -165,8 +171,8 @@ def _init_csharp_env(ctx):
     service_dir = os.path.join(client_lib_dir,
             'Src/Generated/Google.Apis.{}.{}'.format(service_name, version_name))
 
-    #cmd = 'dotnet migrate'
-    #subprocess.check_call(shlex.split(cmd), cwd=service_dir)
+    cmd = 'dotnet migrate -s'
+    subprocess.check_call(shlex.split(cmd), cwd=service_dir)
 
     csharp_src_dir = '{}/csharp'.format(ctx.src_dir)
     if not os.path.exists(csharp_src_dir):
