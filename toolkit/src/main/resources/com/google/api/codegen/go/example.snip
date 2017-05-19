@@ -1,0 +1,229 @@
+@extends "go/header.snip"
+
+@snippet generate(view)
+    {@headerComment(view.fileHeader)}
+
+    package {@view.fileHeader.localExamplePackageName}
+
+    import (
+        {@renderImportSection(view.fileHeader.importSection)}
+    )
+
+    func {@view.clientConstructorExampleName}() {
+        ctx := context.Background()
+        c, err := {@view.fileHeader.localPackageName}.{@view.clientConstructorName}(ctx)
+        if err != nil {
+            // TODO: Handle error.
+        }
+        // TODO: Use client.
+        _ = c
+    }
+
+    @join resource : view.iamResources
+        func {@resource.exampleName}() {
+            ctx := context.Background()
+            c, err := {@view.fileHeader.localPackageName}.{@view.clientConstructorName}(ctx)
+            if err != nil {
+                // TODO: Handle error.
+            }
+
+            {@resource.paramName} := {@resource.resourceConstructorName}{}
+            h := c.{@resource.resourceGetterFunctionName}({@resource.paramName})
+            policy, err := h.Policy(ctx)
+            if err != nil {
+                // TODO: Handle error.
+            }
+            //TODO: Use the IAM policy
+            _ = policy
+        }
+
+    @end
+
+    @join method : view.apiMethods
+        @switch method.grpcStreamingType
+        @case "BidiStreaming"
+            {@bidiStreamingMethod(view, method)}
+        @case "ClientStreaming"
+            {@requestStreamingMethod(view, method)}
+        @case "ServerStreaming"
+            {@responseStreamingMethod(view, method)}
+        @case "NonStreaming"
+            @switch method.type
+            @case "PagedRequestObjectMethod"
+                {@pageStreamingMethod(view, method)}
+            @case "OperationRequestObjectMethod"
+                {@lroMethod(view, method)}
+            @case "RequestObjectMethod"
+                @if method.hasReturnValue
+                    {@simpleMethod(view, method)}
+                @else
+                    {@emptyReturnMethod(view, method)}
+                @end
+            @end
+        @end
+
+
+    @end
+
+@end
+
+@private bidiStreamingMethod(view, method)
+    func {@method.exampleName}() {
+        {@methodInit(view, method)}
+        stream, err := c.{@method.name}(ctx)
+        if err != nil {
+            // TODO: Handle error.
+        }
+        go func() {
+            reqs := []{@method.serviceRequestTypeName}{
+                // TODO: Create requests.
+            }
+            for _, req := range reqs {
+                if err := stream.Send(req); err != nil {
+                    // TODO: Handle error.
+                }
+            }
+            stream.CloseSend()
+        }()
+        for {
+            resp, err := stream.Recv()
+            if err == io.EOF {
+                break
+            }
+            if err != nil {
+                // TODO: handle error.
+            }
+            // TODO: Use resp.
+            _ = resp
+        }
+    }
+@end
+
+@private requestStreamingMethod(view, method)
+    func {@method.exampleName}() {
+        {@methodInit(view, method)}
+        stream, err := c.{@method.name}(ctx)
+        if err != nil {
+            // TODO: Handle error.
+        }
+        reqs := []{@method.serviceRequestTypeName}{
+            // TODO: Create requests.
+        }
+        for _, req := range reqs {
+            if err := stream.Send(req); err != nil {
+                // TODO: Handle error.
+            }
+        }
+        resp, err := stream.CloseAndRecv()
+        if err != nil {
+            // TODO: Handle error.
+        }
+        // TODO: Use resp.
+        _ = resp
+    }
+@end
+
+@private responseStreamingMethod(view, method)
+    func {@method.exampleName}() {
+        {@methodInit(view, method)}
+
+        {@requestInit(view, method)}
+        stream, err := c.{@method.name}(ctx, req)
+        if err != nil {
+            // TODO: Handle error.
+        }
+        for {
+            resp, err := stream.Recv()
+            if err == io.EOF {
+                break
+            }
+            if err != nil {
+                // TODO: handle error.
+            }
+            // TODO: Use resp.
+            _ = resp
+        }
+    }
+@end
+
+@private simpleMethod(view, method)
+    func {@method.exampleName}() {
+        {@methodInit(view, method)}
+
+        {@requestInit(view, method)}
+        resp, err := c.{@method.name}(ctx, req)
+        if err != nil {
+            // TODO: Handle error.
+        }
+        // TODO: Use resp.
+        _ = resp
+    }
+@end
+
+@private lroMethod(view, method)
+    func {@method.exampleName}() {
+        {@methodInit(view, method)}
+
+        {@requestInit(view, method)}
+        op, err := c.{@method.name}(ctx, req)
+        if err != nil {
+            // TODO: Handle error.
+        }
+
+        @if method.hasReturnValue
+            resp, err := op.Wait(ctx)
+            if err != nil {
+                // TODO: Handle error.
+            }
+            // TODO: Use resp.
+            _ = resp
+        @else
+            err = op.Wait(ctx)
+            // TODO: Handle error.
+        @end
+    }
+@end
+
+@private emptyReturnMethod(view, method)
+    func {@method.exampleName}() {
+        {@methodInit(view, method)}
+
+        {@requestInit(view, method)}
+        err = c.{@method.name}(ctx, req)
+        if err != nil {
+            // TODO: Handle error.
+        }
+    }
+@end
+
+@private pageStreamingMethod(view, method)
+    func {@method.exampleName}() {
+        {@methodInit(view, method)}
+
+        {@requestInit(view, method)}
+        it := c.{@method.name}(ctx, req)
+        for {
+            resp, err := it.Next()
+            if err != nil {
+                // TODO: Handle error.
+                break
+            }
+            // TODO: Use resp.
+            _ = resp
+        }
+    }
+@end
+
+@private methodInit(view, method)
+    ctx := context.Background()
+    c, err := {@view.fileHeader.localPackageName}.{@view.clientConstructorName}(ctx)
+    if err != nil {
+        // TODO: Handle error.
+    }
+@end
+
+@private requestInit(view, method)
+    req := {@method.serviceRequestTypeConstructor}{
+        // TODO: Fill request struct fields.
+    }
+@end
