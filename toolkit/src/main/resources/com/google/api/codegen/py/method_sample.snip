@@ -1,0 +1,201 @@
+@extends "py/common.snip"
+
+# Generate code samples for method-level documentation.
+@snippet sampleCode(apiMethod)
+  Example:
+  @join line : util.getDocLines(sampleCode_(apiMethod))
+    {@""}  >>> {@line}
+  @end
+@end
+
+@snippet sampleCode_(apiMethod)
+  {@importList(apiMethod.initCode.importSection.appImports)}
+  client = {@apiMethod.apiVariableName}.{@apiMethod.apiClassName}()
+  @if apiMethod.initCode.lines
+    {@initCode(apiMethod.initCode)}
+  @end
+  @switch apiMethod.type.toString
+  @case "OptionalArrayMethod"
+    {@optionalArrayMethodSampleCode(apiMethod)}
+  @case "PagedOptionalArrayMethod"
+    {@pagedOptionalArrayMethodSampleCode(apiMethod)}
+  @default
+    {@unhandledCase()}
+  @end
+@end
+
+# Helper functions for sampleCode()
+
+# Generate argument initialization code for API call
+@snippet initCode(initCodeSpec)
+  @join line : initCodeSpec.lines
+    @switch line.lineType.toString
+    @case "StructureInitLine"
+      {@initLineStructure(line)}
+    @case "ListInitLine"
+      {@initLineList(line)}
+    @case "SimpleInitLine"
+      {@initLineSimple(line)}
+    @case "MapInitLine"
+      {@initLineMap(line)}
+    @default
+      {@unhandledCase()}
+    @end
+  @end
+@end
+
+# Generate a Protobuf message argument
+@private initLineStructure(line)
+  {@line.identifier} = {@line.typeConstructor}(\
+    {@fieldSettingKwargs(line.fieldSettings)}\
+  )
+@end
+
+# Helper method for initLineStructure()
+@private fieldSettingKwargs(fieldSettings)
+    @join fieldSetting : fieldSettings on ", "
+        {@fieldSetting.fieldName}={@fieldSetting.identifier}
+    @end
+@end
+
+# Generate a List argument
+@private initLineList(line)
+  {@line.identifier} = [{@varList(line.elementIdentifiers)}]
+@end
+
+# Generate a Map argument
+@private initLineMap(line)
+  {@line.identifier} = {{@renderInitMap(line)}}
+@end
+
+# Helper method for initLineMap()
+@private renderInitMap(line)
+  @join entry : line.initEntries vertical on ","
+    {@entry.key}: {@entry.valueString}
+  @end
+@end
+
+# Generate a simple argument
+@private initLineSimple(line)
+  {@line.identifier} = {@renderInitValue(line.initValue)}
+@end
+
+# Value for simple argument
+@private renderInitValue(initValue)
+  @switch initValue.type
+  @case "SimpleInitValueView"
+    {@initValue.initialValue}
+  @case "FormattedInitValueView"
+    client.{@initValue.formatFunctionName}({@varList(initValue.formatArgs)})
+  @default
+    {@unhandledCase()}
+  @end
+@end
+
+@private optionalArrayMethodSampleCode(apiMethod)
+  @switch apiMethod.grpcStreamingType.toString
+  @case "NonStreaming"
+    {@optionalArrayMethodSampleCodeNonStreaming(apiMethod)}
+  @case "ServerStreaming"
+    {@optionalArrayMethodSampleCodeServerStreaming(apiMethod)}
+  @case "ClientStreaming"
+    {@optionalArrayMethodSampleCodeClientStreaming(apiMethod)}
+  @case "BidiStreaming"
+    {@optionalArrayMethodSampleCodeBidiStreaming(apiMethod)}
+  @default
+    {@unhandledCase()}
+  @end
+@end
+
+@private optionalArrayMethodSampleCodeNonStreaming(apiMethod)
+  {@singularResponseSampleCode(apiMethod)}
+@end
+
+@private optionalArrayMethodSampleCodeServerStreaming(apiMethod)
+  {@responseStreamingSampleCode(apiMethod)}
+@end
+
+@private optionalArrayMethodSampleCodeClientStreaming(apiMethod)
+  requests = [request]
+  {@singularResponseSampleCode(apiMethod)}
+@end
+
+@private optionalArrayMethodSampleCodeBidiStreaming(apiMethod)
+  requests = [request]
+  {@responseStreamingSampleCode(apiMethod)}
+@end
+
+@private pagedOptionalArrayMethodSampleCode(apiMethod)
+
+  @# Iterate over all results
+  {@responseStreamingSampleCode(apiMethod)}
+
+  @# Or iterate over results one page at a time
+  for page in {@pagedMethodCallSampleCode(apiMethod)}:
+      for element in page:
+          @# process element
+          pass
+@end
+
+@private responseStreamingSampleCode(apiMethod)
+  for element in {@methodCallSampleCode(apiMethod)}:
+      @# process element
+      pass
+@end
+
+@private singularResponseSampleCode(apiMethod)
+  @if apiMethod.hasReturnValue
+    response = {@methodCallSampleCode(apiMethod)}
+    @if apiMethod.isLongRunningOperation
+
+      def callback(operation_future):
+          @# Handle result.
+          result = operation_future.result()
+
+      response.add_done_callback(callback)
+
+      @# Handle metadata.
+      metadata = response.metadata()
+    @end
+  @else
+    {@methodCallSampleCode(apiMethod)}
+  @end
+@end
+
+# Render the API method call itself
+@private methodCallSampleCode(apiMethod)
+  @if apiMethod.hasRequestStreaming
+    client.{@apiMethod.name}(requests)
+  @else
+    client.{@apiMethod.name}(\
+      {@fieldSettingArgList(apiMethod.initCode.fieldSettings)}\
+    )
+  @end
+@end
+
+# Render the API method call for page streaming
+@private pagedMethodCallSampleCode(apiMethod)
+  client.{@apiMethod.name}(\
+    {@fieldSettingArgListAndComma(apiMethod.initCode.fieldSettings)}\
+    options=CallOptions(page_token=INITIAL_PAGE))
+@end
+
+# Generate comma-separated argument list
+@private varList(params)
+  @join param : params on ", "
+    {@param}
+  @end
+@end
+
+# Generate comma-separated argument list for field settings
+@snippet fieldSettingArgList(fieldSettings)
+  @join fieldSetting : fieldSettings on ", "
+    {@fieldSetting.identifier}
+  @end
+@end
+
+@private fieldSettingArgListAndComma(fieldSettings)
+  @if fieldSettings
+    {@fieldSettingArgList(fieldSettings)}, {@""}
+  @end
+@end
