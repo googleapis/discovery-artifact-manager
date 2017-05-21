@@ -2,8 +2,8 @@ import argparse
 import json
 import os
 import re
-import sys
 
+import discoveryutil
 
 _PROXY_HTML = """<!DOCTYPE html>
 <html>
@@ -23,9 +23,15 @@ _PROXY_HTML = """<!DOCTYPE html>
 </body>
 </html>
 """
+"""string: The contents of the proxy.html file.
+
+The JavaScript client library expects this file under
+"{rootUrl}/static/proxy.html".
+"""
 
 
 class Generator(object):
+    """Generator which produces a mock server from a discovery document."""
 
     _CAST_FUNC = {
         'any': 'dict',
@@ -47,10 +53,20 @@ class Generator(object):
         'string': 'basestring'
     }
 
-    _file = sys.stdout
-
     def __init__(self, root):
         self._root = root
+
+        self._methods = discoveryutil.parse_methods(root)
+        # Verify that all paths are unique. Error if we encounter a conflict.
+        path_signatures = {} # Map from path signatures to method IDs.
+        for id_, method in self._methods.iteritems():
+            path_signature = discoveryutil.path_signature(method)
+            if path_signature in path_signatures:
+                msg = 'method "{}" and "{}" have the same path'
+                msg = msg.format(path_signatures[path_signature], id_)
+                raise Exception(msg)
+            path_signatures[path_signature] = id_
+
         self._features = root.get('features', [])
         schemas = {}
         for schema in root.get('schemas', {}).itervalues():
@@ -58,12 +74,15 @@ class Generator(object):
             schemas[id_] = schema
         self._schemas = schemas
 
-    def set_file(self, file_):
-        self._file = file_
+    def emit(self, file_):
+        """Emits a mock server.
 
-    def emit(self, methods):
-        w = self._w
+        Args:
+            file_ (:obj:`File`): The file to write to.
+        """
+        w = self._w(file_)
 
+        # Emit imports and the initialization code for the Flask server.
         w('import gzip')
         w('import io')
         w('from flask import Flask')
@@ -72,6 +91,9 @@ class Generator(object):
         w('')
         w('app = Flask(__name__)')
         w('')
+        # ApiError represents a "Bad Request" exeception raised by the mock
+        # server if parameters of the incomding request is determined to be
+        # invalid.
         w('class ApiError(Exception):')
         w('    code = 400')
         w('    message = ""')
@@ -91,18 +113,25 @@ class Generator(object):
             }]
         }}""")
         w('')
-        for method in methods.itervalues():
-            self._emit_method(method)
+        # Emit handlers for each method.
+        for method in self._methods.itervalues():
+            self._emit_method(file_, method)
             w('')
+        # Emit the error handler for the ApiError exception. If an ApiError is
+        # raised, this handler sets the status code and returns the error as a
+        # JSON response.
         w('@app.errorhandler(ApiError)')
         w('def handle_api_error(error):')
         w('    response = jsonify(error.to_dict())')
         w('    response.status_code = error.code')
         w('    return response')
         w('')
-        # Got this idea from here:
+        # Handle gzipped request bodies. Some client libraries gzip the request
+        # body with the expectation that the server decompresses it.
+        # Presumably, this would normally be taken care of by a reverse proxy,
+        # but we do here manually if the "content-encoding" header is set.
+        # This code was adapted from
         # https://github.com/cralston0/gzip-encoding/blob/0b13fcc6381324239cb8ae0712516d90a7fb1ac0/flask/middleware.py
-        # TODO: Explain why this middleware is necessary.
         w('@app.before_request')
         w('def handle_gzip():')
         w('    if request.headers.get("content-encoding", "") != "gzip":')
@@ -110,50 +139,66 @@ class Generator(object):
         w('    file_ = gzip.GzipFile(fileobj=io.BytesIO(request.get_data()))')
         w('    request._cached_data = file_.read()')
         w('')
+        # Run the server on port 8000.
         w('if __name__ == "__main__":')
         w('    app.run(port=8000)')
 
-    def _emit_method(self, method):
-        w = self._w
+    def _emit_method(self, file_, method):
+        w = self._w(file_)
 
-        # TODO: Explain this, verify that flatPath doesn't always appear.
+        # The route is derived from either the "flatPath" or "path" if
+        # "flatPath" is not specified.
         path = method.get('flatPath', method['path']).strip('/')
         service_path = self._root['servicePath'].strip('/')
-        # The full path is actually "{servicePath}/{path}".
+        # The full route is actually "{servicePath}/{path}".
+        # ex: "foo/v1" + "bar/{id}" = "foo/v1/bar/{id}"
         path = '/'.join([service_path, path]).strip('/')
 
-        # Pull all the braced URL variable names out of the path.
-        # Note that we ignore the '+' in multi-segment variable names.
-        # Variable names are escaped to prevent naming conflicts.
-        # ex: '/foo/{bar}/{+baz}' => ['bar_', 'baz_']
+        # URL variables in Flask are expected to be inputs to each handler.
+        # Thus, the handler for the route
+        #     "foo/{fooId}/bar/{barId}"
+        # should have the signature
+        #     def foo_bar_handler(fooId_, barId_):
+        # "path" may contain any number of variables which are braced. They may
+        # be multi-segment variables (prepended with a "+", ex: "{+foo}") or
+        # single-segment variables (ex: "{foo}"). We pull all variables out of
+        # the path and escape them with an underscore to prevent naming
+        # conflicts.
+        # ex: "/foo/{bar}/{+baz}" => ["bar_", "baz_"]
         url_vars = [_esc_var(x) for x in re.findall(r'{\+?([^}]+)}', path)]
 
         # Convert path into a Flask route.
-        # ex: "{+foo}" => "<path:foo>"
+        # ex: "{+baz}" => "<path:{}>"
         path = re.sub(r'{(\+[^}]+)}', '<path:{}>', path)
-        # ex: "{foo}" => "<string:foo>"
+        # ex: "{bar}" => "<string:{}>"
         path = re.sub('{([^}]+)}', '<string:{}>', path)
+        # Substitute the variable names back into the path.
+        # ex: "foo/<string:bar_>/<path:baz_>"
         path = path.format(*url_vars)
 
         http_verbs = [ method['httpMethod'] ] # ex: [ "POST" ]
-        # TODO: For some reason, the Java client library sends PATCH requests
-        # as POST requests.
+        # We accept the verbs "POST" and "PATCH" for "PATCH" methods because
+        # the Java client library sends the "POST" verb for "PATCH" requests.
         if http_verbs[0] == 'PATCH':
             http_verbs.append('POST')
+
+        # Emit the route annotation and method signature.
         w('@app.route("/{}", methods={})'.format(path, json.dumps(http_verbs)))
         method_name = method['id'].replace('.', '_')
         w('def {}({}):'.format(method_name, ', '.join(url_vars)))
 
         params = method.get('parameters', {})
+        # "parameterOrder" contains a list of required parameters.
         param_order = method.get('parameterOrder', {})
         for name in param_order:
             location = params[name]['location']
-            # TODO: Explain that this condition indicates that name is a
-            # required path param that isn't in the url vars list. That means
-            # we can't test it, and that it's not really useful to test.
-            if location == 'path' and (name not in url_vars):
+            # If name is a path variable and not in url_vars then it represents
+            # a multi-segment path that was flattened by "flatPath". We don't
+            # bother emitting an assert in this case because the reachability
+            # of the route is a sufficient check.
+            if location == 'path' and (_esc_var(name) not in url_vars):
                 continue
-            self._emit_param_assert(name, params[name])
+            self._emit_param_assert(file_, name, params[name])
 
         # TODO: It may be useful to reintroduce this check in the future.
         # It verifies that a request body has or hasn't been sent based on
@@ -179,25 +224,31 @@ class Generator(object):
         #    w('    if request.data:')
         #    w('        raise ApiError("unexpected request body")')
 
+        # Emit the response.
         if 'response' in method:
             ref = method['response']['$ref']
             obj = self._gen_type(self._schemas[ref])
+            # If "dataWrapper" is one of the values in the top-level "features"
+            # key, then the client library expects the response to be nested
+            # under the key "data".
             if 'dataWrapper' in self._features:
                 obj = {'data': obj}
-            # TODO: Explain.
+            # We pop the page token key from the response object because page
+            # streaming samples in some languages will loop inifnitely if the
+            # response contains even a trivial page token value.
             for key in ['pageToken', 'nextPageToken']:
                 obj.pop(key, None)
             w('    return jsonify({})'.format(obj))
         else:
             w('    return jsonify({})')
 
-    def _emit_param_assert(self, name, param):
-        w = self._w
+    def _emit_param_assert(self, file_, name, param):
+        w = self._w(file_)
 
-        # TODO(saicheems): Because the samples are generated with array fields
-        # initialized as empty arrays, client libraries may interpret the value
-        # as null. As a result, they may not send anything for the field, which
-        # results in a 400 error.
+        # TODO: Because the samples are generated with array fields initialized
+        # as empty arrays, client libraries may interpret the value as null. As
+        # a result, they may not send anything for the field, which results in
+        # a 400 error.
         # This has to be fixed in the samples by initializing each array with a
         # single entry of its type (ex: [''] instead of []).
         if param.get('repeated'):
@@ -271,25 +322,12 @@ class Generator(object):
             }.get(schema.get('format'), 'foo')
         raise Exception('unexpected type: {}'.format(type_))
 
-    def _w(self, data):
-        self._file.write(data + '\n')
+    def _w(self, file_):
+        return lambda data: file_.write(data + '\n')
 
 
 def _esc_var(name):
-    # Return an identifier that can't conflict with any
-    # built-ins/keywords/other vars.
     return name + '_'
-
-
-def _parse_methods(root, methods=None):
-    if methods is None:
-        methods = {}
-    for method in root.get('methods', {}).itervalues():
-        id_ = method['id']
-        methods[id_] = method
-    for resource in root.get('resources', {}).itervalues():
-        _parse_methods(resource, methods)
-    return methods
 
 
 def main():
@@ -301,50 +339,29 @@ def main():
     root = {}
     with open(args.file) as file_:
         root = json.load(file_)
-
-    methods = _parse_methods(root)
     gen = Generator(root)
-
     if not os.path.exists(args.directory):
         os.makedirs(args.directory)
     static_dir = os.path.join(args.directory, 'static')
     if not os.path.exists(static_dir):
         os.makedirs(static_dir)
 
-    #root_copy = root.copy()
-    #root_copy['rootUrl'] = 'http://localhost:8000/'
     name, version = root['name'], root['version']
-    # TODO: Note that the Discovery doc written to the static directory is the
-    # same as the one passed in. The passed Discovery doc should already have
-    # been modified to point to localhost:8000.
+    # Note that the Discovery doc written to the static directory is the same
+    # as the one passed in. The passed Discovery doc should already have been
+    # modified to point to localhost:8000.
     ddoc_path = os.path.join(static_dir, '{}.{}.json'.format(name, version))
     # Write the Discovery doc to the static directory.
     with open(ddoc_path, 'w') as file_:
         file_.write(json.dumps(root, sort_keys=True, indent=2))
     # Write proxy.html to the static directory.
-    # proxy.html is required by the JavaScript client library.
     with open(os.path.join(static_dir, 'proxy.html'), 'w') as file_:
         file_.write(_PROXY_HTML)
 
-    # Verify that all paths are unique. Error if we encounter a conflict.
-    paths = {} # Map from reduced method paths to method IDs.
-    for id_, method in methods.iteritems():
-        # TODO: Check if flatPath is always specified.
-        path = method.get('flatPath', method['path']).strip()
-        path = re.sub(r'{[\+][^}]*}', '{+}', path)
-        path = re.sub(r'{[^\+][^}]*}', '{}', path)
-        path = path + ':' + method['httpMethod']
-        if path in paths:
-            msg = 'method "{}" and "{}" have the same path'
-            msg = msg.format(paths[path], id_)
-            raise Exception(msg)
-        paths[path] = id_
-
-    filename = os.path.join(args.directory,
-                            '{}.{}.mock.py'.format(name, version))
+    filename = '{}.{}.mock.py'.format(name, version)
+    filename = os.path.join(args.directory, filename)
     with open(filename, 'w') as file_:
-        gen.set_file(file_)
-        gen.emit(methods)
+        gen.emit(file_)
 
 
 if __name__ == '__main__':
