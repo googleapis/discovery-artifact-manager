@@ -1,21 +1,32 @@
+"""Generates a mock override file from a Discovery document.
+
+The generated file contains override mappings for the default value of all
+fields which must have a non-trivial value.
+"""
+
 import argparse
 import json
 import random
+
 import rstr
 
-
-def _parse_methods(root, methods=None):
-    if methods is None:
-        methods = {}
-    for method in root.get('methods', {}).itervalues():
-        id_ = method['id']
-        methods[id_] = method
-    for resource in root.get('resources', {}).itervalues():
-        _parse_methods(resource, methods)
-    return methods
+import discoveryutil
 
 
 def _gen_fields(method, quote='"'):
+    """Returns the override dict for required values for the given method.
+
+    Required fields are assigned a non-zero value that should be accepted by
+    all client libraries.
+
+    Args:
+        method (dict): A Discovery method.
+        quote (string, optional): The symbol to enquote strings with.
+
+    Returns:
+        dict: An override mapping for fields in the given method which must
+            have a non-trivial value.
+    """
     params = method.get('parameters', {})
 
     fields = {}
@@ -24,26 +35,32 @@ def _gen_fields(method, quote='"'):
             continue
         pattern = param.get('pattern')
         if not pattern:
-            # TODO: Fix this whole thing.
-            if param.get('type') == 'string' and not param.get('format') and not param.get('repeated'):
-                default_value = ' '
+            is_string = param.get('type') == 'string'
+            has_format = bool(param.get('format'))
+            is_repeated = param.get('repeated')
+
+            # TODO: Add support for required repeated fields.
+
+            # At the moment it's only useful to override strings which have no
+            # format specified (don't bother with bytes or dates). Required
+            # strings in several libraries cannot be empty, so we set their
+            # value to be a single space.
+            if is_string and not has_format and not is_repeated:
+                value = ' '
                 if param.get('enum'):
-                    default_value = param.get('enum')[0]
-                fields[name] = {'defaultValue': quote + default_value + quote}
-            # In the Node.js client, required integers must be non-zero.
-            # TODO: Has to be int64(0) in Go :(
-            #elif param.get('type') == 'integer':
-            #    fields[name] = {'defaultValue': 1}
+                    value = param.get('enum')[0]
+                fields[name] = {'defaultValue': quote + value + quote}
+            # TODO: In the Node.js client, required integers must be non-zero.
             continue
         if pattern[0] == '^' and pattern[-1] == '$':
             continue
         random.seed(7)
-        def_val = rstr.xeger(pattern)
-        fields[name] = {'defaultValue': quote + def_val + quote}
+        value = rstr.xeger(pattern)
+        fields[name] = {'defaultValue': quote + value + quote}
     return fields
 
 
-def main():
+def _main():
     parser = argparse.ArgumentParser()
     parser.add_argument('file')
     parser.add_argument('--output')
@@ -53,9 +70,11 @@ def main():
     with open(args.file) as file_:
         root = json.load(file_)
 
-    methods = _parse_methods(root)
+    methods = discoveryutil.parse_methods(root)
 
+    # A dict of overrides for languages that use double quotes.
     double_quote = {}
+    # A dict of overrides for languages that use single quotes.
     single_quote = {}
     for id_, method in methods.iteritems():
         fields = _gen_fields(method)
@@ -80,4 +99,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    _main()

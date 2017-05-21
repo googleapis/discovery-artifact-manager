@@ -1,5 +1,6 @@
 import re
 
+
 def path_signature(method):
     """Returns the most specific path signature derivable from method.
 
@@ -23,6 +24,7 @@ def path_signature(method):
     path = '{}:{}'.format(path, method['httpMethod'])
     return path
 
+
 def parse_methods(root):
     """Parses methods from the given Discovery document.
 
@@ -33,6 +35,7 @@ def parse_methods(root):
         dict: A mapping of method ID to method.
     """
     return _parse_methods(root)
+
 
 def _parse_methods(root, methods=None):
     if methods is None:

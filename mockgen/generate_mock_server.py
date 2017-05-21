@@ -1,9 +1,19 @@
+"""Generates a mock Discovery service server from a Discovery document.
+
+The generated server is configured to run on "http://localhost:8000" and
+contains an implementation of each method in the given Discovery document.
+For each method, the generated server:
+ - performs asserts to validate input where useful.
+ - returns a non-trivial and complete response.
+"""
+
 import argparse
 import json
 import os
 import re
 
 import discoveryutil
+
 
 _PROXY_HTML = """<!DOCTYPE html>
 <html>
@@ -31,7 +41,7 @@ The JavaScript client library expects this file under
 
 
 class Generator(object):
-    """Generator which produces a mock server from a discovery document."""
+    """A Generator which emits a mock server from a discovery document."""
 
     _CAST_FUNC = {
         'any': 'dict',
@@ -55,10 +65,9 @@ class Generator(object):
 
     def __init__(self, root):
         self._root = root
-
         self._methods = discoveryutil.parse_methods(root)
         # Verify that all paths are unique. Error if we encounter a conflict.
-        path_signatures = {} # Map from path signatures to method IDs.
+        path_signatures = {}  # Map from path signatures to method IDs.
         for id_, method in self._methods.iteritems():
             path_signature = discoveryutil.path_signature(method)
             if path_signature in path_signatures:
@@ -78,9 +87,9 @@ class Generator(object):
         """Emits a mock server.
 
         Args:
-            file_ (:obj:`File`): The file to write to.
+            file_ (File): The file to write to.
         """
-        w = self._w(file_)
+        w = _w(file_)
 
         # Emit imports and the initialization code for the Flask server.
         w('import gzip')
@@ -144,7 +153,13 @@ class Generator(object):
         w('    app.run(port=8000)')
 
     def _emit_method(self, file_, method):
-        w = self._w(file_)
+        """Emits the handler for a Discovery method.
+
+        Args:
+            file_ (File): The file to write to.
+            method (dict): A Discovery method.
+        """
+        w = _w(file_)
 
         # The route is derived from either the "flatPath" or "path" if
         # "flatPath" is not specified.
@@ -176,7 +191,7 @@ class Generator(object):
         # ex: "foo/<string:bar_>/<path:baz_>"
         path = path.format(*url_vars)
 
-        http_verbs = [ method['httpMethod'] ] # ex: [ "POST" ]
+        http_verbs = [method['httpMethod']]  # ex: ["POST"]
         # We accept the verbs "POST" and "PATCH" for "PATCH" methods because
         # the Java client library sends the "POST" verb for "PATCH" requests.
         if http_verbs[0] == 'PATCH':
@@ -193,9 +208,9 @@ class Generator(object):
         for name in param_order:
             location = params[name]['location']
             # If name is a path variable and not in url_vars then it represents
-            # a multi-segment path that was flattened by "flatPath". We don't
+            # a multi-segment path that was flattened in "flatPath". We don't
             # bother emitting an assert in this case because the reachability
-            # of the route is a sufficient check.
+            # of the route is a sufficient test.
             if location == 'path' and (_esc_var(name) not in url_vars):
                 continue
             self._emit_param_assert(file_, name, params[name])
@@ -214,15 +229,15 @@ class Generator(object):
         #   request body fields are usually set in the samples, this check
         #   can fail erroneously.
         #
-        #if 'request' in method:
-        #    w('    if not request.data:')
-        #    w('        raise ApiError("expected a request body")')
-        #    w('    if not isinstance(request.get_json(), dict):')
-        #    msg = 'expected the request body to be an instance of \\"dict\\"'
-        #    w('        raise ApiError("{}")'.format(msg))
-        #else:
-        #    w('    if request.data:')
-        #    w('        raise ApiError("unexpected request body")')
+        # if 'request' in method:
+        #     w('    if not request.data:')
+        #     w('        raise ApiError("expected a request body")')
+        #     w('    if not isinstance(request.get_json(), dict):')
+        #     msg = 'expected the request body to be an instance of \\"dict\\"'
+        #     w('        raise ApiError("{}")'.format(msg))
+        # else:
+        #     w('    if request.data:')
+        #     w('        raise ApiError("unexpected request body")')
 
         # Emit the response.
         if 'response' in method:
@@ -243,7 +258,14 @@ class Generator(object):
             w('    return jsonify({})')
 
     def _emit_param_assert(self, file_, name, param):
-        w = self._w(file_)
+        """Emits an assertion for a Discovery method parameter.
+
+        Args:
+            file_ (File): The file to write to.
+            name (string): The original name of the parameter.
+            param (dict): A Discovery schema.
+        """
+        w = _w(file_)
 
         # TODO: Because the samples are generated with array fields initialized
         # as empty arrays, client libraries may interpret the value as null. As
@@ -272,7 +294,7 @@ class Generator(object):
             msg = 'expected \\"{}\\" to be an instance of \\"{}\\"'
             msg = msg.format(name, instance)
             w('        raise ApiError("{}")'.format(msg))
-        else: # location == 'path'
+        else:  # location == 'path'
             # Path params are accessed as variables passed into the function.
             # The variable name is reconstructed here from the param name.
             var = _esc_var(name)
@@ -285,8 +307,25 @@ class Generator(object):
             w('        raise ApiError("{}")'.format(msg))
 
     def _gen_type(self, schema, visited=None):
+        """Returns a Python object that is the equivalent of the given schema.
+
+        This function recursively explores the given schema and pieces together
+        a mostly non-trivial Python representation.
+
+        For example, for a boolean schema this function will return
+            False
+        but for a complex object schema this function could return
+            {'foo': {'bar': ['', 42, False]}, 'baz': '1970-01-01'}
+
+        Args:
+            schema (dict): A Discovery schema.
+            visited (set, optional): A set of visited schema IDs. Do not set.
+
+        Returns:
+            obj: An arbitrary Python object derived from the given schema.
+        """
         if visited is None:
-            visited = {}
+            visited = set()
         if '$ref' in schema:
             param = self._schemas[schema['$ref']]
             return self._gen_type(param, visited)
@@ -298,9 +337,9 @@ class Generator(object):
         if type_ == 'boolean':
             return False
         if type_ == 'integer':
-            return { 'int32': 42, 'uint32': 42 }.get(schema.get('format', 42))
+            return {'int32': 42, 'uint32': 42}.get(schema.get('format', 42))
         if type_ == 'number':
-            return { 'double': 42, 'float': 42 }.get(schema.get('format', 42))
+            return {'double': 42, 'float': 42}.get(schema.get('format', 42))
         if type_ == 'object':
             obj = {}
             id_ = schema.get('id')
@@ -308,7 +347,7 @@ class Generator(object):
                 return obj
             # Nested objects don't have IDs.
             if id_:
-                visited[id_] = True
+                visited.add(id_)
             for key, val in schema.get('properties', {}).iteritems():
                 obj[key] = self._gen_type(val, visited)
             return obj
@@ -322,15 +361,36 @@ class Generator(object):
             }.get(schema.get('format'), 'foo')
         raise Exception('unexpected type: {}'.format(type_))
 
-    def _w(self, file_):
-        return lambda data: file_.write(data + '\n')
+
+def _w(file_):
+    """Returns a function which writes data to the given file.
+
+    Args:
+        file_ (File): A file.
+
+    Returns:
+        function: A function with the signature "f(string)" that writes the
+            input string to file_ suffixed with a newline.
+    """
+    return lambda data: file_.write(data + '\n')
 
 
 def _esc_var(name):
+    """Returns a valid and unique Python identifier derived from name.
+
+    Just returns name with the "_" appended. This is enough to ensure there's
+    no collisions with any keyword or built-in or import.
+
+    Args:
+        name (string): The name to escape.
+
+    Returns:
+        string: A name which is a valid and unique Python identifier.
+    """
     return name + '_'
 
 
-def main():
+def _main():
     parser = argparse.ArgumentParser()
     parser.add_argument('file')
     parser.add_argument('--directory', default='mocks')
@@ -339,7 +399,7 @@ def main():
     root = {}
     with open(args.file) as file_:
         root = json.load(file_)
-    gen = Generator(root)
+    generator = Generator(root)
     if not os.path.exists(args.directory):
         os.makedirs(args.directory)
     static_dir = os.path.join(args.directory, 'static')
@@ -353,7 +413,7 @@ def main():
     ddoc_path = os.path.join(static_dir, '{}.{}.json'.format(name, version))
     # Write the Discovery doc to the static directory.
     with open(ddoc_path, 'w') as file_:
-        file_.write(json.dumps(root, sort_keys=True, indent=2))
+        file_.write(json.dumps(root, indent=2, sort_keys=True))
     # Write proxy.html to the static directory.
     with open(os.path.join(static_dir, 'proxy.html'), 'w') as file_:
         file_.write(_PROXY_HTML)
@@ -361,8 +421,8 @@ def main():
     filename = '{}.{}.mock.py'.format(name, version)
     filename = os.path.join(args.directory, filename)
     with open(filename, 'w') as file_:
-        gen.emit(file_)
+        generator.emit(file_)
 
 
 if __name__ == '__main__':
-    main()
+    _main()
