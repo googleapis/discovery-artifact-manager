@@ -16,7 +16,7 @@ def path_signature(method):
         method (dict): A Discovery method.
 
     Returns:
-        string: The reduced path.
+        string: A path signature.
     """
     path = method.get('flatPath', method['path']).strip()
     path = re.sub(r'{[\+][^}]*}', '{+}', path)
@@ -25,19 +25,16 @@ def path_signature(method):
     return path
 
 
-def parse_methods(root):
+def parse_methods(root, methods=None):
     """Parses methods from the given Discovery document.
 
     Args:
         root (dict): A Discovery document.
+        methods (dict): A mapping of method ID to Discovery method. Do not set.
 
     Returns:
         dict: A mapping of method ID to method.
     """
-    return _parse_methods(root)
-
-
-def _parse_methods(root, methods=None):
     if methods is None:
         methods = {}
     for method in root.get('methods', {}).itervalues():
@@ -46,3 +43,4 @@ def _parse_methods(root, methods=None):
     for resource in root.get('resources', {}).itervalues():
         _parse_methods(resource, methods)
     return methods
+

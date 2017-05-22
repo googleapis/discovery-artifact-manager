@@ -41,7 +41,7 @@ The JavaScript client library expects this file under
 
 
 class Generator(object):
-    """A Generator which emits a mock server from a discovery document."""
+    """A Generator which emits a mock server from a Discovery document."""
 
     _CAST_FUNC = {
         'any': 'dict',
@@ -64,6 +64,11 @@ class Generator(object):
     }
 
     def __init__(self, root):
+        """Constructs a Generator from the given Discovery document.
+
+        Args:
+            root (dict): A Discovery document.
+        """
         self._root = root
         self._methods = discoveryutil.parse_methods(root)
         # Verify that all paths are unique. Error if we encounter a conflict.
@@ -249,7 +254,7 @@ class Generator(object):
             if 'dataWrapper' in self._features:
                 obj = {'data': obj}
             # We pop the page token key from the response object because page
-            # streaming samples in some languages will loop inifnitely if the
+            # streaming samples in some languages will loop infinitely if the
             # response contains even a trivial page token value.
             for key in ['pageToken', 'nextPageToken']:
                 obj.pop(key, None)
@@ -370,7 +375,7 @@ def _w(file_):
 
     Returns:
         function: A function with the signature "f(string)" that writes the
-            input string to file_ suffixed with a newline.
+            input string terminated with a newline character to file_.
     """
     return lambda data: file_.write(data + '\n')
 
