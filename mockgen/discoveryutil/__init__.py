@@ -41,6 +41,6 @@ def parse_methods(root, methods=None):
         id_ = method['id']
         methods[id_] = method
     for resource in root.get('resources', {}).itervalues():
-        _parse_methods(resource, methods)
+        parse_methods(resource, methods)
     return methods
 

@@ -40,7 +40,7 @@ The JavaScript client library expects this file under
 """
 
 
-class Generator(object):
+class _Generator(object):
     """A Generator which emits a mock server from a Discovery document."""
 
     _CAST_FUNC = {
@@ -350,6 +350,12 @@ class Generator(object):
             id_ = schema.get('id')
             if id_ in visited:
                 return obj
+            additional_properties = schema.get('additionalProperties')
+            # If "additionalProperties" is present, then the type is
+            # map<string, schema>.
+            if additional_properties:
+                obj['key'] = self._gen_type(additional_properties, visited)
+                return obj
             # Nested objects don't have IDs.
             if id_:
                 visited.add(id_)
@@ -404,7 +410,7 @@ def _main():
     root = {}
     with open(args.file) as file_:
         root = json.load(file_)
-    generator = Generator(root)
+    generator = _Generator(root)
     if not os.path.exists(args.directory):
         os.makedirs(args.directory)
     static_dir = os.path.join(args.directory, 'static')
