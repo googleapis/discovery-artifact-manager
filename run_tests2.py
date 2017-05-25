@@ -99,6 +99,35 @@ def _make_lib_dir(test_dir):
     return lib_dir
 
 
+def _make_lib_google_api_client_generator(test_dir):
+    lib_dir = _make_lib_dir(test_dir)
+    client_generator_dir = os.path.join(lib_dir, 'google-api-client-generator')
+    if not os.path.exists(client_generator_dir):
+        cmd = 'cp -r google-api-client-generator {}'.format(lib_dir)
+        subprocess.call(shlex.split(cmd))
+        cmd = 'virtualenv venv'
+        subprocess.call(shlex.split(cmd), cwd=client_generator_dir)
+        cmd = 'venv/bin/python setup.py install'
+        subprocess.call(shlex.split(cmd), cwd=client_generator_dir)
+    return client_generator_dir
+
+
+def _make_lib_venv(test_dir):
+    venv_dir = os.path.join(_make_lib_dir(test_dir), 'venv')
+    if not os.path.exists(venv_dir):
+        cmd = 'virtualenv {}'.format(venv_dir)
+        subprocess.call(shlex.split(cmd))
+
+        env = os.environ.copy()
+        env['PATH'] = '{}:{}'.format(os.path.join(venv_dir, 'bin'),
+                                     env['PATH'])
+        cmd = 'python setup.py install'
+        subprocess.call(shlex.split(cmd), cwd='mockgen', env=env)
+        cmd = 'pip install flask google-api-python-client'
+        subprocess.call(shlex.split(cmd), env=env)
+    return venv_dir
+
+
 def _make_src_dir(test_dir, name, version, language=None):
     src_dir = os.path.join(test_dir, 'src', name, version)
     if language:
@@ -108,15 +137,21 @@ def _make_src_dir(test_dir, name, version, language=None):
     return src_dir
 
 
-def _generate_overrides(src_dir, discovery_document_filename, name, version):
+def _generate_overrides(test_dir, discovery_document_filename, name, version):
     # TODO: Want to set up a virtualenv in test probably.
+    src_dir = _make_src_dir(test_dir, name, version)
     filenames = []
     value_override_filename = os.path.join(src_dir, 'override1.json')
     filenames.append(value_override_filename)
-    cmd = 'python mockgen/generate_mock_value_override.py {} --output {}'
+
+    venv_dir = _make_lib_venv(test_dir)
+    env = os.environ.copy()
+    env['PATH'] = '{}:{}'.format(os.path.join(venv_dir, 'bin'), env['PATH'])
+
+    cmd = 'generate_mock_value_override {} --output {}'
     cmd = cmd.format(discovery_document_filename,
                      value_override_filename)
-    subprocess.call(shlex.split(cmd))
+    subprocess.call(shlex.split(cmd), env=env)
 
     suffix = 2
     override_filename = '{}.override.json'.format(
@@ -167,27 +202,6 @@ def _generate_samples(ctx, language, ruby_names_file=None):
     sample_filenames = glob.glob(os.path.join(autogen_src_dir,
                                               '*.{}'.format(ext)))
     return sample_filenames
-
-
-def _make_lib_google_api_client_generator(test_dir):
-    lib_dir = _make_lib_dir(test_dir)
-    client_generator_dir = os.path.join(lib_dir, 'google-api-client-generator')
-    if not os.path.exists(client_generator_dir):
-        cmd = 'cp -r google-api-client-generator {}'.format(lib_dir)
-        subprocess.call(shlex.split(cmd))
-        cmd = 'virtualenv venv'
-        subprocess.call(shlex.split(cmd), cwd=client_generator_dir)
-        cmd = 'venv/bin/python setup.py install'
-        subprocess.call(shlex.split(cmd), cwd=client_generator_dir)
-    return client_generator_dir
-
-
-def _make_lib_venv(test_dir):
-    venv_dir = _make_lib_dir(test_dir, 'venv')
-    if not os.path.exists(venv_dir):
-        cmd = 'virtualenv {}'.format(venv_dir)
-        subprocess.call(shlex.split(cmd), cwd=lib_dir)
-    return venv_dir
 
 
 def _load_csharp(test_dir, ctxs):
@@ -467,7 +481,7 @@ def _load_python(test_dir, ctxs):
     venv_dir = _make_lib_venv(test_dir)
     cmd = '{} install google-api-python-client'
     cmd = cmd.format(os.path.join(venv_dir, 'bin', 'pip'))
-    subprocess.call(shlex.split(cmd), cwd=lib_dir)
+    subprocess.call(shlex.split(cmd))
 
     sample_cmds = {}
     for ctx in ctxs:
@@ -560,8 +574,8 @@ def _run(discovery_document_filenames, languages):
         os.makedirs(test_dir)
 
     venv_dir = (_make_lib_venv(test_dir))
-    python = os.path.join(venv_dir, 'bin', 'python')
-    pip = os.path.join(venv_dir, 'bin', 'pip')
+    env = os.environ.copy()
+    env['PATH'] = '{}:{}'.format(os.path.join(venv_dir, 'bin'), env['PATH'])
 
     ids = []
     ctxs = []
@@ -583,15 +597,15 @@ def _run(discovery_document_filenames, languages):
 
         filename2 = '{}.{}.json'.format(name, version)
         filename2 = os.path.join(src_dir, filename2)
-        cmd = ('python mockgen/generate_mock_discovery_document.py {}'
-               ' --output {}').format(filename, filename2)
-        subprocess.call(shlex.split(cmd))
+        cmd = ('generate_mock_discovery_document {} --output {}')
+        cmd = cmd.format(filename, filename2)
+        subprocess.call(shlex.split(cmd), env=env)
 
-        cmd = 'python mockgen/generate_mock_server.py {} --directory {}'
+        cmd = 'generate_mock_server {} --directory {}'
         cmd = cmd.format(filename2, src_dir)
-        subprocess.call(shlex.split(cmd))
+        subprocess.call(shlex.split(cmd), env=env)
 
-        override_filenames = _generate_overrides(src_dir, filename2, name,
+        override_filenames = _generate_overrides(test_dir, filename2, name,
                                                  version)
         ctx = Context(filename2, override_filenames, id_, name, version,
                       revision)
@@ -608,8 +622,8 @@ def _run(discovery_document_filenames, languages):
     for ctx in ctxs:
         cmd = 'python {}.{}.mock.py'.format(ctx.name, ctx.version)
         src_dir = _make_src_dir(test_dir, ctx.name, ctx.version)
-        server = subprocess.Popen(shlex.split(cmd), cwd=src_dir)
-                                  #stderr=subprocess.PIPE)
+        server = subprocess.Popen(shlex.split(cmd), cwd=src_dir, env=env,
+                                  stderr=subprocess.PIPE)
         while not server.stderr.readline():
             pass
         time.sleep(1)
@@ -630,7 +644,8 @@ def _run(discovery_document_filenames, languages):
                 sys.stdout.flush()
 
                 sample = subprocess.Popen(shlex.split(cmd.command),
-                                          cwd=cmd.cwd, stdout=subprocess.PIPE,
+                                          cwd=cmd.cwd, env=env,
+                                          stdout=subprocess.PIPE,
                                           stderr=subprocess.PIPE)
                 # This call waits for the process to terminate.
                 stdout_data, stderr_data = sample.communicate()
@@ -650,10 +665,7 @@ def _run(discovery_document_filenames, languages):
                 cond = cond or stdout_data.startswith('"<')
                 if cond:
                     # Record the failure to the error log and mark failure.
-                    if language == _PHP:
-                        err_logs[cmd.id_] = stdout_data
-                    else:
-                        err_logs[cmd.id_] = stderr_data
+                    err_logs[cmd.id_] = (stdout_data, stderr_data)
                     fail = True
 
             if fail:
@@ -661,11 +673,19 @@ def _run(discovery_document_filenames, languages):
             else:
                 print(green(' OK'))
 
+            indent = lambda x: '\n'.join((4*' ') + y for y in x.splitlines())
+
             if err_logs:
                 print('')
             for k, v in err_logs.items():
-                print(red('    {}\n    ---'.format(k)))
-                print(red('    {}'.format(v)))
+                log = '    {}\n'.format(k)
+                if v[0]:
+                    log += '    --- stdout\n'
+                    log += indent(v[0])
+                if v[1]:
+                    log += '    --- stderr'
+                    log += indent(v[1])
+                print(red(log), end='\n\n')
 
         server.terminate()
         server.wait()
