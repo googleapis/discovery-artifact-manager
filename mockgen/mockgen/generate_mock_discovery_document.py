@@ -4,11 +4,13 @@ The generated document points to "http://localhost:8000" and contains no
 ambiguous method paths (each method is guaranteed to point to a unique path).
 """
 
+from __future__ import absolute_import
 import argparse
 import hashlib
 import json
 
 import discoveryutil
+import six
 
 
 def _disambiguate_method_paths(root, seen=None):
@@ -32,7 +34,7 @@ def _disambiguate_method_paths(root, seen=None):
     """
     if seen is None:
         seen = set()
-    for method in root.get('methods', {}).itervalues():
+    for method in six.itervalues(root.get('methods', {})):
         id_ = method['id']
         path_signature = discoveryutil.path_signature(method)
         if path_signature not in seen:
@@ -40,8 +42,7 @@ def _disambiguate_method_paths(root, seen=None):
         else:
             hash_ = hashlib.md5(id_).hexdigest()
             method['path'] = '{}/{}'.format(hash_, method['path'].strip())
-            print method['path']
-    for resource in root.get('resources', {}).itervalues():
+    for resource in six.itervalues(root.get('resources', {})):
         _disambiguate_method_paths(resource, seen)
 
 

@@ -1,6 +1,10 @@
+#!/usr/bin/env python3
+
+from __future__ import absolute_import
 from __future__ import print_function
 import argparse
 import collections
+import concurrent.futures
 import glob
 import json
 import os
@@ -11,6 +15,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import six
 
 _DEVNULL = open(os.devnull, 'w')
 
@@ -72,6 +77,15 @@ _POM_XML = """<project xmlns="http://maven.apache.org/POM/4.0.0"
           </descriptorRefs>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>
@@ -105,6 +119,7 @@ def _make_lib_google_api_client_generator(test_dir):
     if not os.path.exists(client_generator_dir):
         cmd = 'cp -r google-api-client-generator {}'.format(lib_dir)
         subprocess.call(shlex.split(cmd))
+        # TODO: Note that we use Python2 b/c 3 doesn't work.
         cmd = 'virtualenv venv'
         subprocess.call(shlex.split(cmd), cwd=client_generator_dir)
         cmd = 'venv/bin/python setup.py install'
@@ -115,15 +130,15 @@ def _make_lib_google_api_client_generator(test_dir):
 def _make_lib_venv(test_dir):
     venv_dir = os.path.join(_make_lib_dir(test_dir), 'venv')
     if not os.path.exists(venv_dir):
-        cmd = 'virtualenv {}'.format(venv_dir)
+        cmd = 'python3 -m venv {}'.format(venv_dir)
         subprocess.call(shlex.split(cmd))
 
         env = os.environ.copy()
         env['PATH'] = '{}:{}'.format(os.path.join(venv_dir, 'bin'),
                                      env['PATH'])
-        cmd = 'python setup.py install'
+        cmd = 'python3 setup.py install'
         subprocess.call(shlex.split(cmd), cwd='mockgen', env=env)
-        cmd = 'pip install flask google-api-python-client'
+        cmd = 'pip3 install flask gunicorn'
         subprocess.call(shlex.split(cmd), env=env)
     return venv_dir
 
@@ -231,13 +246,26 @@ def _load_csharp(test_dir, ctxs):
     cmd = 'bash BuildGenerated.sh --onlygenerate'
     subprocess.call(shlex.split(cmd), cwd=client_lib_dir, env=env)
 
+    cmd = 'rm {}'.format(os.path.join(client_lib_dir, 'Generated.sln'))
+    subprocess.call(shlex.split(cmd), cwd=client_lib_dir)
+    cmd = 'dotnet new sln --name Generated'
+    csproj_filenames = glob.glob(os.path.join(client_lib_dir, 'Src',
+                                              'Generated', '*', '*.csproj'))
+    subprocess.call(shlex.split(cmd), cwd=client_lib_dir)
+    cmd = 'dotnet sln Generated.sln add {}'.format(' '.join(csproj_filenames))
+    subprocess.call(shlex.split(cmd), cwd=client_lib_dir)
+    cmd = 'dotnet restore Generated.sln'
+    subprocess.call(shlex.split(cmd), cwd=client_lib_dir)
+    cmd = 'dotnet build --framework netstandard1.3 /m'
+    subprocess.call(shlex.split(cmd), cwd=client_lib_dir)
+
     sample_cmds = {}
     for ctx in ctxs:
         sample_filenames = _generate_samples(ctx, _CSHARP)
         sample_cmds[ctx.id_] = []
 
         src_dir = _make_src_dir(test_dir, ctx.name, ctx.version, _CSHARP)
-        cmd = 'dotnet new sln -n test'
+        cmd = 'dotnet new sln --name test'
         subprocess.call(shlex.split(cmd), cwd=src_dir)
 
         csproj_filenames = []
@@ -265,7 +293,7 @@ def _load_csharp(test_dir, ctxs):
 </Project>
 """.format(os.path.join(client_lib_dir, 'Src', 'Generated', '*', '*.csproj')))
 
-            dll_filename = os.path.join(project_dir, 'bin', 'Debug',
+            dll_filename = os.path.join(project_dir, 'bin', 'Release',
                                         'netcoreapp1.0',
                                         '{}.dll'.format(method_id))
             cmd = 'dotnet {}'.format(dll_filename)
@@ -275,7 +303,7 @@ def _load_csharp(test_dir, ctxs):
         subprocess.call(shlex.split(cmd), cwd=src_dir)
         cmd = 'dotnet restore'
         subprocess.call(shlex.split(cmd), cwd=src_dir)
-        cmd = 'dotnet msbuild /m'
+        cmd = 'dotnet build --no-dependencies --configuration Release /m'
         subprocess.call(shlex.split(cmd), cwd=src_dir)
 
     return sample_cmds
@@ -345,6 +373,7 @@ def _load_java(test_dir, ctxs):
         cmd = ('venv/bin/python src/googleapis/codegen/generate_library.py'
                ' --input {}'
                ' --language java'
+               ' --language_variant 1.22.0'
                ' --package_path api/services'
                ' --output_dir {}')
         cmd = cmd.format(ctx.discovery_document_filename, mvn_src_dir)
@@ -478,10 +507,10 @@ def _load_php(test_dir, ctxs):
 
 
 def _load_python(test_dir, ctxs):
-    venv_dir = _make_lib_venv(test_dir)
-    cmd = '{} install google-api-python-client'
-    cmd = cmd.format(os.path.join(venv_dir, 'bin', 'pip'))
-    subprocess.call(shlex.split(cmd))
+    #venv_dir = _make_lib_venv(test_dir)
+    #cmd = '{} install google-api-python-client'
+    #cmd = cmd.format(os.path.join(venv_dir, 'bin', 'pip'))
+    #subprocess.call(shlex.split(cmd))
 
     sample_cmds = {}
     for ctx in ctxs:
@@ -489,12 +518,16 @@ def _load_python(test_dir, ctxs):
         sample_cmds[ctx.id_] = []
 
         src_dir = _make_src_dir(test_dir, ctx.name, ctx.version, _PYTHON)
+        cmd = 'virtualenv venv'
+        subprocess.call(shlex.split(cmd), cwd=src_dir)
+        cmd = 'venv/bin/pip install google-api-python-client'
+        subprocess.call(shlex.split(cmd), cwd=src_dir)
 
         for filename in sample_filenames:
             method_id = _parse_method_id_from_sample_filename(filename)
             new_filename = '{}.py'.format(method_id)
             shutil.copy(filename, os.path.join(src_dir, new_filename))
-            cmd = 'python {}'.format(new_filename)
+            cmd = 'venv/bin/python {}'.format(new_filename)
             sample_cmds[ctx.id_].append(SampleCommand(method_id, cmd, src_dir))
 
     return sample_cmds
@@ -527,7 +560,7 @@ def _load_ruby(test_dir, ctxs):
     cmd = cmd.format(' '.join(discovery_document_filenames), names_filename)
     proc = subprocess.Popen(shlex.split(cmd), cwd=client_lib_dir,
                             stdin=subprocess.PIPE)
-    proc.communicate(input='a')
+    proc.communicate(input=b'a')
     proc.wait()
 
     sample_cmds = {}
@@ -568,6 +601,13 @@ _LOAD_FUNCS = {
 }
 
 
+def _work(cmd):
+    proc = subprocess.Popen(shlex.split(cmd.command), cwd=cmd.cwd,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc.wait()
+    return (proc.returncode, proc.communicate())
+
+
 def _run(discovery_document_filenames, languages):
     test_dir = os.path.abspath('test/{}'.format(int(time.time())))
     if not os.path.exists(test_dir):
@@ -577,7 +617,6 @@ def _run(discovery_document_filenames, languages):
     env = os.environ.copy()
     env['PATH'] = '{}:{}'.format(os.path.join(venv_dir, 'bin'), env['PATH'])
 
-    ids = []
     ctxs = []
     for filename in discovery_document_filenames:
         root = {}
@@ -585,10 +624,6 @@ def _run(discovery_document_filenames, languages):
             root = json.load(file_)
 
         id_ = root['id']
-        if id_ in ids:
-            raise Exception('duplicate file for {}: {}'.format(id_, filename))
-        ids.append(id_)
-
         name = root['name']
         version = root['version']
         revision = root['revision']
@@ -614,25 +649,26 @@ def _run(discovery_document_filenames, languages):
     sample_cmds = {}
     for language in languages:
         func = _LOAD_FUNCS[language]
-        for k, v in func(test_dir, ctxs).iteritems():
+        for k, v in six.iteritems(func(test_dir, ctxs)):
             if k not in sample_cmds:
                 sample_cmds[k] = {}
             sample_cmds[k][language] = v
 
     for ctx in ctxs:
-        cmd = 'python {}.{}.mock.py'.format(ctx.name, ctx.version)
+        cmd = 'gunicorn -w 4 server:app'.format(ctx.name, ctx.version)
         src_dir = _make_src_dir(test_dir, ctx.name, ctx.version)
+        time.sleep(4)
         server = subprocess.Popen(shlex.split(cmd), cwd=src_dir, env=env,
                                   stderr=subprocess.PIPE)
         while not server.stderr.readline():
             pass
-        time.sleep(1)
+        time.sleep(0.25)
 
         bold = lambda x: '\033[95m{}\033[0m'.format(x)
         green = lambda x: '\033[92m{}\033[0m'.format(x)
         red = lambda x: '\033[91m{}\033[0m'.format(x)
 
-        print('\n{}'.format(bold(ctx.id_)))
+        print('\n' + bold(ctx.id_))
         for language in languages:
             err_logs = {}
             fail = False
@@ -640,33 +676,31 @@ def _run(discovery_document_filenames, languages):
             i = 0
 
             print('{0:<7}'.format(language), end='')
-            for cmd in sample_cmds[ctx.id_][language]:
-                sys.stdout.flush()
 
-                sample = subprocess.Popen(shlex.split(cmd.command),
-                                          cwd=cmd.cwd, env=env,
-                                          stdout=subprocess.PIPE,
-                                          stderr=subprocess.PIPE)
-                # This call waits for the process to terminate.
-                stdout_data, stderr_data = sample.communicate()
+            with concurrent.futures.ProcessPoolExecutor() as ex:
+                cmds = sample_cmds[ctx.id_][language]
+                method_ids = [x.id_ for x in cmds]
+                for method_id, result in zip(method_ids, ex.map(_work, cmds)):
+                    sys.stdout.flush()
+                    stdout_data, stderr_data = result[1]
 
-                i += 1
-                print('.'*(int(i*10./n) - int((i-1)*10./n)), end='')
+                    i += 1
+                    print('.'*(int(i*10./n) - int((i-1)*10./n)), end='')
 
-                # The sample fails if the return code is non-zero, or if the
-                # language is Node.js and anything is written to stderr.
-                cond = bool(sample.returncode)
-                cond = cond or (language == _NODEJS and bool(stderr_data))
-                # This is a safety check to make sure we don't miss false
-                # positives in responses returned by the Node.js client
-                # library. Specifically, the client may not error if the
-                # response from the server is an HTML page. Instead, it will
-                # print that HTML page to stdout as a JSON string.
-                cond = cond or stdout_data.startswith('"<')
-                if cond:
-                    # Record the failure to the error log and mark failure.
-                    err_logs[cmd.id_] = (stdout_data, stderr_data)
-                    fail = True
+                    # The sample fails if returncode != 0, or if the language
+                    # is Node.js and anything is written to stderr.
+                    cond = bool(result[0])
+                    cond = cond or (language == _NODEJS and bool(stderr_data))
+                    # This is a safety check to make sure we don't miss false
+                    # positives in responses returned by the Node.js client
+                    # library. Specifically, the client may not error if the
+                    # response from the server is an HTML page. Instead, it
+                    # will print that HTML page to stdout as a JSON string.
+                    cond = cond or stdout_data.startswith(b'"<')
+                    if cond:
+                        # Record the failure to the error log and mark failure.
+                        err_logs[method_id] = (stdout_data, stderr_data)
+                        fail = True
 
             if fail:
                 print(red(' FAIL'))
@@ -677,15 +711,17 @@ def _run(discovery_document_filenames, languages):
 
             if err_logs:
                 print('')
-            for k, v in err_logs.items():
+            for k in sorted(err_logs):
                 log = '    {}\n'.format(k)
+                v = err_logs[k]
+                v = [indent(x.decode('utf-8').strip('\n')) for x in v]
                 if v[0]:
-                    log += '    --- stdout\n'
-                    log += indent(v[0])
+                    log += '\n    --- stdout\n'
+                    log += indent(v[0]) + '\n'
                 if v[1]:
-                    log += '    --- stderr'
-                    log += indent(v[1])
-                print(red(log), end='\n\n')
+                    log += '\n    --- stderr\n'
+                    log += indent(v[1]) + '\n'
+                print(red(log), end='\n')
 
         server.terminate()
         server.wait()

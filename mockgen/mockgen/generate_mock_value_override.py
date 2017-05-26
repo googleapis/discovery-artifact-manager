@@ -4,6 +4,7 @@ The generated file contains override mappings for the default value of all
 fields which must have a non-trivial value.
 """
 
+from __future__ import absolute_import
 import argparse
 import json
 import random
@@ -11,6 +12,7 @@ import random
 import rstr
 
 import discoveryutil
+import six
 
 
 def _gen_fields(method, quote='"'):
@@ -30,7 +32,7 @@ def _gen_fields(method, quote='"'):
     params = method.get('parameters', {})
 
     fields = {}
-    for name, param in params.iteritems():
+    for name, param in six.iteritems(params):
         if not param.get('required'):
             continue
         pattern = param.get('pattern')
@@ -76,7 +78,7 @@ def main():
     double_quote = {}
     # A dict of overrides for languages that use single quotes.
     single_quote = {}
-    for id_, method in methods.iteritems():
+    for id_, method in six.iteritems(methods):
         fields = _gen_fields(method)
         if not fields:
             continue

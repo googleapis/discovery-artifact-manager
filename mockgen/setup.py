@@ -6,7 +6,7 @@ from setuptools import setup
 setup(name='mockgen',
       version='1.0',
       packages=find_packages(),
-      install_requires=['rstr'],
+      install_requires=['rstr', 'six'],
       entry_points={
           'console_scripts': [
               ('generate_mock_discovery_document = '

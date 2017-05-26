@@ -1,4 +1,6 @@
+from __future__ import absolute_import
 import re
+import six
 
 
 def path_signature(method):
@@ -37,10 +39,10 @@ def parse_methods(root, methods=None):
     """
     if methods is None:
         methods = {}
-    for method in root.get('methods', {}).itervalues():
+    for method in six.itervalues(root.get('methods', {})):
         id_ = method['id']
         methods[id_] = method
-    for resource in root.get('resources', {}).itervalues():
+    for resource in six.itervalues(root.get('resources', {})):
         parse_methods(resource, methods)
     return methods
 

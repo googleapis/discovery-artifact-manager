@@ -7,12 +7,14 @@ For each method, the generated server:
  - returns a non-trivial and complete response.
 """
 
+from __future__ import absolute_import
 import argparse
 import json
 import os
 import re
 
 import discoveryutil
+import six
 
 
 _PROXY_HTML = """<!DOCTYPE html>
@@ -73,7 +75,7 @@ class _Generator(object):
         self._methods = discoveryutil.parse_methods(root)
         # Verify that all paths are unique. Error if we encounter a conflict.
         path_signatures = {}  # Map from path signatures to method IDs.
-        for id_, method in self._methods.iteritems():
+        for id_, method in six.iteritems(self._methods):
             path_signature = discoveryutil.path_signature(method)
             if path_signature in path_signatures:
                 msg = 'method "{}" and "{}" have the same path'
@@ -83,7 +85,7 @@ class _Generator(object):
 
         self._features = root.get('features', [])
         schemas = {}
-        for schema in root.get('schemas', {}).itervalues():
+        for schema in six.itervalues(root.get('schemas', {})):
             id_ = schema['id']
             schemas[id_] = schema
         self._schemas = schemas
@@ -126,7 +128,7 @@ class _Generator(object):
         }}""")
         w('')
         # Emit handlers for each method.
-        for method in self._methods.itervalues():
+        for method in six.itervalues(self._methods):
             self._emit_method(file_, method)
             w('')
         # Emit the error handler for the ApiError exception. If an ApiError is
@@ -370,7 +372,7 @@ class _Generator(object):
             # Nested objects don't have IDs.
             if id_:
                 visited.add(id_)
-            for key, val in schema.get('properties', {}).iteritems():
+            for key, val in six.iteritems(schema.get('properties', {})):
                 obj[key] = self._gen_type(val, visited)
             return obj
         if type_ == 'string':
@@ -440,8 +442,7 @@ def main():
     with open(os.path.join(static_dir, 'proxy.html'), 'w') as file_:
         file_.write(_PROXY_HTML)
 
-    filename = '{}.{}.mock.py'.format(name, version)
-    filename = os.path.join(args.directory, filename)
+    filename = os.path.join(args.directory, 'server.py')
     with open(filename, 'w') as file_:
         generator.emit(file_)
 
