@@ -553,8 +553,6 @@ def _load_ruby(test_dir, ctxs):
         discovery_document_filenames.append(ctx.discovery_document_filename)
 
     names_filename = os.path.join(client_lib_dir, 'api_names.yaml')
-    os.remove(names_filename)
-    subprocess.call(shlex.split('touch {}'.format(names_filename)))
     cmd = ('bundle exec bin/generate-api gen generated --file {}'
            ' --names_out {}')
     cmd = cmd.format(' '.join(discovery_document_filenames), names_filename)

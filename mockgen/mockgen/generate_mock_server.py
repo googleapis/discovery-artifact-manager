@@ -105,7 +105,23 @@ class _Generator(object):
         w('from flask import jsonify')
         w('from flask import request')
         w('')
+        # Emit a middleware class to handle the "HTTP-Method-Override" header.
+        # The Java client library sends "PATCH" requests as "POST" requests
+        # with the "HTTP-Method-Override" header set to "PATCH".
+        w('class HTTPMethodOverrideMiddleware(object):')
+        w('    def __init__(self, app):')
+        w('        self.app = app')
+        w('')
+        w('    def __call__(self, environ, start_response):')
+        w('        method = environ.get("HTTP_X_HTTP_METHOD_OVERRIDE", "")')
+        w('        method = method.upper()')
+        w('        if method:')
+        w('            method = method.encode("ascii", "replace")')
+        w('            environ["REQUEST_METHOD"] = method')
+        w('        return self.app(environ, start_response)')
+        w('')
         w('app = Flask(__name__)')
+        w('app.wsgi_app = HTTPMethodOverrideMiddleware(app.wsgi_app)')
         w('')
         # ApiError represents a "Bad Request" exeception raised by the mock
         # server if parameters of the incomding request is determined to be
@@ -146,8 +162,8 @@ class _Generator(object):
         # Node.js client does return an error on 404. Instead, the Node.js
         # client returns the full HTML response as a string. The easiest way to
         # determine a failure in this case is to return a proper JSON error.
-        w('@app.errorhandler(ApiError)')
-        w('def handle_api_error(error):')
+        w('@app.errorhandler(404)')
+        w('def handle_not_found(error):')
         w('    error = ApiError("not found", code=404)')
         w('    response = jsonify(error.to_dict())')
         w('    response.status_code = error.code')
@@ -210,10 +226,6 @@ class _Generator(object):
         path = path.format(*url_vars)
 
         http_verbs = [method['httpMethod']]  # ex: ["POST"]
-        # We accept the verbs "POST" and "PATCH" for "PATCH" methods because
-        # the Java client library sends the "POST" verb for "PATCH" requests.
-        if http_verbs[0] == 'PATCH':
-            http_verbs.append('POST')
 
         # Emit the route annotation and method signature.
         w('@app.route("/{}", methods={})'.format(path, json.dumps(http_verbs)))
