@@ -611,16 +611,17 @@ def _run(discovery_document_filenames, languages):
     if not os.path.exists(test_dir):
         os.makedirs(test_dir)
 
+    roots = []
+    for filename in discovery_document_filenames:
+        with open(filename) as file_:
+            roots.append(json.load(file_))
+
     venv_dir = (_make_lib_venv(test_dir))
     env = os.environ.copy()
     env['PATH'] = '{}:{}'.format(os.path.join(venv_dir, 'bin'), env['PATH'])
 
     ctxs = []
-    for filename in discovery_document_filenames:
-        root = {}
-        with open(filename) as file_:
-            root = json.load(file_)
-
+    for root in roots:
         id_ = root['id']
         name = root['name']
         version = root['version']

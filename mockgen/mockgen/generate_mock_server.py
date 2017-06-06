@@ -313,13 +313,16 @@ class _Generator(object):
         instance = self._INSTANCE[type_]
 
         location = param['location']
+        # The Ruby client library may send query parameters as part of the form
+        # if possible.
+        w('    request_args = request.args or request.form')
         if location == 'query':
-            w('    if "{}" not in request.args:'.format(name))
+            w('    if "{}" not in request_args:'.format(name))
             msg = 'query parameter \\"{}\\" not found'.format(name)
             w('        raise ApiError("{}")'.format(msg))
             w('    try:')
             cast_func = self._CAST_FUNC[type_]
-            w('        {}(request.args.get("{}"))'.format(cast_func, name))
+            w('        {}(request_args.get("{}"))'.format(cast_func, name))
             w('    except:')
             msg = 'expected \\"{}\\" to be an instance of \\"{}\\"'
             msg = msg.format(name, instance)
