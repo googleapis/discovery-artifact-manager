@@ -100,6 +100,17 @@ SampleCommand = collections.namedtuple('SampleCommand', 'id_ command cwd')
 
 
 def _parse_method_id_from_sample_filename(sample_filename):
+    """Returns the method ID of a sample from its filename.
+
+    For example, given "foo.bar.get.frag.go", this function will return
+    "foo.bar.get".
+
+    Args:
+        sample_filename (string): A sample filename.
+
+    Returns:
+        string: A method ID.
+    """
     # "foo/foo.bar.get.frag.go" -> "foo.bar.get.frag.go"
     name = os.path.basename(sample_filename)
     # "foo.bar.get.frag.go" -> "foo.bar.get"
@@ -107,43 +118,89 @@ def _parse_method_id_from_sample_filename(sample_filename):
 
 
 def _make_lib_dir(test_dir):
+    """Creates and returns the path to lib.
+
+    Args:
+        test_dir (string): The parent directory.
+
+    Returns:
+        string: The path to the lib directory.
+    """
     lib_dir = os.path.join(test_dir, 'lib')
     if not os.path.exists(lib_dir):
         os.makedirs(lib_dir)
     return lib_dir
 
 
+def _call(cmd, stdin=None, stdout=None, stderr=None, cwd=None, env=None):
+    """A wrapper over subprocess.call that splits cmd with shlex.split"""
+    return subprocess.call(shlex.split(cmd), stdin=stdin, stdout=stdout,
+                           stderr=stderr, cwd=cwd, env=env)
+
+
 def _make_lib_google_api_client_generator(test_dir):
+    """Creates and returns the path to lib/google-api-client-generator
+
+    The returned path points to a directory which contains source copied
+    from google-api-client-generator and an initialized virtualenv in the
+    "venv" subdirectory.
+
+    Args:
+        test_dir (string): The parent directory.
+
+    Returns:
+        string: The path to the lib/google-api-client-generator directory.
+    """
     lib_dir = _make_lib_dir(test_dir)
     client_generator_dir = os.path.join(lib_dir, 'google-api-client-generator')
     if not os.path.exists(client_generator_dir):
-        cmd = 'cp -r google-api-client-generator {}'.format(lib_dir)
-        subprocess.call(shlex.split(cmd))
+        _call('cp -r google-api-client-generator {}'.format(lib_dir))
         # TODO: Note that we use Python2 b/c 3 doesn't work.
-        cmd = 'virtualenv venv'
-        subprocess.call(shlex.split(cmd), cwd=client_generator_dir)
-        cmd = 'venv/bin/python setup.py install'
-        subprocess.call(shlex.split(cmd), cwd=client_generator_dir)
+        _call('virtualenv venv', cwd=client_generator_dir)
+        _call('venv/bin/python setup.py install', cwd=client_generator_dir)
     return client_generator_dir
 
 
 def _make_lib_venv(test_dir):
+    """Creates and returns the path to lib/venv.
+
+    The returned path points to an initialized Python3 virtualenv.
+
+    Args:
+        test_dir (string): The parent directory.
+
+    Returns:
+        string: The path to the lib/venv directory.
+    """
     venv_dir = os.path.join(_make_lib_dir(test_dir), 'venv')
     if not os.path.exists(venv_dir):
-        cmd = 'python3 -m venv {}'.format(venv_dir)
-        subprocess.call(shlex.split(cmd))
+        _call('python3 -m venv {}'.format(venv_dir))
 
         env = os.environ.copy()
         env['PATH'] = '{}:{}'.format(os.path.join(venv_dir, 'bin'),
                                      env['PATH'])
-        cmd = 'python3 setup.py install'
-        subprocess.call(shlex.split(cmd), cwd='mockgen', env=env)
-        cmd = 'pip3 install flask gunicorn'
-        subprocess.call(shlex.split(cmd), env=env)
+        _call('python3 setup.py install', cwd='mockgen', env=env)
+        _call('pip3 install flask gunicorn', env=env)
     return venv_dir
 
 
 def _make_src_dir(test_dir, name, version, language=None):
+    """Creates and returns the path to a src directory.
+
+    For example, given ("/tmp", "foo", "v1"), this function will return:
+        "/tmp/foo/v1"
+    Given ("/tmp", "foo", "v1", "java"), this function will return:
+        "/tmp/foo/v1/java"
+
+    Args:
+        test_dir (string): The parent directory.
+        name (string): The API name.
+        version (string): The API version.
+        language (string): The language name.
+
+    Returns:
+        string: The path to a src directory.
+    """
     src_dir = os.path.join(test_dir, 'src', name, version)
     if language:
         src_dir = os.path.join(src_dir, language)
@@ -153,21 +210,40 @@ def _make_src_dir(test_dir, name, version, language=None):
 
 
 def _generate_overrides(test_dir, discovery_document_filename, name, version):
-    # TODO: Want to set up a virtualenv in test probably.
+    """Returns an array of generated override filenames for the given API.
+
+    For the given Discovery document, this method generates up to 3 override files:
+    1. A mock value override which overrides strings with defined patterns.
+    2. The original override file copied into the src directory.
+    3. A mock auth/discoveryDocUrl override which forces the sample to be
+       generated with no auth and for any Discovery document URLs to point to
+       the mock server.
+
+    Args:
+        test_dir: The parent directory.
+        discovery_document_filename: The Discovery document's filename.
+        name: The API name.
+        version: The API version.
+
+    Returns:
+        list: A list of filename strings.
+    """
     src_dir = _make_src_dir(test_dir, name, version)
     filenames = []
     value_override_filename = os.path.join(src_dir, 'override1.json')
     filenames.append(value_override_filename)
 
     venv_dir = _make_lib_venv(test_dir)
+    # Temporarily create a new env that points to venv/bin so we can use the
+    # scripts installed by the mockgen module.
     env = os.environ.copy()
     env['PATH'] = '{}:{}'.format(os.path.join(venv_dir, 'bin'), env['PATH'])
 
-    cmd = 'generate_mock_value_override {} --output {}'
-    cmd = cmd.format(discovery_document_filename,
-                     value_override_filename)
-    subprocess.call(shlex.split(cmd), env=env)
+    # 1. Generate the mock value override.
+    _call('generate_mock_value_override {} --output {}'.format(
+            discovery_document_filename, value_override_filename), env=env)
 
+    # 2. Try to copy over the original override file if it exists.
     suffix = 2
     override_filename = '{}.override.json'.format(
             os.path.splitext(discovery_document_filename)[0])
@@ -177,6 +253,7 @@ def _generate_overrides(test_dir, discovery_document_filename, name, version):
         shutil.copy2(original_override_filename, filename)
         suffix += 1
 
+    # 3. Generate the auth/discoveryDocUrl override.
     misc_override_filename = 'override{}.json'.format(suffix)
     misc_override_filename = os.path.join(src_dir, misc_override_filename)
     filenames.append(misc_override_filename)
@@ -196,6 +273,18 @@ def _generate_overrides(test_dir, discovery_document_filename, name, version):
 
 
 def _generate_samples(ctx, language, ruby_names_file=None):
+    """Generates and returns the filenames of samples for an API/language.
+
+    All samples are written to a temporary directory.
+
+    Args:
+        ctx (Context): The Context to generate from.
+        language (string): The language to generate for.
+        ruby_names_file (string, optional): The path to the Ruby names file.
+
+    Returns:
+        list: A list of generated sample filenames.
+    """
     temp_dir = tempfile.mkdtemp()
     cmd = ('java -jar discoGen-0.0.5.jar'
            ' --discovery_doc {}'
@@ -207,7 +296,7 @@ def _generate_samples(ctx, language, ruby_names_file=None):
                      ','.join(ctx.override_filenames), temp_dir)
     if ruby_names_file:
         cmd = cmd + ' --ruby_names_file {}'.format(ruby_names_file)
-    subprocess.call(shlex.split(cmd))
+    _call(cmd)
     autogen_src_dir = os.path.join(temp_dir, 'autogenerated', ctx.name,
                                    ctx.version, ctx.revision)
     ext = {
@@ -220,53 +309,71 @@ def _generate_samples(ctx, language, ruby_names_file=None):
 
 
 def _load_csharp(test_dir, ctxs):
+    """Loads the C# library and samples for the given APIs.
+
+    Args:
+        test_dir: The parent directory.
+        ctxs: The list of Contexts to load.
+
+    Returns:
+        list: A list of Commands to run samples.
+    """
     lib_dir = _make_lib_dir(test_dir)
     client_lib_dir = os.path.join(lib_dir, 'google-api-dotnet-client')
 
-    cmd = 'git clone https://github.com/google/google-api-dotnet-client'
-    subprocess.call(shlex.split(cmd), cwd=lib_dir)
-    cmd = 'git reset --hard v1.26.2'
-    subprocess.call(shlex.split(cmd), cwd=client_lib_dir)
+    # Clone the client and reset it to v1.26.2 (latest).
+    _call('git clone https://github.com/google/google-api-dotnet-client',
+          cwd=lib_dir)
+    _call('git reset --hard v1.26.2', cwd=client_lib_dir)
 
+    # Delete and recreate the DiscoveryJson/ directory.
     discovery_json_dir = os.path.join(client_lib_dir, 'DiscoveryJson')
     shutil.rmtree(discovery_json_dir)
     os.makedirs(discovery_json_dir)
 
+    # Copy all Discovery documents into DiscoveryJson/
     for ctx in ctxs:
         shutil.copy(ctx.discovery_document_filename, discovery_json_dir)
 
+    # Create the virtualenv for google-api-dotnet-client's local copy of
+    # google-api-client-generator.
     client_generator_dir = os.path.join(client_lib_dir, 'ClientGenerator')
-    cmd = 'virtualenv venv'
-    subprocess.call(shlex.split(cmd), cwd=client_generator_dir)
-    cmd = 'venv/bin/python setup.py install'
-    subprocess.call(shlex.split(cmd), cwd=client_generator_dir)
+    _call('virtualenv venv', cwd=client_generator_dir)
+    _call('venv/bin/python setup.py install', cwd=client_generator_dir)
+
+    # Temporarily create a new env that points to venv/bin so the bash script
+    # can use the scripts installed by google-api-client-generator.
     venv_bin_dir = os.path.join(client_generator_dir, 'venv', 'bin')
     env = os.environ.copy()
     env['PATH'] = '{}:{}'.format(venv_bin_dir, env['PATH'])
-    cmd = 'bash BuildGenerated.sh --onlygenerate'
-    subprocess.call(shlex.split(cmd), cwd=client_lib_dir, env=env)
 
-    cmd = 'rm {}'.format(os.path.join(client_lib_dir, 'Generated.sln'))
-    subprocess.call(shlex.split(cmd), cwd=client_lib_dir)
-    cmd = 'dotnet new sln --name Generated'
+    # Run the repo's generator (builds client libraries for all Discovery files
+    # under DiscoveryJson/).
+    _call('bash BuildGenerated.sh --onlygenerate', cwd=client_lib_dir, env=env)
+
+    # Remove and recreate "Generated.sln".
+    _call('rm {}'.format(os.path.join(client_lib_dir, 'Generated.sln')),
+          cwd=client_lib_dir)
     csproj_filenames = glob.glob(os.path.join(client_lib_dir, 'Src',
                                               'Generated', '*', '*.csproj'))
-    subprocess.call(shlex.split(cmd), cwd=client_lib_dir)
-    cmd = 'dotnet sln Generated.sln add {}'.format(' '.join(csproj_filenames))
-    subprocess.call(shlex.split(cmd), cwd=client_lib_dir)
-    cmd = 'dotnet restore Generated.sln'
-    subprocess.call(shlex.split(cmd), cwd=client_lib_dir)
-    cmd = 'dotnet build --framework netstandard1.3 /m'
-    subprocess.call(shlex.split(cmd), cwd=client_lib_dir)
+    _call('dotnet new sln --name Generated', cwd=client_lib_dir)
+    _call('dotnet sln Generated.sln add {}'.format(' '.join(csproj_filenames)),
+          cwd=client_lib_dir)
+
+    # Restore and build with framework netstandard1.3
+    # Building here saves us considerable time when building the project
+    # samples since we can ignore dependencies.
+    _call('dotnet restore Generated.sln', cwd=client_lib_dir)
+    _call('dotnet build --framework netstandard1.3 /m', cwd=client_lib_dir)
 
     sample_cmds = {}
     for ctx in ctxs:
         sample_filenames = _generate_samples(ctx, _CSHARP)
         sample_cmds[ctx.id_] = []
 
+        # Create .../test.sln to collect all the sample projects.
         src_dir = _make_src_dir(test_dir, ctx.name, ctx.version, _CSHARP)
-        cmd = 'dotnet new sln --name test'
-        subprocess.call(shlex.split(cmd), cwd=src_dir)
+        _call('dotnet new sln --name test', cwd=src_dir)
 
         csproj_filenames = []
         for filename in sample_filenames:
@@ -296,70 +403,96 @@ def _load_csharp(test_dir, ctxs):
             dll_filename = os.path.join(project_dir, 'bin', 'Release',
                                         'netcoreapp1.0',
                                         '{}.dll'.format(method_id))
+            # dotnet foo.bar.get/bin/Release/netcoreapp1.0/foo.bar.get.dll
             cmd = 'dotnet {}'.format(dll_filename)
             sample_cmds[ctx.id_].append(SampleCommand(method_id, cmd, None))
 
-        cmd = 'dotnet sln test.sln add {}'.format(' '.join(csproj_filenames))
-        subprocess.call(shlex.split(cmd), cwd=src_dir)
-        cmd = 'dotnet restore'
-        subprocess.call(shlex.split(cmd), cwd=src_dir)
-        cmd = 'dotnet build --no-dependencies --configuration Release /m'
-        subprocess.call(shlex.split(cmd), cwd=src_dir)
+        # Add all projects to test.sln, restore, and build. Use multiple
+        # processors if possible (/m flag).
+        _call('dotnet sln test.sln add {}'.format(' '.join(csproj_filenames)),
+              cwd=src_dir)
+        _call('dotnet restore', cwd=src_dir)
+        _call('dotnet build --no-dependencies --configuration Release /m',
+              cwd=src_dir)
 
     return sample_cmds
 
 
 def _load_go(test_dir, ctxs):
+    """Loads the Go library and samples for the given APIs.
+
+    Args:
+        test_dir: The parent directory.
+        ctxs: The list of Contexts to load.
+
+    Returns:
+        list: A list of Commands to run samples.
+    """
     lib_dir = _make_lib_dir(test_dir)
     go_dir = os.path.join(lib_dir, 'go')
     if not os.path.exists(go_dir):
         os.makedirs(go_dir)
+    # Temporarily create a new env that points GOPATH to lib/go
     env = os.environ.copy()
     env['GOPATH'] = go_dir
-    cmd = 'go get -v google.golang.org/api/google-api-go-generator'
-    subprocess.call(shlex.split(cmd), env=env)
+    _call('go get -v google.golang.org/api/google-api-go-generator', env=env)
 
     sample_cmds = {}
     for ctx in ctxs:
         sample_filenames = _generate_samples(ctx, _GO)
         sample_cmds[ctx.id_] = []
 
+        # It's impossible to figure out where any Go API is without copying the
+        # generator's logic for version names...
         version = ctx.version
         if version == 'alpha' or version == 'beta':
             version = 'v0.' + version
         match = re.match(r'^(.+)_(v[\d\.]+)$', version)
         if match:
             version = '{}/{}'.format(match.group(1), match.group(2))
-        cmd = '{} --api_json_file {}'.format(
+        _call('{} --api_json_file {}'.format(
                 os.path.join(go_dir, 'bin', 'google-api-go-generator'),
-                ctx.discovery_document_filename)
-        subprocess.call(shlex.split(cmd), env=env)
+                ctx.discovery_document_filename), env=env)
 
+        # Point GOBIN to ./bin so we can collect the executables without fear
+        # of collisions under GOPATH/bin
         src_dir = _make_src_dir(test_dir, ctx.name, ctx.version, _GO)
         bin_dir = os.path.join(src_dir, 'bin')
         env['GOBIN'] = bin_dir
         cmd = 'ln -s {} {}'
-        cmd = cmd.format(src_dir, os.path.join(go_dir, 'src', ctx.id_))
-        subprocess.call(shlex.split(cmd))
+        _call(cmd.format(src_dir, os.path.join(go_dir, 'src', ctx.id_)))
 
         sample_cmds[ctx.id_] = []
         for filename in sample_filenames:
             method_id = _parse_method_id_from_sample_filename(filename)
+            # ./foo.bar.get
             package_dir = os.path.join(src_dir, method_id)
             if not os.path.exists(package_dir):
                 os.makedirs(package_dir)
+            # ./foo.bar.get/foo.bar.get.go
             new_filename = os.path.join(package_dir, '{}.go'.format(method_id))
             shutil.copy(filename, new_filename)
+            # ./bin/foo.bar.get
             cmd = os.path.join(bin_dir, method_id)
             sample_cmds[ctx.id_].append(SampleCommand(method_id, cmd, None))
 
-        cmd = 'go get -v ./...'
-        subprocess.call(shlex.split(cmd), cwd=src_dir, env=env)
+        # Compile all source and get all dependencies. This writes all
+        # executables to ./bin
+        _call('go get -v ./...', cwd=src_dir, env=env)
 
     return sample_cmds
 
 
 def _load_java(test_dir, ctxs):
+    """Loads the Java library and samples for the given APIs.
+
+    Args:
+        test_dir: The parent directory.
+        ctxs: The list of Contexts to load.
+
+    Returns:
+        list: A list of Commands to run samples.
+    """
     lib_dir = _make_lib_dir(test_dir)
     client_generator_dir = _make_lib_google_api_client_generator(test_dir)
 
@@ -370,14 +503,15 @@ def _load_java(test_dir, ctxs):
 
         src_dir = _make_src_dir(test_dir, ctx.name, ctx.version, _JAVA)
         mvn_src_dir = os.path.join(src_dir, 'src', 'main', 'java')
+        # Generate the client library and put it in src/main/java
         cmd = ('venv/bin/python src/googleapis/codegen/generate_library.py'
                ' --input {}'
                ' --language java'
                ' --language_variant 1.22.0'
                ' --package_path api/services'
                ' --output_dir {}')
-        cmd = cmd.format(ctx.discovery_document_filename, mvn_src_dir)
-        subprocess.call(shlex.split(cmd), cwd=client_generator_dir)
+        _call(cmd.format(ctx.discovery_document_filename, mvn_src_dir),
+              cwd=client_generator_dir)
         with open(os.path.join(src_dir, 'pom.xml'), 'w') as file_:
             file_.write(_POM_XML)
 
@@ -387,6 +521,7 @@ def _load_java(test_dir, ctxs):
             if not os.path.exists(package_dir):
                 os.makedirs(package_dir)
 
+            # Match and replace the filename with the sample's class name.
             sample_class_name = ''
             sample_content = ''
             with open(filename) as file_:
@@ -395,42 +530,52 @@ def _load_java(test_dir, ctxs):
                 sample_class_name = match.group(1)
             new_filename = os.path.join(package_dir,
                                         '{}.java'.format(sample_class_name))
+
+            # Prepend "package main;" to each sample.
             with open(new_filename, 'w') as file_:
                 file_.write('package {};\n'.format(method_id))
                 file_.write(sample_content)
             jar_filename = 'app-1.0-jar-with-dependencies.jar'
             jar_filename = os.path.join(src_dir, 'target', jar_filename)
+            # java -cp .../target/app-bla.jar foo.bar.get.FooSample
             cmd = 'java -cp {} {}.{}'.format(jar_filename, method_id,
                                              sample_class_name)
             sample_cmds[ctx.id_].append(SampleCommand(method_id, cmd, None))
 
-        cmd = 'mvn package assembly:single'
-        subprocess.call(shlex.split(cmd), cwd=src_dir)
+        # Assemble an executable jar.
+        _call('mvn package assembly:single', cwd=src_dir)
 
     return sample_cmds
 
 
 def _load_nodejs(test_dir, ctxs):
+    """Loads the Node.js library and samples for the given APIs.
+
+    Args:
+        test_dir: The parent directory.
+        ctxs: The list of Contexts to load.
+
+    Returns:
+        list: A list of Commands to run samples.
+    """
     lib_dir = _make_lib_dir(test_dir)
     client_lib_dir = os.path.join(lib_dir, 'google-api-nodejs-client')
 
-    cmd = ('git clone --depth 1 '
-           'https://github.com/google/google-api-nodejs-client')
-    subprocess.call(shlex.split(cmd), cwd=lib_dir)
-    cmd = 'npm install'
-    subprocess.call(shlex.split(cmd), cwd=client_lib_dir)
-    cmd = 'npm run build-tools'
-    subprocess.call(shlex.split(cmd), cwd=client_lib_dir)
-    cmd = 'rm -rf apis'
-    subprocess.call(shlex.split(cmd), cwd=client_lib_dir)
+    # Clone the client, install dependencies, build the scripts, and delete the
+    # generated apis directory.
+    _call(('git clone --depth 1 '
+           'https://github.com/google/google-api-nodejs-client'), cwd=lib_dir)
+    _call('npm install', cwd=client_lib_dir)
+    _call('npm run build-tools', cwd=client_lib_dir)
+    _call('rm -rf apis', cwd=client_lib_dir)
 
+    # Generate all client libraries.
     for ctx in ctxs:
         cmd = 'node scripts/generate {}'
-        cmd = cmd.format(ctx.discovery_document_filename)
-        subprocess.call(shlex.split(cmd), cwd=client_lib_dir)
+        _call(cmd.format(ctx.discovery_document_filename), cwd=client_lib_dir)
 
-    cmd = 'npm run build'
-    subprocess.call(shlex.split(cmd), cwd=client_lib_dir)
+    # Build all client libraries.
+    _call('npm run build', cwd=client_lib_dir)
 
     sample_cmds = {}
     for ctx in ctxs:
@@ -442,35 +587,46 @@ def _load_nodejs(test_dir, ctxs):
             method_id = _parse_method_id_from_sample_filename(filename)
             new_filename = '{}.js'.format(method_id)
             shutil.copy(filename, os.path.join(src_dir, new_filename))
+            # node .../foo.bar.get.js
             cmd = 'node {}'.format(new_filename)
             sample_cmds[ctx.id_].append(SampleCommand(method_id, cmd, src_dir))
 
-        cmd = 'npm install {}'.format(client_lib_dir)
-        subprocess.call(shlex.split(cmd), cwd=src_dir)
+        _call('npm install {}'.format(client_lib_dir), cwd=src_dir)
 
     return sample_cmds
 
 
 def _load_php(test_dir, ctxs):
+    """Loads the PHP library and samples for the given APIs.
+
+    Args:
+        test_dir: The parent directory.
+        ctxs: The list of Contexts to load.
+
+    Returns:
+        list: A list of Commands to run samples.
+    """
     lib_dir = _make_lib_dir(test_dir)
     client_lib_dir = os.path.join(lib_dir, 'google-api-php-client-services')
-    cmd = ('git clone --depth 1'
-           ' https://github.com/google/google-api-php-client-services')
-    subprocess.call(shlex.split(cmd), cwd=lib_dir)
+    _call(('git clone --depth 1'
+           ' https://github.com/google/google-api-php-client-services'),
+          cwd=lib_dir)
     client_generator_dir = _make_lib_google_api_client_generator(test_dir)
 
+    # Delete all generated client libraries.
     shutil.rmtree(os.path.join(client_lib_dir, 'src'))
 
+    # Generate all client libraries.
     for ctx in ctxs:
         cmd = ('venv/bin/python src/googleapis/codegen/generate_library.py'
                ' --input {}'
                ' --language php'
                ' --language_variant 1.2.0'
                ' --output_dir {}')
-        cmd = cmd.format(
+        _call(cmd.format(
                 ctx.discovery_document_filename,
-                os.path.join(client_lib_dir, 'src', 'Google', 'Service'))
-        subprocess.call(shlex.split(cmd), cwd=client_generator_dir)
+                os.path.join(client_lib_dir, 'src', 'Google', 'Service')),
+              cwd=client_generator_dir)
 
     sample_cmds = {}
     for ctx in ctxs:
@@ -497,27 +653,33 @@ def _load_php(test_dir, ctxs):
             method_id = _parse_method_id_from_sample_filename(filename)
             new_filename = '{}.php'.format(method_id)
             shutil.copy(filename, os.path.join(src_dir, new_filename))
+            # php .../foo.bar.get.php
             cmd = 'php {}'.format(new_filename)
             sample_cmds[ctx.id_].append(SampleCommand(method_id, cmd, src_dir))
 
-        cmd = 'composer update'
-        subprocess.call(shlex.split(cmd), cwd=src_dir)
+        # Install all dependencies.
+        _call('composer update', cwd=src_dir)
 
     return sample_cmds
 
 
 def _load_python(test_dir, ctxs):
-    #venv_dir = _make_lib_venv(test_dir)
-    #cmd = '{} install google-api-python-client'
-    #cmd = cmd.format(os.path.join(venv_dir, 'bin', 'pip'))
-    #subprocess.call(shlex.split(cmd))
+    """Loads the Python library and samples for the given APIs.
 
+    Args:
+        test_dir: The parent directory.
+        ctxs: The list of Contexts to load.
+
+    Returns:
+        list: A list of Commands to run samples.
+    """
     sample_cmds = {}
     for ctx in ctxs:
         sample_filenames = _generate_samples(ctx, _PYTHON)
         sample_cmds[ctx.id_] = []
 
         src_dir = _make_src_dir(test_dir, ctx.name, ctx.version, _PYTHON)
+        # Create a virtualenv.
         cmd = 'virtualenv venv'
         subprocess.call(shlex.split(cmd), cwd=src_dir)
         cmd = 'venv/bin/pip install google-api-python-client'
@@ -527,6 +689,7 @@ def _load_python(test_dir, ctxs):
             method_id = _parse_method_id_from_sample_filename(filename)
             new_filename = '{}.py'.format(method_id)
             shutil.copy(filename, os.path.join(src_dir, new_filename))
+            # /venv/bin/python .../foo.bar.get.py
             cmd = 'venv/bin/python {}'.format(new_filename)
             sample_cmds[ctx.id_].append(SampleCommand(method_id, cmd, src_dir))
 
@@ -534,30 +697,42 @@ def _load_python(test_dir, ctxs):
 
 
 def _load_ruby(test_dir, ctxs):
+    """Loads the Ruby library and samples for the given APIs.
+
+    Args:
+        test_dir: The parent directory.
+        ctxs: The list of Contexts to load.
+
+    Returns:
+        list: A list of Commands to run samples.
+    """
     lib_dir = _make_lib_dir(test_dir)
     client_lib_dir = os.path.join(lib_dir, 'google-api-ruby-client')
-    cmd = ('git clone --depth 1'
-           ' https://github.com/google/google-api-ruby-client')
-    subprocess.call(shlex.split(cmd), cwd=lib_dir)
-    cmd = 'bundle install --path vendor/bundle'
-    subprocess.call(shlex.split(cmd), cwd=client_lib_dir)
 
+    # Clone the client library, install dependencies, delete all generated
+    # client libraries, and restore the discovery_v1 client (needed by the
+    # generator script).
+    _call(('git clone --depth 1'
+           ' https://github.com/google/google-api-ruby-client'), cwd=lib_dir)
+    _call('bundle install --path vendor/bundle', cwd=client_lib_dir)
     shutil.rmtree(os.path.join(client_lib_dir, 'generated'))
-    cmd = 'git checkout generated/google/apis/discovery_v1'
-    subprocess.call(shlex.split(cmd), cwd=client_lib_dir)
-    cmd = 'git checkout generated/google/apis/discovery_v1.rb'
-    subprocess.call(shlex.split(cmd), cwd=client_lib_dir)
+    _call('git checkout generated/google/apis/discovery_v1',
+          cwd=client_lib_dir)
+    _call('git checkout generated/google/apis/discovery_v1.rb',
+          cwd=client_lib_dir)
 
     discovery_document_filenames = []
     for ctx in ctxs:
         discovery_document_filenames.append(ctx.discovery_document_filename)
-
     names_filename = os.path.join(client_lib_dir, 'api_names.yaml')
+
+    # Generate all client libraries.
     cmd = ('bundle exec bin/generate-api gen generated --file {}'
            ' --names_out {}')
     cmd = cmd.format(' '.join(discovery_document_filenames), names_filename)
     proc = subprocess.Popen(shlex.split(cmd), cwd=client_lib_dir,
                             stdin=subprocess.PIPE)
+    # The generate-api script asks for user input... 'a' means accept all.
     proc.communicate(input=b'a')
     proc.wait()
 
@@ -569,6 +744,7 @@ def _load_ruby(test_dir, ctxs):
 
         src_dir = _make_src_dir(test_dir, ctx.name, ctx.version, _RUBY)
 
+        # Create a Gemfile that points to lib/google-api-ruby-client
         with open(os.path.join(src_dir, 'Gemfile'), 'w') as file_:
             file_.write('source \'https://rubygems.org\'\n')
             line = 'gem \'google-api-client\', :path => \'{}\'\n'
@@ -579,11 +755,12 @@ def _load_ruby(test_dir, ctxs):
             method_id = _parse_method_id_from_sample_filename(filename)
             new_filename = '{}.rb'.format(method_id)
             shutil.copy(filename, os.path.join(src_dir, new_filename))
+            # bundle exec ruby .../foo.bar.get.rb
             cmd = 'bundle exec ruby {}'.format(new_filename)
             sample_cmds[ctx.id_].append(SampleCommand(method_id, cmd, src_dir))
 
-        cmd = 'bundle install --path vendor/bundle'
-        subprocess.call(shlex.split(cmd), cwd=src_dir)
+        # Install all dependencies.
+        _call('bundle install --path vendor/bundle', cwd=src_dir)
 
     return sample_cmds
 
@@ -600,6 +777,17 @@ _LOAD_FUNCS = {
 
 
 def _work(cmd):
+    """Returns the result of the process run from Command.
+
+    A worker function to parallelize the sample tests.
+
+    Args:
+        cmd (Command): The command to run.
+
+    Returns:
+        tuple: A tuple containing the return code of the process and the output
+        of STDIN and STDOUT: (returncode, (stdin_out, stdout_out)).
+    """
     proc = subprocess.Popen(shlex.split(cmd.command), cwd=cmd.cwd,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     proc.wait()
@@ -617,9 +805,12 @@ def _run(discovery_document_filenames, languages):
             roots.append(json.load(file_))
 
     venv_dir = (_make_lib_venv(test_dir))
+    # Temporarily create a new env that points to venv/bin so we can use the
+    # scripts installed by the mockgen module.
     env = os.environ.copy()
     env['PATH'] = '{}:{}'.format(os.path.join(venv_dir, 'bin'), env['PATH'])
 
+    # Generate a Context for each passed Discovery document.
     ctxs = []
     for root in roots:
         id_ = root['id']
@@ -645,6 +836,7 @@ def _run(discovery_document_filenames, languages):
                       revision)
         ctxs.append(ctx)
 
+    # Load all Contexts for all languages.
     sample_cmds = {}
     for language in languages:
         func = _LOAD_FUNCS[language]
@@ -654,6 +846,8 @@ def _run(discovery_document_filenames, languages):
             sample_cmds[k][language] = v
 
     for ctx in ctxs:
+        # Run the server with gunicorn so it doesn't lock up when responding to
+        # requests made by multiple threads/processes.
         cmd = 'gunicorn -w 4 server:app'.format(ctx.name, ctx.version)
         src_dir = _make_src_dir(test_dir, ctx.name, ctx.version)
         time.sleep(4)
@@ -667,6 +861,7 @@ def _run(discovery_document_filenames, languages):
         green = lambda x: '\033[92m{}\033[0m'.format(x)
         red = lambda x: '\033[91m{}\033[0m'.format(x)
 
+        # For each language, run each sample.
         print('\n' + bold(ctx.id_))
         for language in languages:
             err_logs = {}
@@ -706,6 +901,7 @@ def _run(discovery_document_filenames, languages):
             else:
                 print(green(' OK'))
 
+            # Simple lambda to indent the input string by 4 spaces.
             indent = lambda x: '\n'.join((4*' ') + y for y in x.splitlines())
 
             if err_logs:

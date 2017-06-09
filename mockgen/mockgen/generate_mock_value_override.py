@@ -22,7 +22,7 @@ def _gen_fields(method, quote='"'):
     all client libraries.
 
     Args:
-        method (dict): A Discovery method.
+        method (dict): The Discovery method.
         quote (string, optional): The symbol to enquote strings with.
 
     Returns:
