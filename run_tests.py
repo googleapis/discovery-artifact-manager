@@ -132,11 +132,9 @@ def _make_lib_dir(test_dir):
     return lib_dir
 
 
-def _call(cmd, stdin=None, stdout=None, stderr=None, cwd=None, env=None):
+def _call(cmd, **kwargs):
     """A wrapper over subprocess.call that splits cmd with shlex.split"""
-    return subprocess.call(shlex.split(cmd), stdin=stdin, stdout=stdout,
-                           stderr=stderr, cwd=cwd, env=env)
-
+    return subprocess.call(shlex.split(cmd), **kwargs)
 
 def _make_lib_google_api_client_generator(test_dir):
     """Creates and returns the path to lib/google-api-client-generator
@@ -680,10 +678,8 @@ def _load_python(test_dir, ctxs):
 
         src_dir = _make_src_dir(test_dir, ctx.name, ctx.version, _PYTHON)
         # Create a virtualenv.
-        cmd = 'virtualenv venv'
-        subprocess.call(shlex.split(cmd), cwd=src_dir)
-        cmd = 'venv/bin/pip install google-api-python-client'
-        subprocess.call(shlex.split(cmd), cwd=src_dir)
+        _call('virtualenv venv', cwd=src_dir)
+        _call('venv/bin/pip install google-api-python-client', cwd=src_dir)
 
         for filename in sample_filenames:
             method_id = _parse_method_id_from_sample_filename(filename)
@@ -822,13 +818,10 @@ def _run(discovery_document_filenames, languages):
 
         filename2 = '{}.{}.json'.format(name, version)
         filename2 = os.path.join(src_dir, filename2)
-        cmd = ('generate_mock_discovery_document {} --output {}')
-        cmd = cmd.format(filename, filename2)
-        subprocess.call(shlex.split(cmd), env=env)
-
-        cmd = 'generate_mock_server {} --directory {}'
-        cmd = cmd.format(filename2, src_dir)
-        subprocess.call(shlex.split(cmd), env=env)
+        _call('generate_mock_discovery_document {} --output {}'.format(
+                filename, filename2), env=env)
+        _call('generate_mock_server {} --directory {}'.format(
+                filename2, src_dir), env=env)
 
         override_filenames = _generate_overrides(test_dir, filename2, name,
                                                  version)
