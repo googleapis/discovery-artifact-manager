@@ -204,6 +204,14 @@ func UpdateAPI(API apiInfo, absolutePath string, permissions os.FileMode, update
 		return fmt.Errorf("Error parsing Discovery doc from %v: %v", API.DiscoveryRestURL, err)
 	}
 
+	// If "revision" is nil or not a string, the empty string is returned.
+	newRevision, _ := newAPI["revision"].(string)
+	oldRevision, _ := oldAPI["revision"].(string)
+	// Do nothing if the revision of the new API is older than what already exists.
+	if newRevision < oldRevision {
+		return fmt.Errorf("Error validating Discovery doc revision from %v: %v < %v", API.DiscoveryRestURL, newRevision, oldRevision)
+	}
+
 	if oldAPI == nil || !sameAPI(oldAPI, newAPI) {
 		if err := ioutil.WriteFile(filepath, newDisco, permissions); err != nil {
 			return fmt.Errorf("Error writing Discovery doc to %v: %v", filepath, err)
@@ -231,11 +239,23 @@ func discoFromFile(absolutePath string) (contents []byte, err error) {
 // discoFromURL returns the Discovery `contents` at `URL`.
 func discoFromURL(URL string) (contents []byte, err error) {
 	response, err := http.Get(URL)
+	// Note that err is nil for non-200 responses.
 	if err != nil {
 		err = fmt.Errorf("Error downloading Discovery doc from %v: %v", URL, err)
 		return
 	}
 	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		// Fail if the status code is not 200.
+		// This can happen if a service is listed in the Discovery
+		// directory, but the Discovery document is not accessible.
+		// In this case, the existing Discovery document is left in
+		// place until the directory is updated to delist the service.
+		// At that point, the updatedisco script will delete the
+		// Discovery document.
+		err = fmt.Errorf("Error downloading Discovery doc from %v: %v response", URL, response.StatusCode)
+		return
+	}
 	contents, err = ioutil.ReadAll(response.Body)
 	if err != nil {
 		err = fmt.Errorf("Error reading Discovery doc from %v: %v", URL, err)
