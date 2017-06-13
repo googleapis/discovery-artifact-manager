@@ -209,7 +209,7 @@ func UpdateAPI(API apiInfo, absolutePath string, permissions os.FileMode, update
 	oldRevision, _ := oldAPI["revision"].(string)
 	// Do nothing if the revision of the new API is older than what already exists.
 	if newRevision < oldRevision {
-		return fmt.Errorf("Error validating Discovery doc revision %v: %v < %v", newRevision, oldRevision)
+		return fmt.Errorf("Error validating Discovery doc revision from %v: %v < %v", API.DiscoveryRestURL, newRevision, oldRevision)
 	}
 
 	if oldAPI == nil || !sameAPI(oldAPI, newAPI) {
@@ -239,6 +239,7 @@ func discoFromFile(absolutePath string) (contents []byte, err error) {
 // discoFromURL returns the Discovery `contents` at `URL`.
 func discoFromURL(URL string) (contents []byte, err error) {
 	response, err := http.Get(URL)
+	// Note that err is nil for non-200 responses.
 	if err != nil {
 		err = fmt.Errorf("Error downloading Discovery doc from %v: %v", URL, err)
 		return
