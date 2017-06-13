@@ -9,11 +9,11 @@ setup(name='mockgen',
       install_requires=['rstr', 'six'],
       entry_points={
           'console_scripts': [
-              ('generate_mock_discovery_document = '
-               'mockgen.generate_mock_discovery_document:main'),
+              ('generate_mock_discovery_document ='
+               ' mockgen.generate_mock_discovery_document:main'),
               'generate_mock_server = mockgen.generate_mock_server:main',
-              ('generate_mock_value_override = '
-               'mockgen.generate_mock_value_override:main')
+              ('generate_mock_value_override ='
+               ' mockgen.generate_mock_value_override:main')
           ],
       })
 
