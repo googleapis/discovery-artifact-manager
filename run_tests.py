@@ -720,7 +720,7 @@ def _load_ruby(test_dir, ctxs):
     discovery_document_filenames = []
     for ctx in ctxs:
         discovery_document_filenames.append(ctx.discovery_document_filename)
-    names_filename = os.path.join(client_lib_dir, 'api_names.yaml')
+    names_filename = os.path.join(client_lib_dir, 'api_names_out.yaml')
 
     # Generate all client libraries.
     cmd = ('bundle exec bin/generate-api gen generated --file {}'

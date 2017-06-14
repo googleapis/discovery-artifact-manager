@@ -101,9 +101,7 @@ class _Generator(object):
         # Emit imports and the initialization code for the Flask server.
         w('import gzip')
         w('import io')
-        w('from flask import Flask')
-        w('from flask import jsonify')
-        w('from flask import request')
+        w('from flask import Flask, jsonify, request')
         w('')
         # Emit a middleware class to handle the "HTTP-Method-Override" header.
         # The Java client library sends "PATCH" requests as "POST" requests
@@ -113,18 +111,17 @@ class _Generator(object):
         w('        self.app = app')
         w('')
         w('    def __call__(self, environ, start_response):')
-        w('        method = environ.get("HTTP_X_HTTP_METHOD_OVERRIDE", "")')
-        w('        method = method.upper()')
+        w('        method = environ.get("HTTP_X_HTTP_METHOD_OVERRIDE")')
         w('        if method:')
-        w('            method = method.encode("ascii", "replace")')
+        w('            method = method.upper().encode("ascii", "replace")')
         w('            environ["REQUEST_METHOD"] = method')
         w('        return self.app(environ, start_response)')
         w('')
         w('app = Flask(__name__)')
         w('app.wsgi_app = HTTPMethodOverrideMiddleware(app.wsgi_app)')
         w('')
-        # ApiError represents a "Bad Request" exeception raised by the mock
-        # server if parameters of the incomding request is determined to be
+        # ApiError represents a "Bad Request" exception raised by the mock
+        # server if a parameter of the incoming request is determined to be
         # invalid.
         w('class ApiError(Exception):')
         w('    def __init__(self, msg, code=400):')
@@ -218,9 +215,9 @@ class _Generator(object):
 
         # Convert path into a Flask route.
         # ex: "{+baz}" => "<path:{}>"
-        path = re.sub(r'{(\+[^}]+)}', '<path:{}>', path)
+        path = re.sub(r'{\+[^}]+}', '<path:{}>', path)
         # ex: "{bar}" => "<string:{}>"
-        path = re.sub('{([^}]+)}', '<string:{}>', path)
+        path = re.sub('{[^}]+}', '<string:{}>', path)
         # Substitute the variable names back into the path.
         # ex: "foo/<string:bar_>/<path:baz_>"
         path = path.format(*url_vars)
@@ -241,6 +238,13 @@ class _Generator(object):
             # a multi-segment path that was flattened in "flatPath". We don't
             # bother emitting an assert in this case because the reachability
             # of the route is a sufficient test.
+            #
+            # For example, given a method with:
+            # - "path": "{+name}"
+            # - "flatPath": "foo/{fooId}"
+            # - "parameters": { "name": { ... } }
+            # we skip the assert for the parameter "name", because its
+            # information is absorbed into "flatPath".
             if location == 'path' and (_esc_var(name) not in url_vars):
                 continue
             self._emit_param_assert(file_, name, params[name])
@@ -327,7 +331,7 @@ class _Generator(object):
             msg = 'expected \\"{}\\" to be an instance of \\"{}\\"'
             msg = msg.format(name, instance)
             w('        raise ApiError("{}")'.format(msg))
-        else:  # location == 'path'
+        elif location == 'path':
             # Path params are accessed as variables passed into the function.
             # The variable name is reconstructed here from the param name.
             var = _esc_var(name)
@@ -338,6 +342,8 @@ class _Generator(object):
             msg = 'expected \\"{}\\" to be an instance of \\"{}\\"'
             msg = msg.format(name, instance)
             w('        raise ApiError("{}")'.format(msg))
+        else:
+            raise Exception('unexpected location: {}'.format(location))
 
     def _gen_type(self, schema, visited=None):
         """Returns a Python object that is the equivalent of the given schema.
@@ -370,9 +376,9 @@ class _Generator(object):
         if type_ == 'boolean':
             return False
         if type_ == 'integer':
-            return {'int32': 42, 'uint32': 42}.get(schema.get('format', 42))
+            return {'int32': 42, 'uint32': 42}.get(schema.get('format'), 42)
         if type_ == 'number':
-            return {'double': 42, 'float': 42}.get(schema.get('format', 42))
+            return {'double': 42, 'float': 42}.get(schema.get('format'), 42)
         if type_ == 'object':
             obj = {}
             id_ = schema.get('id')
