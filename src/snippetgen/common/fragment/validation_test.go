@@ -56,7 +56,7 @@ func TestCheckLanguages(t *testing.T) {
 	}
 
 	// Having all the required languages and a language with a different display name should pass validation
-	info.File.CodeFragment["Web"] = &CodeFragment{Fragment: "sample"}
+	info.File.CodeFragment["Browser"] = &CodeFragment{Fragment: "sample"}
 	info.File.CodeFragment["C#"] = &CodeFragment{Fragment: "sample"}
 	if err := info.CheckLanguages(); err != nil {
 		t.Errorf("having the required languages plus a language with a different display name passes CheckLanguages: got error: %q", err)

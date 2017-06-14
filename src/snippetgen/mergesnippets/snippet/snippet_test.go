@@ -72,7 +72,7 @@ func TestRenameLanguages(t *testing.T) {
 		"Dart",
 		"Go",
 		"Google Web Toolkit",
-		"Web",
+		"Browser",
 		"Objective-C",
 		"Node.js",
 		"Code Fragment",
