@@ -169,6 +169,9 @@ func writeDiscoCache(indexData []byte, absolutePath string, directory os.FileInf
 func cleanDiscoCache(absolutePath string, files []os.FileInfo, updated map[string]bool, errors *errorlist.Errors) {
 	for _, file := range files {
 		filename := file.Name()
+		if filename == "index.json" {
+			continue
+		}
 		if !updated[filename] {
 			filepath := path.Join(absolutePath, filename)
 			if err := os.Remove(filepath); err != nil {
