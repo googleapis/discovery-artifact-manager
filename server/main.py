@@ -14,8 +14,54 @@ app = Flask(__name__)
 _DEVNULL = open(os.devnull, 'w')
 
 
-@app.route('/update/discovery')
-def update_discovery():
+@app.route('/cron/clients/php')
+def cron_clients_php():
+    if request.headers.get('X-AppEngine-Cron') is None:
+        abort(403)
+
+    with TemporaryDirectory as tmp_dir:
+        client_lib_dir = os.path.join(tmp_dir, 'google-api-php-client-services')
+        cmd = ('git clone'
+               ' https://github.com/saicheems/google-api-php-client-services'
+               ' {}')
+        cmd = cmd.format(client_lib_dir)
+        subprocess.call(cmd)
+
+        dartman_dir = os.path.join(tmp_dir, 'discovery-artifact-manager')
+        cmd = ('git clone https://github.com/saicheems/discovery-artifact-manager'
+               ' {}').format(dartman_dir)
+        subprocess.call(shlex.split(cmd))
+
+        discovery_document_filenames = glob.glob(
+                os.path.join(dartman_dir, 'discoveries')):
+
+        venv_dir = os.path.join(tmp_dir, 'venv')
+        cmd = 'python -m venv {}'.format(venv_dir)
+        subprocess.call(shlex.split(cmd))
+
+        index_filename = os.path.join(dartman_dir, 'discoveries', 'index.json')
+        with open(index_filename) as file_:
+            root = json.load(file_)
+
+        for filename in discovery_document_filenames:
+            root = {}
+            with open(filename) as file_:
+                root = json.load(file_)
+            name = root['name']
+            id_ = root['name']
+            preferred = root['preferred']
+
+            if 
+            if name == 'discovery':
+                continue
+            if id_ == 'admin:directory_v1' or id_ == 'admin:datatransfer_v1':
+                continue
+
+    return ''
+
+
+@app.route('/cron/discoveries')
+def cron_discoveries():
     # This header can't be spoofed, see
     # https://cloud.google.com/appengine/docs/flexible/nodejs/scheduling-jobs-with-cron-yaml#securing_urls_for_cron
     if request.headers.get('X-AppEngine-Cron') is None:
