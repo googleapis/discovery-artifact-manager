@@ -34,12 +34,12 @@ func UpdateDiscos() (names []string, err error) {
 		return
 	}
 
-	index, err := readDiscoIndex()
+	indexData, err := readDiscoIndex()
 	if err != nil {
 		return
 	}
 
-	updated, errs := writeDiscoCache(index, absolutePath, dir)
+	updated, errs := writeDiscoCache(indexData, absolutePath, dir)
 
 	cleanDiscoCache(absolutePath, files, updated, &errs)
 	err = errs.Error()
@@ -76,9 +76,8 @@ func readDiscoCache() (absolutePath string, directory os.FileInfo, files []os.Fi
 	return
 }
 
-// readDiscoIndex returns an `index` of API attributes extracted from the JSON index returned by the
-// live Discovery service.
-func readDiscoIndex() (index *apiIndex, err error) {
+// readDiscoIndex returns the index returned by the live Discovery service as a JSON byte array.
+func readDiscoIndex() (indexData []byte, err error) {
 	fmt.Printf("Fetching Discovery doc index from %v ...\n", discoURL)
 	client := &http.Client{}
 	request, err := http.NewRequest("GET", discoURL, nil)
@@ -94,17 +93,9 @@ func readDiscoIndex() (index *apiIndex, err error) {
 		return
 	}
 	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
+	indexData, err = ioutil.ReadAll(response.Body)
 	if err != nil {
 		err = fmt.Errorf("Error reading Discovery doc index: %v", err)
-		return
-	}
-
-	fmt.Println("Parsing Discovery doc index ...")
-	index = &apiIndex{}
-	err = json.Unmarshal(body, index)
-	if err != nil {
-		err = fmt.Errorf("Error parsing Discovery doc index: %v", err)
 		return
 	}
 	return
@@ -112,13 +103,28 @@ func readDiscoIndex() (index *apiIndex, err error) {
 
 // writeDiscoCache updates (creates or replaces) Discovery doc files in the top-level 'discoveries'
 // directory (given its `absolutePath` and `directory` attributes) as needed to update descriptions
-// of APIs in the `index` (assumed not to contain duplicates). It returns a map containing `updated`
+// of APIs in `indexData` (assumed not to contain duplicates). It returns a map containing `updated`
 // file basenames corresponding to live APIs, and accumulates `errors` from all updates.
-func writeDiscoCache(index *apiIndex, absolutePath string, directory os.FileInfo) (updated map[string]bool, errors errorlist.Errors) {
-	fmt.Printf("Updating local Discovery docs in %v:\n", absolutePath)
-	size := len(index.Items)
+func writeDiscoCache(indexData []byte, absolutePath string, directory os.FileInfo) (updated map[string]bool, errors errorlist.Errors) {
+	fmt.Printf("Updating local Discovery docs in %v ...\n", absolutePath)
 	// Make Discovery doc file permissions like parent directory (no execute)
 	perm := directory.Mode() & 0666
+
+	fmt.Println("Parsing and writing Discovery doc index ...")
+	index := &apiIndex{}
+	err := json.Unmarshal(indexData, index)
+	if err != nil {
+		err = fmt.Errorf("Error parsing Discovery doc index: %v", err)
+		errors.Add(err)
+		return
+	}
+	size := len(index.Items)
+
+	filepath := path.Join(absolutePath, "index.json")
+	if err := ioutil.WriteFile(filepath, indexData, perm); err != nil {
+		err = fmt.Errorf("Error writing Discovery index to %v: %v", filepath, err)
+		errors.Add(err)
+	}
 
 	var collect sync.WaitGroup
 	errChan := make(chan error, size)
