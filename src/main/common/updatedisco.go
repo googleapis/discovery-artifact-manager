@@ -56,7 +56,8 @@ func UpdateDiscos() (names []string, err error) {
 }
 
 // readDiscoCache returns the `absolutePath` to the top-level 'discoveries' directory along with its
-// `directory` attributes and those of all discovery `files` therein.
+// `directory` attributes and those of all discovery `files` therein. Note that the discovery index
+// file, index.json, is excluded from `files`.
 func readDiscoCache() (absolutePath string, directory os.FileInfo, files []os.FileInfo, err error) {
 	root, err := environment.RepoRoot()
 	if err != nil {
@@ -72,6 +73,12 @@ func readDiscoCache() (absolutePath string, directory os.FileInfo, files []os.Fi
 	files, err = ioutil.ReadDir(absolutePath)
 	if err != nil {
 		err = fmt.Errorf("Error reading path for Discovery docs: %v", absolutePath)
+	}
+	for i := 0; i < len(files); i += 1 {
+		if files[i].Name() == "index.json" {
+			files = append(files[:i], files[i+1:]...)
+			break
+		}
 	}
 	return
 }
@@ -169,9 +176,6 @@ func writeDiscoCache(indexData []byte, absolutePath string, directory os.FileInf
 func cleanDiscoCache(absolutePath string, files []os.FileInfo, updated map[string]bool, errors *errorlist.Errors) {
 	for _, file := range files {
 		filename := file.Name()
-		if filename == "index.json" {
-			continue
-		}
 		if !updated[filename] {
 			filepath := path.Join(absolutePath, filename)
 			if err := os.Remove(filepath); err != nil {
