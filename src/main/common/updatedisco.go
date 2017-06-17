@@ -74,6 +74,7 @@ func readDiscoCache() (absolutePath string, directory os.FileInfo, files []os.Fi
 	if err != nil {
 		err = fmt.Errorf("Error reading path for Discovery docs: %v", absolutePath)
 	}
+	// Remove "index.json" from files, as it's not a Discovery document.
 	for i := 0; i < len(files); i += 1 {
 		if files[i].Name() == "index.json" {
 			files = append(files[:i], files[i+1:]...)
