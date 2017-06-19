@@ -21,4 +21,5 @@ ENV PATH /env/bin:$PATH
 ADD requirements.txt /app/
 RUN pip install -r requirements.txt
 ADD . /app/
-CMD gunicorn -b :$PORT main:app
+# 10 minute timeout.
+CMD gunicorn -b :$PORT main:app --timeout 600
