@@ -50,15 +50,15 @@ func UpdateDiscos() (names []string, err error) {
 
 	names = make([]string, 0, len(updated))
 	for filename, _ := range updated {
-		path := path.Join(absolutePath, filename)
-		names = append(names, path)
+		fp := path.Join(absolutePath, filename)
+		names = append(names, fp)
 	}
 	return
 }
 
 // readDiscoCache returns the `absolutePath` to the top-level 'discoveries' directory along with its
-// `directory` attributes and those of all discovery `filepaths` therein. Note that the discovery
-// index file, index.json, is excluded from `files`.
+// `directory` attributes and all discovery `filepaths` therein. Note that the discovery index file,
+// index.json, is excluded from `files`.
 func readDiscoCache() (absolutePath string, directory os.FileInfo, filepaths []string, err error) {
 	root, err := environment.RepoRoot()
 	if err != nil {
@@ -72,11 +72,11 @@ func readDiscoCache() (absolutePath string, directory os.FileInfo, filepaths []s
 		return
 	}
 	globPath := path.Join(absolutePath, "*.json")
-	filepaths, err = filepath.Glob(path.Join(absolutePath, "*.json"))
+	filepaths, err = filepath.Glob(globPath)
 	if err != nil {
-		err = fmt.Errorf("Error globbing path for Discovery docs: %v", globPath)
+		err = fmt.Errorf("Error searching path for Discovery docs: %v", globPath)
 	}
-	// Remove "index.json" from files, as it's not a Discovery document.
+	// Remove "index.json" from filepaths, as it's not a Discovery document.
 	for i := 0; i < len(filepaths); i += 1 {
 		_, filename := filepath.Split(filepaths[i])
 		fmt.Println(filename, filename == "index.json")
@@ -132,9 +132,9 @@ func writeDiscoCache(indexData []byte, absolutePath string, directory os.FileInf
 	}
 	size := len(index.Items)
 
-	path := path.Join(absolutePath, "index.json")
-	if err := ioutil.WriteFile(path, indexData, perm); err != nil {
-		err = fmt.Errorf("Error writing Discovery index to %v: %v", path, err)
+	indexFilepath := path.Join(absolutePath, "index.json")
+	if err := ioutil.WriteFile(indexFilepath, indexData, perm); err != nil {
+		err = fmt.Errorf("Error writing Discovery index to %v: %v", indexFilepath, err)
 		errors.Add(err)
 	}
 
@@ -180,12 +180,12 @@ func writeDiscoCache(indexData []byte, absolutePath string, directory os.FileInf
 // `absolutePath` whose names do not appear in the map of `updated` files, and accumulates any
 // further `errors`.
 func cleanDiscoCache(absolutePath string, filepaths []string, updated map[string]bool, errors *errorlist.Errors) {
-	for _, path := range filepaths {
-		_, filename := filepath.Split(path)
+	for _, fp := range filepaths {
+		_, filename := filepath.Split(fp)
 		if !updated[filename] {
-			path = filepath.Join(absolutePath, filename)
-			if err := os.Remove(path); err != nil {
-				errors.Add(fmt.Errorf("Error deleting expired Discovery doc %v: %v", path, err))
+			fp = path.Join(absolutePath, filename)
+			if err := os.Remove(fp); err != nil {
+				errors.Add(fmt.Errorf("Error deleting expired Discovery doc %v: %v", fp, err))
 			}
 		}
 	}
@@ -203,15 +203,15 @@ func UpdateAPI(API apiInfo, absolutePath string, permissions os.FileMode, update
 	fmt.Printf("Updating API: %v %v ...\n", API.Name, API.Version)
 	filename := API.Name + "." + API.Version + ".json"
 	updateChannel <- filename
-	path := path.Join(absolutePath, filename)
+	discoFilepath := path.Join(absolutePath, filename)
 
-	oldDisco, err := discoFromFile(path)
+	oldDisco, err := discoFromFile(discoFilepath)
 	if err != nil {
 		return err
 	}
 	oldAPI, err := parseAPI(oldDisco)
 	if err != nil {
-		return fmt.Errorf("Error parsing Discovery doc from %v: %v", path, err)
+		return fmt.Errorf("Error parsing Discovery doc from %v: %v", discoFilepath, err)
 	}
 
 	newDisco, err := discoFromURL(API.DiscoveryRestURL)
@@ -232,8 +232,8 @@ func UpdateAPI(API apiInfo, absolutePath string, permissions os.FileMode, update
 	}
 
 	if oldAPI == nil || !sameAPI(oldAPI, newAPI) {
-		if err := ioutil.WriteFile(path, newDisco, permissions); err != nil {
-			return fmt.Errorf("Error writing Discovery doc to %v: %v", path, err)
+		if err := ioutil.WriteFile(discoFilepath, newDisco, permissions); err != nil {
+			return fmt.Errorf("Error writing Discovery doc to %v: %v", discoFilepath, err)
 		}
 	}
 	return nil
