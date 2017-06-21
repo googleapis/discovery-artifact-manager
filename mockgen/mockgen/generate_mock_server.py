@@ -4,7 +4,7 @@ The generated server is configured to run on "http://localhost:8000" and
 contains an implementation of each method in the given Discovery document.
 For each method, the generated server:
  - performs asserts to validate input where useful.
- - returns a non-trivial and complete response.
+ - returns a non-trivial (non-zero) response.
 """
 
 from __future__ import absolute_import
@@ -382,17 +382,17 @@ class _Generator(object):
         if type_ == 'object':
             obj = {}
             id_ = schema.get('id')
-            if id_ in visited:
-                return obj
+            # Nested objects don't have IDs.
+            if id_:
+                if id_ in visited:
+                    return obj
+                visited.add(id_)
             additional_properties = schema.get('additionalProperties')
             # If "additionalProperties" is present, then the type is
             # map<string, schema>.
             if additional_properties:
                 obj['key'] = self._gen_type(additional_properties, visited)
                 return obj
-            # Nested objects don't have IDs.
-            if id_:
-                visited.add(id_)
             for key, val in six.iteritems(schema.get('properties', {})):
                 obj[key] = self._gen_type(val, visited)
             return obj

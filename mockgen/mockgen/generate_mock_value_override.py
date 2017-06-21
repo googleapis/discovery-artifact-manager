@@ -21,9 +21,20 @@ def _gen_fields(method, quote='"'):
     Required fields are assigned a non-zero value that should be accepted by
     all client libraries.
 
+    If a required field specifies a regex pattern that is not a path template,
+    the non-zero value will be a random string that matches that regex. Note
+    that this function uses a fixed seed, so two parameters that specify the
+    same regex will be overriden with the same value.
+
+    If a required field specifies a string which is an enum, the first valid
+    enum value is used.
+
+    If a required field specifies a string which is not one of the above, the
+    value 'foo' is assigned.
+
     Args:
         method (dict): The Discovery method.
-        quote (string, optional): The symbol to enquote strings with.
+        quote (string, optional): The delimiter for string literals.
 
     Returns:
         dict: An override mapping for fields in the given method which must

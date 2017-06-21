@@ -46,7 +46,6 @@ _GAPIC_YAML_FILENAMES = {
              '/ruby_discovery.yaml')
 }
 
-
 _POM_XML = """<project xmlns="http://maven.apache.org/POM/4.0.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
@@ -90,7 +89,6 @@ _POM_XML = """<project xmlns="http://maven.apache.org/POM/4.0.0"
   </build>
 </project>
 """
-
 
 Context = collections.namedtuple('Context', ('discovery_document_filename'
                                              ' override_filenames id_ name'
@@ -502,7 +500,7 @@ def _load_java(test_dir, ctxs):
         src_dir = _make_src_dir(test_dir, ctx.name, ctx.version, _JAVA)
         mvn_src_dir = os.path.join(src_dir, 'src', 'main', 'java')
         # Generate the client library and put it in src/main/java
-        cmd = ('venv/bin/python src/googleapis/codegen/generate_library.py'
+        cmd = ('venv/bin/generate_library'
                ' --input {}'
                ' --language java'
                ' --language_variant 1.22.0'
@@ -616,7 +614,7 @@ def _load_php(test_dir, ctxs):
 
     # Generate all client libraries.
     for ctx in ctxs:
-        cmd = ('venv/bin/python src/googleapis/codegen/generate_library.py'
+        cmd = ('venv/bin/generate_library'
                ' --input {}'
                ' --language php'
                ' --language_variant 1.2.0'
