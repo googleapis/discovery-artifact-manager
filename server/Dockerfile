@@ -11,8 +11,6 @@ RUN mv go /usr/local
 ENV PATH="/usr/local/go/bin:${PATH}"
 
 RUN git clone https://github.com/googleapis/discovery-artifact-manager /discovery-artifact-manager
-RUN git config --global user.name "Google APIs"
-RUN git config --global user.email googleapis-publisher@google.com
 
 # Set virtualenv environment variables. This is equivalent to running
 # source /env/bin/activate
