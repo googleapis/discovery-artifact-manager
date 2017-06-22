@@ -11,7 +11,6 @@ app = Flask(__name__)
 _DEVNULL = open(os.devnull, 'w')
 
 ds = datastore.Client()
-
 _GITHUB_CREDENTIAL = list(ds.query(kind='GithubCredential').fetch())[0]
 
 _GITHUB_NAME = _GITHUB_CREDENTIAL['name']
