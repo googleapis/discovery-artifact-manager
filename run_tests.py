@@ -151,7 +151,6 @@ def _make_lib_google_api_client_generator(test_dir):
     client_generator_dir = os.path.join(lib_dir, 'google-api-client-generator')
     if not os.path.exists(client_generator_dir):
         _call('cp -r google-api-client-generator {}'.format(lib_dir))
-        # TODO: Note that we use Python2 b/c 3 doesn't work.
         _call('virtualenv venv', cwd=client_generator_dir)
         _call('venv/bin/python setup.py install', cwd=client_generator_dir)
     return client_generator_dir
@@ -500,7 +499,7 @@ def _load_java(test_dir, ctxs):
         src_dir = _make_src_dir(test_dir, ctx.name, ctx.version, _JAVA)
         mvn_src_dir = os.path.join(src_dir, 'src', 'main', 'java')
         # Generate the client library and put it in src/main/java
-        cmd = ('venv/bin/generate_library'
+        cmd = ('venv/bin/python src/googleapis/codegen/generate_library.py'
                ' --input {}'
                ' --language java'
                ' --language_variant 1.22.0'
@@ -614,7 +613,7 @@ def _load_php(test_dir, ctxs):
 
     # Generate all client libraries.
     for ctx in ctxs:
-        cmd = ('venv/bin/generate_library'
+        cmd = ('venv/bin/python src/googleapis/codegen/generate_library.py'
                ' --input {}'
                ' --language php'
                ' --language_variant 1.2.0'

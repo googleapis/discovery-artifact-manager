@@ -354,7 +354,7 @@ class _Generator(object):
         For example, for a boolean schema this function will return
             False
         but for a complex object schema this function could return
-            {'foo': {'bar': ['', 42, False]}, 'baz': '1970-01-01'}
+            {'foo': {'bar': ['', 2**32-1, False]}, 'baz': '1970-01-01'}
 
         Args:
             schema (dict): A Discovery schema.
@@ -376,9 +376,15 @@ class _Generator(object):
         if type_ == 'boolean':
             return False
         if type_ == 'integer':
-            return {'int32': 42, 'uint32': 42}.get(schema.get('format'), 42)
+            return {
+                'int32': 2**31-1,  # Max int32.
+                'uint32': 2**32-1  # Max uint32.
+            }[schema['format']]
         if type_ == 'number':
-            return {'double': 42, 'float': 42}.get(schema.get('format'), 42)
+            return {
+                'double': 2**1023*(2**53-1)/2**52,  # Max double.
+                'float': 2**127*(2**24-1)/2**23     # Max float.
+            }[schema['format']]
         if type_ == 'object':
             obj = {}
             id_ = schema.get('id')
@@ -401,8 +407,8 @@ class _Generator(object):
                 'byte': 'foo',
                 'date': '1970-01-01',
                 'date-time': '1970-01-01T00:00:00-07:00',
-                'int64': '42',
-                'uint64': '42',
+                'int64': str(2**63-1),   # Max int64.
+                'uint64': str(2**64-1),  # Max uint64.
             }.get(schema.get('format'), 'foo')
         raise Exception('unexpected type: {}'.format(type_))
 
