@@ -12,7 +12,7 @@ app = Flask(__name__)
 _DEVNULL = open(os.devnull, 'w')
 
 GitHubAccount = namedtuple('GitHubAccount',
-                           'name email personal_access_token')
+                           'name email username personal_access_token')
 
 
 def _get_github_account():
@@ -24,7 +24,7 @@ def _get_github_account():
     ds = datastore.Client()
     account = list(ds.query(kind='GitHubAccount').fetch())[0]
     return GitHubAccount(account['name'], account['email'],
-                         account['personal_access_token'])
+                         account['username'], account['personal_access_token'])
 
 
 def _call(cmd, check=False, **kwargs):
@@ -48,8 +48,8 @@ def _call(cmd, check=False, **kwargs):
 @app.route('/cron/discoveries')
 def cron_discoveries():
     # This header can't be spoofed, see
-    # https://cloud.google.com/appengine/docs/flexible/nodejs/scheduling-jobs-with-cron-yaml#securing_urls_for_cron
-    if request.headers.get('X-AppEngine-Cron') is None:
+    # https://cloud.google.com/appengine/docs/flexible/python/scheduling-jobs-with-cron-yaml#securing_urls_for_cron
+    if request.headers.get('X-Appengine-Cron') is None:
         abort(403)
 
     with TemporaryDirectory() as tmp_dir:
@@ -60,7 +60,7 @@ def cron_discoveries():
         dartman_dir = os.path.join(tmp_dir, 'discovery-artifact-manager')
 
         _call(('git clone'
-               ' https://github.com/saicheems/discovery-artifact-manager'
+               ' https://github.com/googleapis/discovery-artifact-manager'
                ' {}').format(dartman_dir), check=True)
 
         # ln -s /tmp/discovery-artifact-manager/src \
@@ -88,9 +88,10 @@ def cron_discoveries():
 
         # returncode is non-zero if there's nothing to commit.
         if not returncode:
-            remote_url = ('https://saicheems:{}@github.com'
-                          '/saicheems/discovery-artifact-manager')
-            remote_url = remote_url.format(account.personal_access_token)
+            remote_url = ('https://{}:{}@github.com'
+                          '/googleapis/discovery-artifact-manager')
+            remote_url = remote_url.format(account.username,
+                                           account.personal_access_token)
 
             # Send output to /dev/null so remote_url isn't logged.
             _call('git remote add github {}'.format(remote_url), check=True,
