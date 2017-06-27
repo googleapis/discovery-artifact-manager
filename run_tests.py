@@ -510,7 +510,7 @@ def _load_java(test_dir, ctxs):
         with open(os.path.join(src_dir, 'pom.xml'), 'w') as file_:
             file_.write(_POM_XML)
 
-        for filename in sample_filenames:
+        for i, filename in enumerate(sample_filenames):
             method_id = _parse_method_id_from_sample_filename(filename)
             package_dir = os.path.join(mvn_src_dir, method_id)
             if not os.path.exists(package_dir):
@@ -528,13 +528,13 @@ def _load_java(test_dir, ctxs):
 
             # Prepend "package main;" to each sample.
             with open(new_filename, 'w') as file_:
-                file_.write('package {};\n'.format(method_id))
+                file_.write('package p{};\n'.format(i))
                 file_.write(sample_content)
             jar_filename = 'app-1.0-jar-with-dependencies.jar'
             jar_filename = os.path.join(src_dir, 'target', jar_filename)
             # java -cp .../target/app-bla.jar foo.bar.get.FooSample
-            cmd = 'java -cp {} {}.{}'.format(jar_filename, method_id,
-                                             sample_class_name)
+            cmd = 'java -cp {} p{}.{}'.format(jar_filename, i,
+                                              sample_class_name)
             sample_cmds[ctx.id_].append(SampleCommand(method_id, cmd, None))
 
         # Assemble an executable jar.

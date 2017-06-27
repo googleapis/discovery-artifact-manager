@@ -40,7 +40,7 @@ def _disambiguate_method_paths(root, seen=None):
         if path_signature not in seen:
             seen.add(path_signature)
         else:
-            hash_ = hashlib.md5(id_).hexdigest()
+            hash_ = hashlib.md5(id_.encode('utf-8')).hexdigest()
             method['path'] = '{}/{}'.format(hash_, method['path'].strip())
     for resource in six.itervalues(root.get('resources', {})):
         _disambiguate_method_paths(resource, seen)
