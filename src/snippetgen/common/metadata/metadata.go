@@ -62,7 +62,7 @@ var (
 		{"Go", "", "go", false},
 		{"Google Web Toolkit", "", "gwt", false},
 		{"Java", "", "java", false},
-		{"JavaScript", "Web", "js", false},
+		{"JavaScript", "Browser", "js", false},
 		{".NET", "C#", "cs", false},
 		{"Node.js", "", "njs", false},
 		{"Objective-C", "", "m", false},
