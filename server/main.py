@@ -110,7 +110,7 @@ def cron_clients_php():
     if request.headers.get('X-Appengine-Cron') is None:
         abort(403)
 
-    with TemporaryDirectory as tmp_dir:
+    with TemporaryDirectory() as tmp_dir:
         # /tmp/discovery-artifact-manager
         dartman_dir = os.path.join(tmp_dir, 'discovery-artifact-manager')
         _call(('git clone'
@@ -248,13 +248,14 @@ def cron_clients_php():
 
             # Send output to /dev/null so `remote_url` isn't logged.
             _call('git remote add github {}'.format(remote_url), check=True,
-                  cwd=dartman_dir, stdout=_DEVNULL, stderr=_DEVNULL)
-            _call('git push github', check=True, cwd=dartman_dir,
+                  cwd=client_lib_dir, stdout=_DEVNULL, stderr=_DEVNULL)
+            _call('git push github', check=True, cwd=client_lib_dir,
                   stdout=_DEVNULL, stderr=_DEVNULL)
             # Tags have to be pushed separately.
-            cmd = 'git push github --tags'
-            _call(shlex.split(cmd), check=True, cwd=client_lib_dir,
+            _call('git push github --tags', check=True, cwd=client_lib_dir,
                   stdout=_DEVNULL, stderr=_DEVNULL)
+
+    return ''
 
 
 if __name__ == '__main__':
