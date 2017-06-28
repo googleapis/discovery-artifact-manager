@@ -36,7 +36,6 @@ flags.DEFINE_boolean(
     True,
     'Adds owner subdirectory to --output_dir path.')
 
-
 # This pattern is used to extract the DT and DD text groups.
 # It is meant to be applied to the split partions of the dl_pattern_re.
 # It turns  'A - Description A\nB - Description B'
@@ -215,15 +214,18 @@ class CppGenerator(api_library_generator.ApiLibraryGenerator):
   def AnnotateApi(self, the_api):
     """Annotate a Api with C++ specific elements."""
     super(CppGenerator, self).AnnotateApi(the_api)
+    if the_api.values.get('version') and self._options.get('version_package'):
+      the_api.module.SetPath('%s_%s' % (
+          the_api.module.package_path, the_api.values.get('versionNoDots')))
+
     for schema in the_api.TopLevelModelClasses():
       filename = utilities.UnCamelCase(schema.class_name)
       schema.SetTemplateValue('filename', filename)
       schema.SetTemplateValue(
           'include_path',
           self._HeaderFileName(schema.module.path, schema.values['filename']))
-      include_guard = '%s_%s_H_' % (the_api.module.name.upper(),
-                                    filename.upper())
-      schema.SetTemplateValue('include_guard', include_guard)
+      include_guard = '%s_%s_H_' % (the_api.module.name, filename)
+      schema.SetTemplateValue('include_guard', include_guard.upper())
 
     the_api.SetTemplateValue('filename',
                              utilities.UnCamelCase(the_api.class_name))
