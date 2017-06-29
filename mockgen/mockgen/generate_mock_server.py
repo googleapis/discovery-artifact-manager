@@ -9,37 +9,13 @@ For each method, the generated server:
 
 from __future__ import absolute_import
 import argparse
+import datetime
 import json
 import os
 import re
 
 import discoveryutil
 import six
-
-
-_PROXY_HTML = """<!DOCTYPE html>
-<html>
-<head>
-<title></title>
-<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-<script type="text/javascript">
-  window['startup'] = function() {
-    googleapis.server.init();
-  };
-</script>
-<script type="text/javascript"
-  src="https://apis.google.com/js/googleapis.proxy.js?onload=startup" async
-  defer></script>
-</head>
-<body>
-</body>
-</html>
-"""
-"""string: The contents of the proxy.html file.
-
-The JavaScript client library expects this file under
-"{rootUrl}/static/proxy.html".
-"""
 
 
 class _Generator(object):
@@ -54,6 +30,7 @@ class _Generator(object):
         'object': 'dict',
         'string': 'str'
     }
+    """dict: A map of JSON types to the corresponding Python cast function."""
 
     _INSTANCE = {
         'any': 'object',
@@ -64,6 +41,7 @@ class _Generator(object):
         'object': 'dict',
         'string': 'basestring'
     }
+    """dict: A map of JSON types to the corresponding Python instance."""
 
     def __init__(self, root):
         """Constructs a Generator from the given Discovery document.
@@ -84,6 +62,7 @@ class _Generator(object):
             path_signatures[path_signature] = id_
 
         self._features = root.get('features', [])
+
         schemas = {}
         for schema in six.itervalues(root.get('schemas', {})):
             id_ = schema['id']
@@ -98,90 +77,95 @@ class _Generator(object):
         """
         w = _w(file_)
 
-        # Emit imports and the initialization code for the Flask server.
-        w('import gzip')
-        w('import io')
-        w('from flask import Flask, jsonify, request')
-        w('')
-        # Emit a middleware class to handle the "HTTP-Method-Override" header.
-        # The Java client library sends "PATCH" requests as "POST" requests
-        # with the "HTTP-Method-Override" header set to "PATCH".
-        w('class HTTPMethodOverrideMiddleware(object):')
-        w('    def __init__(self, app):')
-        w('        self.app = app')
-        w('')
-        w('    def __call__(self, environ, start_response):')
-        w('        method = environ.get("HTTP_X_HTTP_METHOD_OVERRIDE")')
-        w('        if method:')
-        w('            method = method.upper().encode("ascii", "replace")')
-        w('            environ["REQUEST_METHOD"] = method')
-        w('        return self.app(environ, start_response)')
-        w('')
-        w('app = Flask(__name__)')
-        w('app.wsgi_app = HTTPMethodOverrideMiddleware(app.wsgi_app)')
-        w('')
-        # ApiError represents a "Bad Request" exception raised by the mock
-        # server if a parameter of the incoming request is determined to be
-        # invalid.
-        w('class ApiError(Exception):')
-        w('    def __init__(self, msg, code=400):')
-        w('        self.message = msg')
-        w('        self.code = code')
-        w('')
-        w('    def to_dict(self):')
-        w("""        return {"error": {
-            "code": self.code,
-            "message": self.message,
-            "details": [],
-            "errors": [{
-              "message": self.message,
-              "domain": "global",
-              "reason": "badRequest"
-            }]
-        }}""")
-        w('')
+        w("""# AUTO-GENERATED SERVER
+# {}
+""".format(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+
+        # Emit initialization/middleware/error/handler code.
+        w("""import gzip
+import io
+from flask import Flask, jsonify, request
+
+# A middleware class to handle the "HTTP-Method-Override" header.
+# The Java client library sends "PATCH" requests as "POST" requests
+# with the "HTTP-Method-Override" header set to "PATCH".
+class HTTPMethodOverrideMiddleware(object):
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        method = environ.get("HTTP_X_HTTP_METHOD_OVERRIDE")
+        if method:
+            method = method.upper().encode("ascii", "replace")
+            environ["REQUEST_METHOD"] = method
+        return self.app(environ, start_response)
+
+app = Flask(__name__)
+app.wsgi_app = HTTPMethodOverrideMiddleware(app.wsgi_app)
+
+# ApiError represents a "Bad Request" exception raised by the mock server if a
+# parameter of the incoming request is determined to be invalid.
+class ApiError(Exception):
+    def __init__(self, msg, code=400):
+        self.message = msg
+        self.code = code
+
+    def to_dict(self):
+        return {"error": {
+        "code": self.code,
+        "message": self.message,
+        "details": [],
+        "errors": [{
+          "message": self.message,
+          "domain": "global",
+          "reason": "badRequest"
+        }]
+    }}
+
+# The error handler for the ApiError exception. If an ApiError is raised, this
+# handler sets the status code and returns the error as a JSON response.
+@app.errorhandler(ApiError)
+def handle_api_error(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.code
+    return response
+
+# The error handler for 404 errors. By default, Flask returns an HTML page on
+# 404, which is in line with how Google services work. The default behavior is
+# a pain for testing purposes however, since the Node.js client does return an
+# error on 404. Instead, the Node.js client returns the full HTML response as a
+# string. The easiest way to determine a failure in this case is to return a
+# proper JSON error.
+@app.errorhandler(404)
+def handle_not_found(error):
+    error = ApiError("not found", code=404)
+    response = jsonify(error.to_dict())
+    response.status_code = error.code
+    return response
+
+# The handler for gzipped request bodies. Some client libraries gzip the
+# request body with the expectation that the server decompresses it.
+# Presumably, this would normally be taken care of by a reverse proxy, but we
+# do here manually if the "content-encoding" header is set.
+# This code was adapted from
+# https://github.com/cralston0/gzip-encoding/blob/0b13fcc6381324239cb8ae0712516d90a7fb1ac0/flask/middleware.py
+@app.before_request
+def handle_gzip():
+    if request.headers.get("content-encoding", "") != "gzip":
+        return
+    file_ = gzip.GzipFile(fileobj=io.BytesIO(request.get_data()))
+    request._cached_data = file_.read()
+""")
+
         # Emit handlers for each method.
         for method in six.itervalues(self._methods):
             self._emit_method(file_, method)
             w('')
-        # Emit the error handler for the ApiError exception. If an ApiError is
-        # raised, this handler sets the status code and returns the error as a
-        # JSON response.
-        w('@app.errorhandler(ApiError)')
-        w('def handle_api_error(error):')
-        w('    response = jsonify(error.to_dict())')
-        w('    response.status_code = error.code')
-        w('    return response')
-        w('')
-        # Emit the error handler for 404 errors. By default, Flask returns an
-        # HTML page on 404, which is in line with how Google services work. The
-        # default behavior is a pain for testing purposes however, since the
-        # Node.js client does return an error on 404. Instead, the Node.js
-        # client returns the full HTML response as a string. The easiest way to
-        # determine a failure in this case is to return a proper JSON error.
-        w('@app.errorhandler(404)')
-        w('def handle_not_found(error):')
-        w('    error = ApiError("not found", code=404)')
-        w('    response = jsonify(error.to_dict())')
-        w('    response.status_code = error.code')
-        w('    return response')
-        w('')
-        # Handle gzipped request bodies. Some client libraries gzip the request
-        # body with the expectation that the server decompresses it.
-        # Presumably, this would normally be taken care of by a reverse proxy,
-        # but we do here manually if the "content-encoding" header is set.
-        # This code was adapted from
-        # https://github.com/cralston0/gzip-encoding/blob/0b13fcc6381324239cb8ae0712516d90a7fb1ac0/flask/middleware.py
-        w('@app.before_request')
-        w('def handle_gzip():')
-        w('    if request.headers.get("content-encoding", "") != "gzip":')
-        w('        return')
-        w('    file_ = gzip.GzipFile(fileobj=io.BytesIO(request.get_data()))')
-        w('    request._cached_data = file_.read()')
-        w('')
+
         # Run the server on port 8000.
-        w('if __name__ == "__main__":')
-        w('    app.run(port=8000)')
+        w("""if __name__ == "__main__":
+    app.run(port=8000)
+""")
 
     def _emit_method(self, file_, method):
         """Emits the handler for a Discovery method.
@@ -465,9 +449,6 @@ def main():
     # Write the Discovery doc to the static directory.
     with open(ddoc_path, 'w') as file_:
         file_.write(json.dumps(root, indent=2, sort_keys=True))
-    # Write proxy.html to the static directory.
-    with open(os.path.join(static_dir, 'proxy.html'), 'w') as file_:
-        file_.write(_PROXY_HTML)
 
     filename = os.path.join(args.directory, 'server.py')
     with open(filename, 'w') as file_:

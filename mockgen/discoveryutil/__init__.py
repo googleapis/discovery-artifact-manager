@@ -31,8 +31,10 @@ def parse_methods(root, methods=None):
     """Parses methods from the given Discovery document.
 
     Args:
-        root (dict): A Discovery document.
-        methods (dict): A mapping of method ID to Discovery method. Do not set.
+        root (dict): A Discovery document. When called recursively, this is a
+            resource within a Discovery document.
+        methods (dict): A mapping of method ID to Discovery method. Do not set,
+            this is used to collect method IDs while recursing.
 
     Returns:
         dict: A mapping of method ID to method.

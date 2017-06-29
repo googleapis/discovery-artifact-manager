@@ -1,7 +1,7 @@
 """Generates a mock override file from a Discovery document.
 
 The generated file contains override mappings for the default value of all
-fields which must have a non-trivial value.
+fields that require a non-trivial value.
 """
 
 from __future__ import absolute_import
@@ -37,8 +37,8 @@ def _gen_fields(method, quote='"'):
         quote (string, optional): The delimiter for string literals.
 
     Returns:
-        dict: An override mapping for fields in the given method which must
-            have a non-trivial value.
+        dict: An override mapping for fields in the given method that require
+            a non-trivial value.
     """
     params = method.get('parameters', {})
 
@@ -63,7 +63,6 @@ def _gen_fields(method, quote='"'):
                 if param.get('enum'):
                     value = param.get('enum')[0]
                 fields[name] = {'defaultValue': quote + value + quote}
-            # TODO: In the Node.js client, required integers must be non-zero.
             continue
         if pattern[0] == '^' and pattern[-1] == '$':
             continue
@@ -93,11 +92,12 @@ def main():
         fields = _gen_fields(method)
         if not fields:
             continue
+
         double_quote[id_] = {'fields': fields}
         single_quote[id_] = {'fields': _gen_fields(method, quote='\'')}
 
     obj = {}
-    if double_quote:
+    if single_quote:
         obj['csharp|go|java'] = {'methods': double_quote}
         obj['js|nodejs|php|python|ruby'] = {'methods': single_quote}
 
