@@ -156,6 +156,9 @@ def cron_clients_php():
 
         account = _get_github_account()
 
+        # A set of API IDs which have been processed.
+        processed = set()
+
         returncode = -1
         for filename in discovery_document_filenames:
             root = {}
@@ -164,6 +167,19 @@ def cron_clients_php():
             id_ = root['id']
             name = root['name']
             version = root['version']
+
+            # The Discovery service is currently returning two APIs with the
+            # same ID. In the Discovery directory, both "cloudtrace:v2" and
+            # "tracing:v2" point to Discovery documents which are essentially
+            # the same. This causes double commits where the "cloudtrace:v2"
+            # API is updated first, and a second commit from the "tracing:v2"
+            # API is layered on top. Since the generator works off of API name
+            # and version, both APIs are generated as "CloudTrace".
+            # So, to prevent that corner case, if an API ID has already been
+            # processed, skip it.
+            if id_ in processed:
+                continue
+            processed.add(id_)
 
             # Skip the "discovery" and any non-preferred services.
             if name == 'discovery':
