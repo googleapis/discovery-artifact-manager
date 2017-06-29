@@ -120,7 +120,7 @@ def cron_clients_php():
         # /tmp/google-api-php-client-services
         client_lib_dir = os.path.join(tmp_dir, 'google-api-php-client-services')
         _call(('git clone'
-               ' https://github.com/saicheems/google-api-php-client-services'
+               ' https://github.com/google/google-api-php-client-services'
                ' {}').format(client_lib_dir), check=True)
 
         index_filename = os.path.join(dartman_dir, 'discoveries', 'index.json')
@@ -258,7 +258,7 @@ def cron_clients_php():
                   cwd=client_lib_dir)
 
             remote_url = ('https://{}:{}@github.com'
-                          '/saicheems/google-api-php-client-services')
+                          '/google/google-api-php-client-services')
             remote_url = remote_url.format(account.username,
                                            account.personal_access_token)
 
