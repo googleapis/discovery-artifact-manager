@@ -18,4 +18,4 @@ ADD requirements.txt /app/
 RUN pip install -r requirements.txt
 ADD . /app/
 # 10 minute timeout.
-CMD gunicorn -b :$PORT main:app --timeout 600
+CMD gunicorn -b :$PORT main:app --timeout 600 --workers 4
