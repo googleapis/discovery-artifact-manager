@@ -321,6 +321,9 @@ def cron_clients_php_release():
             minor_revision = match.group(2)
             # ex: '13'
             new_minor_revision = str(int(minor_revision) + 1)
+            # '\1' is substituted with the first group captured by the
+            # `version_re` pattern. This replacement defends against the
+            # possibility of regressing the major version.
             # ex: 'v0.13'
             new_version = version_re.sub(
                 r'\1.{}'.format(new_minor_revision), latest_tag)
