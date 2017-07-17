@@ -105,6 +105,25 @@ def cron_discoveries():
     return ''
 
 
+@app.route('/cron/clients/ruby/update')
+def cron_clients_ruby_update():
+    if request.headers.get('X-Appengine-Cron') is None:
+        abort(403)
+
+    account = _get_github_account()
+
+    with TemporaryDirectory() as tmp_dir:
+      # /tmp/google-api-ruby-client
+      client_lib_dir = os.path.join(tmp_dir, 'google-api-ruby-client')
+      _call(('git clone'
+             ' https://github.com/google/google-api-ruby-client'
+             ' {}').format(client_lib_dir), check=True)
+
+      _call('bundle install --path vendor/bundle', check=True,
+            cwd=client_lib_dir)
+      _call('./scripts/generate', check=True, cwd=client_lib_dir)
+
+
 @app.route('/cron/clients/php/update')
 def cron_clients_php_update():
     if request.headers.get('X-Appengine-Cron') is None:
