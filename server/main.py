@@ -260,7 +260,7 @@ def cron_clients_php_update():
                 for id_ in sorted(added):
                     commitmsg += '- {}\n'.format(id_)
             if updated:
-                commitmsg += '\nUpdated:\n'
+                commitmsg += '\nUpdate:\n'
                 for id_ in sorted(updated):
                     commitmsg += '- {}\n'.format(id_)
 
