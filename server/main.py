@@ -32,6 +32,7 @@ def _get_github_account():
     return GitHubAccount(account['name'], account['email'],
                          account['username'], account['personal_access_token'])
 
+
 def _get_npm_account():
     """Returns the npm account stored in Datastore
 
@@ -41,6 +42,7 @@ def _get_npm_account():
     ds = datastore.Client()
     account = list(ds.query(kind='NpmAccount').fetch())[0]
     return NpmAccount(account['auth_token'])
+
 
 def _call(cmd, check=False, **kwargs):
     """A wrapper over subprocess.call that splits cmd with shlex.split
@@ -127,7 +129,7 @@ def cron_clients_nodejs_update():
         # /tmp/google-api-nodejs-client
         client_lib_dir = os.path.join(tmp_dir, 'google-api-nodejs-client')
         _call(('git clone'
-               ' https://github.com/saicheems/google-api-nodejs-client'
+               ' https://github.com/google/google-api-nodejs-client'
                ' {}').format(client_lib_dir), check=True)
 
         # Install dependencies.
@@ -156,8 +158,8 @@ def cron_clients_nodejs_update():
         # `name_version_re` matches strings like
         # "M    apis/foo/v1.ts"
         name_version_re = re.compile(r'(\w)\s+apis/(.+)/(.+)\.ts')
-        # Grab the names of files that have been changed since the last commit
-        # + their status (A, D, or M).
+        # Get the names of files that have been changed since the last commit
+        # + their status ("A", "D", or "M").
         diff_ns = subprocess.check_output(
             shlex.split('git diff --name-status --staged'), cwd=client_lib_dir)
         # Match for each client and add to the appropriate set.
@@ -190,16 +192,16 @@ def cron_clients_nodejs_update():
         cmd = cmd.format(account.name, account.email, commitmsg)
         # A zero return code means there's something to push.
         if _call(cmd, cwd=client_lib_dir) == 0:
-          remote_url = ('https://{}:{}@github.com'
-                        '/saicheems/google-api-nodejs-client')
-          remote_url = remote_url.format(account.username,
-                                         account.personal_access_token)
+            remote_url = ('https://{}:{}@github.com'
+                          '/google/google-api-nodejs-client')
+            remote_url = remote_url.format(account.username,
+                                           account.personal_access_token)
 
-          # Send output to /dev/null so `remote_url` isn't logged.
-          _call('git remote add github {}'.format(remote_url), check=True,
-                cwd=client_lib_dir, stdout=_DEVNULL, stderr=_DEVNULL)
-          _call('git push github', check=True, cwd=client_lib_dir,
-                stdout=_DEVNULL, stderr=_DEVNULL)
+            # Send output to /dev/null so `remote_url` isn't logged.
+            _call('git remote add github {}'.format(remote_url), check=True,
+                  cwd=client_lib_dir, stdout=_DEVNULL, stderr=_DEVNULL)
+            _call('git push github', check=True, cwd=client_lib_dir,
+                  stdout=_DEVNULL, stderr=_DEVNULL)
 
     return ''
 
@@ -216,16 +218,16 @@ def cron_clients_nodejs_release():
         # /tmp/google-api-nodejs-client
         client_lib_dir = os.path.join(tmp_dir, 'google-api-nodejs-client')
         _call(('git clone'
-               ' https://github.com/saicheems/google-api-nodejs-client'
+               ' https://github.com/google/google-api-nodejs-client'
                ' {}').format(client_lib_dir), check=True)
 
-        # Grab the latest tag.
+        # Get the latest tag.
         output = subprocess.check_output(
             shlex.split('git describe --tags --abbrev=0'),
             cwd=client_lib_dir)
         latest_tag = output.decode('utf-8').strip()
 
-        # Grab the latest package version on npm.
+        # Get the latest `googleapis` package version on npm.
         output = subprocess.check_output(
             shlex.split('npm view googleapis version'))
         latest_version = output.decode('utf-8').strip()
@@ -245,7 +247,7 @@ def cron_clients_nodejs_release():
         if latest_tag != latest_version:
             raise Exception(
                 ('latest tag does not match the latest package version on npm:'
-                ' {} != {}').format(latest_tag, latest_version))
+                 ' {} != {}').format(latest_tag, latest_version))
 
         # Install dependencies.
         _call('npm install', check=True,
@@ -273,17 +275,18 @@ def cron_clients_nodejs_release():
         # `name_version_re` matches strings like
         # "M    apis/foo/v1.ts"
         name_version_re = re.compile(r'(\w)\s+apis/(.+)/(.+)\.ts')
-        # Grab the names of files that have been changed since the last commit
-        # + their status (A, D, or M).
+        # Get the names of files that have been changed since the last commit
+        # + their status ("A", "D", or "M").
         diff_ns = subprocess.check_output(
-              shlex.split(
-                  'git diff --name-status {}..HEAD --oneline'.format(
-                      latest_tag)),
-              cwd=client_lib_dir)
+            shlex.split(
+                'git diff --name-status {}..HEAD --oneline'.format(
+                    latest_tag)),
+            cwd=client_lib_dir)
 
-        # Grab the status for each file.
+        # Get the status for each file.
         statuses = [match.group(1) for match
                     in name_version_re.finditer(diff_ns.decode('utf-8'))]
+        # `changes` is a map of API ID to file status ("A", "D", or "M").
         changes = {}
         for match in name_version_re.finditer(diff_ns.decode('utf-8')):
             status = match.group(1)
@@ -298,9 +301,8 @@ def cron_clients_nodejs_release():
 
         new_version = '{}.{}.{}'.format(major_version, minor_version,
                                         patch_version)
-        _call('git tag {}'.format(new_version), check=True,
-              cwd=client_lib_dir)
 
+        # Update `package.json` with the new version.
         package_filename = os.path.join(client_lib_dir, 'package.json')
         package_data = None
         with open(package_filename) as file_:
@@ -310,8 +312,9 @@ def cron_clients_nodejs_release():
             data['version'] = new_version
             file_.write(json.dumps(data, indent=2) + '\n')
 
-        changelog = '##### {} - {}\n'.format(new_version,
-            date.today().strftime("%d %B %Y"))
+        # Update `CHANGELOG.md`.
+        changelog = '##### {} - {}\n'.format(
+            new_version, date.today().strftime("%d %B %Y"))
         if 'D' in statuses:
             changelog += '\n###### Breaking changes\n'
         for name_version in sorted(changes):
@@ -326,7 +329,6 @@ def cron_clients_nodejs_release():
             if changes[name_version] == 'M':
                 changelog += '- Updated `{}`\n'.format(name_version)
         changelog += '\n'
-
         changelog_filename = os.path.join(client_lib_dir, 'CHANGELOG.md')
         changelog_data = None
         with open(changelog_filename) as file_:
@@ -334,13 +336,16 @@ def cron_clients_nodejs_release():
         with open(changelog_filename, 'w') as file_:
             file_.write(changelog + changelog_data)
 
+        # Commit the changes to `package.json` and `CHANGELOG.md`.
         cmd = 'git -c user.name="{}" -c user.email="{}" commit -a -m "{}"'
         cmd = cmd.format(github_account.name, github_account.email,
                          new_version)
         _call(cmd, check=True, cwd=client_lib_dir)
+        _call('git tag {}'.format(new_version), check=True,
+              cwd=client_lib_dir)
 
         remote_url = ('https://{}:{}@github.com'
-                      '/saicheems/google-api-nodejs-client')
+                      '/google/google-api-nodejs-client')
         remote_url = remote_url.format(github_account.username,
                                        github_account.personal_access_token)
 
@@ -352,7 +357,6 @@ def cron_clients_nodejs_release():
         _call('git push github --tags', check=True, cwd=client_lib_dir,
               stdout=_DEVNULL, stderr=_DEVNULL)
 
-        npm_auth_token = ''
         with open(os.path.expanduser('~/.npmrc'), 'w') as file_:
             file_.write('//registry.npmjs.org/:_authToken={}\n'.format(
                 npm_account.auth_token))
@@ -376,7 +380,8 @@ def cron_clients_php_update():
                ' {}').format(dartman_dir), check=True)
 
         # /tmp/google-api-php-client-services
-        client_lib_dir = os.path.join(tmp_dir, 'google-api-php-client-services')
+        client_lib_dir = os.path.join(tmp_dir,
+                                      'google-api-php-client-services')
         _call(('git clone'
                ' https://github.com/google/google-api-php-client-services'
                ' {}').format(client_lib_dir), check=True)
@@ -430,7 +435,6 @@ def cron_clients_php_update():
                 root = json.load(file_)
             id_ = root['id']
             name = root['name']
-            version = root['version']
 
             # The Discovery service is currently returning two APIs with the
             # same ID. In the Discovery directory, both "cloudtrace:v2" and
@@ -507,7 +511,7 @@ def cron_clients_php_update():
         if not returncode:
             # Reset all the changes so we can combine them into one commit.
             _call('git reset --soft HEAD~{}'.format(commit_count), check=True,
-                cwd=client_lib_dir)
+                  cwd=client_lib_dir)
 
             commitmsg = 'Autogenerated update ({})\n'.format(
                 date.today().isoformat())
@@ -547,12 +551,13 @@ def cron_clients_php_release():
 
     with TemporaryDirectory() as tmp_dir:
         # /tmp/google-api-php-client-services
-        client_lib_dir = os.path.join(tmp_dir, 'google-api-php-client-services')
+        client_lib_dir = os.path.join(tmp_dir,
+                                      'google-api-php-client-services')
         _call(('git clone'
                ' https://github.com/google/google-api-php-client-services'
                ' {}').format(client_lib_dir), check=True)
 
-        # Grab the latest tag.
+        # Get the latest tag.
         output = subprocess.check_output(
             shlex.split('git describe --tags --abbrev=0'),
             cwd=client_lib_dir)
@@ -595,12 +600,13 @@ def cron_clients_php_release():
 
         # Send output to /dev/null so `remote_url` isn't logged.
         _call('git remote add github {}'.format(remote_url), check=True,
-               cwd=client_lib_dir, stdout=_DEVNULL, stderr=_DEVNULL)
+              cwd=client_lib_dir, stdout=_DEVNULL, stderr=_DEVNULL)
         # Tags have to be pushed separately.
         _call('git push github --tags', check=True, cwd=client_lib_dir,
               stdout=_DEVNULL, stderr=_DEVNULL)
 
     return ''
+
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8080, debug=True)
