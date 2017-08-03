@@ -1,5 +1,4 @@
 FROM gcr.io/google_appengine/python
-RUN virtualenv /env -p python3.6
 
 RUN apt-get update
 RUN apt-get install -y curl openssh-client
@@ -13,6 +12,9 @@ ENV PATH "/usr/local/go/bin:${PATH}"
 # Install Node.js 8.x.
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash -
 RUN apt-get install -y nodejs
+
+# Install Python 3.6.
+RUN virtualenv /env -p python3.6
 
 # Install Ruby 2.4.1 and Bundler.
 RUN wget https://cache.ruby-lang.org/pub/ruby/2.4/ruby-2.4.1.tar.gz
