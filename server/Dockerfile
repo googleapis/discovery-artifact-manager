@@ -23,5 +23,5 @@ ENV PATH /env/bin:$PATH
 ADD requirements.txt /app/
 RUN pip install -r requirements.txt
 ADD . /app/
-# 20 minute timeout.
+# 20 minute timeout so the process is not killed before any task completes.
 CMD gunicorn -b :$PORT main:app --timeout 1200 --workers 4

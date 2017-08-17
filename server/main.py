@@ -15,6 +15,13 @@ app = Flask(__name__)
 
 _DEVNULL = open(os.devnull, 'w')
 
+_DARTMAN = 'dartman'
+_NODEJS = 'nodejs'
+_PHP = 'php'
+
+# Matches strings like "M    apis/foo/v1.ts".
+_NODEJS_GIT_DIFF_RE = re.compile(r'(\w)\s+apis/(.+)/(.+)\.ts')
+
 GitHubAccount = namedtuple('GitHubAccount',
                            'name email username personal_access_token')
 
@@ -44,7 +51,28 @@ def _get_npm_account():
     return NpmAccount(account['auth_token'])
 
 
-def _call(cmd, check=False, **kwargs):
+def _get_remote_url(repo_name, github_account):
+    """Returns an authenticated remote URL for the given repo name.
+
+    Args:
+        repo_name (str): a key in REPO_URLS.
+        github_account (GitHubAccount): the GitHub account to authenticate
+            with.
+
+    Returns:
+        str: an authenticated remote URL.
+    """
+    remote_url = {
+        _DARTMAN: 'github.com/googleapis/discovery-artifact-manager',
+        _NODEJS: 'github.com/google/google-api-nodejs-client',
+        _PHP: 'github.com/google/google-api-php-client-services'
+    }[repo_name]
+    return 'https://{}:{}@{}'.format(github_account.username,
+                                     github_account.personal_access_token,
+                                     remote_url)
+
+
+def _call(cmd, check=False, quiet=False, **kwargs):
     """A wrapper over subprocess.call that splits cmd with shlex.split
 
     If check is True, then check_call is run instead of call.
@@ -52,6 +80,8 @@ def _call(cmd, check=False, **kwargs):
     Args:
         cmd (string): A command to run.
         check (bool, optional): If true, check_call is run instead of call.
+        quiet (bool, optional): If true, stdout and stderr are redirected to
+            /dev/null.
 
     Returns:
         int: The return code of the call.
@@ -59,7 +89,12 @@ def _call(cmd, check=False, **kwargs):
     func = subprocess.call
     if check:
         func = subprocess.check_call
-    return func(shlex.split(cmd), **kwargs)
+    stdout = None
+    stderr = None
+    if quiet:
+        stdout = _DEVNULL
+        stderr = _DEVNULL
+    return func(shlex.split(cmd), stdout=stdout, stderr=stderr, **kwargs)
 
 
 @app.route('/cron/discoveries')
@@ -77,9 +112,8 @@ def cron_discoveries():
 
         # /tmp/discovery-artifact-manager
         dartman_dir = os.path.join(tmp_dir, 'discovery-artifact-manager')
-        _call(('git clone'
-               ' https://github.com/googleapis/discovery-artifact-manager'
-               ' {}').format(dartman_dir), check=True)
+        remote_url = _get_remote_url(_DARTMAN, account)
+        _call('git clone {} {}'.format(remote_url, dartman_dir), check=True)
 
         # ln -s /tmp/discovery-artifact-manager/src \
         #       /tmp/go/src/discovery-artifact-manager
@@ -104,16 +138,9 @@ def cron_discoveries():
 
         # `returncode` is non-zero if there's nothing to commit.
         if not returncode:
-            remote_url = ('https://{}:{}@github.com'
-                          '/googleapis/discovery-artifact-manager')
-            remote_url = remote_url.format(account.username,
-                                           account.personal_access_token)
-
             # Send output to /dev/null so `remote_url` isn't logged.
-            _call('git remote add github {}'.format(remote_url), check=True,
-                  cwd=dartman_dir, stdout=_DEVNULL, stderr=_DEVNULL)
-            _call('git push github', check=True, cwd=dartman_dir,
-                  stdout=_DEVNULL, stderr=_DEVNULL)
+            _call('git push {}'.format(remote_url), check=True,
+                  cwd=dartman_dir, quiet=True)
 
     return ''
 
@@ -128,9 +155,8 @@ def cron_clients_nodejs_update():
     with TemporaryDirectory() as tmp_dir:
         # /tmp/google-api-nodejs-client
         client_lib_dir = os.path.join(tmp_dir, 'google-api-nodejs-client')
-        _call(('git clone'
-               ' https://github.com/google/google-api-nodejs-client'
-               ' {}').format(client_lib_dir), check=True)
+        remote_url = _get_remote_url(_NODEJS, account)
+        _call('git clone {} {}'.format(remote_url, client_lib_dir), check=True)
 
         # Install dependencies.
         _call('npm install', check=True,
@@ -155,15 +181,12 @@ def cron_clients_nodejs_update():
         # A set of IDs for APIs which have been updated.
         updated = set()
 
-        # `name_version_re` matches strings like
-        # "M    apis/foo/v1.ts"
-        name_version_re = re.compile(r'(\w)\s+apis/(.+)/(.+)\.ts')
         # Get the names of files that have been changed since the last commit
         # + their status ("A", "D", or "M").
         diff_ns = subprocess.check_output(
             shlex.split('git diff --name-status --staged'), cwd=client_lib_dir)
         # Match for each client and add to the appropriate set.
-        for match in name_version_re.finditer(diff_ns.decode('utf-8')):
+        for match in _NODEJS_GIT_DIFF_RE.finditer(diff_ns.decode('utf-8')):
             status = match.group(1)
             name_version = '{}:{}'.format(match.group(2), match.group(3))
             if status == 'A':
@@ -192,16 +215,9 @@ def cron_clients_nodejs_update():
         cmd = cmd.format(account.name, account.email, commitmsg)
         # A zero return code means there's something to push.
         if _call(cmd, cwd=client_lib_dir) == 0:
-            remote_url = ('https://{}:{}@github.com'
-                          '/google/google-api-nodejs-client')
-            remote_url = remote_url.format(account.username,
-                                           account.personal_access_token)
-
             # Send output to /dev/null so `remote_url` isn't logged.
-            _call('git remote add github {}'.format(remote_url), check=True,
-                  cwd=client_lib_dir, stdout=_DEVNULL, stderr=_DEVNULL)
-            _call('git push github', check=True, cwd=client_lib_dir,
-                  stdout=_DEVNULL, stderr=_DEVNULL)
+            _call('git push {}'.format(remote_url), check=True,
+                  cwd=client_lib_dir, quiet=True)
 
     return ''
 
@@ -217,9 +233,8 @@ def cron_clients_nodejs_release():
     with TemporaryDirectory() as tmp_dir:
         # /tmp/google-api-nodejs-client
         client_lib_dir = os.path.join(tmp_dir, 'google-api-nodejs-client')
-        _call(('git clone'
-               ' https://github.com/google/google-api-nodejs-client'
-               ' {}').format(client_lib_dir), check=True)
+        remote_url = _get_remote_url(_NODEJS, github_account)
+        _call('git clone {} {}'.format(remote_url, client_lib_dir), check=True)
 
         # Get the latest tag.
         output = subprocess.check_output(
@@ -261,7 +276,7 @@ def cron_clients_nodejs_release():
         _call('npm run test', check=True, cwd=client_lib_dir)
 
         # `version_re` matches versions like "20.1.0".
-        version_re = re.compile(r'^([0-9]+)\.([0-9]+)\.([0-9]+)$')
+        version_re = re.compile(r'^([0-9]+)\.([0-9]+)\.[0-9]+$')
         match = version_re.match(latest_tag)
         if not match:
             raise Exception(
@@ -270,11 +285,7 @@ def cron_clients_nodejs_release():
 
         major_version = int(match.group(1))
         minor_version = int(match.group(2))
-        patch_version = int(match.group(3))
 
-        # `name_version_re` matches strings like
-        # "M    apis/foo/v1.ts"
-        name_version_re = re.compile(r'(\w)\s+apis/(.+)/(.+)\.ts')
         # Get the names of files that have been changed since the last commit
         # + their status ("A", "D", or "M").
         diff_ns = subprocess.check_output(
@@ -285,10 +296,10 @@ def cron_clients_nodejs_release():
 
         # Get the status for each file.
         statuses = [match.group(1) for match
-                    in name_version_re.finditer(diff_ns.decode('utf-8'))]
+                    in _NODEJS_GIT_DIFF_RE.finditer(diff_ns.decode('utf-8'))]
         # `changes` is a map of API ID to file status ("A", "D", or "M").
         changes = {}
-        for match in name_version_re.finditer(diff_ns.decode('utf-8')):
+        for match in _NODEJS_GIT_DIFF_RE.finditer(diff_ns.decode('utf-8')):
             status = match.group(1)
             name_version = '{}:{}'.format(match.group(2), match.group(3))
             changes[name_version] = status
@@ -299,8 +310,7 @@ def cron_clients_nodejs_release():
         else:  # Otherwise, increment the minor version.
             minor_version += 1
 
-        new_version = '{}.{}.{}'.format(major_version, minor_version,
-                                        patch_version)
+        new_version = '{}.{}.0'.format(major_version, minor_version)
 
         # Update `package.json` with the new version.
         package_filename = os.path.join(client_lib_dir, 'package.json')
@@ -344,18 +354,11 @@ def cron_clients_nodejs_release():
         _call('git tag {}'.format(new_version), check=True,
               cwd=client_lib_dir)
 
-        remote_url = ('https://{}:{}@github.com'
-                      '/google/google-api-nodejs-client')
-        remote_url = remote_url.format(github_account.username,
-                                       github_account.personal_access_token)
-
         # Send output to /dev/null so `remote_url` isn't logged.
-        _call('git remote add github {}'.format(remote_url), check=True,
-              cwd=client_lib_dir, stdout=_DEVNULL, stderr=_DEVNULL)
-        _call('git push github', check=True, cwd=client_lib_dir,
-              stdout=_DEVNULL, stderr=_DEVNULL)
-        _call('git push github --tags', check=True, cwd=client_lib_dir,
-              stdout=_DEVNULL, stderr=_DEVNULL)
+        _call('git push {}'.format(remote_url), check=True, cwd=client_lib_dir,
+              quiet=True)
+        _call('git push {} --tags'.format(remote_url), check=True,
+              cwd=client_lib_dir, quiet=True)
 
         with open(os.path.expanduser('~/.npmrc'), 'w') as file_:
             file_.write('//registry.npmjs.org/:_authToken={}\n'.format(
@@ -375,9 +378,8 @@ def cron_clients_php_update():
     with TemporaryDirectory() as tmp_dir:
         # /tmp/discovery-artifact-manager
         dartman_dir = os.path.join(tmp_dir, 'discovery-artifact-manager')
-        _call(('git clone'
-               ' https://github.com/googleapis/discovery-artifact-manager'
-               ' {}').format(dartman_dir), check=True)
+        _call('git clone {} {}'.format(
+            _get_remote_url(_DARTMAN, account), dartman_dir), check=True)
 
         # /tmp/google-api-php-client-services
         client_lib_dir = os.path.join(tmp_dir,
@@ -535,9 +537,9 @@ def cron_clients_php_update():
 
             # Send output to /dev/null so `remote_url` isn't logged.
             _call('git remote add github {}'.format(remote_url), check=True,
-                  cwd=client_lib_dir, stdout=_DEVNULL, stderr=_DEVNULL)
+                  cwd=client_lib_dir, quiet=True)
             _call('git push github', check=True, cwd=client_lib_dir,
-                  stdout=_DEVNULL, stderr=_DEVNULL)
+                  quiet=True)
 
     return ''
 
@@ -553,9 +555,8 @@ def cron_clients_php_release():
         # /tmp/google-api-php-client-services
         client_lib_dir = os.path.join(tmp_dir,
                                       'google-api-php-client-services')
-        _call(('git clone'
-               ' https://github.com/google/google-api-php-client-services'
-               ' {}').format(client_lib_dir), check=True)
+        remote_url = _get_remote_url(_PHP, account)
+        _call('git clone {} {}'.format(remote_url, client_lib_dir), check=True)
 
         # Get the latest tag.
         output = subprocess.check_output(
@@ -593,17 +594,8 @@ def cron_clients_php_release():
         _call('git tag {}'.format(new_version), check=True,
               cwd=client_lib_dir)
 
-        remote_url = ('https://{}:{}@github.com'
-                      '/google/google-api-php-client-services')
-        remote_url = remote_url.format(account.username,
-                                       account.personal_access_token)
-
-        # Send output to /dev/null so `remote_url` isn't logged.
-        _call('git remote add github {}'.format(remote_url), check=True,
-              cwd=client_lib_dir, stdout=_DEVNULL, stderr=_DEVNULL)
-        # Tags have to be pushed separately.
-        _call('git push github --tags', check=True, cwd=client_lib_dir,
-              stdout=_DEVNULL, stderr=_DEVNULL)
+        _call('git push {} --tags'.format(remote_url), check=True,
+              cwd=client_lib_dir, quiet=True)
 
     return ''
 
