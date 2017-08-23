@@ -4,7 +4,7 @@ import os
 import re
 import shlex
 import subprocess
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 from datetime import date
 from tempfile import TemporaryDirectory
 
@@ -15,8 +15,17 @@ app = Flask(__name__)
 
 _DEVNULL = open(os.devnull, 'w')
 
+_DARTMAN = 'dartman'
+_NODEJS = 'nodejs'
+_PHP = 'php'
+
+# Matches strings like "M    apis/foo/v1.ts".
+_NODEJS_GIT_DIFF_RE = re.compile(r'(\w)\s+apis/(.+)/(.+)\.ts')
+
 GitHubAccount = namedtuple('GitHubAccount',
                            'name email username personal_access_token')
+
+NpmAccount = namedtuple('NpmAccount', 'auth_token')
 
 
 def _get_github_account():
@@ -31,7 +40,39 @@ def _get_github_account():
                          account['username'], account['personal_access_token'])
 
 
-def _call(cmd, check=False, **kwargs):
+def _get_npm_account():
+    """Returns the npm account stored in Datastore
+
+    Returns:
+        NpmAccount: an npm account.
+    """
+    ds = datastore.Client()
+    account = list(ds.query(kind='NpmAccount').fetch())[0]
+    return NpmAccount(account['auth_token'])
+
+
+def _get_remote_url(repo_name, github_account):
+    """Returns an authenticated remote URL for the given repo name.
+
+    Args:
+        repo_name (str): a key in REPO_URLS.
+        github_account (GitHubAccount): the GitHub account to authenticate
+            with.
+
+    Returns:
+        str: an authenticated remote URL.
+    """
+    remote_url = {
+        _DARTMAN: 'github.com/googleapis/discovery-artifact-manager',
+        _NODEJS: 'github.com/google/google-api-nodejs-client',
+        _PHP: 'github.com/google/google-api-php-client-services'
+    }[repo_name]
+    return 'https://{}:{}@{}'.format(github_account.username,
+                                     github_account.personal_access_token,
+                                     remote_url)
+
+
+def _call(cmd, check=False, quiet=False, **kwargs):
     """A wrapper over subprocess.call that splits cmd with shlex.split
 
     If check is True, then check_call is run instead of call.
@@ -39,6 +80,8 @@ def _call(cmd, check=False, **kwargs):
     Args:
         cmd (string): A command to run.
         check (bool, optional): If true, check_call is run instead of call.
+        quiet (bool, optional): If true, stdout and stderr are redirected to
+            /dev/null.
 
     Returns:
         int: The return code of the call.
@@ -46,7 +89,12 @@ def _call(cmd, check=False, **kwargs):
     func = subprocess.call
     if check:
         func = subprocess.check_call
-    return func(shlex.split(cmd), **kwargs)
+    stdout = None
+    stderr = None
+    if quiet:
+        stdout = _DEVNULL
+        stderr = _DEVNULL
+    return func(shlex.split(cmd), stdout=stdout, stderr=stderr, **kwargs)
 
 
 @app.route('/cron/discoveries')
@@ -64,9 +112,8 @@ def cron_discoveries():
 
         # /tmp/discovery-artifact-manager
         dartman_dir = os.path.join(tmp_dir, 'discovery-artifact-manager')
-        _call(('git clone'
-               ' https://github.com/googleapis/discovery-artifact-manager'
-               ' {}').format(dartman_dir), check=True)
+        remote_url = _get_remote_url(_DARTMAN, account)
+        _call('git clone {} {}'.format(remote_url, dartman_dir), check=True)
 
         # ln -s /tmp/discovery-artifact-manager/src \
         #       /tmp/go/src/discovery-artifact-manager
@@ -91,16 +138,232 @@ def cron_discoveries():
 
         # `returncode` is non-zero if there's nothing to commit.
         if not returncode:
-            remote_url = ('https://{}:{}@github.com'
-                          '/googleapis/discovery-artifact-manager')
-            remote_url = remote_url.format(account.username,
-                                           account.personal_access_token)
-
             # Send output to /dev/null so `remote_url` isn't logged.
-            _call('git remote add github {}'.format(remote_url), check=True,
-                  cwd=dartman_dir, stdout=_DEVNULL, stderr=_DEVNULL)
-            _call('git push github', check=True, cwd=dartman_dir,
-                  stdout=_DEVNULL, stderr=_DEVNULL)
+            _call('git push {}'.format(remote_url), check=True,
+                  cwd=dartman_dir, quiet=True)
+
+    return ''
+
+
+@app.route('/cron/clients/nodejs/update')
+def cron_clients_nodejs_update():
+    if request.headers.get('X-Appengine-Cron') is None:
+        abort(403)
+
+    account = _get_github_account()
+
+    with TemporaryDirectory() as tmp_dir:
+        # /tmp/google-api-nodejs-client
+        client_lib_dir = os.path.join(tmp_dir, 'google-api-nodejs-client')
+        remote_url = _get_remote_url(_NODEJS, account)
+        _call('git clone {} {}'.format(remote_url, client_lib_dir), check=True)
+
+        # Install dependencies.
+        _call('npm install', check=True,
+              cwd=client_lib_dir)
+
+        # Generate and build all clients.
+        _call('node --max_old_space_size=2000 /usr/bin/npm run generate-apis',
+              check=True, cwd=client_lib_dir)
+        _call('node --max_old_space_size=2000 /usr/bin/npm run build',
+              check=True, cwd=client_lib_dir)
+
+        # Run tests.
+        _call('npm run test', check=True, cwd=client_lib_dir)
+
+        # Stage all changes.
+        _call('git add .', check=True, cwd=client_lib_dir)
+
+        # A set of IDs for APIs which have been newly added.
+        added = set()
+        # A set of IDs for APIs which have been deleted.
+        deleted = set()
+        # A set of IDs for APIs which have been updated.
+        updated = set()
+
+        # Get the names of files that have been changed since the last commit
+        # + their status ("A", "D", or "M").
+        diff_ns = subprocess.check_output(
+            shlex.split('git diff --name-status --staged'), cwd=client_lib_dir)
+        # Match for each client and add to the appropriate set.
+        for match in _NODEJS_GIT_DIFF_RE.finditer(diff_ns.decode('utf-8')):
+            status = match.group(1)
+            name_version = '{}:{}'.format(match.group(2), match.group(3))
+            if status == 'A':
+                added.add(name_version)
+            elif status == 'D':
+                deleted.add(name_version)
+            elif status == 'M':
+                updated.add(name_version)
+
+        commitmsg = 'Autogenerated update ({})\n'.format(
+            date.today().isoformat())
+        if added:
+            commitmsg += '\nAdd:\n'
+            for id_ in sorted(added):
+                commitmsg += '- {}\n'.format(id_)
+        if deleted:
+            commitmsg += '\nDelete:\n'
+            for id_ in sorted(deleted):
+                commitmsg += '- {}\n'.format(id_)
+        if updated:
+            commitmsg += '\nUpdate:\n'
+            for id_ in sorted(updated):
+                commitmsg += '- {}\n'.format(id_)
+
+        cmd = 'git -c user.name="{}" -c user.email="{}" commit -a -m "{}"'
+        cmd = cmd.format(account.name, account.email, commitmsg)
+        # A zero return code means there's something to push.
+        if _call(cmd, cwd=client_lib_dir) == 0:
+            # Send output to /dev/null so `remote_url` isn't logged.
+            _call('git push {}'.format(remote_url), check=True,
+                  cwd=client_lib_dir, quiet=True)
+
+    return ''
+
+
+@app.route('/cron/clients/nodejs/release')
+def cron_clients_nodejs_release():
+    if request.headers.get('X-Appengine-Cron') is None:
+        abort(403)
+
+    github_account = _get_github_account()
+    npm_account = _get_npm_account()
+
+    with TemporaryDirectory() as tmp_dir:
+        # /tmp/google-api-nodejs-client
+        client_lib_dir = os.path.join(tmp_dir, 'google-api-nodejs-client')
+        remote_url = _get_remote_url(_NODEJS, github_account)
+        _call('git clone {} {}'.format(remote_url, client_lib_dir), check=True)
+
+        # Get the latest tag.
+        output = subprocess.check_output(
+            shlex.split('git describe --tags --abbrev=0'),
+            cwd=client_lib_dir)
+        latest_tag = output.decode('utf-8').strip()
+
+        # Get the latest `googleapis` package version on npm.
+        output = subprocess.check_output(
+            shlex.split('npm view googleapis version'))
+        latest_version = output.decode('utf-8').strip()
+
+        # Get the list of authors for commits since the last tag.
+        output = subprocess.check_output(
+            shlex.split('git log {}..HEAD --pretty=format:"%ae"'.format(
+                latest_tag)),
+            cwd=client_lib_dir)
+        authors = output.decode('utf-8').strip().split('\n')
+
+        # If there weren't any commits, or the bot account wasn't the author of
+        # all commits since the last tag, stop here.
+        if not output or not all(a == github_account.email for a in authors):
+            return ''
+
+        if latest_tag != latest_version:
+            raise Exception(
+                ('latest tag does not match the latest package version on npm:'
+                 ' {} != {}').format(latest_tag, latest_version))
+
+        # Install dependencies.
+        _call('npm install', check=True,
+              cwd=client_lib_dir)
+
+        # Build all clients.
+        _call('node --max_old_space_size=2000 /usr/bin/npm run build',
+              check=True, cwd=client_lib_dir)
+
+        # Run tests.
+        _call('npm run test', check=True, cwd=client_lib_dir)
+
+        # `version_re` matches versions like "20.1.0".
+        version_re = re.compile(r'^([0-9]+)\.([0-9]+)\.[0-9]+$')
+        match = version_re.match(latest_tag)
+        if not match:
+            raise Exception(
+                'latest tag does not match the pattern \'{}\': {}'.format(
+                    version_re.pattern, latest_tag))
+
+        major_version = int(match.group(1))
+        minor_version = int(match.group(2))
+
+        # Get the names of files that have been changed since the last commit
+        # + their status ("A", "D", or "M").
+        diff_ns = subprocess.check_output(
+            shlex.split(
+                'git diff --name-status {}..HEAD --oneline'.format(
+                    latest_tag)),
+            cwd=client_lib_dir)
+
+        # Get the status for each file.
+        statuses = [match.group(1) for match
+                    in _NODEJS_GIT_DIFF_RE.finditer(diff_ns.decode('utf-8'))]
+        # `changes` is a map of API ID to file status ("A", "D", or "M").
+        changes = {}
+        for match in _NODEJS_GIT_DIFF_RE.finditer(diff_ns.decode('utf-8')):
+            status = match.group(1)
+            name_version = '{}:{}'.format(match.group(2), match.group(3))
+            changes[name_version] = status
+
+        # If any clients were deleted, increment the major version.
+        if 'D' in statuses:
+            major_version += 1
+        else:  # Otherwise, increment the minor version.
+            minor_version += 1
+
+        new_version = '{}.{}.0'.format(major_version, minor_version)
+
+        # Update `package.json` with the new version.
+        package_filename = os.path.join(client_lib_dir, 'package.json')
+        package_data = None
+        with open(package_filename) as file_:
+            package_data = file_.read()
+        with open(package_filename, 'w') as file_:
+            data = json.loads(package_data, object_pairs_hook=OrderedDict)
+            data['version'] = new_version
+            file_.write(json.dumps(data, indent=2) + '\n')
+
+        # Update `CHANGELOG.md`.
+        changelog = '##### {} - {}\n'.format(
+            new_version, date.today().strftime("%d %B %Y"))
+        if 'D' in statuses:
+            changelog += '\n###### Breaking changes\n'
+        for name_version in sorted(changes):
+            if changes[name_version] == 'D':
+                changelog += '- Deleted `{}`\n'.format(name_version)
+        if 'A' in statuses or 'M' in statuses:
+            changelog += '\n###### Backwards compatible changes\n'
+        for name_version in sorted(changes):
+            if changes[name_version] == 'A':
+                changelog += '- Added `{}`\n'.format(name_version)
+        for name_version in sorted(changes):
+            if changes[name_version] == 'M':
+                changelog += '- Updated `{}`\n'.format(name_version)
+        changelog += '\n'
+        changelog_filename = os.path.join(client_lib_dir, 'CHANGELOG.md')
+        changelog_data = None
+        with open(changelog_filename) as file_:
+            changelog_data = file_.read()
+        with open(changelog_filename, 'w') as file_:
+            file_.write(changelog + changelog_data)
+
+        # Commit the changes to `package.json` and `CHANGELOG.md`.
+        cmd = 'git -c user.name="{}" -c user.email="{}" commit -a -m "{}"'
+        cmd = cmd.format(github_account.name, github_account.email,
+                         new_version)
+        _call(cmd, check=True, cwd=client_lib_dir)
+        _call('git tag {}'.format(new_version), check=True,
+              cwd=client_lib_dir)
+
+        # Send output to /dev/null so `remote_url` isn't logged.
+        _call('git push {}'.format(remote_url), check=True, cwd=client_lib_dir,
+              quiet=True)
+        _call('git push {} --tags'.format(remote_url), check=True,
+              cwd=client_lib_dir, quiet=True)
+
+        with open(os.path.expanduser('~/.npmrc'), 'w') as file_:
+            file_.write('//registry.npmjs.org/:_authToken={}\n'.format(
+                npm_account.auth_token))
+        _call('npm publish', check=True, cwd=client_lib_dir)
 
     return ''
 
@@ -115,12 +378,12 @@ def cron_clients_php_update():
     with TemporaryDirectory() as tmp_dir:
         # /tmp/discovery-artifact-manager
         dartman_dir = os.path.join(tmp_dir, 'discovery-artifact-manager')
-        _call(('git clone'
-               ' https://github.com/googleapis/discovery-artifact-manager'
-               ' {}').format(dartman_dir), check=True)
+        _call('git clone {} {}'.format(
+            _get_remote_url(_DARTMAN, account), dartman_dir), check=True)
 
         # /tmp/google-api-php-client-services
-        client_lib_dir = os.path.join(tmp_dir, 'google-api-php-client-services')
+        client_lib_dir = os.path.join(tmp_dir,
+                                      'google-api-php-client-services')
         _call(('git clone'
                ' https://github.com/google/google-api-php-client-services'
                ' {}').format(client_lib_dir), check=True)
@@ -174,7 +437,6 @@ def cron_clients_php_update():
                 root = json.load(file_)
             id_ = root['id']
             name = root['name']
-            version = root['version']
 
             # The Discovery service is currently returning two APIs with the
             # same ID. In the Discovery directory, both "cloudtrace:v2" and
@@ -251,7 +513,7 @@ def cron_clients_php_update():
         if not returncode:
             # Reset all the changes so we can combine them into one commit.
             _call('git reset --soft HEAD~{}'.format(commit_count), check=True,
-                cwd=client_lib_dir)
+                  cwd=client_lib_dir)
 
             commitmsg = 'Autogenerated update ({})\n'.format(
                 date.today().isoformat())
@@ -275,9 +537,9 @@ def cron_clients_php_update():
 
             # Send output to /dev/null so `remote_url` isn't logged.
             _call('git remote add github {}'.format(remote_url), check=True,
-                  cwd=client_lib_dir, stdout=_DEVNULL, stderr=_DEVNULL)
+                  cwd=client_lib_dir, quiet=True)
             _call('git push github', check=True, cwd=client_lib_dir,
-                  stdout=_DEVNULL, stderr=_DEVNULL)
+                  quiet=True)
 
     return ''
 
@@ -291,12 +553,12 @@ def cron_clients_php_release():
 
     with TemporaryDirectory() as tmp_dir:
         # /tmp/google-api-php-client-services
-        client_lib_dir = os.path.join(tmp_dir, 'google-api-php-client-services')
-        _call(('git clone'
-               ' https://github.com/google/google-api-php-client-services'
-               ' {}').format(client_lib_dir), check=True)
+        client_lib_dir = os.path.join(tmp_dir,
+                                      'google-api-php-client-services')
+        remote_url = _get_remote_url(_PHP, account)
+        _call('git clone {} {}'.format(remote_url, client_lib_dir), check=True)
 
-        # Grab the latest tag.
+        # Get the latest tag.
         output = subprocess.check_output(
             shlex.split('git describe --tags --abbrev=0'),
             cwd=client_lib_dir)
@@ -307,41 +569,33 @@ def cron_clients_php_release():
             shlex.split('git log {}..HEAD --oneline'.format(latest_tag)),
             cwd=client_lib_dir)
 
-        # If there were any commits, then release a new tag.
-        if output:
-            # `version_re` matches versions like "v0.12".
-            version_re = re.compile(r'^(v[0-9]+)\.([0-9]+)$')
-            match = version_re.match(latest_tag)
-            if not match:
-                raise Exception(
-                    'latest tag does not match the pattern \'{}\': {}'.format(
-                        version_re.pattern, latest_tag))
+        # If there weren't any commits, stop here.
+        if not output:
+            return ''
 
-            # ex: '12'
-            minor_revision = match.group(2)
-            # ex: '13'
-            new_minor_revision = str(int(minor_revision) + 1)
-            # '\1' is substituted with the first group captured by the
-            # `version_re` pattern. This replacement defends against the
-            # possibility of regressing the major version.
-            # ex: 'v0.13'
-            new_version = version_re.sub(
-                r'\1.{}'.format(new_minor_revision), latest_tag)
+        # `version_re` matches versions like "v0.12".
+        version_re = re.compile(r'^(v[0-9]+)\.([0-9]+)$')
+        match = version_re.match(latest_tag)
+        if not match:
+            raise Exception(
+                'latest tag does not match the pattern \'{}\': {}'.format(
+                    version_re.pattern, latest_tag))
 
-            _call('git tag {}'.format(new_version), check=True,
-                  cwd=client_lib_dir)
+        # ex: '12'
+        minor_version = match.group(2)
+        # ex: '13'
+        new_minor_version = str(int(minor_version) + 1)
+        # '\1' is substituted with the first group captured by the
+        # `version_re` pattern. This replacement defends against the
+        # possibility of regressing the major version.
+        # ex: 'v0.13'
+        new_version = version_re.sub(
+            r'\1.{}'.format(new_minor_version), latest_tag)
+        _call('git tag {}'.format(new_version), check=True,
+              cwd=client_lib_dir)
 
-            remote_url = ('https://{}:{}@github.com'
-                          '/google/google-api-php-client-services')
-            remote_url = remote_url.format(account.username,
-                                           account.personal_access_token)
-
-            # Send output to /dev/null so `remote_url` isn't logged.
-            _call('git remote add github {}'.format(remote_url), check=True,
-                   cwd=client_lib_dir, stdout=_DEVNULL, stderr=_DEVNULL)
-            # Tags have to be pushed separately.
-            _call('git push github --tags', check=True, cwd=client_lib_dir,
-                  stdout=_DEVNULL, stderr=_DEVNULL)
+        _call('git push {} --tags'.format(remote_url), check=True,
+              cwd=client_lib_dir, quiet=True)
 
     return ''
 
