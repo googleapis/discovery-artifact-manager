@@ -8,7 +8,7 @@ RUN apt-get -y install openssh-client
 RUN wget https://storage.googleapis.com/golang/go1.8.linux-amd64.tar.gz
 RUN tar -xvf go1.8.linux-amd64.tar.gz
 RUN mv go /usr/local
-ENV PATH "/usr/local/go/bin:${PATH}"
+ENV PATH /usr/local/go/bin:$PATH
 
 # Set virtualenv environment variables. This is equivalent to running
 # source /env/bin/activate
@@ -17,5 +17,7 @@ ENV PATH /env/bin:$PATH
 ADD requirements.txt /app/
 RUN pip install -r requirements.txt
 ADD . /app/
+
 # 10 minute timeout.
-CMD gunicorn -b :$PORT main:app --timeout 600 --workers 4
+CMD scripts/git-cookie-authdaemon && \
+    gunicorn -b :$PORT main:app --timeout 600 --workers 4
