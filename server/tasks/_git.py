@@ -17,6 +17,7 @@ from enum import Enum
 
 from tasks._check_output import check_output
 
+# Matches strings like "A\tfoo/bar/baz.txt".
 _DIFF_NAME_STATUS_RE = re.compile(r'^(\w)\s+(.*)$')
 
 Status = Enum('Status', 'ADDED DELETED UPDATED UNKNOWN')
@@ -101,7 +102,7 @@ class Repository(object):
         return data.strip().split('\n')
 
     def checkout(self, branch):
-        """Switch branches.
+        """Switches branches.
 
         Args:
             branch (str): the name of the branch to checkout.
@@ -112,7 +113,7 @@ class Repository(object):
         check_output(['git', 'checkout', branch], cwd=self.filepath)
 
     def commit(self, message, name, email):
-        """Record changes to the repository.
+        """Records changes to the repository.
 
         Args:
             message (str): the commit message.
@@ -130,7 +131,7 @@ class Repository(object):
             cwd=self.filepath)
 
     def diff_name_status(self, rev=None, staged=True):
-        """Return a list of status, filename pairs of changes from `rev`.
+        """Returns a list of status, filename pairs of changes from `rev`.
 
         Args:
             rev (str, optional): a revision parameter. If set, `staged` is
