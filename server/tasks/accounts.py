@@ -22,9 +22,10 @@ NpmAccount = namedtuple('NpmAccount', 'auth_token')
 RubyGemsAccount = namedtuple('RubyGemsAccount', 'api_key')
 
 
-def _obj(kind):
+def _get(type_):
     client = datastore.Client()
-    return list(client.query(kind=kind).fetch())[0]
+    obj = list(client.query(kind=type_.__name__).fetch())[0]
+    return type_(*[obj[x] for x in type_._fields])
 
 
 def get_github_account():
@@ -33,9 +34,7 @@ def get_github_account():
     Returns:
         GitHubAccount: a GitHub account.
     """
-    obj = _obj('GitHubAccount')
-    return GitHubAccount(obj['name'], obj['email'], obj['username'],
-                         obj['personal_access_token'])
+    return _get(GitHubAccount)
 
 
 def get_npm_account():
@@ -44,8 +43,7 @@ def get_npm_account():
     Returns:
         NpmAccount: an npm account.
     """
-    obj = _obj('NpmAccount')
-    return NpmAccount(obj['auth_token'])
+    return _get(NpmAccount)
 
 
 def get_rubygems_account():
@@ -54,5 +52,4 @@ def get_rubygems_account():
     Returns:
         RubyGemsAccount: a RubyGems account.
     """
-    obj = _obj('RubyGemsAccount')
-    return RubyGemsAccount(obj['api_key'])
+    return _get(RubyGemsAccount)
