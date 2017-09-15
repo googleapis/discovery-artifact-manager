@@ -13,7 +13,7 @@
 # limitations under the License.
 from unittest.mock import call, Mock, mock_open, patch
 
-from tasks import accounts, discovery_artifact_manager
+from tasks import discovery_artifact_manager
 from tests import common
 
 _DISCOVERY_FILENAMES = [

@@ -32,9 +32,10 @@ def discovery_documents(filepath, preferred=False, skip=None):
     """Returns a map of API IDs to Discovery document filenames.
 
     Args:
-        repo (Repository): the discovery-artifact-manager repository.
-        preferred_only (bool, optional): if true, only APIs marked as
-            preferred are returned.
+        filepath (str): the directory to work in. Discovery documents are
+            downloaded to this directory.
+        preferred (bool, optional): if true, only APIs marked as preferred are
+            returned.
         skip (list, optional): a list of API IDs to skip.
 
     Returns:
@@ -75,7 +76,7 @@ def update(filepath, github_account):
     """Updates the discovery-artifact-manager repository.
 
     Args:
-        filepath (str): the directory to download artifacts to.
+        filepath (str): the directory to work in.
         github_account (GitHubAccount): the GitHub account to commit and push
             with.
     """
