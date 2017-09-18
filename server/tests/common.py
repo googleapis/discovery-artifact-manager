@@ -17,6 +17,18 @@ GITHUB_ACCOUNT = accounts.GitHubAccount('Test', 'test@test.com', '_', '_')
 
 
 def clone_from_github_mock_side_effect(repo_mock):
+    """Returns a side effect function for clone_from_github.
+
+    The function returned returns repo_mock with its filepath set to the
+    filepath that clone_from_github was called with.
+
+    Args:
+        repo_mock (Mock): the repo to be returned from clone_from_github.
+
+    Returns:
+        function(str, str, github_account=GitHubAccount): a side effect
+            function for clone_from_github.
+    """
     def side_effect(path, dest, github_account=None):
         repo_mock.filepath = dest
         return repo_mock
