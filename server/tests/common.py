@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Contains common functions and constants for tests."""
 from tasks import accounts
 
 GITHUB_ACCOUNT = accounts.GitHubAccount('Test', 'test@test.com', '_', '_')
