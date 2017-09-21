@@ -275,6 +275,27 @@ def test_release_different_authors_since_latest_tag(clone_from_github_mock):
     ]
 
 
+@patch('tasks.google_api_php_client_services.check_output')
+@patch('tasks.google_api_php_client_services._git.clone_from_github')
+def test_release_force(clone_from_github_mock, check_output_mock):
+    repo_mock = Mock()
+    repo_mock.latest_tag.return_value = 'v0.1'
+    repo_mock.authors_since.return_value = ['test@test.com', 'test@test.com']
+    side_effect = common.clone_from_github_mock_side_effect(repo_mock)
+    clone_from_github_mock.side_effect = side_effect
+
+    google_api_php_client_services.release(
+        '/tmp', common.GITHUB_ACCOUNT, force=True)
+    # We don't bother verifying all calls in this case, since we only want to
+    # verify that the different authors check was passed.
+    assert repo_mock.mock_calls == [
+        call.latest_tag(),
+        call.authors_since('v0.1'),
+        call.tag('v0.2'),
+        call.push(tags=True)
+    ]
+
+
 @patch('tasks.google_api_php_client_services._git.clone_from_github')
 def test_release_invalid_latest_tag(clone_from_github_mock):
     repo_mock = Mock()

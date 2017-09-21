@@ -401,6 +401,66 @@ def test_release_different_authors_since_latest_tag(clone_from_github_mock):
     ]
 
 
+@patch('tasks.google_api_nodejs_client.os.path.expanduser')
+@patch('tasks.google_api_nodejs_client.date')
+@patch('tasks.google_api_nodejs_client.open', new_callable=mock_open)
+@patch('tasks.google_api_nodejs_client.check_output')
+@patch('tasks.google_api_nodejs_client._git.clone_from_github')
+def test_release_force(clone_from_github_mock,
+                       check_output_mock,
+                       open_mock,
+                       date_mock,
+                       expanduser_mock):
+    repo_mock = Mock()
+    repo_mock.latest_tag.return_value = '20.1.0'
+    repo_mock.authors_since.return_value = ['test@test.com', 'test2@test.com']
+    repo_mock.diff_name_status.return_value = [
+        ('apis/foo/v1.ts', _git.Status.ADDED),
+        ('apis/baz/v1.ts', _git.Status.UPDATED),
+    ]
+    side_effect = common.clone_from_github_mock_side_effect(repo_mock)
+    clone_from_github_mock.side_effect = side_effect
+    check_output_mock.return_value = '20.1.0'
+    open_package_json_mock = mock_open(read_data=('{"version": "20.1.0"}'))
+    open_changelog_md_mock = mock_open(read_data='...\n')
+    open_npmrc_mock = mock_open()
+    open_index_md_mock = mock_open(
+        read_data=('...\n\n'
+                   '### ...\n\n'
+                   '* [v20.1.0 (latest)](...)\n'
+                   '...\n'))
+    open_mock.side_effect = [
+        open_package_json_mock.return_value,
+        open_package_json_mock.return_value,
+        open_changelog_md_mock.return_value,
+        open_changelog_md_mock.return_value,
+        open_npmrc_mock.return_value,
+        open_index_md_mock.return_value,
+        open_index_md_mock.return_value
+    ]
+    date_mock.today.return_value.strftime.return_value = '1 September 2017'
+    expanduser_mock.side_effect = lambda x: '/home/test' + x[1:]
+
+    google_api_nodejs_client.release(
+        '/tmp', common.GITHUB_ACCOUNT, _NPM_ACCOUNT, force=True)
+    # We don't bother verifying all calls in this case, since we only want to
+    # verify that the different authors check was passed.
+    assert repo_mock.mock_calls == [
+        call.latest_tag(),
+        call.authors_since('20.1.0'),
+        call.diff_name_status(rev='20.1.0'),
+        call.commit('20.2.0', 'Test', 'test@test.com'),
+        call.tag('20.2.0'),
+        call.push(),
+        call.push(tags=True),
+        call.checkout('gh-pages'),
+        call.add(['latest', '20.2.0']),
+        call.commit('20.2.0', 'Test', 'test@test.com'),
+        call.push(branch='gh-pages'),
+        call.checkout('master')
+    ]
+
+
 @patch('tasks.google_api_nodejs_client.check_output')
 @patch('tasks.google_api_nodejs_client._git.clone_from_github')
 def test_release_latest_version_mismatch(clone_from_github_mock,
