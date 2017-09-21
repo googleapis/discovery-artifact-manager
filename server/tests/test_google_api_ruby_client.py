@@ -349,6 +349,59 @@ def test_release_different_authors_since_latest_tag(clone_from_github_mock):
     ]
 
 
+@patch('tasks.google_api_ruby_client.os.chmod')
+@patch('tasks.google_api_ruby_client.os.path.expanduser')
+@patch('tasks.google_api_ruby_client.open', new_callable=mock_open)
+@patch('tasks.google_api_ruby_client.check_output')
+@patch('tasks.google_api_ruby_client._git.clone_from_github')
+def test_release_force(clone_from_github_mock,
+                       check_output_mock,
+                       open_mock,
+                       expanduser_mock,
+                       chmod_mock):
+    repo_mock = Mock()
+    repo_mock.latest_tag.return_value = '0.13.6'
+    repo_mock.authors_since.return_value = ['test@test.com', 'test@test.com']
+    repo_mock.diff_name_status.return_value = [
+        ('generated/google/apis/foo_v1.rb', _git.Status.ADDED),
+        ('generated/google/apis/baz_v1.rb', _git.Status.UPDATED),
+    ]
+    side_effect = common.clone_from_github_mock_side_effect(repo_mock)
+    clone_from_github_mock.side_effect = side_effect
+    check_output_mock.return_value = 'google-api-client (0.13.6)'
+    open_version_rb_mock = mock_open(
+        read_data=('...\n'
+                   'module Google\n'
+                   '    module Apis\n'
+                   '        # Client library version\n'
+                   '        VERSION = \'0.13.6\'\n'
+                   '    ...\n'))
+    open_changelog_md_mock = mock_open(read_data='...\n')
+    open_credentials_mock = mock_open()
+    open_mock.side_effect = [
+        open_version_rb_mock.return_value,
+        open_version_rb_mock.return_value,
+        open_changelog_md_mock.return_value,
+        open_changelog_md_mock.return_value,
+        open_credentials_mock.return_value
+    ]
+    expanduser_mock.side_effect = lambda x: '/home/test' + x[1:]
+
+    google_api_ruby_client.release(
+        '/tmp', common.GITHUB_ACCOUNT, _RUBYGEMS_ACCOUNT, force=True)
+    # We don't bother verifying all calls in this case, since we only want to
+    # verify that the different authors check was passed.
+    assert repo_mock.mock_calls == [
+        call.latest_tag(),
+        call.authors_since('0.13.6'),
+        call.diff_name_status(rev='0.13.6'),
+        call.commit('0.13.7', 'Test', 'test@test.com'),
+        call.tag('0.13.7'),
+        call.push(),
+        call.push(tags=True),
+    ]
+
+
 @patch('tasks.google_api_ruby_client.check_output')
 @patch('tasks.google_api_ruby_client._git.clone_from_github')
 def test_release_latest_version_mismatch(clone_from_github_mock,
