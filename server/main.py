@@ -49,7 +49,7 @@ def cron_clients_nodejs_release():
     npm_account = accounts.get_npm_account()
     force = request.args.get('force', default=False, type=bool)
     with TemporaryDirectory() as filepath:
-        google_api_nodejs_client.update(
+        google_api_nodejs_client.release(
             filepath, github_account, npm_account, force=force)
     return ''
 
