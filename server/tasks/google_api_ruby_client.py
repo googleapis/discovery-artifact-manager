@@ -11,7 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """Contains update/release functions for google-api-ruby-client."""
+
 import re
 
 import os
@@ -32,6 +34,7 @@ _VERSION_RE = re.compile(r'^0\.([0-9]+)\.([0-9]+)$')
 
 
 class _Version(object):
+    """Represents a version of the format "0.1.2"."""
 
     def __init__(self, latest_tag):
         match = _VERSION_RE.match(latest_tag)
@@ -66,15 +69,16 @@ def _generate_all_clients(repo):
     check_output(['rm', '-rf', 'generated'], cwd=repo.filepath)
     check_output(['./script/generate'], cwd=repo.filepath)
     added, deleted, updated = set(), set(), set()
+    status_to_ids = {
+        _git.Status.ADDED: added,
+        _git.Status.DELETED: deleted,
+        _git.Status.UPDATED: updated
+    }
     for filename, status in repo.diff_name_status(staged=False):
         match = _SERVICE_FILENAME_RE.match(filename)
         if not match:
             continue
-        {
-            _git.Status.ADDED: added,
-            _git.Status.DELETED: deleted,
-            _git.Status.UPDATED: updated
-        }.get(status, set()).add(match.group(1))
+        status_to_ids.get(status, set()).add(match.group(1))
     return added, deleted, updated
 
 
@@ -156,6 +160,11 @@ def update(filepath, github_account):
 def release(filepath, github_account, rubygems_account):
     """Releases a new version in the google-api-ruby-client repository.
 
+    A release consists of:
+        1. A Git tag of a new version.
+        2. An update to "lib/google/apis/version.rb" and "CHANGELOG.md".
+        3. A package pushed to RubyGems.
+
     Args:
         filepath (str): the directory to work in.
         github_account (GitHubAccount): the GitHub account to commit with.
@@ -169,16 +178,17 @@ def release(filepath, github_account, rubygems_account):
         return
     _check_latest_version(latest_tag)
     added, deleted, updated = set(), set(), set()
+    status_to_ids = {
+        _git.Status.ADDED: added,
+        _git.Status.DELETED: deleted,
+        _git.Status.UPDATED: updated
+    }
     diff_ns = repo.diff_name_status(rev=latest_tag)
     for filename, status in diff_ns:
         match = _SERVICE_FILENAME_RE.match(filename)
         if not match:
             continue
-        {
-            _git.Status.ADDED: added,
-            _git.Status.DELETED: deleted,
-            _git.Status.UPDATED: updated
-        }.get(status, set()).add(match.group(1))
+        status_to_ids.get(status, set()).add(match.group(1))
     if deleted:
         version.bump_minor()
     else:
