@@ -11,7 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """Contains update/release functions for google-api-nodejs-client."""
+
 import json
 import re
 from datetime import date
@@ -31,6 +33,7 @@ _VERSION_RE = re.compile(r'^([0-9]+)\.([0-9]+)\.([0-9]+)$')
 
 
 class _Version(object):
+    """Represents a version of the format "1.2.3"."""
 
     def __init__(self, latest_tag):
         match = _VERSION_RE.match(latest_tag)
@@ -64,16 +67,17 @@ def _generate_all_clients(repo):
                   'generate-apis'],
                  cwd=repo.filepath)
     added, deleted, updated = set(), set(), set()
+    status_to_ids = {
+        _git.Status.ADDED: added,
+        _git.Status.DELETED: deleted,
+        _git.Status.UPDATED: updated
+    }
     for filename, status in repo.diff_name_status(staged=False):
         match = _SERVICE_FILENAME_RE.match(filename)
         if not match:
             continue
         name_version = '{}:{}'.format(match.group(1), match.group(2))
-        {
-            _git.Status.ADDED: added,
-            _git.Status.DELETED: deleted,
-            _git.Status.UPDATED: updated
-        }.get(status, set()).add(name_version)
+        status_to_ids.get(status, set()).add(name_version)
     return added, deleted, updated
 
 
@@ -133,7 +137,8 @@ def _update_and_publish_gh_pages(repo, new_version, github_account):
     lines = []
     with open(index_md_filename) as file_:
         lines = file_.readlines()
-    print(lines)
+    # index.md should be at least 5 lines long and have the first bullet
+    # (latest) on line 4.
     if len(lines) < 5 or lines[3] != '\n' or not lines[4].startswith('*'):
         raise Exception('index.md has an unexpected format')
     lines[4] = lines[4].replace(' (latest)', '', 1)
@@ -186,6 +191,12 @@ def update(filepath, github_account):
 def release(filepath, github_account, npm_account):
     """Releases a new version in the google-api-nodejs-client repository.
 
+    A release consists of:
+        1. A Git tag of a new version.
+        2. An update to "package.json" and "CHANGELOG.md".
+        3. A package pushed to npm.
+        4. Generated docs updated on the branch "gh-pages".
+
     Args:
         filepath (str): the directory to work in.
         github_account (GitHubAccount): the GitHub account to commit with.
@@ -199,16 +210,17 @@ def release(filepath, github_account, npm_account):
         return
     _check_latest_version(latest_tag)
     added, deleted, updated = set(), set(), set()
+    status_to_ids = {
+        _git.Status.ADDED: added,
+        _git.Status.DELETED: deleted,
+        _git.Status.UPDATED: updated
+    }
     diff_ns = repo.diff_name_status(rev=latest_tag)
     for filename, status in diff_ns:
         match = _SERVICE_FILENAME_RE.match(filename)
         if not match:
             continue
-        {
-            _git.Status.ADDED: added,
-            _git.Status.DELETED: deleted,
-            _git.Status.UPDATED: updated
-        }.get(status, set()).add(match.group(1))
+        status_to_ids.get(status, set()).add(match.group(1))
     if deleted:
         version.bump_major()
     else:
