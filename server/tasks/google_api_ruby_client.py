@@ -14,9 +14,8 @@
 
 """Contains update/release functions for google-api-ruby-client."""
 
-import re
-
 import os
+import re
 from os.path import join
 
 from tasks import _commit_message, _git

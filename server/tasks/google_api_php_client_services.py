@@ -14,11 +14,10 @@
 
 """Contains update/release functions for google-api-php-client-services."""
 
-import re
-from tempfile import TemporaryDirectory
-
 import os
+import re
 from os.path import join
+from tempfile import TemporaryDirectory
 
 from tasks import _commit_message, _git
 from tasks._check_output import check_output
