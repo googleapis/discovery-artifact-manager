@@ -11,7 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """Implements a utility for cloning and operating on Git repositories."""
+
 import re
 from enum import Enum
 
@@ -155,8 +157,6 @@ class Repository(object):
         if not output:
             return pairs
         for line in output.split('\n'):
-            # `split` doesn't *have* to return 2 strings, but it should behave
-            # as expected on the command output.
             match = _DIFF_NAME_STATUS_RE.match(line)
             if not match:
                 continue
