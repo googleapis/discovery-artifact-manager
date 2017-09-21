@@ -11,7 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """Contains update/release functions for google-api-php-client-services."""
+
 import re
 from tempfile import TemporaryDirectory
 
@@ -30,6 +32,7 @@ _VERSION_RE = re.compile(r'^v0\.([0-9]+)$')
 
 
 class _Version(object):
+    """Represents a version of the format "v0.1"."""
 
     def __init__(self, latest_tag):
         match = _VERSION_RE.match(latest_tag)
@@ -56,7 +59,7 @@ def _generate_and_commit_all_clients(repo, venv_filepath, discovery_documents):
         statuses[id_] = None
         if not diff_ns:
             continue
-        # If any files changed, the client was updated.
+        # If any files changed, the client was updated or added.
         statuses[id_] = _git.Status.UPDATED
         # If the service file is new, the client was added.
         for filename, status in diff_ns:
@@ -64,6 +67,8 @@ def _generate_and_commit_all_clients(repo, venv_filepath, discovery_documents):
             if match and status == _git.Status.ADDED:
                 statuses[id_] = _git.Status.ADDED
                 break
+        # All client commits are soft reset before pushing, so the commit
+        # message is left blank and "_" is used for the author name/email.
         repo.commit('', '_', '_')
     added = {k for k, v in statuses.items() if v == _git.Status.ADDED}
     updated = {k for k, v in statuses.items() if v == _git.Status.UPDATED}
@@ -107,6 +112,8 @@ def update(filepath, discovery_documents, github_account):
         _REPO_PATH, join(filepath, _REPO_NAME), github_account=github_account)
     venv_filepath = join(repo.filepath, 'venv')
     check_output(['virtualenv', venv_filepath])
+    # The PHP client library generator is published in the
+    # "google-apis-client-generator" package.
     check_output([join(venv_filepath, 'bin/pip'),
                   'install',
                   'google-apis-client-generator==1.4.3'])
@@ -124,6 +131,9 @@ def update(filepath, discovery_documents, github_account):
 
 def release(filepath, github_account):
     """Releases a new version in the google-api-php-client-services repository.
+
+    A release consists of:
+        1. A Git tag of a new version.
 
     Args:
         filepath (str): the directory to work in.
