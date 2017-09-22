@@ -51,11 +51,20 @@ def test_repository_add_multiple_filepaths(check_output_mock):
 
 
 @patch('tasks._git.check_output', autospec=True)
+def test_repository_authors_since_none(check_output_mock):
+    check_output_mock.return_value = ''
+    authors = _REPO.authors_since('HEAD~1')
+    check_output_mock.assert_called_once_with(
+        ['git', 'log', 'HEAD~1..HEAD', '--pretty=format:%ae'], cwd='/tmp')
+    assert authors == []
+
+
+@patch('tasks._git.check_output', autospec=True)
 def test_repository_authors_since_one(check_output_mock):
     check_output_mock.return_value = 'example@example.com'
     authors = _REPO.authors_since('HEAD~1')
     check_output_mock.assert_called_once_with(
-        ['git', 'log', 'HEAD~1..HEAD', '--pretty=format:"%ae"'], cwd='/tmp')
+        ['git', 'log', 'HEAD~1..HEAD', '--pretty=format:%ae'], cwd='/tmp')
     assert authors == ['example@example.com']
 
 
@@ -64,7 +73,7 @@ def test_repository_authors_since_multiple(check_output_mock):
     check_output_mock.return_value = 'example@example.com\ntest@test.com'
     authors = _REPO.authors_since('HEAD~2')
     check_output_mock.assert_called_once_with(
-        ['git', 'log', 'HEAD~2..HEAD', '--pretty=format:"%ae"'], cwd='/tmp')
+        ['git', 'log', 'HEAD~2..HEAD', '--pretty=format:%ae'], cwd='/tmp')
     assert authors == ['example@example.com', 'test@test.com']
 
 

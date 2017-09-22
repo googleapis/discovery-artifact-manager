@@ -110,7 +110,7 @@ def update(filepath, discovery_documents, github_account):
     repo = _git.clone_from_github(
         _REPO_PATH, join(filepath, _REPO_NAME), github_account=github_account)
     venv_filepath = join(repo.filepath, 'venv')
-    check_output(['virtualenv', venv_filepath])
+    check_output(['virtualenv', venv_filepath, '-p', 'python2.7'])
     # The PHP client library generator is published in the
     # "google-apis-client-generator" package.
     check_output([join(venv_filepath, 'bin/pip'),

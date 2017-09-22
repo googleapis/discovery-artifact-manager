@@ -200,7 +200,7 @@ def test_release_major(clone_from_github_mock,
         call.repo.checkout('gh-pages'),
         call.check_output(['rm', '-rf', 'latest'],
                           cwd='/tmp/google-api-nodejs-client'),
-        call.check_output(['cp', '-r', 'doc/googleapis/21.0.0'],
+        call.check_output(['cp', '-r', 'doc/googleapis/21.0.0', 'latest'],
                           cwd='/tmp/google-api-nodejs-client'),
         call.check_output(['cp', '-r', 'doc/googleapis/21.0.0', '21.0.0'],
                           cwd='/tmp/google-api-nodejs-client'),
@@ -214,8 +214,8 @@ def test_release_major(clone_from_github_mock,
             ('...\n\n'
              '### ...\n\n'
              '* [v21.0.0 (latest)]'
-             '(http://google.github.io/google-api-nodejs-client/21.0.0/'
-             'index.html)\n'
+             '(http://google.github.io/google-api-nodejs-client/21.0.0'
+             '/index.html)\n'
              '* [v20.1.0](...)\n'
              '...\n')),
         call.open_index_md().__exit__(None, None, None),
@@ -329,7 +329,7 @@ def test_release_minor(clone_from_github_mock,
         call.repo.checkout('gh-pages'),
         call.check_output(['rm', '-rf', 'latest'],
                           cwd='/tmp/google-api-nodejs-client'),
-        call.check_output(['cp', '-r', 'doc/googleapis/20.2.0'],
+        call.check_output(['cp', '-r', 'doc/googleapis/20.2.0', 'latest'],
                           cwd='/tmp/google-api-nodejs-client'),
         call.check_output(['cp', '-r', 'doc/googleapis/20.2.0', '20.2.0'],
                           cwd='/tmp/google-api-nodejs-client'),
@@ -343,8 +343,8 @@ def test_release_minor(clone_from_github_mock,
             ('...\n\n'
              '### ...\n\n'
              '* [v20.2.0 (latest)]'
-             '(http://google.github.io/google-api-nodejs-client/20.2.0/'
-             'index.html)\n'
+             '(http://google.github.io/google-api-nodejs-client/20.2.0'
+             '/index.html)\n'
              '* [v20.1.0](...)\n'
              '...\n')),
         call.open_index_md().__exit__(None, None, None),
@@ -593,7 +593,7 @@ def test_release_invalid_index_md(clone_from_github_mock,
         call.repo.checkout('gh-pages'),
         call.check_output(['rm', '-rf', 'latest'],
                           cwd='/tmp/google-api-nodejs-client'),
-        call.check_output(['cp', '-r', 'doc/googleapis/20.2.0'],
+        call.check_output(['cp', '-r', 'doc/googleapis/20.2.0', 'latest'],
                           cwd='/tmp/google-api-nodejs-client'),
         call.check_output(['cp', '-r', 'doc/googleapis/20.2.0', '20.2.0'],
                           cwd='/tmp/google-api-nodejs-client'),
