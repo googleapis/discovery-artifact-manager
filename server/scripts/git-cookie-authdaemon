@@ -1,0 +1,144 @@
+#!/usr/bin/python2.7
+# Copyright 2017, Google Inc. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Background daemon to refresh OAuth access tokens.
+
+Tokens are written to ~/.git-credential-cache/cookie
+"""
+
+import atexit
+import contextlib
+import cookielib
+import json
+import os
+import subprocess
+import sys
+import time
+import urllib2
+
+REFRESH = 25  # Seconds remaining when starting refresh.
+RETRY_INTERVAL = 5  # Seconds between retrying a failed refresh.
+
+META_URL = ('http://metadata.google.internal/computeMetadata/v1/instance'
+            '/service-accounts/default/')
+COOKIE_JAR = None
+
+
+def read_meta(part):
+    r = urllib2.Request(META_URL + part)
+    r.add_header('Metadata-Flavor', 'Google')
+    return contextlib.closing(urllib2.urlopen(r))
+
+
+def configure_git():
+    global COOKIE_JAR
+
+    dir_ = os.path.join(os.environ['HOME'], '.git-credential-cache')
+    COOKIE_JAR = os.path.join(dir_, 'cookie')
+
+    if os.path.exists(dir_):
+        os.chmod(dir_, 0o700)
+    else:
+        os.mkdir(dir_, 0o700)
+    subprocess.call(
+        ['git', 'config', '--global', 'http.cookiefile', COOKIE_JAR])
+
+
+def acquire_token(retry):
+    while True:
+        try:
+            with read_meta('token') as d:
+                return json.load(d)
+        except urllib2.URLError:
+            if not retry:
+                raise
+        time.sleep(RETRY_INTERVAL)
+
+
+def update_cookie(retry):
+    now = int(time.time())
+    token = acquire_token(retry)
+    access_token = token['access_token']
+    expires = now + int(token['expires_in'])
+
+    tmp_jar = COOKIE_JAR + '.lock'
+    cj = cookielib.MozillaCookieJar(tmp_jar)
+
+    for d in ['source.developers.google.com', '.googlesource.com']:
+        cj.set_cookie(
+            cookielib.Cookie(
+                version=0,
+                name='o',
+                value=access_token,
+                port=None,
+                port_specified=False,
+                domain=d,
+                domain_specified=True,
+                domain_initial_dot=d.startswith('.'),
+                path='/',
+                path_specified=True,
+                secure=True,
+                expires=expires,
+                discard=False,
+                comment=None,
+                comment_url=None,
+                rest=None))
+
+    cj.save()
+    os.rename(tmp_jar, COOKIE_JAR)
+    return expires
+
+
+def cleanup():
+    if COOKIE_JAR:
+        for p in [COOKIE_JAR, COOKIE_JAR + '.lock']:
+            if os.path.exists(p):
+                os.remove(p)
+
+
+def refresh_loop(expires):
+    atexit.register(cleanup)
+    expires = expires - REFRESH
+    while True:
+        now = time.time()
+        expires = max(expires, now + RETRY_INTERVAL)
+        while now < expires:
+            time.sleep(expires - now)
+            now = time.time()
+        expires = update_cookie(retry=True) - REFRESH
+
+
+def main():
+    configure_git()
+    expires = update_cookie(retry=False)
+
+    if '--nofork' not in sys.argv:
+        if os.fork() > 0:
+            sys.exit(0)
+
+        os.chdir('/')
+        os.setsid()
+        os.umask(0)
+
+        pid = os.fork()
+        if pid > 0:
+            print 'git-cookie-authdaemon PID %d' % pid
+            sys.exit(0)
+
+    refresh_loop(expires)
+
+
+if __name__ == '__main__':
+    main()
