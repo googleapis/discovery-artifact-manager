@@ -1,4 +1,5 @@
 FROM ubuntu:16.04
+ENV LANG C.UTF-8
 
 RUN apt-get update
 RUN apt-get install -y curl git openssh-client wget
@@ -16,7 +17,7 @@ RUN curl -sL https://deb.nodesource.com/setup_7.x | bash -
 RUN apt-get install -y nodejs
 
 # Install PHP 7 and Composer.
-RUN apt-get install -y php7.0
+RUN apt-get install -y php7.0 php7.0-xml
 RUN curl https://getcomposer.org/download/1.5.2/composer.phar \
     -o /usr/local/bin/composer
 RUN chmod +x /usr/local/bin/composer
