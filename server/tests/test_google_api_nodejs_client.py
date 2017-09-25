@@ -61,8 +61,8 @@ def test_update(clone_from_github_mock, check_output_mock, date_mock):
                           '\nAdd:\n- foo:v1\n'
                           '\nDelete:\n- baz:v1\n'
                           '\nUpdate:\n- bar:v1'),
-                         'Test',
-                         'test@test.com'),
+                         'Alice',
+                         'alice@test.com'),
         call.repo.push()
     ]
 
@@ -106,7 +106,7 @@ def test_release_major(clone_from_github_mock,
                        expanduser_mock):
     repo_mock = Mock()
     repo_mock.latest_tag.return_value = '20.1.0'
-    repo_mock.authors_since.return_value = ['test@test.com', 'test@test.com']
+    repo_mock.authors_since.return_value = ['alice@test.com', 'alice@test.com']
     repo_mock.diff_name_status.return_value = [
         ('apis/foo/v1.ts', _git.Status.ADDED),
         ('apis/bar/v1.ts', _git.Status.DELETED),
@@ -184,7 +184,7 @@ def test_release_major(clone_from_github_mock,
                           cwd='/tmp/google-api-nodejs-client'),
         call.check_output(['npm', 'run', 'test'],
                           cwd='/tmp/google-api-nodejs-client'),
-        call.repo.commit('21.0.0', 'Test', 'test@test.com'),
+        call.repo.commit('21.0.0', 'Alice', 'alice@test.com'),
         call.repo.tag('21.0.0'),
         call.repo.push(),
         call.repo.push(tags=True),
@@ -220,7 +220,7 @@ def test_release_major(clone_from_github_mock,
              '...\n')),
         call.open_index_md().__exit__(None, None, None),
         call.repo.add(['latest', '21.0.0']),
-        call.repo.commit('21.0.0', 'Test', 'test@test.com'),
+        call.repo.commit('21.0.0', 'Alice', 'alice@test.com'),
         call.repo.push(branch='gh-pages'),
         call.repo.checkout('master')
     ]
@@ -238,7 +238,7 @@ def test_release_minor(clone_from_github_mock,
                        expanduser_mock):
     repo_mock = Mock()
     repo_mock.latest_tag.return_value = '20.1.0'
-    repo_mock.authors_since.return_value = ['test@test.com', 'test@test.com']
+    repo_mock.authors_since.return_value = ['alice@test.com', 'alice@test.com']
     repo_mock.diff_name_status.return_value = [
         ('apis/foo/v1.ts', _git.Status.ADDED),
         ('apis/baz/v1.ts', _git.Status.UPDATED),
@@ -313,7 +313,7 @@ def test_release_minor(clone_from_github_mock,
                           cwd='/tmp/google-api-nodejs-client'),
         call.check_output(['npm', 'run', 'test'],
                           cwd='/tmp/google-api-nodejs-client'),
-        call.repo.commit('20.2.0', 'Test', 'test@test.com'),
+        call.repo.commit('20.2.0', 'Alice', 'alice@test.com'),
         call.repo.tag('20.2.0'),
         call.repo.push(),
         call.repo.push(tags=True),
@@ -349,7 +349,7 @@ def test_release_minor(clone_from_github_mock,
              '...\n')),
         call.open_index_md().__exit__(None, None, None),
         call.repo.add(['latest', '20.2.0']),
-        call.repo.commit('20.2.0', 'Test', 'test@test.com'),
+        call.repo.commit('20.2.0', 'Alice', 'alice@test.com'),
         call.repo.push(branch='gh-pages'),
         call.repo.checkout('master')
     ]
@@ -382,7 +382,7 @@ def test_release_no_commits_since_latest_tag(clone_from_github_mock):
 def test_release_different_authors_since_latest_tag(clone_from_github_mock):
     repo_mock = Mock()
     repo_mock.latest_tag.return_value = '20.1.0'
-    repo_mock.authors_since.return_value = ['test@test.com', 'test2@test.com']
+    repo_mock.authors_since.return_value = ['alice@test.com', 'bob@test.com']
     side_effect = common.clone_from_github_mock_side_effect(repo_mock)
     clone_from_github_mock.side_effect = side_effect
 
@@ -413,7 +413,7 @@ def test_release_force(clone_from_github_mock,
                        expanduser_mock):
     repo_mock = Mock()
     repo_mock.latest_tag.return_value = '20.1.0'
-    repo_mock.authors_since.return_value = ['test@test.com', 'test2@test.com']
+    repo_mock.authors_since.return_value = ['alice@test.com', 'bob@test.com']
     repo_mock.diff_name_status.return_value = [
         ('apis/foo/v1.ts', _git.Status.ADDED),
         ('apis/baz/v1.ts', _git.Status.UPDATED),
@@ -449,13 +449,13 @@ def test_release_force(clone_from_github_mock,
         call.latest_tag(),
         call.authors_since('20.1.0'),
         call.diff_name_status(rev='20.1.0'),
-        call.commit('20.2.0', 'Test', 'test@test.com'),
+        call.commit('20.2.0', 'Alice', 'alice@test.com'),
         call.tag('20.2.0'),
         call.push(),
         call.push(tags=True),
         call.checkout('gh-pages'),
         call.add(['latest', '20.2.0']),
-        call.commit('20.2.0', 'Test', 'test@test.com'),
+        call.commit('20.2.0', 'Alice', 'alice@test.com'),
         call.push(branch='gh-pages'),
         call.checkout('master')
     ]
@@ -467,7 +467,7 @@ def test_release_latest_version_mismatch(clone_from_github_mock,
                                          check_output_mock):
     repo_mock = Mock()
     repo_mock.latest_tag.return_value = '20.1.0'
-    repo_mock.authors_since.return_value = ['test@test.com']
+    repo_mock.authors_since.return_value = ['alice@test.com']
     side_effect = common.clone_from_github_mock_side_effect(repo_mock)
     clone_from_github_mock.side_effect = side_effect
     check_output_mock.return_value = '20.0.0'
@@ -505,7 +505,7 @@ def test_release_invalid_index_md(clone_from_github_mock,
                                   expanduser_mock):
     repo_mock = Mock()
     repo_mock.latest_tag.return_value = '20.1.0'
-    repo_mock.authors_since.return_value = ['test@test.com', 'test@test.com']
+    repo_mock.authors_since.return_value = ['alice@test.com', 'alice@test.com']
     repo_mock.diff_name_status.return_value = [
         ('apis/foo/v1.ts', _git.Status.ADDED),
         ('apis/baz/v1.ts', _git.Status.UPDATED),
@@ -577,7 +577,7 @@ def test_release_invalid_index_md(clone_from_github_mock,
                           cwd='/tmp/google-api-nodejs-client'),
         call.check_output(['npm', 'run', 'test'],
                           cwd='/tmp/google-api-nodejs-client'),
-        call.repo.commit('20.2.0', 'Test', 'test@test.com'),
+        call.repo.commit('20.2.0', 'Alice', 'alice@test.com'),
         call.repo.tag('20.2.0'),
         call.repo.push(),
         call.repo.push(tags=True),

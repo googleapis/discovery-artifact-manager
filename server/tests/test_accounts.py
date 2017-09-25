@@ -20,14 +20,14 @@ from tasks import accounts
 def test_get_github_account(client_mock):
     query_mock = Mock()
     query_mock.return_value.fetch.return_value = [{
-        'name': 'Test',
-        'email': 'test@example.com',
+        'name': 'Alice',
+        'email': 'alice@test.com',
         'username': 'test',
         'personal_access_token': 'token'
     }]
     client_mock.return_value.query = query_mock
     expected = accounts.GitHubAccount(
-        'Test', 'test@example.com', 'test', 'token')
+        'Alice', 'alice@test.com', 'test', 'token')
     actual = accounts.get_github_account()
     query_mock.assert_called_once_with(kind='GitHubAccount')
     assert actual == expected
