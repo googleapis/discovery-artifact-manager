@@ -1,4 +1,5 @@
 FROM ubuntu:16.04
+# Default is ASCII, but Discovery documents are UTF-8.
 ENV LANG C.UTF-8
 
 RUN apt-get update
