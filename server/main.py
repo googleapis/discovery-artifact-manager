@@ -72,7 +72,6 @@ def ruby_release(filepath, github_account, force):
 @app.route('/cron/clients/<string:lang>/update')
 @verify_cron_header
 def cron_clients_lang_update(lang):
-    github_account = accounts.get_github_account()
     update = {
         'go': google_api_go_client.update,
         'nodejs': google_api_nodejs_client.update,
@@ -81,6 +80,7 @@ def cron_clients_lang_update(lang):
     }.get(lang, None)
     if not update:
         abort(404)
+    github_account = accounts.get_github_account()
     with TemporaryDirectory() as filepath:
         update(filepath, github_account)
 
@@ -88,7 +88,6 @@ def cron_clients_lang_update(lang):
 @app.route('/cron/clients/<string:lang>/release')
 @verify_cron_header
 def cron_clients_lang_release(lang):
-    github_account = accounts.get_github_account()
     release = {
         'nodejs': nodejs_release,
         'php': google_api_php_client_services.release,
@@ -96,6 +95,7 @@ def cron_clients_lang_release(lang):
     }.get(lang, None)
     if not release:
         abort(404)
+    github_account = accounts.get_github_account()
     force = request.args.get('force', default=False, type=bool)
     with TemporaryDirectory() as filepath:
         release(filepath, github_account, force=force)
