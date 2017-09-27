@@ -16,7 +16,7 @@
 
 from tasks import accounts
 
-GITHUB_ACCOUNT = accounts.GitHubAccount('Test', 'test@test.com', '_', '_')
+GITHUB_ACCOUNT = accounts.GitHubAccount('Alice', 'alice@test.com', '_', '_')
 
 
 def clone_from_github_mock_side_effect(repo_mock):

@@ -21,7 +21,7 @@ from datetime import date
 import os
 from os.path import join
 
-from tasks import _commit_message, _git
+from tasks import _commit_message, _common, _git
 from tasks._check_output import check_output
 
 _REPO_NAME = 'google-api-nodejs-client'
@@ -188,7 +188,7 @@ def update(filepath, github_account):
     repo.push()
 
 
-def release(filepath, github_account, npm_account):
+def release(filepath, github_account, npm_account, force=False):
     """Releases a new version in the google-api-nodejs-client repository.
 
     A release consists of:
@@ -200,13 +200,14 @@ def release(filepath, github_account, npm_account):
     Args:
         filepath (str): the directory to work in.
         github_account (GitHubAccount): the GitHub account to commit with.
+        force (bool, optional): if true, the check that all authors since the
+            last tag were `github_account` is ignored.
     """
     repo = _git.clone_from_github(
         _REPO_PATH, join(filepath, _REPO_NAME), github_account=github_account)
     latest_tag = repo.latest_tag()
     version = _Version(latest_tag)
-    authors = repo.authors_since(latest_tag)
-    if not authors or not all([x == github_account.email for x in authors]):
+    if not _common.check_prerelease(repo, latest_tag, github_account, force):
         return
     _check_latest_version(latest_tag)
     added, deleted, updated = set(), set(), set()
