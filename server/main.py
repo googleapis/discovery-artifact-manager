@@ -18,6 +18,7 @@ from functools import wraps
 from tempfile import TemporaryDirectory
 
 from flask import Flask, abort, request
+
 from tasks import (accounts,
                    discovery_artifact_manager,
                    google_api_go_client,
@@ -73,7 +74,7 @@ def ruby_release(filepath, github_account, force):
 def cron_clients_lang_update(lang):
     github_account = accounts.get_github_account()
     update = {
-        'go': google_api_go_client.update
+        'go': google_api_go_client.update,
         'nodejs': google_api_nodejs_client.update,
         'php': php_update,
         'ruby': google_api_ruby_client.update,
@@ -81,7 +82,7 @@ def cron_clients_lang_update(lang):
     if not update:
         abort(404)
     with TemporaryDirectory() as filepath:
-        f(filepath, github_account, force=force)
+        update(filepath, github_account)
 
 
 @app.route('/cron/clients/<string:lang>/release')
