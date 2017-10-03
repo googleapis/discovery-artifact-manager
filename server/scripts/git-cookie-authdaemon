@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/python3
 # Copyright 2017, Google Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,26 +20,30 @@ Tokens are written to ~/.git-credential-cache/cookie
 
 import atexit
 import contextlib
-import cookielib
+import http.cookiejar
 import json
 import os
 import subprocess
 import sys
 import time
-import urllib2
+import urllib.error
+import urllib.parse
+import urllib.request
 
 REFRESH = 25  # Seconds remaining when starting refresh.
 RETRY_INTERVAL = 5  # Seconds between retrying a failed refresh.
 
+# URL to query for an OAuth2 token for the instance's default service account.
 META_URL = ('http://metadata.google.internal/computeMetadata/v1/instance'
             '/service-accounts/default/')
+# Holds the cookie file under "~/.git-credential-cache/cookie".
 COOKIE_JAR = None
 
 
 def read_meta(part):
-    r = urllib2.Request(META_URL + part)
+    r = urllib.request.Request(META_URL + part)
     r.add_header('Metadata-Flavor', 'Google')
-    return contextlib.closing(urllib2.urlopen(r))
+    return contextlib.closing(urllib.request.urlopen(r))
 
 
 def configure_git():
@@ -60,8 +64,8 @@ def acquire_token(retry):
     while True:
         try:
             with read_meta('token') as d:
-                return json.load(d)
-        except urllib2.URLError:
+                return json.loads(d.read().decode('utf-8'))
+        except urllib.error.URLError:
             if not retry:
                 raise
         time.sleep(RETRY_INTERVAL)
@@ -74,11 +78,11 @@ def update_cookie(retry):
     expires = now + int(token['expires_in'])
 
     tmp_jar = COOKIE_JAR + '.lock'
-    cj = cookielib.MozillaCookieJar(tmp_jar)
+    cj = http.cookiejar.MozillaCookieJar(tmp_jar)
 
     for d in ['source.developers.google.com', '.googlesource.com']:
         cj.set_cookie(
-            cookielib.Cookie(
+            http.cookiejar.Cookie(
                 version=0,
                 name='o',
                 value=access_token,
@@ -113,9 +117,9 @@ def refresh_loop(expires):
     expires = expires - REFRESH
     while True:
         now = time.time()
-        expires = max(expires, now + RETRY_INTERVAL)
-        while now < expires:
-            time.sleep(expires - now)
+        updates = max(expires, now + RETRY_INTERVAL)
+        while now < updates:
+            time.sleep(updates - now)
             now = time.time()
         expires = update_cookie(retry=True) - REFRESH
 
@@ -134,7 +138,7 @@ def main():
 
         pid = os.fork()
         if pid > 0:
-            print 'git-cookie-authdaemon PID %d' % pid
+            print(('git-cookie-authdaemon PID {}'.format(pid)))
             sys.exit(0)
 
     refresh_loop(expires)
