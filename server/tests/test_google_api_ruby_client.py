@@ -63,8 +63,8 @@ def test_update(clone_from_github_mock, check_output_mock, date_mock):
                           '\nAdd:\n- foo_v1\n'
                           '\nDelete:\n- baz_v1\n'
                           '\nUpdate:\n- bar_v1'),
-                         'Test',
-                         'test@test.com'),
+                         'Alice',
+                         'alice@test.com'),
         call.repo.push()
     ]
 
@@ -113,7 +113,7 @@ def test_release_minor(clone_from_github_mock,
                        chmod_mock):
     repo_mock = Mock()
     repo_mock.latest_tag.return_value = '0.13.6'
-    repo_mock.authors_since.return_value = ['test@test.com', 'test@test.com']
+    repo_mock.authors_since.return_value = ['alice@test.com', 'alice@test.com']
     repo_mock.diff_name_status.return_value = [
         ('generated/google/apis/foo_v1.rb', _git.Status.ADDED),
         ('generated/google/apis/bar_v1.rb', _git.Status.DELETED),
@@ -192,7 +192,7 @@ def test_release_minor(clone_from_github_mock,
                           cwd='/tmp/google-api-ruby-client'),
         call.check_output(['bundle', 'exec', 'rake', 'spec'],
                           cwd='/tmp/google-api-ruby-client'),
-        call.repo.commit('0.14.0', 'Test', 'test@test.com'),
+        call.repo.commit('0.14.0', 'Alice', 'alice@test.com'),
         call.repo.tag('0.14.0'),
         call.repo.push(),
         call.repo.push(tags=True),
@@ -220,7 +220,7 @@ def test_release_patch(clone_from_github_mock,
                        chmod_mock):
     repo_mock = Mock()
     repo_mock.latest_tag.return_value = '0.13.6'
-    repo_mock.authors_since.return_value = ['test@test.com', 'test@test.com']
+    repo_mock.authors_since.return_value = ['alice@test.com', 'alice@test.com']
     repo_mock.diff_name_status.return_value = [
         ('generated/google/apis/foo_v1.rb', _git.Status.ADDED),
         ('generated/google/apis/baz_v1.rb', _git.Status.UPDATED),
@@ -296,7 +296,7 @@ def test_release_patch(clone_from_github_mock,
                           cwd='/tmp/google-api-ruby-client'),
         call.check_output(['bundle', 'exec', 'rake', 'spec'],
                           cwd='/tmp/google-api-ruby-client'),
-        call.repo.commit('0.13.7', 'Test', 'test@test.com'),
+        call.repo.commit('0.13.7', 'Alice', 'alice@test.com'),
         call.repo.tag('0.13.7'),
         call.repo.push(),
         call.repo.push(tags=True),
@@ -340,7 +340,7 @@ def test_release_no_commits_since_latest_tag(clone_from_github_mock):
 def test_release_different_authors_since_latest_tag(clone_from_github_mock):
     repo_mock = Mock()
     repo_mock.latest_tag.return_value = '0.13.6'
-    repo_mock.authors_since.return_value = ['test@test.com', 'test2@test.com']
+    repo_mock.authors_since.return_value = ['alice@test.com', 'bob@test.com']
     side_effect = common.clone_from_github_mock_side_effect(repo_mock)
     clone_from_github_mock.side_effect = side_effect
 
@@ -371,7 +371,7 @@ def test_release_force(clone_from_github_mock,
                        chmod_mock):
     repo_mock = Mock()
     repo_mock.latest_tag.return_value = '0.13.6'
-    repo_mock.authors_since.return_value = ['test@test.com', 'test@test.com']
+    repo_mock.authors_since.return_value = ['alice@test.com', 'alice@test.com']
     repo_mock.diff_name_status.return_value = [
         ('generated/google/apis/foo_v1.rb', _git.Status.ADDED),
         ('generated/google/apis/baz_v1.rb', _git.Status.UPDATED),
@@ -405,7 +405,7 @@ def test_release_force(clone_from_github_mock,
         call.latest_tag(),
         call.authors_since('0.13.6'),
         call.diff_name_status(rev='0.13.6'),
-        call.commit('0.13.7', 'Test', 'test@test.com'),
+        call.commit('0.13.7', 'Alice', 'alice@test.com'),
         call.tag('0.13.7'),
         call.push(),
         call.push(tags=True),
@@ -418,7 +418,7 @@ def test_release_latest_version_mismatch(clone_from_github_mock,
                                          check_output_mock):
     repo_mock = Mock()
     repo_mock.latest_tag.return_value = '0.13.6'
-    repo_mock.authors_since.return_value = ['test@test.com']
+    repo_mock.authors_since.return_value = ['alice@test.com']
     side_effect = common.clone_from_github_mock_side_effect(repo_mock)
     clone_from_github_mock.side_effect = side_effect
     check_output_mock.return_value = 'google-api-client (1.0.0)'

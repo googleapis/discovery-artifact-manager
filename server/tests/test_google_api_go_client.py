@@ -65,8 +65,8 @@ def test_update(environ_mock, check_output_mock, repository_mock, date_mock):
                           '\nAdd:\n- foo/v1\n'
                           '\nDelete:\n- baz/v1\n'
                           '\nUpdate:\n- bar/v1'),
-                         'Test',
-                         'test@test.com'),
+                         'Alice',
+                         'alice@test.com'),
         call.repo.push(remote=_REMOTE_URL)
     ]
 
