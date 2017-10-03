@@ -101,6 +101,7 @@ class Repository(object):
         data = check_output(
             ['git', 'log', '{}..HEAD'.format(rev), '--pretty=format:%ae'],
             cwd=self.filepath)
+        # Strip whitespace and filter so '' is never returned as an email.
         data = data.strip().split('\n')
         return list(filter(None, data))
 
