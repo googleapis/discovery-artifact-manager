@@ -27,7 +27,7 @@ def test_clone_from_github(check_output_mock):
 
     check_output_mock.reset_mock()
     github_account = accounts.GitHubAccount(
-        'Test', 'test@example.com', 'test', 'token')
+        'Alice', 'alice@test.com', 'test', 'token')
     repo = _git.clone_from_github(
         'example/myrepo', '/tmp', github_account=github_account)
     check_output_mock.assert_called_once_with([
@@ -61,20 +61,20 @@ def test_repository_authors_since_none(check_output_mock):
 
 @patch('tasks._git.check_output', autospec=True)
 def test_repository_authors_since_one(check_output_mock):
-    check_output_mock.return_value = 'example@example.com'
+    check_output_mock.return_value = 'alice@test.com'
     authors = _REPO.authors_since('HEAD~1')
     check_output_mock.assert_called_once_with(
         ['git', 'log', 'HEAD~1..HEAD', '--pretty=format:%ae'], cwd='/tmp')
-    assert authors == ['example@example.com']
+    assert authors == ['alice@test.com']
 
 
 @patch('tasks._git.check_output', autospec=True)
 def test_repository_authors_since_multiple(check_output_mock):
-    check_output_mock.return_value = 'example@example.com\ntest@test.com'
+    check_output_mock.return_value = 'alice@test.com\nbob@test.com'
     authors = _REPO.authors_since('HEAD~2')
     check_output_mock.assert_called_once_with(
         ['git', 'log', 'HEAD~2..HEAD', '--pretty=format:%ae'], cwd='/tmp')
-    assert authors == ['example@example.com', 'test@test.com']
+    assert authors == ['alice@test.com', 'bob@test.com']
 
 
 @patch('tasks._git.check_output', autospec=True)

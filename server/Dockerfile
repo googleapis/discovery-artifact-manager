@@ -1,4 +1,5 @@
 FROM ubuntu:16.04
+# Default is ASCII, but Discovery documents are UTF-8.
 ENV LANG C.UTF-8
 
 RUN apt-get update
@@ -39,6 +40,6 @@ ADD . /app
 WORKDIR /app
 RUN pip install -r requirements.txt
 
-# 20 minute timeout so the process is not killed before any task completes.
+# 1 hour timeout so the process is not killed before any task completes.
 CMD scripts/git-cookie-authdaemon && \
-    gunicorn -b :$PORT main:app --timeout 1200 --workers 4
+    gunicorn -b :$PORT main:app --timeout 3600 --workers 4
