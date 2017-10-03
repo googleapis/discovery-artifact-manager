@@ -56,7 +56,7 @@ def test_update(clone_from_github_mock,
     manager.attach_mock(repo_mock, 'repo')
 
     google_api_php_client_services.update(
-        '/tmp', discovery_documents, common.GITHUB_ACCOUNT)
+        '/tmp', common.GITHUB_ACCOUNT, discovery_documents)
     assert manager.mock_calls == [
         call.clone_from_github('google/google-api-php-client-services',
                                '/tmp/google-api-php-client-services',
@@ -167,7 +167,7 @@ def test_update_no_changes(clone_from_github_mock,
     manager.attach_mock(repo_mock, 'repo')
 
     google_api_php_client_services.update(
-        '/tmp', discovery_documents, common.GITHUB_ACCOUNT)
+        '/tmp', common.GITHUB_ACCOUNT, discovery_documents)
     assert manager.mock_calls == [
         call.clone_from_github('google/google-api-php-client-services',
                                '/tmp/google-api-php-client-services',

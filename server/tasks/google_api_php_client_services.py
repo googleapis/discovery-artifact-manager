@@ -14,11 +14,10 @@
 
 """Contains update/release functions for google-api-php-client-services."""
 
-import re
-from tempfile import TemporaryDirectory
-
 import os
+import re
 from os.path import join
+from tempfile import TemporaryDirectory
 
 from tasks import _commit_message, _common, _git
 from tasks._check_output import check_output
@@ -99,14 +98,14 @@ def _run_tests(repo):
     check_output(['vendor/bin/phpunit', '-c', '.'], cwd=repo.filepath)
 
 
-def update(filepath, discovery_documents, github_account):
+def update(filepath, github_account, discovery_documents):
     """Updates the google-api-php-client-services repository.
 
     Args:
         filepath (str): the directory to work in.
+        github_account (GitHubAccount): the GitHub account to commit with.
         discovery_documents (dict(str, str)): a map of API IDs to Discovery
             document filenames to generate from.
-        github_account (GitHubAccount): the GitHub account to commit with.
     """
     repo = _git.clone_from_github(
         _REPO_PATH, join(filepath, _REPO_NAME), github_account=github_account)

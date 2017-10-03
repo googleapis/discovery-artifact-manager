@@ -15,10 +15,9 @@
 """Contains update/release functions for google-api-nodejs-client."""
 
 import json
+import os
 import re
 from datetime import date
-
-import os
 from os.path import join
 
 from tasks import _commit_message, _common, _git
