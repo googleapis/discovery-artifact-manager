@@ -82,6 +82,7 @@ def _generate_all_clients(repo):
 
 def _check_latest_version(latest_tag):
     latest_version = check_output(['npm', 'view', 'googleapis', 'version'])
+    latest_version = latest_version.strip()
     if latest_tag != latest_version:
         raise Exception(
             ('latest tag does not match the latest package version on npm:'
@@ -129,8 +130,7 @@ def _update_and_publish_gh_pages(repo, new_version, github_account):
     repo.checkout('gh-pages')
     check_output(['rm', '-rf', 'latest'], cwd=repo.filepath)
     doc_filepath = 'doc/googleapis/{}'.format(new_version)
-    check_output(['cp', '-r', 'doc/googleapis/{}'.format(new_version)],
-                 cwd=repo.filepath)
+    check_output(['cp', '-r', doc_filepath, 'latest'], cwd=repo.filepath)
     check_output(['cp', '-r', doc_filepath, new_version], cwd=repo.filepath)
     index_md_filename = join(repo.filepath, 'index.md')
     lines = []

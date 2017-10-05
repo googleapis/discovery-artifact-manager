@@ -56,7 +56,7 @@ class _Version(object):
 
 
 def _check_latest_version(latest_tag):
-    output = check_output(['gem', 'search', '-e', '-r', 'google-api-client'])
+    output = check_output(['gem', 'search', '-r', '^google-api-client$'])
     latest_version = _GEM_SEARCH_RE.match(output).group(1)
     if latest_tag != latest_version:
         raise Exception(
@@ -66,6 +66,11 @@ def _check_latest_version(latest_tag):
 
 def _generate_all_clients(repo):
     check_output(['rm', '-rf', 'generated'], cwd=repo.filepath)
+    # The `discovery_v1` service is used by the generator.
+    check_output(['git', 'checkout',
+                  'generated/google/apis/discovery_v1.rb',
+                  'generated/google/apis/discovery_v1'],
+                 cwd=repo.filepath)
     check_output(['./script/generate'], cwd=repo.filepath)
     added, deleted, updated = set(), set(), set()
     status_to_ids = {
@@ -130,7 +135,7 @@ def _update_version_rb(repo, new_version):
         data = file_.read()
     data = re.sub(
         'VERSION = \'.+\'', 'VERSION = \'{}\''.format(new_version), data, 1)
-    with open(filename) as file_:
+    with open(filename, 'w') as file_:
         file_.write(data)
 
 
