@@ -83,6 +83,7 @@ def cron_clients_lang_update(lang):
     github_account = accounts.get_github_account()
     with TemporaryDirectory() as filepath:
         update(filepath, github_account)
+    return ''
 
 
 @app.route('/cron/clients/<string:lang>/release')
@@ -99,6 +100,7 @@ def cron_clients_lang_release(lang):
     force = request.args.get('force', default=False, type=bool)
     with TemporaryDirectory() as filepath:
         release(filepath, github_account, force=force)
+    return ''
 
 
 if __name__ == '__main__':

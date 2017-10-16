@@ -31,16 +31,17 @@ def _generate_all_clients(repo, env):
     generator_filepath = join(repo.filepath, 'google-api-go-generator')
     check_output(['make', 'all'], cwd=generator_filepath, env=env)
     added, deleted, updated = set(), set(), set()
+    status_to_ids = {
+        _git.Status.ADDED: added,
+        _git.Status.DELETED: deleted,
+        _git.Status.UPDATED: updated
+    }
     for filename, status in repo.diff_name_status(staged=False):
         match = _NAME_VERSION_RE.match(filename)
         if not match:
             continue
         name_version = '{}/{}'.format(match.group(1), match.group(2))
-        {
-            _git.Status.ADDED: added,
-            _git.Status.DELETED: deleted,
-            _git.Status.UPDATED: updated
-        }.get(status, set()).add(name_version)
+        status_to_ids.get(status, set()).add(name_version)
     return added, deleted, updated
 
 
