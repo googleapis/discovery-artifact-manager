@@ -14,7 +14,7 @@ ENV PATH /usr/local/go/bin:$PATH
 # Install Node.js 6.x.
 # We're using 6.x because there's a doc generation bug in
 # google-api-nodejs-client on the latest Node.js version (8.5).
-# Also, we're using 6.x instead of 7.x because 6.x is supported.
+# Also, we're using 6.x instead of 7.x because 6.x is an LTS release.
 RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
 RUN apt-get install -y nodejs
 
