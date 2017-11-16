@@ -183,13 +183,19 @@ class Repository(object):
             ['git', 'describe', '--tags', '--abbrev=0'], cwd=self.filepath)
         return data.strip()
 
-    def push(self, remote='origin', branch='master', tags=False):
+    def push(self,
+             remote='origin',
+             branch='master',
+             tags=False,
+             nokeycheck=False):
         """Updates remote refs.
 
         Args:
             remote (str): the remote name.
             branch (str): the branch name.
             tags (bool, optional): if true, only tags are pushed.
+            nokeycheck (bool, optional): if true, the
+                "--push-option nokeycheck" flag is passed.
 
         Raises:
             CallError: if the call returns a non-zero return code.
@@ -199,6 +205,8 @@ class Repository(object):
             args.append('--tags')
         else:
             args.append(branch)
+        if nokeycheck:
+            args.extend(['--push-option', 'nokeycheck'])
         check_output(args, cwd=self.filepath)
 
     def soft_reset(self, rev):

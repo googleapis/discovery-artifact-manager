@@ -65,4 +65,4 @@ def update(filepath, github_account):
     commitmsg = _commit_message.build(added, deleted, updated, subject=subject)
     repo.add(['.'])
     repo.commit(commitmsg, github_account.name, github_account.email)
-    repo.push(remote=_REMOTE_URL)
+    repo.push(remote=_REMOTE_URL, nokeycheck=True)

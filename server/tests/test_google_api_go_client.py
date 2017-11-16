@@ -67,7 +67,7 @@ def test_update(environ_mock, check_output_mock, repository_mock, date_mock):
                           '\nUpdate:\n- bar/v1'),
                          'Alice',
                          'alice@test.com'),
-        call.repo.push(remote=_REMOTE_URL)
+        call.repo.push(remote=_REMOTE_URL, nokeycheck=True)
     ]
 
 

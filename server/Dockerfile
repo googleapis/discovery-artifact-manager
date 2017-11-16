@@ -3,7 +3,14 @@ FROM ubuntu:16.04
 ENV LANG C.UTF-8
 
 RUN apt-get update
-RUN apt-get install -y curl git openssh-client wget
+
+# Install the latest stable version of git.
+RUN apt-get install -y software-properties-common
+RUN add-apt-repository -y ppa:git-core/ppa
+RUN apt-get update
+RUN apt-get install -y git
+
+RUN apt-get install -y curl openssh-client wget
 
 # Install Go 1.8.
 RUN wget https://storage.googleapis.com/golang/go1.8.linux-amd64.tar.gz

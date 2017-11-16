@@ -173,6 +173,14 @@ def test_repository_push_tags(check_output_mock):
 
 
 @patch('tasks._git.check_output', autospec=True)
+def test_repository_push_nokeycheck(check_output_mock):
+    _REPO.push(nokeycheck=True)
+    check_output_mock.assert_called_once_with(
+        ['git', 'push', 'origin', 'master', '--push-option', 'nokeycheck'],
+        cwd='/tmp')
+
+
+@patch('tasks._git.check_output', autospec=True)
 def test_repository_soft_reset(check_output_mock):
     _REPO.soft_reset('HEAD~1')
     check_output_mock.assert_called_once_with(
