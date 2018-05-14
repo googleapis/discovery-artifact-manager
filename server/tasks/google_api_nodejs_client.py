@@ -56,14 +56,12 @@ class _Version(object):
 
 
 def _build(repo):
-    check_output(['node', '--max_old_space_size=2000', '/usr/bin/npm', 'run',
-                  'build'],
+    check_output(['make', 'build'],
                  cwd=repo.filepath)
 
 
 def _generate_all_clients(repo):
-    check_output(['node', '--max_old_space_size=2000', '/usr/bin/npm', 'run',
-                  'generate-apis'],
+    check_output(['make', 'generate'],
                  cwd=repo.filepath)
     added, deleted, updated = set(), set(), set()
     status_to_ids = {
@@ -101,7 +99,7 @@ def _publish_package(repo, npm_account):
 
 
 def _run_tests(repo):
-    check_output(['npm', 'run', 'test'], cwd=repo.filepath)
+    check_output(['make', 'test'], cwd=repo.filepath)
 
 
 def _update_changelog_md(repo, new_version, added, deleted, updated):
@@ -126,7 +124,7 @@ def _update_changelog_md(repo, new_version, added, deleted, updated):
 
 
 def _update_and_publish_gh_pages(repo, new_version, github_account):
-    check_output(['npm', 'run', 'doc'], cwd=repo.filepath)
+    check_output(['make', 'docs'], cwd=repo.filepath)
     repo.checkout('gh-pages')
     check_output(['rm', '-rf', 'latest'], cwd=repo.filepath)
     doc_filepath = 'doc/googleapis/{}'.format(new_version)
