@@ -18,11 +18,10 @@ RUN tar -xvf go1.8.linux-amd64.tar.gz
 RUN mv go /usr/local
 ENV PATH /usr/local/go/bin:$PATH
 
-# Install Node.js 6.x.
-# We're using 6.x because there's a doc generation bug in
-# google-api-nodejs-client on the latest Node.js version (8.5).
-# Also, we're using 6.x instead of 7.x because 6.x is an LTS release.
-RUN curl -sL https://deb.nodesource.com/setup_6.x | bash -
+# Install Node.js 8.x.
+# We need to use 8.x because generate.ts in google-cloud-nodejs-client
+# uses async function and 8.x is LTS release
+RUN curl -sL https://deb.nodesource.com/setup_8.x | bash -
 RUN apt-get install -y nodejs
 
 # Install PHP 7 and Composer.
