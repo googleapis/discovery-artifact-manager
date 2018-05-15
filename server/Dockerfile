@@ -20,7 +20,7 @@ ENV PATH /usr/local/go/bin:$PATH
 
 # Install Node.js 8.x.
 # We need to use 8.x because generate.ts in google-cloud-nodejs-client
-# uses async function
+# uses async function and 8.x is LTS release
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash -
 RUN apt-get install -y nodejs
 
