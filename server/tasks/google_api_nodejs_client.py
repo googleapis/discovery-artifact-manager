@@ -27,8 +27,8 @@ _REPO_NAME = 'google-api-nodejs-client'
 _REPO_PATH = 'google/google-api-nodejs-client'
 # Matches strings like "apis/foo/v1.ts".
 _SERVICE_FILENAME_RE = re.compile(r'apis/(.+)/(.+)\.ts')
-# Matches strings like "20.3.1".
-_VERSION_RE = re.compile(r'^([0-9]+)\.([0-9]+)\.([0-9]+)$')
+# Matches strings like "v20.3.1".
+_VERSION_RE = re.compile(r'^v([0-9]+)\.([0-9]+)\.([0-9]+)$')
 
 
 class _Version(object):
