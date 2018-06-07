@@ -1,12 +1,12 @@
 {
  "kind": "discovery#restDescription",
- "etag": "\"Zkyw9ACJZUvcYmlFaKGChzhmtnE/nGBPpDDGWhw4dV_gNaRiVjVo800\"",
+ "etag": "\"Zkyw9ACJZUvcYmlFaKGChzhmtnE/gbIWvenWZqlU7t-u56xMS7foDfs\"",
  "discoveryVersion": "v1",
  "id": "content:v2",
  "name": "content",
  "canonicalName": "Shopping Content",
  "version": "v2",
- "revision": "20180529",
+ "revision": "20180605",
  "title": "Content API for Shopping",
  "description": "Manages product items, inventory, and Merchant Center accounts for Google Shopping.",
  "ownerDomain": "google.com",
@@ -849,6 +849,26 @@
     }
    }
   },
+  "CutoffTime": {
+   "id": "CutoffTime",
+   "type": "object",
+   "properties": {
+    "hour": {
+     "type": "integer",
+     "description": "Hour of the cutoff time until which an order has to be placed to be processed in the same day. Required.",
+     "format": "uint32"
+    },
+    "minute": {
+     "type": "integer",
+     "description": "Minute of the cutoff time until which an order has to be placed to be processed in the same day. Required.",
+     "format": "uint32"
+    },
+    "timezone": {
+     "type": "string",
+     "description": "Timezone identifier for the cutoff time. A list of identifiers can be found in  the AdWords API documentation. E.g. \"Europe/Zurich\". Required."
+    }
+   }
+  },
   "Datafeed": {
    "id": "Datafeed",
    "type": "object",
@@ -1351,6 +1371,10 @@
    "id": "DeliveryTime",
    "type": "object",
    "properties": {
+    "cutoffTime": {
+     "$ref": "CutoffTime",
+     "description": "Business days cutoff time definition. If not configured the cutoff time will be defaulted to 8AM PST."
+    },
     "holidayCutoffs": {
      "type": "array",
      "description": "Holiday cutoff definitions. If configured, they specify order cutoff times for holiday-specific shipping.",
@@ -1358,9 +1382,19 @@
       "$ref": "HolidayCutoff"
      }
     },
+    "maxHandlingTimeInDays": {
+     "type": "integer",
+     "description": "Maximum number of business days spent before an order is shipped. 0 means same day shipped, 1 means next day shipped. Must be greater than or equal to minHandlingTimeInDays.",
+     "format": "uint32"
+    },
     "maxTransitTimeInDays": {
      "type": "integer",
      "description": "Maximum number of business days that is spent in transit. 0 means same day delivery, 1 means next day delivery. Must be greater than or equal to minTransitTimeInDays. Required.",
+     "format": "uint32"
+    },
+    "minHandlingTimeInDays": {
+     "type": "integer",
+     "description": "Minimum number of business days spent before an order is shipped. 0 means same day shipped, 1 means next day shipped.",
      "format": "uint32"
     },
     "minTransitTimeInDays": {
@@ -1860,6 +1894,10 @@
      "$ref": "LiaOnDisplayToOrderSettings",
      "description": "LIA \"On Display To Order\" settings."
     },
+    "posDataProvider": {
+     "$ref": "LiaPosDataProvider",
+     "description": "The POS data provider linked with this country."
+    },
     "storePickupActive": {
      "type": "boolean",
      "description": "The status of the \"Store pickup\" feature."
@@ -1899,6 +1937,21 @@
     "status": {
      "type": "string",
      "description": "The status of the ?On display to order? feature."
+    }
+   }
+  },
+  "LiaPosDataProvider": {
+   "id": "LiaPosDataProvider",
+   "type": "object",
+   "properties": {
+    "posDataProviderId": {
+     "type": "string",
+     "description": "The ID of the POS data provider.",
+     "format": "uint64"
+    },
+    "posExternalAccountId": {
+     "type": "string",
+     "description": "The account ID by which this merchant is known to the POS data provider."
     }
    }
   },
@@ -2067,6 +2120,24 @@
     }
    }
   },
+  "LiasettingsListPosDataProvidersResponse": {
+   "id": "LiasettingsListPosDataProvidersResponse",
+   "type": "object",
+   "properties": {
+    "kind": {
+     "type": "string",
+     "description": "Identifies what kind of resource this is. Value: the fixed string \"content#liasettingsListPosDataProvidersResponse\".",
+     "default": "content#liasettingsListPosDataProvidersResponse"
+    },
+    "posDataProviders": {
+     "type": "array",
+     "description": "The list of POS data providers for each eligible country",
+     "items": {
+      "$ref": "PosDataProviders"
+     }
+    }
+   }
+  },
   "LiasettingsListResponse": {
    "id": "LiasettingsListResponse",
    "type": "object",
@@ -2118,6 +2189,17 @@
      "type": "string",
      "description": "Identifies what kind of resource this is. Value: the fixed string \"content#liasettingsSetInventoryVerificationContactResponse\".",
      "default": "content#liasettingsSetInventoryVerificationContactResponse"
+    }
+   }
+  },
+  "LiasettingsSetPosDataProviderResponse": {
+   "id": "LiasettingsSetPosDataProviderResponse",
+   "type": "object",
+   "properties": {
+    "kind": {
+     "type": "string",
+     "description": "Identifies what kind of resource this is. Value: the fixed string \"content#liasettingsSetPosDataProviderResponse\".",
+     "default": "content#liasettingsSetPosDataProviderResponse"
     }
    }
   },
@@ -5909,6 +5991,10 @@
      "$ref": "Table",
      "description": "A table defining the rate group, when singleValue is not expressive enough. Can only be set if singleValue is not set."
     },
+    "name": {
+     "type": "string",
+     "description": "Name of the rate group. Optional. If set has to be unique within shipping service."
+    },
     "singleValue": {
      "$ref": "Value",
      "description": "The value of the rate group (e.g. flat rate $10). Can only be set if mainTable and subtables are not set."
@@ -7762,6 +7848,18 @@
       "https://www.googleapis.com/auth/content"
      ]
     },
+    "listposdataproviders": {
+     "id": "content.liasettings.listposdataproviders",
+     "path": "liasettings/posdataproviders",
+     "httpMethod": "GET",
+     "description": "Retrieves the list of POS data providers that have active settings for the all eiligible countries.",
+     "response": {
+      "$ref": "LiasettingsListPosDataProvidersResponse"
+     },
+     "scopes": [
+      "https://www.googleapis.com/auth/content"
+     ]
+    },
     "patch": {
      "id": "content.liasettings.patch",
      "path": "{merchantId}/liasettings/{accountId}",
@@ -7925,6 +8023,54 @@
      ],
      "response": {
       "$ref": "LiasettingsSetInventoryVerificationContactResponse"
+     },
+     "scopes": [
+      "https://www.googleapis.com/auth/content"
+     ]
+    },
+    "setposdataprovider": {
+     "id": "content.liasettings.setposdataprovider",
+     "path": "{merchantId}/liasettings/{accountId}/setposdataprovider",
+     "httpMethod": "POST",
+     "description": "Sets the POS data provider for the specified country.",
+     "parameters": {
+      "accountId": {
+       "type": "string",
+       "description": "The ID of the account for which to retrieve accessible Google My Business accounts.",
+       "required": true,
+       "format": "uint64",
+       "location": "path"
+      },
+      "country": {
+       "type": "string",
+       "description": "The country for which the POS data provider is selected.",
+       "location": "query"
+      },
+      "merchantId": {
+       "type": "string",
+       "description": "The ID of the managing account. If this parameter is not the same as accountId, then this account must be a multi-client account and accountId must be the ID of a sub-account of this account.",
+       "required": true,
+       "format": "uint64",
+       "location": "path"
+      },
+      "posDataProviderId": {
+       "type": "string",
+       "description": "The ID of POS data provider.",
+       "format": "uint64",
+       "location": "query"
+      },
+      "posExternalAccountId": {
+       "type": "string",
+       "description": "The account ID by which this merchant is known to the POS data provider.",
+       "location": "query"
+      }
+     },
+     "parameterOrder": [
+      "merchantId",
+      "accountId"
+     ],
+     "response": {
+      "$ref": "LiasettingsSetPosDataProviderResponse"
      },
      "scopes": [
       "https://www.googleapis.com/auth/content"
