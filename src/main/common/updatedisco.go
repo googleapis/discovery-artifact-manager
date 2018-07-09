@@ -225,8 +225,8 @@ func UpdateAPI(API apiInfo, absolutePath string, permissions os.FileMode, update
 	// If "revision" is nil or not a string, the empty string is returned.
 	newRevision, _ := newAPI["revision"].(string)
 	oldRevision, _ := oldAPI["revision"].(string)
-	// Do nothing if the revision of the new API is older than what already exists.
-	if newRevision < oldRevision {
+	// Do nothing if the revision of the new API exists and is older than what already exists.
+	if newRevision != "" && newRevision < oldRevision {
 		return fmt.Errorf("Error validating Discovery doc revision from %v: %v < %v", API.DiscoveryRestURL, newRevision, oldRevision)
 	}
 
