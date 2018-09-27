@@ -20,6 +20,11 @@
 # `*_repository` rules) are currently highlighted as errornous by IDE plugins (is expected taking
 # into account that the feature is new and experimental). This problem is temprorary and will go
 # away once the repo mapping feature (or its "better" replacement) is stabilized.
+#
+# To fix enable bazel project sync in IntelliJ plugin add the following lines to .bazelproject file:
+#
+# build_flags:
+#  --experimental_enable_repo_mapping
 
 workspace(name = "com_google_discovery_artifact_manager")
 
