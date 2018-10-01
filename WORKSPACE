@@ -38,11 +38,17 @@ maven_jar(
     artifact = "com.google.guava:guava:26.0-jre",
 )
 
+maven_jar(
+    name = "com_google_api_grpc_proto_google_common_protos__com_google_api_codegen",
+    artifact = "com.google.api.grpc:proto-google-common-protos:1.13.0-pre1",
+)
+
 local_repository(
     name = "com_google_api_codegen",
     path = "/usr/local/google/home/vam/_/projects/github/vam-google/gapic-generator",
     repo_mapping = {
         "@com_google_guava_guava": "@com_google_guava_guava__com_google_api_codegen",
+        "@com_google_api_grpc_proto_google_common_protos": "@com_google_api_grpc_proto_google_common_protos__com_google_api_codegen",
     },
 )
 
