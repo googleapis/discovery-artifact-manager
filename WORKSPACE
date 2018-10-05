@@ -14,10 +14,10 @@
 # Even if the experimental feature will be eventually cancelled, there will still be a solution
 # for solving the problems desribed above, so it is relatively safe to structure workspaces and
 # packages under assumption that the dependencies naming conflicts can be solved in the "outer"
-# workspace (the one, which imports the "innter" workspace via `*_repository` rule).
+# workspace (the one, which imports the "inner" workspace via `*_repository` rule).
 #
 # Note, the rule arguments related to the repo mapping feature (like repo_mapping arument in
-# `*_repository` rules) are currently highlighted as errornous by IDE plugins (is expected taking
+# `*_repository` rules) are currently highlighted as erroneous by IDE plugins (is expected taking
 # into account that the feature is new and experimental). This problem is temprorary and will go
 # away once the repo mapping feature (or its "better" replacement) is stabilized.
 #
