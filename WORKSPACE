@@ -1,6 +1,6 @@
 # IMPORTANT INFORMATION!
 #
-# This workspace configuraiton assumes `--experimental_enable_repo_mapping` command line argument
+# This workspace configuration assumes `--experimental_enable_repo_mapping` command line argument
 # on every build of anything under this workspace. The repo mapping is a recently released feature
 # (bazel >= 0.16.0) and allows to solve two very nasty problems:
 #     1) Allowing two or more workspaces with dependency conflicts (same dependency name but
@@ -18,7 +18,7 @@
 #
 # Note, the rule arguments related to the repo mapping feature (like repo_mapping arument in
 # `*_repository` rules) are currently highlighted as erroneous by IDE plugins (is expected taking
-# into account that the feature is new and experimental). This problem is temprorary and will go
+# into account that the feature is new and experimental). This problem is temporary and will go
 # away once the repo mapping feature (or its "better" replacement) is stabilized.
 #
 # To fix enable bazel project sync in IntelliJ plugin add the following lines to .bazelproject file:
@@ -79,7 +79,7 @@ load(
     "com_google_api_codegen_tools_repositories",
 )
 
-#TODO:  Update all ommited dependencies in gapic_generator so they match the newer versions used by
+#TODO:  Update all omitted dependencies in gapic_generator so they match the newer versions used by
 #       grpc-java and gax
 com_google_api_codegen_repositories(
     omit_com_google_api_api_common = True,
