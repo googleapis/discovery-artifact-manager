@@ -40,7 +40,7 @@ maven_jar(
 
 maven_jar(
     name = "com_google_api_grpc_proto_google_common_protos__com_google_api_codegen",
-    artifact = "com.google.api.grpc:proto-google-common-protos:1.13.0-pre1",
+    artifact = "com.google.api.grpc:proto-google-common-protos:1.13.0-pre2",
 )
 
 git_repository(
@@ -94,4 +94,3 @@ com_google_api_codegen_repositories(
 com_google_api_codegen_test_repositories()
 
 com_google_api_codegen_tools_repositories()
-
