@@ -12,9 +12,9 @@ RUN apt-get install -y git
 
 RUN apt-get install -y curl openssh-client wget
 
-# Install Go 1.8.
-RUN wget https://storage.googleapis.com/golang/go1.8.linux-amd64.tar.gz
-RUN tar -xvf go1.8.linux-amd64.tar.gz
+# Install Go 1.11.
+RUN wget https://storage.googleapis.com/golang/go1.11.linux-amd64.tar.gz
+RUN tar -xvf go1.11.linux-amd64.tar.gz
 RUN mv go /usr/local
 ENV PATH /usr/local/go/bin:$PATH
 
