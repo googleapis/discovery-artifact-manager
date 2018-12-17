@@ -15,25 +15,23 @@
 package com.google.api.codegen.gapic;
 
 import com.google.api.codegen.InterfaceView;
-import com.google.api.codegen.ProtoFileView;
 import com.google.api.codegen.SnippetSetRunner;
 import com.google.api.codegen.clientconfig.ClientConfigGapicContext;
 import com.google.api.codegen.clientconfig.ClientConfigSnippetSetRunner;
 import com.google.api.codegen.clientconfig.php.PhpClientConfigGapicContext;
 import com.google.api.codegen.config.GapicProductConfig;
 import com.google.api.codegen.config.PackageMetadataConfig;
+import com.google.api.codegen.grpcmetadatagen.java.JavaPackageCopier;
 import com.google.api.codegen.nodejs.NodeJSCodePathMapper;
 import com.google.api.codegen.php.PhpGapicCodePathMapper;
-import com.google.api.codegen.py.PythonGapicContext;
-import com.google.api.codegen.py.PythonInterfaceInitializer;
-import com.google.api.codegen.py.PythonProtoFileInitializer;
-import com.google.api.codegen.py.PythonSnippetSetRunner;
 import com.google.api.codegen.rendering.CommonSnippetSetRunner;
 import com.google.api.codegen.transformer.csharp.CSharpGapicClientTransformer;
 import com.google.api.codegen.transformer.csharp.CSharpGapicSnippetsTransformer;
+import com.google.api.codegen.transformer.csharp.CSharpGapicTestTransformer;
 import com.google.api.codegen.transformer.go.GoGapicSurfaceTestTransformer;
 import com.google.api.codegen.transformer.go.GoGapicSurfaceTransformer;
 import com.google.api.codegen.transformer.java.JavaGapicMetadataTransformer;
+import com.google.api.codegen.transformer.java.JavaGapicSampleAppTransformer;
 import com.google.api.codegen.transformer.java.JavaGapicSurfaceTestTransformer;
 import com.google.api.codegen.transformer.java.JavaGapicSurfaceTransformer;
 import com.google.api.codegen.transformer.nodejs.NodeJSGapicSurfaceDocTransformer;
@@ -44,6 +42,7 @@ import com.google.api.codegen.transformer.php.PhpGapicSurfaceTestTransformer;
 import com.google.api.codegen.transformer.php.PhpGapicSurfaceTransformer;
 import com.google.api.codegen.transformer.php.PhpPackageMetadataTransformer;
 import com.google.api.codegen.transformer.py.PythonGapicSurfaceTestTransformer;
+import com.google.api.codegen.transformer.py.PythonGapicSurfaceTransformer;
 import com.google.api.codegen.transformer.py.PythonPackageMetadataTransformer;
 import com.google.api.codegen.transformer.ruby.RubyGapicSurfaceDocTransformer;
 import com.google.api.codegen.transformer.ruby.RubyGapicSurfaceTestTransformer;
@@ -53,11 +52,12 @@ import com.google.api.codegen.util.CommonRenderingUtil;
 import com.google.api.codegen.util.csharp.CSharpNameFormatter;
 import com.google.api.codegen.util.csharp.CSharpRenderingUtil;
 import com.google.api.codegen.util.java.JavaRenderingUtil;
+import com.google.api.codegen.util.py.PythonRenderingUtil;
 import com.google.api.codegen.util.ruby.RubyNameFormatter;
 import com.google.api.tools.framework.model.Interface;
 import com.google.api.tools.framework.model.Model;
-import com.google.api.tools.framework.model.ProtoFile;
 import com.google.common.collect.ImmutableList;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -74,17 +74,25 @@ public class MainGapicProviderFactory
   public static final String NODEJS = "nodejs";
   public static final String NODEJS_DOC = "nodejs_doc";
   public static final String PHP = "php";
-  public static final String PYTHON = "python";
-  public static final String PYTHON_DOC = "python_doc";
+  public static final String PYTHON = "py";
   public static final String RUBY = "ruby";
   public static final String RUBY_DOC = "ruby_doc";
+
+  private static final ImmutableList<String> JAVA_SAMPLE_APP_STATIC_FILES =
+      ImmutableList.of(
+          "gradlew",
+          "gradle/wrapper/gradle-wrapper.jar",
+          "gradle/wrapper/gradle-wrapper.properties",
+          "gradlew.bat",
+          "settings.gradle");
 
   /** Create the GapicProviders based on the given id */
   public static List<GapicProvider<? extends Object>> defaultCreate(
       Model model,
       GapicProductConfig productConfig,
       GapicGeneratorConfig generatorConfig,
-      PackageMetadataConfig packageConfig) {
+      PackageMetadataConfig packageConfig,
+      String outputPath) {
 
     ArrayList<GapicProvider<? extends Object>> providers = new ArrayList<>();
     String id = generatorConfig.id();
@@ -103,11 +111,11 @@ public class MainGapicProviderFactory
               .build();
       providers.add(provider);
     } else if (id.equals(CSHARP)) {
+      String packageName = productConfig.getPackageName();
       if (generatorConfig.enableSurfaceGenerator()) {
         GapicCodePathMapper pathMapper =
             CommonGapicCodePathMapper.newBuilder()
-                .setPrefix("")
-                .setShouldAppendPackage(true)
+                .setPrefix(packageName + File.separator + packageName)
                 .setPackageFilePathNameFormatter(new CSharpNameFormatter())
                 .build();
         GapicProvider<? extends Object> mainProvider =
@@ -115,18 +123,39 @@ public class MainGapicProviderFactory
                 .setModel(model)
                 .setProductConfig(productConfig)
                 .setSnippetSetRunner(new CommonSnippetSetRunner(new CSharpRenderingUtil()))
-                .setModelToViewTransformer(new CSharpGapicClientTransformer(pathMapper))
+                .setModelToViewTransformer(
+                    new CSharpGapicClientTransformer(pathMapper, packageConfig))
                 .build();
         providers.add(mainProvider);
-
+        GapicCodePathMapper snippetPathMapper =
+            CommonGapicCodePathMapper.newBuilder()
+                .setPrefix(packageName + File.separator + packageName + ".Snippets")
+                .setPackageFilePathNameFormatter(new CSharpNameFormatter())
+                .build();
         GapicProvider<? extends Object> snippetProvider =
             ViewModelGapicProvider.newBuilder()
                 .setModel(model)
                 .setProductConfig(productConfig)
                 .setSnippetSetRunner(new CommonSnippetSetRunner(new CSharpRenderingUtil()))
-                .setModelToViewTransformer(new CSharpGapicSnippetsTransformer(pathMapper))
+                .setModelToViewTransformer(new CSharpGapicSnippetsTransformer(snippetPathMapper))
                 .build();
         providers.add(snippetProvider);
+      }
+      if (generatorConfig.enableTestGenerator()) {
+        GapicCodePathMapper smokeTestPathMapper =
+            CommonGapicCodePathMapper.newBuilder()
+                .setPrefix(packageName + File.separator + packageName + ".SmokeTests")
+                .setPackageFilePathNameFormatter(new CSharpNameFormatter())
+                .build();
+        GapicProvider<? extends Object> smokeTestProvider =
+            ViewModelGapicProvider.newBuilder()
+                .setModel(model)
+                .setProductConfig(productConfig)
+                .setSnippetSetRunner(new CommonSnippetSetRunner(new CSharpRenderingUtil()))
+                .setModelToViewTransformer(
+                    new CSharpGapicTestTransformer(smokeTestPathMapper, packageConfig))
+                .build();
+        providers.add(smokeTestProvider);
       }
 
     } else if (id.equals(GO)) {
@@ -175,7 +204,9 @@ public class MainGapicProviderFactory
                 .setModel(model)
                 .setProductConfig(productConfig)
                 .setSnippetSetRunner(new CommonSnippetSetRunner(new JavaRenderingUtil()))
-                .setModelToViewTransformer(new JavaGapicMetadataTransformer(packageConfig))
+                .setModelToViewTransformer(
+                    new JavaGapicMetadataTransformer(
+                        javaPathMapper, productConfig, packageConfig, generatorConfig))
                 .build();
 
         providers.add(metadataProvider);
@@ -194,6 +225,28 @@ public class MainGapicProviderFactory
                 .setModelToViewTransformer(new JavaGapicSurfaceTestTransformer(javaTestPathMapper))
                 .build();
         providers.add(testProvider);
+      }
+      if (generatorConfig.enableSampleAppGenerator()) {
+        GapicCodePathMapper javaSampleAppPathMapper =
+            CommonGapicCodePathMapper.newBuilder()
+                .setPrefix("src/main/java")
+                .setShouldAppendPackage(true)
+                .build();
+        GapicProvider<? extends Object> sampleAppProvider =
+            ViewModelGapicProvider.newBuilder()
+                .setModel(model)
+                .setProductConfig(productConfig)
+                .setSnippetSetRunner(new CommonSnippetSetRunner(new CommonRenderingUtil()))
+                .setModelToViewTransformer(
+                    new JavaGapicSampleAppTransformer(javaSampleAppPathMapper))
+                .build();
+        providers.add(sampleAppProvider);
+
+        // Copy static files for the Java sample application (e.g. gradle wrapper, build files)
+        GapicProvider<? extends Object> staticFileProvider =
+            new StaticGapicProvider<>(
+                new JavaPackageCopier(JAVA_SAMPLE_APP_STATIC_FILES, outputPath));
+        providers.add(staticFileProvider);
       }
       return providers;
 
@@ -242,7 +295,7 @@ public class MainGapicProviderFactory
           providers.add(messageProvider);
         }
       }
-      if (generatorConfig.enableTestGenerator() && id.equals(NODEJS)) {
+      if (generatorConfig.enableTestGenerator()) {
         GapicProvider<? extends Object> testProvider =
             ViewModelGapicProvider.newBuilder()
                 .setModel(model)
@@ -304,34 +357,17 @@ public class MainGapicProviderFactory
         providers.add(testProvider);
       }
 
-    } else if (id.equals(PYTHON) || id.equals(PYTHON_DOC)) {
+    } else if (id.equals(PYTHON)) {
       if (generatorConfig.enableSurfaceGenerator()) {
         GapicCodePathMapper pythonPathMapper =
             CommonGapicCodePathMapper.newBuilder().setShouldAppendPackage(true).build();
         GapicProvider<? extends Object> mainProvider =
-            CommonGapicProvider.<Interface>newBuilder()
+            ViewModelGapicProvider.newBuilder()
                 .setModel(model)
-                .setView(new InterfaceView())
-                .setContext(new PythonGapicContext(model, productConfig, packageConfig))
-                .setSnippetSetRunner(
-                    new PythonSnippetSetRunner<>(
-                        new PythonInterfaceInitializer(productConfig),
-                        SnippetSetRunner.SNIPPET_RESOURCE_ROOT))
-                .setSnippetFileNames(Arrays.asList("py/main.snip"))
-                .setCodePathMapper(pythonPathMapper)
-                .build();
-        // Note: enumProvider implementation doesn't care about the InputElementT view.
-        GapicProvider<? extends Object> enumProvider =
-            CommonGapicProvider.<Interface>newBuilder()
-                .setModel(model)
-                .setView(new InterfaceView())
-                .setContext(new PythonGapicContext(model, productConfig, packageConfig))
-                .setSnippetSetRunner(
-                    new PythonSnippetSetRunner<Interface>(
-                        new PythonInterfaceInitializer(productConfig),
-                        SnippetSetRunner.SNIPPET_RESOURCE_ROOT))
-                .setSnippetFileNames(Arrays.asList("py/enum.snip"))
-                .setCodePathMapper(pythonPathMapper)
+                .setProductConfig(productConfig)
+                .setSnippetSetRunner(new CommonSnippetSetRunner(new PythonRenderingUtil()))
+                .setModelToViewTransformer(
+                    new PythonGapicSurfaceTransformer(pythonPathMapper, packageConfig))
                 .build();
         GapicProvider<? extends Object> clientConfigProvider =
             CommonGapicProvider.<Interface>newBuilder()
@@ -341,28 +377,11 @@ public class MainGapicProviderFactory
                 .setSnippetSetRunner(
                     new ClientConfigSnippetSetRunner<Interface>(
                         SnippetSetRunner.SNIPPET_RESOURCE_ROOT))
-                .setSnippetFileNames(Arrays.asList("clientconfig/json.snip"))
+                .setSnippetFileNames(Arrays.asList("clientconfig/python_clientconfig.snip"))
                 .setCodePathMapper(pythonPathMapper)
                 .build();
         providers.add(mainProvider);
         providers.add(clientConfigProvider);
-        providers.add(enumProvider);
-
-        if (id.equals(PYTHON_DOC)) {
-          GapicProvider<? extends Object> messageProvider =
-              CommonGapicProvider.<ProtoFile>newBuilder()
-                  .setModel(model)
-                  .setView(new ProtoFileView())
-                  .setContext(new PythonGapicContext(model, productConfig, packageConfig))
-                  .setSnippetSetRunner(
-                      new PythonSnippetSetRunner<>(
-                          new PythonProtoFileInitializer(), SnippetSetRunner.SNIPPET_RESOURCE_ROOT))
-                  .setSnippetFileNames(Arrays.asList("py/message.snip"))
-                  .setCodePathMapper(CommonGapicCodePathMapper.defaultInstance())
-                  .build();
-
-          providers.add(messageProvider);
-        }
 
         if (id.equals(PYTHON)) {
           GapicCodePathMapper pythonTestPathMapper =
@@ -385,10 +404,8 @@ public class MainGapicProviderFactory
             ViewModelGapicProvider.newBuilder()
                 .setModel(model)
                 .setProductConfig(productConfig)
-                .setSnippetSetRunner(new CommonSnippetSetRunner(new CommonRenderingUtil()))
-                .setModelToViewTransformer(
-                    new PythonPackageMetadataTransformer(
-                        packageConfig, ImmutableList.copyOf(providers)))
+                .setSnippetSetRunner(new CommonSnippetSetRunner(new PythonRenderingUtil()))
+                .setModelToViewTransformer(new PythonPackageMetadataTransformer(packageConfig))
                 .build();
         providers.add(metadataProvider);
       }
@@ -438,7 +455,8 @@ public class MainGapicProviderFactory
                   .setModel(model)
                   .setProductConfig(productConfig)
                   .setSnippetSetRunner(new CommonSnippetSetRunner(new CommonRenderingUtil()))
-                  .setModelToViewTransformer(new RubyGapicSurfaceDocTransformer(rubyPathMapper))
+                  .setModelToViewTransformer(
+                      new RubyGapicSurfaceDocTransformer(rubyPathMapper, packageConfig))
                   .build();
           providers.add(messageProvider);
         }
@@ -455,7 +473,8 @@ public class MainGapicProviderFactory
                 .setModel(model)
                 .setProductConfig(productConfig)
                 .setSnippetSetRunner(new CommonSnippetSetRunner(new CommonRenderingUtil()))
-                .setModelToViewTransformer(new RubyGapicSurfaceTestTransformer(rubyTestPathMapper))
+                .setModelToViewTransformer(
+                    new RubyGapicSurfaceTestTransformer(rubyTestPathMapper, packageConfig))
                 .build();
         providers.add(testProvider);
       }
@@ -475,7 +494,8 @@ public class MainGapicProviderFactory
       Model model,
       GapicProductConfig productConfig,
       GapicGeneratorConfig generatorConfig,
-      PackageMetadataConfig packageConfig) {
-    return defaultCreate(model, productConfig, generatorConfig, packageConfig);
+      PackageMetadataConfig packageConfig,
+      String outputPath) {
+    return defaultCreate(model, productConfig, generatorConfig, packageConfig, outputPath);
   }
 }

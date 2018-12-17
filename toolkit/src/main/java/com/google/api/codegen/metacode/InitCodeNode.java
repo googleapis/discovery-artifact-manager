@@ -15,6 +15,7 @@
 package com.google.api.codegen.metacode;
 
 import com.google.api.codegen.config.FieldConfig;
+import com.google.api.codegen.config.FieldModel;
 import com.google.api.codegen.config.OneofConfig;
 import com.google.api.codegen.metacode.InitCodeContext.InitCodeOutputType;
 import com.google.api.codegen.util.Name;
@@ -212,7 +213,7 @@ public class InitCodeNode {
       // Add items in fieldSet to newSubTrees in case they were not included in
       // sampleCodeInitFields, and to ensure the order is determined by initFields
       List<InitCodeNode> newSubTrees = new ArrayList<>();
-      for (Field field : context.initFields()) {
+      for (FieldModel field : context.initFields()) {
         String nameString = field.getSimpleName();
         InitValueConfig initValueConfig = context.initValueConfigMap().get(nameString);
         if (initValueConfig == null) {
@@ -223,7 +224,7 @@ public class InitCodeNode {
       }
       // Filter subTrees using fieldSet
       Set<String> fieldSet = new HashSet<>();
-      for (Field field : context.initFields()) {
+      for (FieldModel field : context.initFields()) {
         fieldSet.add(field.getSimpleName());
       }
       for (InitCodeNode subTree : subTrees) {
@@ -313,11 +314,10 @@ public class InitCodeNode {
         }
         break;
       case SimpleInitLine:
-        if (!typeRef.isPrimitive() && !typeRef.isEnum()) {
-          throw new IllegalArgumentException(
-              "typeRef " + typeRef + " not compatible with " + lineType);
+        if (childKeys.size() != 0) {
+          throw new IllegalArgumentException("node with SimpleInitLine type cannot have children");
         }
-        // Fall through to Unknown to check for no children.
+        break;
       case Unknown:
         // Any typeRef is acceptable, but we need to check that there are no children.
         if (childKeys.size() != 0) {

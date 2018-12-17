@@ -15,11 +15,11 @@
 package com.google.api.codegen.grpcmetadatagen.java;
 
 import com.google.api.codegen.TargetLanguage;
+import com.google.api.codegen.config.ApiModel;
 import com.google.api.codegen.config.PackageMetadataConfig;
 import com.google.api.codegen.transformer.PackageMetadataTransformer;
 import com.google.api.codegen.transformer.java.JavaPackageMetadataNamer;
 import com.google.api.codegen.viewmodel.metadata.PackageMetadataView;
-import com.google.api.tools.framework.model.Model;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,29 +31,36 @@ public abstract class JavaPackageMetadataTransformer {
 
   protected abstract Map<String, String> getSnippetsOutput();
 
-  public List<PackageMetadataView> transform(Model model, PackageMetadataConfig config) {
-    return generateMetadataView(model, config);
+  public List<PackageMetadataView> transform(ApiModel model, PackageMetadataConfig config) {
+    List<PackageMetadataView> views = new ArrayList<>();
+    for (PackageMetadataView.Builder builder : generateMetadataViewBuilders(model, config)) {
+      views.add(builder.build());
+    }
+    return views;
   }
 
-  private List<PackageMetadataView> generateMetadataView(
-      Model model, PackageMetadataConfig config) {
+  /**
+   * Creates a partially initialized builders that can be used to build PackageMetadataViews later.
+   */
+  protected final List<PackageMetadataView.Builder> generateMetadataViewBuilders(
+      ApiModel model, PackageMetadataConfig config) {
     JavaPackageMetadataNamer namer =
         new JavaPackageMetadataNamer(
             config.packageName(TargetLanguage.JAVA), config.generationLayer());
-    ArrayList<PackageMetadataView> views = new ArrayList<>();
-    for (String template : getSnippetsOutput().keySet()) {
-      PackageMetadataView view =
+
+    ArrayList<PackageMetadataView.Builder> viewBuilders = new ArrayList<>();
+    for (Map.Entry<String, String> entry : getSnippetsOutput().entrySet()) {
+      PackageMetadataView.Builder viewBuilder =
           metadataTransformer
               .generateMetadataView(
-                  config, model, template, getSnippetsOutput().get(template), TargetLanguage.JAVA)
+                  config, model, entry.getKey(), entry.getValue(), TargetLanguage.JAVA)
               .identifier(namer.getMetadataIdentifier())
               .protoPackageName(namer.getProtoPackageName())
               .grpcPackageName(namer.getGrpcPackageName())
               .generationLayer(config.generationLayer())
-              .apiCommonVersionBound(config.apiCommonVersionBound(TargetLanguage.JAVA))
-              .build();
-      views.add(view);
+              .apiCommonVersionBound(config.apiCommonVersionBound(TargetLanguage.JAVA));
+      viewBuilders.add(viewBuilder);
     }
-    return views;
+    return viewBuilders;
   }
 }

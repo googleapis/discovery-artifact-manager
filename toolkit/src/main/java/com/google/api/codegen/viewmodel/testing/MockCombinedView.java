@@ -68,7 +68,9 @@ public abstract class MockCombinedView implements ViewModel {
   }
 
   @Nullable
-  public abstract String apiWrapperModuleName();
+  public abstract String localPackageName();
+
+  public abstract boolean packageHasMultipleServices();
 
   @Override
   public String resourceRoot() {
@@ -82,7 +84,7 @@ public abstract class MockCombinedView implements ViewModel {
   public abstract String outputPath();
 
   public static Builder newBuilder() {
-    return new AutoValue_MockCombinedView.Builder();
+    return new AutoValue_MockCombinedView.Builder().packageHasMultipleServices(false);
   }
 
   @AutoValue.Builder
@@ -95,11 +97,13 @@ public abstract class MockCombinedView implements ViewModel {
 
     public abstract Builder mockServices(List<MockServiceUsageView> val);
 
-    public abstract Builder apiWrapperModuleName(String val);
+    public abstract Builder localPackageName(String val);
 
     public abstract Builder outputPath(String val);
 
     public abstract Builder templateFileName(String val);
+
+    public abstract Builder packageHasMultipleServices(boolean val);
 
     public abstract MockCombinedView build();
   }

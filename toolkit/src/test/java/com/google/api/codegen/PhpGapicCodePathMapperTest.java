@@ -14,10 +14,9 @@
  */
 package com.google.api.codegen;
 
-import com.google.api.codegen.config.GapicInterfaceConfig;
 import com.google.api.codegen.config.GapicProductConfig;
+import com.google.api.codegen.config.InterfaceConfig;
 import com.google.api.codegen.php.PhpGapicCodePathMapper;
-import com.google.api.gax.grpc.ApiCallable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.truth.Truth;
 import org.junit.Rule;
@@ -26,7 +25,6 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/** Tests for {@link ApiCallable}. */
 @RunWith(JUnit4.class)
 public class PhpGapicCodePathMapperTest {
 
@@ -39,7 +37,7 @@ public class PhpGapicCodePathMapperTest {
 
     GapicProductConfig configWithGoogleCloud =
         GapicProductConfig.createDummyInstance(
-            ImmutableMap.<String, GapicInterfaceConfig>of(),
+            ImmutableMap.<String, InterfaceConfig>of(),
             "Google\\Cloud\\Sample\\Package\\V1",
             "",
             null);
@@ -48,7 +46,7 @@ public class PhpGapicCodePathMapperTest {
 
     GapicProductConfig configWithGoogleNonCloud =
         GapicProductConfig.createDummyInstance(
-            ImmutableMap.<String, GapicInterfaceConfig>of(),
+            ImmutableMap.<String, InterfaceConfig>of(),
             "Google\\NonCloud\\Sample\\Package\\V1",
             "",
             null);
@@ -57,7 +55,7 @@ public class PhpGapicCodePathMapperTest {
 
     GapicProductConfig configWithAlphabet =
         GapicProductConfig.createDummyInstance(
-            ImmutableMap.<String, GapicInterfaceConfig>of(),
+            ImmutableMap.<String, InterfaceConfig>of(),
             "Alphabet\\Google\\Cloud\\Sample\\Package\\V1",
             "",
             null);

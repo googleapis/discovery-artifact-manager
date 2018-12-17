@@ -38,6 +38,11 @@ public class PhpTypeTable implements TypeTable {
   }
 
   @Override
+  public TypeTable cloneEmpty(String packageName) {
+    return new PhpTypeTable(packageName);
+  }
+
+  @Override
   public TypeName getTypeName(String fullName) {
     return dynamicTypeTable.getTypeName(fullName);
   }
@@ -90,6 +95,11 @@ public class PhpTypeTable implements TypeTable {
       cleanedImports.put(imported, imports.get(imported));
     }
     return cleanedImports;
+  }
+
+  @Override
+  public Map<String, TypeAlias> getAllImports() {
+    return dynamicTypeTable.getAllImports();
   }
 
   public boolean hasImports() {

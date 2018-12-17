@@ -31,6 +31,8 @@ public interface TypeTable extends TypeNameConverter {
   /** Return a new TypeTable with the same concrete type as this one. */
   TypeTable cloneEmpty();
 
+  TypeTable cloneEmpty(String packageName);
+
   /**
    * Computes the nickname for the given full name, adds the full name to the import set, and
    * returns the nickname.
@@ -57,4 +59,7 @@ public interface TypeTable extends TypeNameConverter {
 
   /** Returns the imports accumulated so far. */
   Map<String, TypeAlias> getImports();
+
+  /** Returns the imports accumulated so far, including implicit imports. */
+  Map<String, TypeAlias> getAllImports();
 }
