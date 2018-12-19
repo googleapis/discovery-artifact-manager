@@ -25,6 +25,10 @@ public abstract class InitCodeView {
 
   public abstract List<FieldSettingView> fieldSettings();
 
+  public abstract List<FieldSettingView> optionalFieldSettings();
+
+  public abstract List<FieldSettingView> requiredFieldSettings();
+
   /** Used to hold information about the types used in method samples. */
   public abstract ImportSectionView importSection();
 
@@ -33,8 +37,11 @@ public abstract class InitCodeView {
    */
   public abstract String apiFileName();
 
-  /** The file name of the index file. */
+  /** The file name of the version index file. */
   public abstract String versionIndexFileImportName();
+
+  /** The file name of the top level index file. */
+  public abstract String topLevelIndexFileImportName();
 
   public static Builder newBuilder() {
     return new AutoValue_InitCodeView.Builder();
@@ -48,11 +55,17 @@ public abstract class InitCodeView {
 
     public abstract Builder fieldSettings(List<FieldSettingView> val);
 
+    public abstract Builder optionalFieldSettings(List<FieldSettingView> val);
+
+    public abstract Builder requiredFieldSettings(List<FieldSettingView> val);
+
     public abstract Builder importSection(ImportSectionView val);
 
     public abstract Builder apiFileName(String apiFileName);
 
     public abstract Builder versionIndexFileImportName(String indexFileImportName);
+
+    public abstract Builder topLevelIndexFileImportName(String val);
 
     public abstract InitCodeView build();
   }

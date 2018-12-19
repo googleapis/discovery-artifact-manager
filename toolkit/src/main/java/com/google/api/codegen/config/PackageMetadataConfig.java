@@ -16,6 +16,7 @@ package com.google.api.codegen.config;
 
 import com.google.api.codegen.ReleaseLevel;
 import com.google.api.codegen.TargetLanguage;
+import com.google.api.codegen.grpcmetadatagen.DependencyType;
 import com.google.api.codegen.grpcmetadatagen.GenerationLayer;
 import com.google.api.codegen.grpcmetadatagen.PackageType;
 import com.google.auto.value.AutoValue;
@@ -47,6 +48,8 @@ public abstract class PackageMetadataConfig {
 
   protected abstract Map<TargetLanguage, VersionBound> gaxVersionBound();
 
+  protected abstract Map<TargetLanguage, VersionBound> gaxGrpcVersionBound();
+
   protected abstract Map<TargetLanguage, VersionBound> grpcVersionBound();
 
   protected abstract Map<TargetLanguage, VersionBound> protoVersionBound();
@@ -55,7 +58,9 @@ public abstract class PackageMetadataConfig {
 
   protected abstract Map<TargetLanguage, VersionBound> authVersionBound();
 
-  protected abstract Map<TargetLanguage, VersionBound> generatedPackageVersionBound();
+  protected abstract Map<TargetLanguage, VersionBound> generatedNonGAPackageVersionBound();
+
+  protected abstract Map<TargetLanguage, VersionBound> generatedGAPackageVersionBound();
 
   protected abstract Map<TargetLanguage, String> packageName();
 
@@ -69,6 +74,11 @@ public abstract class PackageMetadataConfig {
   /** The version of GAX that this package depends on. Configured per language. */
   public VersionBound gaxVersionBound(TargetLanguage language) {
     return gaxVersionBound().get(language);
+  }
+
+  /** The version of GAX Grpc that this package depends on. Configured per language. */
+  public VersionBound gaxGrpcVersionBound(TargetLanguage language) {
+    return gaxGrpcVersionBound().get(language);
   }
 
   /** The version of api-common that this package depends on. Only used by Java */
@@ -91,7 +101,14 @@ public abstract class PackageMetadataConfig {
 
   /** The version the client library package. E.g., "0.14.0". Configured per language. */
   public VersionBound generatedPackageVersionBound(TargetLanguage language) {
-    return generatedPackageVersionBound().get(language);
+    if (releaseLevel(language) == ReleaseLevel.GA
+        && generatedGAPackageVersionBound() != null
+        && generatedGAPackageVersionBound().containsKey(language)) {
+      return generatedGAPackageVersionBound().get(language);
+    } else {
+      // Default to non-GA version since not all languages config GA version explicitly.
+      return generatedNonGAPackageVersionBound().get(language);
+    }
   }
 
   /** The version the auth library package that this package depends on. Configured per language. */
@@ -136,6 +153,10 @@ public abstract class PackageMetadataConfig {
   @Nullable
   public abstract PackageType packageType();
 
+  /** Returns the type of the dependency */
+  @Nullable
+  public abstract DependencyType dependencyType();
+
   @Nullable
   public abstract GenerationLayer generationLayer();
 
@@ -172,6 +193,8 @@ public abstract class PackageMetadataConfig {
   protected abstract static class Builder {
     abstract Builder gaxVersionBound(Map<TargetLanguage, VersionBound> val);
 
+    abstract Builder gaxGrpcVersionBound(Map<TargetLanguage, VersionBound> val);
+
     abstract Builder grpcVersionBound(Map<TargetLanguage, VersionBound> val);
 
     abstract Builder protoVersionBound(Map<TargetLanguage, VersionBound> val);
@@ -182,7 +205,10 @@ public abstract class PackageMetadataConfig {
 
     abstract Builder packageName(Map<TargetLanguage, String> val);
 
-    abstract Builder generatedPackageVersionBound(Map<TargetLanguage, VersionBound> val);
+    abstract Builder generatedNonGAPackageVersionBound(Map<TargetLanguage, VersionBound> val);
+
+    @Nullable
+    abstract Builder generatedGAPackageVersionBound(Map<TargetLanguage, VersionBound> val);
 
     abstract Builder protoPackageDependencies(Map<TargetLanguage, Map<String, VersionBound>> val);
 
@@ -194,6 +220,8 @@ public abstract class PackageMetadataConfig {
     abstract Builder shortName(String val);
 
     abstract Builder packageType(PackageType val);
+
+    abstract Builder dependencyType(DependencyType val);
 
     abstract Builder generationLayer(GenerationLayer val);
 
@@ -219,16 +247,19 @@ public abstract class PackageMetadataConfig {
   public static PackageMetadataConfig createDummyPackageMetadataConfig() {
     return newBuilder()
         .gaxVersionBound(ImmutableMap.<TargetLanguage, VersionBound>of())
+        .gaxGrpcVersionBound(ImmutableMap.<TargetLanguage, VersionBound>of())
         .grpcVersionBound(ImmutableMap.<TargetLanguage, VersionBound>of())
         .protoVersionBound(ImmutableMap.<TargetLanguage, VersionBound>of())
         .packageName(ImmutableMap.<TargetLanguage, String>of())
         .authVersionBound(ImmutableMap.<TargetLanguage, VersionBound>of())
         .apiCommonVersionBound(ImmutableMap.<TargetLanguage, VersionBound>of())
-        .generatedPackageVersionBound(ImmutableMap.<TargetLanguage, VersionBound>of())
+        .generatedNonGAPackageVersionBound(ImmutableMap.<TargetLanguage, VersionBound>of())
+        .generatedGAPackageVersionBound(ImmutableMap.<TargetLanguage, VersionBound>of())
         .protoPackageDependencies(ImmutableMap.<TargetLanguage, Map<String, VersionBound>>of())
         .releaseLevel(ImmutableMap.<TargetLanguage, ReleaseLevel>of())
         .shortName("")
         .packageType(PackageType.GRPC_CLIENT)
+        .dependencyType(DependencyType.RELEASE)
         .generationLayer(GenerationLayer.PROTO)
         .apiVersion("")
         .protoPath("")
@@ -249,13 +280,16 @@ public abstract class PackageMetadataConfig {
         newBuilder()
             .gaxVersionBound(
                 createVersionMap((Map<String, Map<String, String>>) configMap.get("gax_version")))
+            .gaxGrpcVersionBound(
+                createVersionMap(
+                    (Map<String, Map<String, String>>) configMap.get("gax_grpc_version")))
             .grpcVersionBound(
                 createVersionMap((Map<String, Map<String, String>>) configMap.get("grpc_version")))
             .protoVersionBound(
                 createVersionMap((Map<String, Map<String, String>>) configMap.get("proto_version")))
             .authVersionBound(
                 createVersionMap((Map<String, Map<String, String>>) configMap.get("auth_version")))
-            .generatedPackageVersionBound(
+            .generatedNonGAPackageVersionBound(
                 createVersionMap(
                     (Map<String, Map<String, String>>) configMap.get("generated_package_version")))
             .apiCommonVersionBound(
@@ -269,6 +303,7 @@ public abstract class PackageMetadataConfig {
             .packageName(buildMapWithDefault((Map<String, String>) configMap.get("package_name")))
             .shortName((String) configMap.get("short_name"))
             .packageType(PackageType.of((String) configMap.get("package_type")))
+            .dependencyType(DependencyType.of((String) configMap.get("dependency_type")))
             .generationLayer(GenerationLayer.of((String) configMap.get("generation_layer")))
             .apiVersion((String) configMap.get("major_version"))
             .protoPath((String) configMap.get("proto_path"))
@@ -280,6 +315,12 @@ public abstract class PackageMetadataConfig {
     if (configMap.containsKey("proto_test_deps")) {
       builder.protoPackageTestDependencies(
           createProtoPackageDependencies(configMap, "proto_test_deps", TEST_PROTO_PACKAGE_PREFIX));
+    }
+
+    if (configMap.containsKey("generated_ga_package_version")) {
+      builder.generatedGAPackageVersionBound(
+          createVersionMap(
+              (Map<String, Map<String, String>>) configMap.get("generated_ga_package_version")));
     }
     return builder.build();
   }

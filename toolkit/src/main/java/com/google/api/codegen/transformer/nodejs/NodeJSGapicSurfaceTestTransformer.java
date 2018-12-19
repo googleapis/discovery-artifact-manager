@@ -15,13 +15,20 @@
 package com.google.api.codegen.transformer.nodejs;
 
 import com.google.api.codegen.InterfaceView;
+import com.google.api.codegen.config.ApiModel;
 import com.google.api.codegen.config.FieldConfig;
-import com.google.api.codegen.config.GapicMethodConfig;
+import com.google.api.codegen.config.FlatteningConfig;
 import com.google.api.codegen.config.GapicProductConfig;
 import com.google.api.codegen.config.GrpcStreamingConfig.GrpcStreamingType;
+import com.google.api.codegen.config.InterfaceModel;
+import com.google.api.codegen.config.MethodConfig;
+import com.google.api.codegen.config.MethodModel;
+import com.google.api.codegen.config.ProtoApiModel;
+import com.google.api.codegen.config.ProtoMethodModel;
 import com.google.api.codegen.metacode.InitCodeContext;
 import com.google.api.codegen.metacode.InitCodeContext.InitCodeOutputType;
 import com.google.api.codegen.nodejs.NodeJSUtils;
+import com.google.api.codegen.transformer.DynamicLangApiMethodTransformer;
 import com.google.api.codegen.transformer.FileHeaderTransformer;
 import com.google.api.codegen.transformer.GapicInterfaceContext;
 import com.google.api.codegen.transformer.GapicMethodContext;
@@ -39,16 +46,20 @@ import com.google.api.codegen.util.testing.StandardValueProducer;
 import com.google.api.codegen.util.testing.TestValueGenerator;
 import com.google.api.codegen.util.testing.ValueProducer;
 import com.google.api.codegen.viewmodel.ClientMethodType;
+import com.google.api.codegen.viewmodel.FileHeaderView;
 import com.google.api.codegen.viewmodel.ImportSectionView;
+import com.google.api.codegen.viewmodel.InitCodeView;
+import com.google.api.codegen.viewmodel.OptionalArrayMethodView;
 import com.google.api.codegen.viewmodel.ViewModel;
 import com.google.api.codegen.viewmodel.testing.ClientTestClassView;
 import com.google.api.codegen.viewmodel.testing.MockCombinedView;
 import com.google.api.codegen.viewmodel.testing.MockServiceImplView;
 import com.google.api.codegen.viewmodel.testing.MockServiceUsageView;
+import com.google.api.codegen.viewmodel.testing.SmokeTestClassView;
 import com.google.api.codegen.viewmodel.testing.TestCaseView;
-import com.google.api.tools.framework.model.Interface;
-import com.google.api.tools.framework.model.Method;
 import com.google.api.tools.framework.model.Model;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -57,6 +68,8 @@ import java.util.List;
 /** Responsible for producing testing related views for NodeJS */
 public class NodeJSGapicSurfaceTestTransformer implements ModelToViewTransformer {
   private static final String TEST_TEMPLATE_FILE = "nodejs/test.snip";
+  private static final String SMOKE_TEST_TEMPLATE_FILE = "nodejs/smoke_test.snip";
+  private static final String SMOKE_TEST_OUTPUT_BASE_PATH = "smoke-test";
 
   private final ValueProducer valueProducer = new StandardValueProducer();
   private final StandardImportSectionTransformer importSectionTransformer =
@@ -70,15 +83,17 @@ public class NodeJSGapicSurfaceTestTransformer implements ModelToViewTransformer
 
   @Override
   public List<String> getTemplateFileNames() {
-    return Collections.singletonList(TEST_TEMPLATE_FILE);
+    return ImmutableList.of(TEST_TEMPLATE_FILE, SMOKE_TEST_TEMPLATE_FILE);
   }
 
   @Override
   public List<ViewModel> transform(Model model, GapicProductConfig productConfig) {
     List<ViewModel> models = new ArrayList<ViewModel>();
+    ApiModel apiModel = new ProtoApiModel(model);
     NodeJSSurfaceNamer namer =
         new NodeJSSurfaceNamer(productConfig.getPackageName(), NodeJSUtils.isGcloud(productConfig));
-    models.add(generateTestView(model, productConfig, namer));
+    models.add(generateTestView(apiModel, productConfig, namer));
+    models.addAll(createSmokeTestViews(apiModel, productConfig));
     return models;
   }
 
@@ -89,24 +104,25 @@ public class NodeJSGapicSurfaceTestTransformer implements ModelToViewTransformer
   }
 
   private MockCombinedView generateTestView(
-      Model model, GapicProductConfig productConfig, SurfaceNamer namer) {
+      ApiModel model, GapicProductConfig productConfig, SurfaceNamer namer) {
     ModelTypeTable typeTable = createTypeTable(productConfig);
     List<MockServiceImplView> impls = new ArrayList<>();
     List<ClientTestClassView> testClasses = new ArrayList<>();
 
-    for (Interface apiInterface :
+    for (InterfaceModel apiInterface :
         mockServiceTransformer.getGrpcInterfacesToMock(model, productConfig)) {
       GapicInterfaceContext context =
           GapicInterfaceContext.create(
               apiInterface, productConfig, typeTable, namer, featureConfig);
       impls.add(
           MockServiceImplView.newBuilder()
-              .grpcClassName(namer.getGrpcServerTypeName(apiInterface))
+              .grpcClassName(namer.getGrpcServerTypeName(context.getInterfaceModel()))
               .name(namer.getMockGrpcServiceImplName(apiInterface))
               .grpcMethods(mockServiceTransformer.createMockGrpcMethodViews(context))
               .build());
     }
-    for (Interface apiInterface : new InterfaceView().getElementIterable(model)) {
+    InterfaceView interfaceView = new InterfaceView();
+    for (InterfaceModel apiInterface : model.getInterfaces(productConfig)) {
       // We don't need any imports here.
       GapicInterfaceContext context =
           GapicInterfaceContext.create(
@@ -122,6 +138,10 @@ public class NodeJSGapicSurfaceTestTransformer implements ModelToViewTransformer
                       "NodeJSGapicSurfaceTestTransformer.generateTestView - name"))
               .testCases(createTestCaseViews(context))
               .apiHasLongRunningMethods(context.getInterfaceConfig().hasLongRunningOperations())
+              .packageServiceName(namer.getPackageServiceName(context.getInterfaceModel()))
+              .missingDefaultServiceAddress(
+                  !context.getInterfaceConfig().hasDefaultServiceAddress())
+              .missingDefaultServiceScopes(!context.getInterfaceConfig().hasDefaultServiceScopes())
               .mockServices(Collections.<MockServiceUsageView>emptyList())
               .build());
     }
@@ -129,20 +149,30 @@ public class NodeJSGapicSurfaceTestTransformer implements ModelToViewTransformer
     ImportSectionView importSection =
         importSectionTransformer.generateImportSection(typeTable.getImports());
     return MockCombinedView.newBuilder()
-        .outputPath("test" + File.separator + "test.js")
+        .outputPath(testCaseOutputFile(namer))
         .serviceImpls(impls)
         .mockServices(new ArrayList<MockServiceUsageView>())
         .testClasses(testClasses)
-        .apiWrapperModuleName(namer.getApiWrapperModuleName())
+        .localPackageName(namer.getLocalPackageName())
         .templateFileName(TEST_TEMPLATE_FILE)
+        .packageHasMultipleServices(model.hasMultipleServices(productConfig))
         .fileHeader(fileHeaderTransformer.generateFileHeader(productConfig, importSection, namer))
         .build();
+  }
+
+  private String testCaseOutputFile(SurfaceNamer namer) {
+    String outputPath = "test";
+    String fileName =
+        Strings.isNullOrEmpty(namer.getApiWrapperModuleVersion())
+            ? "gapic.js"
+            : "gapic-" + namer.getApiWrapperModuleVersion() + ".js";
+    return outputPath + File.separator + fileName;
   }
 
   private List<TestCaseView> createTestCaseViews(GapicInterfaceContext context) {
     ArrayList<TestCaseView> testCaseViews = new ArrayList<>();
     SymbolTable testNameTable = new SymbolTable();
-    for (Method method : context.getSupportedMethods()) {
+    for (MethodModel method : context.getSupportedMethods()) {
       GapicMethodContext methodContext = context.asRequestMethodContext(method);
       if (methodContext.getMethodConfig().getGrpcStreamingType()
           == GrpcStreamingType.ClientStreaming) {
@@ -158,7 +188,7 @@ public class NodeJSGapicSurfaceTestTransformer implements ModelToViewTransformer
               .suggestedName(Name.from("request"))
               .initFieldConfigStrings(methodContext.getMethodConfig().getSampleCodeInitFields())
               .initValueConfigMap(InitCodeTransformer.createCollectionMap(methodContext))
-              .initFields(FieldConfig.toFieldIterable(fieldConfigs))
+              .initFields(FieldConfig.toFieldTypeIterable(fieldConfigs))
               .outputType(InitCodeOutputType.SingleObject)
               .fieldConfigMap(FieldConfig.toFieldConfigMap(fieldConfigs))
               .valueGenerator(valueGenerator)
@@ -174,7 +204,7 @@ public class NodeJSGapicSurfaceTestTransformer implements ModelToViewTransformer
     return testCaseViews;
   }
 
-  private ClientMethodType getMethodType(GapicMethodConfig config) {
+  private ClientMethodType getMethodType(MethodConfig config) {
     ClientMethodType clientMethodType = ClientMethodType.RequestObjectMethod;
     if (config.isPageStreaming()) {
       clientMethodType = ClientMethodType.PagedRequestObjectMethod;
@@ -184,5 +214,80 @@ public class NodeJSGapicSurfaceTestTransformer implements ModelToViewTransformer
       clientMethodType = ClientMethodType.OperationCallableMethod;
     }
     return clientMethodType;
+  }
+
+  private List<ViewModel> createSmokeTestViews(ApiModel model, GapicProductConfig productConfig) {
+    ImmutableList.Builder<ViewModel> views = ImmutableList.builder();
+    for (InterfaceModel apiInterface : model.getInterfaces(productConfig)) {
+      GapicInterfaceContext context = createContext(apiInterface, productConfig);
+      if (context.getInterfaceConfig().getSmokeTestConfig() != null) {
+        views.add(createSmokeTestClassView(context, model.hasMultipleServices(productConfig)));
+      }
+    }
+    return views.build();
+  }
+
+  private SmokeTestClassView createSmokeTestClassView(
+      GapicInterfaceContext context, boolean packageHasMultipleServices) {
+    SurfaceNamer namer = context.getNamer();
+    String name = namer.getSmokeTestClassName(context.getInterfaceConfig());
+
+    ProtoMethodModel method =
+        new ProtoMethodModel(context.getInterfaceConfig().getSmokeTestConfig().getMethod());
+    FlatteningConfig flatteningGroup =
+        testCaseTransformer.getSmokeTestFlatteningGroup(
+            context.getMethodConfig(method), context.getInterfaceConfig().getSmokeTestConfig());
+    GapicMethodContext flattenedMethodContext =
+        context.asFlattenedMethodContext(method, flatteningGroup);
+
+    SmokeTestClassView.Builder testClass = SmokeTestClassView.newBuilder();
+    TestCaseView testCaseView = testCaseTransformer.createSmokeTestCaseView(flattenedMethodContext);
+    OptionalArrayMethodView apiMethodView =
+        createSmokeTestCaseApiMethodView(flattenedMethodContext, packageHasMultipleServices);
+
+    testClass.apiSettingsClassName(namer.getApiSettingsClassName(context.getInterfaceConfig()));
+    testClass.apiClassName(namer.getApiWrapperClassName(context.getInterfaceConfig()));
+    testClass.name(name);
+    testClass.outputPath(namer.getSourceFilePath(SMOKE_TEST_OUTPUT_BASE_PATH, name));
+    testClass.templateFileName(SMOKE_TEST_TEMPLATE_FILE);
+    testClass.apiMethod(apiMethodView);
+    testClass.method(testCaseView);
+    testClass.requireProjectId(
+        testCaseTransformer.requireProjectIdInSmokeTest(
+            apiMethodView.initCode(), context.getNamer()));
+
+    FileHeaderView fileHeader = fileHeaderTransformer.generateFileHeader(context);
+    testClass.fileHeader(fileHeader);
+
+    return testClass.build();
+  }
+
+  private OptionalArrayMethodView createSmokeTestCaseApiMethodView(
+      GapicMethodContext context, boolean packageHasMultipleServices) {
+    OptionalArrayMethodView initialApiMethodView =
+        new DynamicLangApiMethodTransformer(new NodeJSApiMethodParamTransformer())
+            .generateMethod(context, packageHasMultipleServices);
+
+    OptionalArrayMethodView.Builder apiMethodView = initialApiMethodView.toBuilder();
+
+    InitCodeTransformer initCodeTransformer = new InitCodeTransformer();
+    InitCodeView initCodeView =
+        initCodeTransformer.generateInitCode(
+            context, testCaseTransformer.createSmokeTestInitContext(context));
+    apiMethodView.initCode(initCodeView);
+    apiMethodView.packageName("../src");
+    return apiMethodView.build();
+  }
+
+  private GapicInterfaceContext createContext(
+      InterfaceModel apiInterface, GapicProductConfig productConfig) {
+    return GapicInterfaceContext.create(
+        apiInterface,
+        productConfig,
+        new ModelTypeTable(
+            new JSTypeTable(productConfig.getPackageName()),
+            new NodeJSModelTypeNameConverter(productConfig.getPackageName())),
+        new NodeJSSurfaceNamer(productConfig.getPackageName(), NodeJSUtils.isGcloud(productConfig)),
+        new NodeJSFeatureConfig());
   }
 }

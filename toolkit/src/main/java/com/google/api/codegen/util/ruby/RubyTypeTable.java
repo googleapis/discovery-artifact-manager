@@ -38,6 +38,11 @@ public class RubyTypeTable implements TypeTable {
   }
 
   @Override
+  public TypeTable cloneEmpty(String packageName) {
+    return new RubyTypeTable(packageName);
+  }
+
+  @Override
   public TypeName getTypeName(String fullName) {
     return dynamicTypeTable.getTypeName(fullName);
   }
@@ -77,6 +82,11 @@ public class RubyTypeTable implements TypeTable {
     TreeMap<TypeAlias, String> inverseMap = new TreeMap<>(TypeAlias.getNicknameComparator());
     inverseMap.putAll(dynamicTypeTable.getImportsBimap().inverse());
     return HashBiMap.create(inverseMap).inverse();
+  }
+
+  @Override
+  public Map<String, TypeAlias> getAllImports() {
+    return dynamicTypeTable.getAllImports();
   }
 
   public boolean hasImports() {

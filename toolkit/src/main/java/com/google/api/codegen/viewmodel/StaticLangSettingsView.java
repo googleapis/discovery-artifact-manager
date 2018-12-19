@@ -14,6 +14,7 @@
  */
 package com.google.api.codegen.viewmodel;
 
+import com.google.api.codegen.config.TransportProtocol;
 import com.google.auto.value.AutoValue;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +33,9 @@ public abstract class StaticLangSettingsView {
   public abstract String serviceAddress();
 
   public abstract Integer servicePort();
+
+  /* Whether to use the default service port with the default endpoint. Default true. */
+  public abstract boolean useDefaultServicePortInEndpoint();
 
   @Nullable
   public abstract String packagePath();
@@ -76,8 +80,37 @@ public abstract class StaticLangSettingsView {
 
   public abstract boolean hasDefaultInstance();
 
+  @Nullable // Used in Java
+  public abstract String stubInterfaceName();
+
+  @Nullable // Used in Java
+  public abstract String rpcStubClassName();
+
+  @Nullable // Used in Java
+  public abstract String rpcTransportName();
+
+  @Nullable // Used in Java
+  public abstract String transportNameGetter();
+
+  @Nullable // Used in Java
+  public abstract String defaultChannelProviderBuilder();
+
+  @Nullable // Used in Java
+  public abstract String defaultTransportProviderBuilder();
+
+  @Nullable // Used in Java
+  public abstract String transportProvider();
+
+  @Nullable // Used in Java
+  public abstract String instantiatingChannelProvider();
+
+  @Nullable // Used in Java
+  public abstract TransportProtocol transportProtocol();
+
   public static Builder newBuilder() {
-    return new AutoValue_StaticLangSettingsView.Builder();
+    return new AutoValue_StaticLangSettingsView.Builder()
+        .transportProtocol(TransportProtocol.GRPC)
+        .useDefaultServicePortInEndpoint(true);
   }
 
   @AutoValue.Builder
@@ -92,6 +125,8 @@ public abstract class StaticLangSettingsView {
     public abstract Builder serviceAddress(String val);
 
     public abstract Builder servicePort(Integer val);
+
+    public abstract Builder useDefaultServicePortInEndpoint(boolean val);
 
     public abstract Builder packagePath(String val);
 
@@ -115,6 +150,24 @@ public abstract class StaticLangSettingsView {
     public abstract Builder hasDefaultServiceScopes(boolean hasDefaultServiceScopes);
 
     public abstract Builder hasDefaultInstance(boolean hasDefaultInstance);
+
+    public abstract Builder stubInterfaceName(String val);
+
+    public abstract Builder rpcStubClassName(String val);
+
+    public abstract Builder rpcTransportName(String val);
+
+    public abstract Builder transportNameGetter(String val);
+
+    public abstract Builder defaultChannelProviderBuilder(String val);
+
+    public abstract Builder defaultTransportProviderBuilder(String val);
+
+    public abstract Builder transportProvider(String val);
+
+    public abstract Builder instantiatingChannelProvider(String val);
+
+    public abstract Builder transportProtocol(TransportProtocol transportProtocol);
 
     public abstract StaticLangSettingsView build();
   }

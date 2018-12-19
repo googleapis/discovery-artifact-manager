@@ -14,13 +14,19 @@
  */
 package com.google.api.codegen.discovery;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.auto.value.AutoValue;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
+import com.google.gson.internal.LinkedTreeMap;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * A representation of a Discovery Document.
@@ -29,7 +35,7 @@ import java.util.Map;
  * example, this class combines all methods in the Discovery Document into one list for convenience.
  */
 @AutoValue
-public abstract class Document {
+public abstract class Document implements Node {
 
   // TODO(saicheems): Assert that all references link to a valid schema?
 
@@ -45,22 +51,30 @@ public abstract class Document {
   public static Document from(DiscoveryNode root) {
     AuthType authType;
     DiscoveryNode scopesNode = root.getObject("auth").getObject("oauth2").getObject("scopes");
+
+    ImmutableList.Builder<String> authScopes = new Builder<>();
     if (scopesNode.isEmpty()) {
       authType = AuthType.API_KEY;
-    } else if (scopesNode.has(CLOUD_PLATFORM_SCOPE)) {
-      authType = AuthType.ADC;
     } else {
-      authType = AuthType.OAUTH_3L;
+      authScopes.addAll(scopesNode.getFieldNames());
+      if (scopesNode.has(CLOUD_PLATFORM_SCOPE)) {
+        authType = AuthType.ADC;
+      } else {
+        authType = AuthType.OAUTH_3L;
+      }
     }
     String canonicalName = root.getString("canonicalName");
     String description = root.getString("description");
+    String id = root.getString("id");
     Map<String, Schema> schemas = parseSchemas(root);
-    List<Method> methods = parseMethods(root, "");
+    List<Method> methods = parseMethods(root);
     Collections.sort(methods); // Ensure methods are ordered alphabetically by their ID.
+    String ownerDomain = root.getString("ownerDomain");
     String name = root.getString("name");
     if (canonicalName.isEmpty()) {
       canonicalName = name;
     }
+    Map<String, List<Method>> resources = parseResources(root);
     String revision = root.getString("revision");
     String rootUrl = root.getString("rootUrl");
     String servicePath = root.getString("servicePath");
@@ -68,57 +82,75 @@ public abstract class Document {
     String version = root.getString("version");
     boolean versionModule = root.getBoolean("version_module");
 
-    return new AutoValue_Document(
-        "", // authInstructionsUrl (only intended to be overridden).
-        authType,
-        canonicalName,
-        description,
-        "", // discoveryDocUrl (only intended to be overridden).
-        methods,
-        name,
-        revision,
-        rootUrl,
-        schemas,
-        servicePath,
-        title,
-        version,
-        versionModule);
+    String baseUrl =
+        root.has("baseUrl")
+            ? root.getString("baseUrl")
+            : (rootUrl + Strings.nullToEmpty(root.getString("basePath")));
+
+    Document thisDocument =
+        new AutoValue_Document(
+            "", // authInstructionsUrl (only intended to be overridden).
+            authScopes.build(),
+            authType,
+            baseUrl,
+            canonicalName,
+            description,
+            "", // discoveryDocUrl (only intended to be overridden).
+            id,
+            methods,
+            name,
+            ownerDomain,
+            resources,
+            revision,
+            rootUrl,
+            schemas,
+            servicePath,
+            title,
+            version,
+            versionModule);
+
+    for (Schema schema : schemas.values()) {
+      schema.setParent(thisDocument);
+    }
+    for (Method method : methods) {
+      method.setParent(thisDocument);
+    }
+    for (List<Method> resourceMethods : resources.values()) {
+      for (Method method : resourceMethods) {
+        method.setParent(thisDocument);
+      }
+    }
+
+    return thisDocument;
   }
 
-  /**
-   * Returns the schema the given schema references.
-   *
-   * <p>If the reference property of a schema is non-empty, then it references another schema. This
-   * method returns the schema that the given schema eventually references. If the given schema does
-   * not reference another schema, it is returned. If schema is null, null is returned.
-   *
-   * @param schema the schema to dereference.
-   * @return the first non-reference schema, or null if schema is null.
-   */
-  public Schema dereferenceSchema(Schema schema) {
-    if (schema == null) {
-      return null;
-    }
-    if (!schema.reference().isEmpty()) {
-      return dereferenceSchema(schemas().get(schema.reference()));
-    }
-    return schema;
-  }
-
-  private static List<Method> parseMethods(DiscoveryNode root, String path) {
+  private static Map<String, List<Method>> parseResources(DiscoveryNode root) {
     List<Method> methods = new ArrayList<>();
     DiscoveryNode methodsNode = root.getObject("methods");
     List<String> resourceNames = methodsNode.getFieldNames();
-    if (!path.isEmpty()) {
-      path += ".";
-    }
     for (String name : resourceNames) {
-      methods.add(Method.from(methodsNode.getObject(name), path + "methods." + name));
+      methods.add(Method.from(methodsNode.getObject(name), null));
+    }
+    Map<String, List<Method>> resources = new LinkedTreeMap<>();
+    DiscoveryNode resourcesNode = root.getObject("resources");
+    resourceNames = resourcesNode.getFieldNames();
+    for (String name : resourceNames) {
+      resources.put(name, parseMethods(resourcesNode.getObject(name)));
+    }
+    return resources;
+  }
+
+  private static List<Method> parseMethods(DiscoveryNode root) {
+    List<Method> methods = new ArrayList<>();
+    DiscoveryNode methodsNode = root.getObject("methods");
+    List<String> resourceNames = methodsNode.getFieldNames();
+    for (String name : resourceNames) {
+      methods.add(Method.from(methodsNode.getObject(name), null));
     }
     DiscoveryNode resourcesNode = root.getObject("resources");
     resourceNames = resourcesNode.getFieldNames();
     for (String name : resourceNames) {
-      methods.addAll(parseMethods(resourcesNode.getObject(name), path + "resources." + name));
+      methods.addAll(parseMethods(resourcesNode.getObject(name)));
     }
     return methods;
   }
@@ -127,18 +159,38 @@ public abstract class Document {
     Map<String, Schema> schemas = new HashMap<>();
     DiscoveryNode schemasNode = root.getObject("schemas");
     for (String name : schemasNode.getFieldNames()) {
-      schemas.put(name, Schema.from(schemasNode.getObject(name), "schemas." + name));
+      schemas.put(name, Schema.from(schemasNode.getObject(name), name, null));
     }
     return schemas;
+  }
+
+  /** @return the parent Node that contains this node. */
+  @JsonIgnore @Nullable private Node parent;
+
+  @Override
+  public Node parent() {
+    return parent;
+  }
+
+  // Package private for use by other Node objects.
+  void setParent(Node parent) {
+    this.parent = parent;
   }
 
   /** @return the auth instructions URL. */
   @JsonProperty("authInstructionsUrl")
   public abstract String authInstructionsUrl();
 
+  /** @return The list of OAuth2 scopes; this can be empty. */
+  public abstract List<String> authScopes();
+
   /** @return the auth type. */
   @JsonProperty("authType")
   public abstract AuthType authType();
+
+  /** @return the base URL. */
+  @JsonProperty("baseUrl")
+  public abstract String baseUrl();
 
   /** @return the canonical name. */
   @JsonProperty("canonicalName")
@@ -152,6 +204,11 @@ public abstract class Document {
   @JsonProperty("discoveryDocUrl")
   public abstract String discoveryDocUrl();
 
+  /** @return the ID of the Discovery document for the API. */
+  @Override
+  @JsonProperty("id")
+  public abstract String id();
+
   /** @return the list of all methods. */
   @JsonProperty("methods")
   public abstract List<Method> methods();
@@ -159,6 +216,14 @@ public abstract class Document {
   /** @return the name. */
   @JsonProperty("name")
   public abstract String name();
+
+  /** @return the name. */
+  @JsonProperty("name")
+  public abstract String ownerDomain();
+
+  /** @return the revision. */
+  @JsonProperty("revision")
+  public abstract Map<String, List<Method>> resources();
 
   /** @return the revision. */
   @JsonProperty("revision")

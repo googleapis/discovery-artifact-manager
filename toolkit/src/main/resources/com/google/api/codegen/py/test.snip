@@ -23,36 +23,8 @@
 
 @end
 
-@private licenseSection(fileHeader)
-    @join line : fileHeader.copyrightLines
-        @# {@line}
-    @end
-    {@BREAK}@#
-    @join line : fileHeader.licenseLines
-        @# {@line}
-    @end
-@end
-
 @private moduleDocstring()
     """Unit tests."""
-@end
-
-@private renderImportSection(importSection)
-    @if importSection.standardImports
-
-        {@importList(importSection.standardImports)}
-
-    @end
-    @if importSection.externalImports
-
-        {@importList(importSection.externalImports)}
-
-    @end
-    @if importSection.appImports
-
-        {@importList(importSection.appImports)}
-
-    @end
 @end
 
 @private testCase(test, moduleName)
@@ -180,7 +152,7 @@
         self.assertRaises(\
             errors.GaxError, \
             client.{@test.clientMethodName}\
-            {@fieldSettingArgListAfterComma(test.initCode.fieldSettings)})
+            {@sampleMethodCallArgListAfterComma(test.initCode)})
 @end
 
 @private pagedStreamingTestWithException(test, moduleName)
@@ -214,7 +186,7 @@
     def {@test.name}(self, mock_create_stub):
         {@unaryTestSetup(test, moduleName)}
         @# Mock response
-        {@initCode(test.mockResponse.initCode)}
+        {@responseInitCode(test)}
         operation = operations_pb2.Operation(name='operations/{@test.name}', done=True)
         operation.response.Pack(expected_response)
         grpc_stub.{@test.grpcStubCallString}.return_value = operation
@@ -267,21 +239,26 @@
 
 @private unaryTestResponse(test)
     @# Mock response
-    {@initCode(test.mockResponse.initCode)}
+    {@responseInitCode(test)}
     grpc_stub.{@test.grpcStubCallString}.return_value = expected_response
 
 @end
 
 @private responseStreamingTestResponse(test)
     @# Mock response
-    {@initCode(test.mockResponse.initCode)}
+    {@responseInitCode(test)}
     grpc_stub.{@test.grpcStubCallString}.return_value = iter([expected_response])
 
 @end
 
+@private responseInitCode(test)
+    {@initCode(test.mockResponse.initCode)}
+    expected_response = {@test.responseTypeName}(**expected_response)
+@end
+
 @private unaryTestMethodCall(test)
     client.{@test.clientMethodName}(\
-        {@fieldSettingArgList(test.initCode.fieldSettings)})
+        {@sampleMethodCallArgList(test.initCode)})
 @end
 
 @private requestStreamingTestMethodCall(test)
@@ -327,8 +304,8 @@
     self.assertEqual(request, actual_request)
 @end
 
-@private fieldSettingArgListAfterComma(fieldSettings)
-  @if fieldSettings
-    , {@fieldSettingArgList(fieldSettings)}
+@private sampleMethodCallArgListAfterComma(initCode)
+  @if initCode.fieldSettings
+    , {@sampleMethodCallArgList(initCode)}
   @end
 @end

@@ -55,6 +55,11 @@ public class DynamicLangTypeTable implements TypeTable {
   }
 
   @Override
+  public TypeTable cloneEmpty(String packageName) {
+    return new DynamicLangTypeTable(packageName, separator);
+  }
+
+  @Override
   public TypeName getTypeName(String fullName) {
     int lastSeparatorIndex = fullName.lastIndexOf(getSeparator());
     if (lastSeparatorIndex < 0) {
@@ -111,6 +116,11 @@ public class DynamicLangTypeTable implements TypeTable {
 
   @Override
   public Map<String, TypeAlias> getImports() {
+    return new TreeMap<>(imports);
+  }
+
+  @Override
+  public Map<String, TypeAlias> getAllImports() {
     return new TreeMap<>(imports);
   }
 

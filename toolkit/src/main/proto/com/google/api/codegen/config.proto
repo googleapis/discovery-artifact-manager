@@ -64,6 +64,8 @@ option java_package = "com.google.api.codegen";
 //         request_object_method: true
 //         field_name_patterns:
 //           name: book
+//         header_request_params:
+//           - name
 //       - name: GetBook
 //       ...
 //     ...
@@ -112,6 +114,9 @@ message LanguageSettingsProto {
 
   // Overrides ConfigProto::license_header.
   LicenseHeaderProto license_header_override = 5;
+
+  // The release level of the client in the language
+  ReleaseLevel release_level = 6; 
 }
 
 // ReleaseLevel indicates the stage of development of a piece of code and
@@ -267,6 +272,11 @@ message MethodConfigProto {
   // IAM methods to IamPolicy for Pub/Sub.
   string reroute_to_grpc_interface = 12;
 
+  // Specifies the list of the method's input message fields (including nested
+  // ones, using the dot notation), which should be url-encoded in
+  // "x-goog-request-params" header
+  repeated string header_request_params = 14;
+
   repeated SurfaceTreatmentProto surface_treatments = 20;
 
   // Set the resource name treatment for fields
@@ -274,6 +284,7 @@ message MethodConfigProto {
 
   // Long-running settings.
   LongRunningConfigProto long_running = 30;
+
 }
 
 // `FlatteningConfigProto` describes the parameter groups for which a
@@ -505,6 +516,16 @@ message LongRunningConfigProto {
   // Whether or not the server implements cancel.
   bool implements_cancel = 4;
 
-  // The interval of polling, in milliseconds.
-  uint64 polling_interval_millis = 5;
+  // Initial delay after which first poll request will be made.
+  uint64 initial_poll_delay_millis = 5;
+
+  // Multiplier to gradually increase delay between subsequent polls until it
+  // reaches max_poll_delay_millis.
+  double poll_delay_multiplier = 6;
+
+  // Maximum time between two subsequent poll requests.
+  uint64 max_poll_delay_millis = 7;
+
+  // Total polling timeout.
+  uint64 total_poll_timeout_millis = 8;
 }

@@ -71,6 +71,11 @@ public class TypeNameTest {
     }
 
     @Override
+    public TypeTable cloneEmpty(String packageName) {
+      return new MockTypeTable();
+    }
+
+    @Override
     public String getAndSaveNicknameFor(String fullName) {
       return null;
     }
@@ -82,6 +87,11 @@ public class TypeNameTest {
 
     @Override
     public Map<String, TypeAlias> getImports() {
+      return null;
+    }
+
+    @Override
+    public Map<String, TypeAlias> getAllImports() {
       return null;
     }
 
