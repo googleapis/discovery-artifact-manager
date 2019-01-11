@@ -98,9 +98,9 @@
         @# https://google.github.io/google-api-python-client/docs/epy/googleapiclient.http.MediaIoBaseDownload-class.html
 
     @end
-    {@class.requestVarName} = {@class.serviceVarName}.{@callChain(class.methodNameComponents)}({@paramList(class.methodParamAssigments)})
     @if class.isPageStreaming
-        while {@class.requestVarName} is not None:
+        while True:
+            {@class.requestVarName} = {@class.serviceVarName}.{@callChain(class.methodNameComponents)}({@paramList(class.methodParamAssigments)})
             {@class.responseVarName} = {@class.requestVarName}.execute()
 
             @if class.pageStreaming.isResourceRepeated
@@ -109,7 +109,7 @@
                         @# TODO: Change code below to process each ({@class.pageStreaming.resourceKeyVarName}, {@class.pageStreaming.resourceValueVarName}) item:
                         pprint(({@class.pageStreaming.resourceKeyVarName}, {@class.pageStreaming.resourceValueVarName}))
                 @else
-                    for {@class.pageStreaming.resourceVarName} in {@class.responseVarName}['{@class.pageStreaming.resourceFieldName}']:
+                    for {@class.pageStreaming.resourceVarName} in {@class.responseVarName}.get('{@class.pageStreaming.resourceFieldName}', []):
                         @# TODO: Change code below to process each `{@class.pageStreaming.resourceVarName}` resource:
                         pprint({@class.pageStreaming.resourceVarName})
                 @end
@@ -119,11 +119,14 @@
             @end
 
             @if class.pageStreaming.isResourceSetterInRequestBody
-                {@class.requestBodyVarName}.{@class.pageStreaming.pageTokenName} = {@class.responseVarName}.{@class.pageStreaming.nextPageTokenName}
+                if 'nextPageToken' not in {@class.responseVarName}:
+                    break
+                {@class.requestBodyVarName}['pageToken'] = {@class.responseVarName}['nextPageToken']
             @else
                 {@class.requestVarName} = {@class.serviceVarName}.{@callChain(class.methodNameComponents)}_next(previous_request={@class.requestVarName}, previous_response={@class.responseVarName})
             @end
     @else
+        {@class.requestVarName} = {@class.serviceVarName}.{@callChain(class.methodNameComponents)}({@paramList(class.methodParamAssigments)})
         @if class.hasResponse
             {@class.responseVarName} = {@class.requestVarName}.execute()
 
