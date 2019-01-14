@@ -105,33 +105,34 @@
         @else
             {@class.requestVarName} = {@class.serviceVarName}.{@callChain(class.methodNameComponents)}({@paramList(class.methodParamAssigments)})
             while True:
-        @end
-        {@class.responseVarName} = {@class.requestVarName}.execute()
 
-        @if class.pageStreaming.isResourceRepeated
-            @if class.pageStreaming.isResourceMap
-                for {@class.pageStreaming.resourceKeyVarName}, {@class.pageStreaming.resourceValueVarName} in {@class.responseVarName}['{@class.pageStreaming.resourceFieldName}'].items():
-                    @# TODO: Change code below to process each ({@class.pageStreaming.resourceKeyVarName}, {@class.pageStreaming.resourceValueVarName}) item:
-                    pprint(({@class.pageStreaming.resourceKeyVarName}, {@class.pageStreaming.resourceValueVarName}))
+        @end
+            {@class.responseVarName} = {@class.requestVarName}.execute()
+
+            @if class.pageStreaming.isResourceRepeated
+                @if class.pageStreaming.isResourceMap
+                    for {@class.pageStreaming.resourceKeyVarName}, {@class.pageStreaming.resourceValueVarName} in {@class.responseVarName}['{@class.pageStreaming.resourceFieldName}'].items():
+                        @# TODO: Change code below to process each ({@class.pageStreaming.resourceKeyVarName}, {@class.pageStreaming.resourceValueVarName}) item:
+                        pprint(({@class.pageStreaming.resourceKeyVarName}, {@class.pageStreaming.resourceValueVarName}))
+                @else
+                    for {@class.pageStreaming.resourceVarName} in {@class.responseVarName}.get('{@class.pageStreaming.resourceFieldName}', []):
+                        @# TODO: Change code below to process each `{@class.pageStreaming.resourceVarName}` resource:
+                        pprint({@class.pageStreaming.resourceVarName})
+                @end
             @else
-                for {@class.pageStreaming.resourceVarName} in {@class.responseVarName}.get('{@class.pageStreaming.resourceFieldName}', []):
-                    @# TODO: Change code below to process each `{@class.pageStreaming.resourceVarName}` resource:
-                    pprint({@class.pageStreaming.resourceVarName})
+                @# TODO: Change code below to process each `{@class.responseVarName}['{@class.pageStreaming.resourceFieldName}']` resource:
+                pprint({@class.responseVarName}['{@class.pageStreaming.resourceFieldName}'])
             @end
-        @else
-            @# TODO: Change code below to process each `{@class.responseVarName}['{@class.pageStreaming.resourceFieldName}']` resource:
-            pprint({@class.responseVarName}['{@class.pageStreaming.resourceFieldName}'])
-        @end
 
-        @if class.pageStreaming.isResourceSetterInRequestBody
-            if 'nextPageToken' not in {@class.responseVarName}:
-                break
-            {@class.requestBodyVarName}['pageToken'] = {@class.responseVarName}['nextPageToken']
-        @else
-            {@class.requestVarName} = {@class.serviceVarName}.{@callChain(class.methodNameComponents)}_next(previous_request={@class.requestVarName}, previous_response={@class.responseVarName})
-            if request is None:
-                break
-        @end
+            @if class.pageStreaming.isResourceSetterInRequestBody
+                if 'nextPageToken' not in {@class.responseVarName}:
+                    break
+                {@class.requestBodyVarName}['pageToken'] = {@class.responseVarName}['nextPageToken']
+            @else
+                {@class.requestVarName} = {@class.serviceVarName}.{@callChain(class.methodNameComponents)}_next(previous_request={@class.requestVarName}, previous_response={@class.responseVarName})
+                if request is None:
+                    break
+            @end
     @else
         {@class.requestVarName} = {@class.serviceVarName}.{@callChain(class.methodNameComponents)}({@paramList(class.methodParamAssigments)})
         @if class.hasResponse
