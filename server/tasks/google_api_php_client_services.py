@@ -115,7 +115,7 @@ def update(filepath, github_account, discovery_documents):
     # "google-apis-client-generator" package.
     check_output([join(venv_filepath, 'bin/pip'),
                   'install',
-                  'google-apis-client-generator==1.4.3'])
+                  'google-apis-client-generator==1.6.0'])
     added, updated = _generate_and_commit_all_clients(
         repo, venv_filepath, discovery_documents)
     commit_count = len(added) + len(updated)
