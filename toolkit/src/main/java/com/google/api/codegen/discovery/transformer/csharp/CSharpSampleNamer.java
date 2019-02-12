@@ -33,7 +33,7 @@ class CSharpSampleNamer extends SampleNamer {
 
   @Override
   public String getServiceVarName(String apiTypeName) {
-    return Name.upperCamel(apiTypeName).toLowerCamel();
+    return Name.anyCamel(apiTypeName).toLowerCamel();
   }
 
   @Override

@@ -26,7 +26,7 @@ public class JSSampleNamer extends SampleNamer {
 
   @Override
   public String getServiceVarName(String apiTypeName) {
-    return localVarName(Name.upperCamelKeepUpperAcronyms(apiTypeName));
+    return localVarName(Name.anyCamelKeepUpperAcronyms(apiTypeName));
   }
 
   @Override
