@@ -80,7 +80,7 @@ def _generate_client(repo, venv_filepath, ddoc_filename):
         check_output([join(venv_filepath, 'bin/generate_library'),
                       '--input={}'.format(ddoc_filename),
                       '--language=php',
-                      '--language_variant=1.2.0',
+                      '--language_variant=1.2.1',
                       '--output_dir={}'.format(dest_filepath)])
         dirs = os.listdir(dest_filepath)
         client_name = os.path.splitext(dirs[0])[0]  # ex: "BigQuery"
@@ -115,7 +115,7 @@ def update(filepath, github_account, discovery_documents):
     # "google-apis-client-generator" package.
     check_output([join(venv_filepath, 'bin/pip'),
                   'install',
-                  'google-apis-client-generator==1.6.0'])
+                  'google-apis-client-generator==1.6.1'])
     added, updated = _generate_and_commit_all_clients(
         repo, venv_filepath, discovery_documents)
     commit_count = len(added) + len(updated)
