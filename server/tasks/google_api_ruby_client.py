@@ -72,6 +72,13 @@ def _generate_all_clients(repo):
                   'generated/google/apis/discovery_v1'],
                  cwd=repo.filepath)
     check_output(['./script/generate'], cwd=repo.filepath)
+    # Temporarily disable generation of health care services.
+    check_output(['rm', '-rf',
+                  'generated/google/apis/healthcare_v1alpha2',
+                  'generated/google/apis/healthcare_v1alpha2.rb',
+                  'generated/google/apis/healthcare_v1alpha',
+                  'generated/google/apis/healthcare_v1alpha.rb'],
+                  cwd=repo.filepath)
     added, deleted, updated = set(), set(), set()
     status_to_ids = {
         _git.Status.ADDED: added,
