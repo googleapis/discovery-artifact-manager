@@ -58,9 +58,7 @@ def nodejs_release(filepath, github_account, force):
 def php_update(filepath, github_account):
     """Wrapper over the PHP release function to standardize parameters."""
     ddocs = discovery_artifact_manager.discovery_documents(
-        filepath, preferred=True, skip=['discovery:v1',
-                                        'healthcare:v1alpha2',
-                                        'healthcare:v1alpha'])
+        filepath, preferred=True, skip=['discovery:v1'])
     google_api_php_client_services.update(filepath, github_account, ddocs)
 
 
