@@ -15,6 +15,7 @@
 package com.google.api.codegen.discovery.config.py;
 
 import com.google.api.codegen.discovery.config.TypeNameGenerator;
+import java.util.List;
 
 public class PythonTypeNameGenerator extends TypeNameGenerator {
 
@@ -28,5 +29,10 @@ public class PythonTypeNameGenerator extends TypeNameGenerator {
     // Avoid cases like "DatasetList.Datasets"
     String pieces[] = messageTypeName.split("\\.");
     return pieces[pieces.length - 1];
+  }
+
+  @Override
+  public List<String> getMethodNameComponents(List<String> nameComponents) {
+    return camelCaseDiscoveryMethodName(nameComponents).subList(1, nameComponents.size());
   }
 }

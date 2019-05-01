@@ -17,7 +17,9 @@ package com.google.api.codegen.discovery.config;
 import com.google.api.codegen.DiscoveryImporter;
 import com.google.api.codegen.LanguageUtil;
 import com.google.api.codegen.discovery.DefaultString;
+import com.google.api.codegen.util.Name;
 import com.google.common.base.Strings;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -37,7 +39,6 @@ public class TypeNameGenerator {
    */
   public List<String> getMethodNameComponents(List<String> nameComponents) {
     LinkedList<String> copy = new LinkedList<>(nameComponents);
-    // Don't edit the original object.
     copy.removeFirst();
     return copy;
   }
@@ -173,5 +174,20 @@ public class TypeNameGenerator {
   /** Returns the URL of the discovery doc. */
   public String getDiscoveryDocUrl(String apiName, String apiVersion, String rootUrl) {
     return "";
+  }
+
+  // Healthcase API has three methods that do not follow camel case format:
+  // "Patient-everything", "Observation-lastn" and "Reserve-purge"
+  // We need to change them to lower camel case first.
+  protected List<String> camelCaseDiscoveryMethodName(List<String> nameComponents) {
+    List<String> camelCaseNameComponents = new ArrayList<>();
+    for (String component : nameComponents) {
+      if (Name.isHyphen(component)) {
+        camelCaseNameComponents.add(Name.anyHyphen(component).toLowerCamel());
+      } else {
+        camelCaseNameComponents.add(component);
+      }
+    }
+    return camelCaseNameComponents;
   }
 }

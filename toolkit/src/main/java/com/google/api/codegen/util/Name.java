@@ -18,6 +18,7 @@ import com.google.api.codegen.util.CommonAcronyms.NamePieceCasingType;
 import com.google.api.codegen.util.CommonAcronyms.SubNamePiece;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -79,6 +80,27 @@ public class Name {
    */
   public static Name anyCamel(String... pieces) {
     return camelInternal(CheckCase.NO_CHECK, AcronymMode.CAMEL_CASE, pieces);
+  }
+
+  /**
+   * Creates a Name from a sequence of hyphen-case strings.
+   *
+   * @throws IllegalArgumentException if any of the strings do not follow the hyphen-case format.
+   */
+  public static Name anyHyphen(String... pieces) {
+    List<NamePiece> namePieces = new ArrayList<>();
+    for (String piece : pieces) {
+      if (isHyphen(piece, CheckCase.NO_CHECK)) {
+        piece = piece.toLowerCase();
+      }
+      validateHyphen(piece, CheckCase.LOWER);
+      namePieces.add(new NamePiece(piece, CaseFormat.LOWER_HYPHEN));
+    }
+    return new Name(namePieces);
+  }
+
+  public static boolean isHyphen(String identifier) {
+    return isHyphen(identifier, CheckCase.NO_CHECK);
   }
 
   /**
@@ -188,6 +210,30 @@ public class Name {
       }
     }
     return true;
+  }
+
+  public static boolean isHyphen(String identifier, CheckCase check) {
+    if (identifier.length() == 0) {
+      return true;
+    }
+    String[] subPieces = identifier.split("-");
+    if (subPieces.length <= 1) {
+      return false;
+    }
+    for (String subPiece : subPieces) {
+      if (!check.valid(identifier.charAt(0))) {
+        return false;
+      }
+      if (!subPiece.chars().skip(1).allMatch(Character::isLowerCase)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private static void validateHyphen(String identifier, CheckCase check) {
+    Preconditions.checkArgument(
+        isHyphen(identifier, check), "Name: identifier not in dash-case: '" + identifier + "'");
   }
 
   private Name(List<NamePiece> namePieces) {
