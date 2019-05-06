@@ -15,6 +15,7 @@
 package com.google.api.codegen.discovery.config.nodejs;
 
 import com.google.api.codegen.discovery.config.TypeNameGenerator;
+import java.util.List;
 
 public class NodeJSTypeNameGenerator extends TypeNameGenerator {
 
@@ -26,5 +27,10 @@ public class NodeJSTypeNameGenerator extends TypeNameGenerator {
   @Override
   public String getStringFormatExample(String format) {
     return getStringFormatExample(format, "Date.toISOString()", "Date.toISOString()");
+  }
+
+  @Override
+  public List<String> getMethodNameComponents(List<String> nameComponents) {
+    return camelCaseDiscoveryMethodName(nameComponents).subList(1, nameComponents.size());
   }
 }

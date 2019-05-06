@@ -17,7 +17,6 @@ package com.google.api.codegen.discovery.config.go;
 import com.google.api.codegen.DiscoveryImporter;
 import com.google.api.codegen.discovery.config.TypeNameGenerator;
 import com.google.api.codegen.util.Name;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,9 +28,9 @@ public class GoTypeNameGenerator extends TypeNameGenerator {
 
   @Override
   public List<String> getMethodNameComponents(List<String> nameComponents) {
-    LinkedList<String> copy = new LinkedList<String>(nameComponents);
     // Don't edit the original object.
-    copy.removeFirst();
+    List<String> copy =
+        camelCaseDiscoveryMethodName(nameComponents).subList(1, nameComponents.size());
     for (int i = 0; i < copy.size(); i++) {
       copy.set(i, Name.lowerCamel(copy.get(i)).toUpperCamel());
     }
@@ -57,8 +56,8 @@ public class GoTypeNameGenerator extends TypeNameGenerator {
 
   @Override
   public String getRequestTypeName(List<String> methodNameComponents) {
-    LinkedList<String> copy = new LinkedList<String>(methodNameComponents);
-    copy.removeFirst();
+    List<String> copy =
+        camelCaseDiscoveryMethodName(methodNameComponents).subList(1, methodNameComponents.size());
     String arr[] = copy.toArray(new String[copy.size() + 1]);
     arr[arr.length - 1] = "call";
     return Name.lowerCamel(arr).toUpperCamel();

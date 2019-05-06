@@ -25,7 +25,7 @@ public class JSTypeNameGenerator extends TypeNameGenerator {
   public List<String> getMethodNameComponents(List<String> nameComponents) {
     // In JS, we want the whole name components list to make it to the
     // transformer because every element is part of the method construction.
-    return nameComponents;
+    return camelCaseDiscoveryMethodName(nameComponents);
   }
 
   @Override

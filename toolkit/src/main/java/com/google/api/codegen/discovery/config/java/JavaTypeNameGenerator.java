@@ -18,7 +18,6 @@ import com.google.api.codegen.discovery.config.TypeNameGenerator;
 import com.google.api.codegen.util.Name;
 import com.google.api.codegen.util.java.JavaNameFormatter;
 import com.google.common.base.Joiner;
-import java.util.LinkedList;
 import java.util.List;
 
 public class JavaTypeNameGenerator extends TypeNameGenerator {
@@ -26,8 +25,8 @@ public class JavaTypeNameGenerator extends TypeNameGenerator {
   @Override
   public List<String> getMethodNameComponents(List<String> nameComponents) {
     // Don't edit the original object.
-    LinkedList<String> copy = new LinkedList<>(nameComponents);
-    copy.removeFirst();
+    List<String> copy =
+        camelCaseDiscoveryMethodName(nameComponents).subList(1, nameComponents.size());
     // Handle cases where the method signature contains keywords.
     // ex: "variants.import" to "variants.genomicsImport"
     for (int i = 0; i < copy.size(); i++) {

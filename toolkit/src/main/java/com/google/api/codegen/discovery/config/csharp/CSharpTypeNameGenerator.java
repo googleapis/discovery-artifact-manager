@@ -17,16 +17,15 @@ package com.google.api.codegen.discovery.config.csharp;
 import com.google.api.codegen.discovery.config.TypeNameGenerator;
 import com.google.api.codegen.util.Name;
 import com.google.common.base.Joiner;
-import java.util.LinkedList;
 import java.util.List;
 
 public class CSharpTypeNameGenerator extends TypeNameGenerator {
 
   @Override
   public List<String> getMethodNameComponents(List<String> nameComponents) {
-    LinkedList<String> copy = new LinkedList<String>(nameComponents);
+    List<String> copy =
+        camelCaseDiscoveryMethodName(nameComponents).subList(1, nameComponents.size());
     // Don't edit the original object.
-    copy.removeFirst();
     for (int i = 0; i < copy.size(); i++) {
       copy.set(i, Name.lowerCamel(copy.get(i)).toUpperCamel());
     }

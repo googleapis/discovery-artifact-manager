@@ -156,4 +156,18 @@ public class NameTest {
     Truth.assertThat(name.toLowerCamel()).isEqualTo("iamHTTPXML");
     Truth.assertThat(name.toUpperCamel()).isEqualTo("IAMHTTPXML");
   }
+
+  @Test
+  public void isHyphen() {
+    Truth.assertThat(Name.isHyphen("Abc-Def")).isTrue();
+    Truth.assertThat(Name.isHyphen("abc-def")).isTrue();
+    Truth.assertThat(Name.isHyphen("abc_def")).isFalse();
+    Truth.assertThat(Name.isHyphen("abcDef")).isFalse();
+  }
+
+  @Test
+  public void anyHyphenToLowerCamel() {
+    Name name = Name.anyHyphen("Abc-def", "ghi-Jkl");
+    Truth.assertThat(name.toLowerCamel()).isEqualTo("abcDefGhiJkl");
+  }
 }

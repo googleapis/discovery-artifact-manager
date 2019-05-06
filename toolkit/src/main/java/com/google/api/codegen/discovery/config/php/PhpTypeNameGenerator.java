@@ -44,7 +44,7 @@ public class PhpTypeNameGenerator extends TypeNameGenerator {
   public List<String> getMethodNameComponents(List<String> nameComponents) {
     ArrayList<String> out = new ArrayList<>();
 
-    nameComponents = super.getMethodNameComponents(nameComponents);
+    nameComponents = camelCaseDiscoveryMethodName(super.getMethodNameComponents(nameComponents));
     String verb = nameComponents.remove(nameComponents.size() - 1); // Pop the last element.
     if (RENAMED_METHODS.contains(verb)) {
       for (String s : nameComponents) {
