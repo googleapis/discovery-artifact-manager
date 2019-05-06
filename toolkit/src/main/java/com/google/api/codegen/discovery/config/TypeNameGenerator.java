@@ -38,6 +38,7 @@ public class TypeNameGenerator {
    * <p>For example: "myapi.foo.get" to ["Foo", "Get"]
    */
   public List<String> getMethodNameComponents(List<String> nameComponents) {
+    // Don't edit the original object.
     LinkedList<String> copy = new LinkedList<>(nameComponents);
     copy.removeFirst();
     return copy;

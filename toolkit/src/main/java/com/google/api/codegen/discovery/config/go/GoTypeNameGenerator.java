@@ -28,6 +28,7 @@ public class GoTypeNameGenerator extends TypeNameGenerator {
 
   @Override
   public List<String> getMethodNameComponents(List<String> nameComponents) {
+    // Don't edit the original object.
     List<String> copy =
         camelCaseDiscoveryMethodName(nameComponents).subList(1, nameComponents.size());
     for (int i = 0; i < copy.size(); i++) {

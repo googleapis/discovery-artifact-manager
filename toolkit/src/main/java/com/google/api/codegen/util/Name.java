@@ -99,6 +99,7 @@ public class Name {
     return new Name(namePieces);
   }
 
+  /** Checks if {@code identifier} is in hyphen-case. */
   public static boolean isHyphen(String identifier) {
     return isHyphen(identifier, CheckCase.NO_CHECK);
   }
@@ -212,7 +213,7 @@ public class Name {
     return true;
   }
 
-  public static boolean isHyphen(String identifier, CheckCase check) {
+  private static boolean isHyphen(String identifier, CheckCase check) {
     if (identifier.length() == 0) {
       return true;
     }
@@ -233,7 +234,7 @@ public class Name {
 
   private static void validateHyphen(String identifier, CheckCase check) {
     Preconditions.checkArgument(
-        isHyphen(identifier, check), "Name: identifier not in dash-case: '" + identifier + "'");
+        isHyphen(identifier, check), "Name: identifier not in hyphen-case: '" + identifier + "'");
   }
 
   private Name(List<NamePiece> namePieces) {
