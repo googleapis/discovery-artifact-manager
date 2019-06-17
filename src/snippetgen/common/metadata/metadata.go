@@ -69,6 +69,7 @@ var (
 		{"PHP", "", "php", false},
 		{"Python", "", "py", false},
 		{"Ruby", "", "rb", false},
+		{"Web", "", "web", false},
 		FragmentLanguage,
 	}
 

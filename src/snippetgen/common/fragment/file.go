@@ -99,7 +99,7 @@ func FromFile(filePath string) (*Info, error) {
 // revision marker (rather than whatever revision is contained in
 // Info).
 func (info *Info) ToFile(rootPath string, markCurrent bool) error {
-	const filePermissions = 0440
+	const filePermissions = 0740
 	const directoryPermissions = 0750
 	if info == nil {
 		return fmt.Errorf("no metadata available")
