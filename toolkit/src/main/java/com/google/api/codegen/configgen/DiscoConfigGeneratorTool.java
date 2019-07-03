@@ -39,7 +39,7 @@ public class DiscoConfigGeneratorTool {
     options.addOption(
         Option.builder("o")
             .longOpt("output")
-            .desc("The directory in which to output the generated config.")
+            .desc("The output file name for the generated config.")
             .hasArg()
             .argName("OUTPUT-FILE")
             .required(true)
