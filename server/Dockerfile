@@ -35,9 +35,16 @@ RUN apt-get install -y python-pip
 RUN pip install virtualenv
 RUN virtualenv /env -p python3
 
-# Install Ruby 2.3 and Bundler.
-RUN apt-get install -y ruby ruby-dev
-RUN gem install bundler --no-ri --no-rdoc
+# Install Ruby 2.6.5 and Bundler.
+ARG ruby_version=2.6.5
+RUN apt-get install -y libssl-dev libreadline-dev zlib1g-dev
+RUN mkdir -p /tmp/ruby-build \
+    && cd /tmp/ruby-build \
+    && git clone https://github.com/rbenv/ruby-build.git \
+    && ./ruby-build/bin/ruby-build --keep "${ruby_version}" /usr/local/ruby \
+    && rm -rf /tmp/ruby-build
+ENV PATH /usr/local/ruby/bin:$PATH
+RUN gem install bundler:1.17.3 bundler:2.0.2 --no-document
 
 # Set virtualenv environment variables. This is equivalent to running
 # source /env/bin/activate
