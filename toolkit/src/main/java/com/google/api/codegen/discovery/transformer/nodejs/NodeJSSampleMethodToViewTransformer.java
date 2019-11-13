@@ -74,8 +74,9 @@ public class NodeJSSampleMethodToViewTransformer implements SampleMethodToViewTr
 
     SampleView.Builder builder = SampleView.newBuilder();
 
-    String serviceVarName = symbolTable.getNewSymbol(namer.getServiceVarName(config.apiTypeName()));
-    String serviceTypeName = typeTable.getAndSaveNicknameForServiceType(config.apiTypeName());
+    // Node.js uses apiName instead of apiCanonicalName to generate the client name
+    String serviceVarName = symbolTable.getNewSymbol(namer.getServiceVarName(config.apiName()));
+    String serviceTypeName = typeTable.getAndSaveNicknameForServiceType(config.apiName());
     String requestVarName = symbolTable.getNewSymbol(namer.getRequestVarName());
 
     // Created before the fields in case there are naming conflicts in the symbol table.
