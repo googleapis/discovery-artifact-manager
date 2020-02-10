@@ -67,3 +67,20 @@ from any subdirectory. **This cache is not yet used for testing by other tools.*
 cd toolkit
 ./gradlew test
 ```
+
+## Updating samples
+
+To update samples, you will both need to make edits in the appropriate `.snip`
+file, e.g.,
+`toolkit/src/main/resources/com/google/api/codegen/nodejs/sample.snip`, and
+update tests.
+
+### Updating tests
+
+* `cd toolkit`.
+* run: `./gradlew test`, this will generate the expected test output in
+  `/tmp/com.google.api.codegen_testdata/`.
+* copy the snapshot files generated in `/tmp` to the appropriate location, in
+  the case of this example: `src/test/java/com/google/api/codegen/testdata/discoveries/nodejs/`.
+* make sure that the samples look appropriate.
+* and _finally`, re-run tests.
