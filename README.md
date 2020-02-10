@@ -83,4 +83,4 @@ update tests.
 * copy the snapshot files generated in `/tmp` to the appropriate location, in
   the case of this example: `src/test/java/com/google/api/codegen/testdata/discoveries/nodejs/`.
 * make sure that the samples look appropriate.
-* and _finally`, re-run tests.
+* and _finally_, re-run tests.
