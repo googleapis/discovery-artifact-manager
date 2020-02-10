@@ -41,9 +41,11 @@
 @end
 
 @private mainFunc(class)
-  {@class.auth.authFuncName}(function({@class.auth.authVarName}) {
+  async function main () {
+    const {@class.auth.authVarName} = await {@class.auth.authFuncName}();
     {@mainFuncBody(class)}
-  });
+  }
+  main();
 @end
 
 @private mainFuncBody(class)
@@ -164,21 +166,16 @@
 @end
 
 @private authFunc_ADC(class)
-  async function {@class.auth.authFuncName}(callback) {
+  async function {@class.auth.authFuncName}() {
     const auth = new google.auth.GoogleAuth({
       scopes: ['https://www.googleapis.com/auth/cloud-platform']
     });
-    try {
-      const authClient = await auth.getClient();
-      callback(authClient);
-    } catch (err) {
-      console.error('authentication failed: ', err);
-    }
+    return await auth.getClient();
   }
 @end
 
 @private authFunc_OAuth3L(class)
-  function {@class.auth.authFuncName}(callback) {
+  function {@class.auth.authFuncName}() {
     // TODO: Change placeholder below to generate authentication credentials. See
     // {@class.auth.instructionsUrl}
     //
@@ -193,10 +190,10 @@
     var authClient = null;
 
     if (authClient == null) {
-      console.log('authentication failed');
-      return;
+      throw Error('authentication failed');
+    } else {
+      return authClient;
     }
-    callback(authClient);
   }
 @end
 
