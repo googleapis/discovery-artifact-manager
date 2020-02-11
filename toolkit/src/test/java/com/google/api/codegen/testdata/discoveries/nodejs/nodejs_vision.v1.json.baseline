@@ -14,10 +14,11 @@
 //    `npm install googleapis --save`
 
 const {google} = require('googleapis');
-var vision = google.vision('v1');
+const vision = google.vision('v1');
 
-authorize(function(authClient) {
-  var request = {
+async function main () {
+  const authClient = await authorize();
+  const request = {
     resource: {
       // TODO: Add desired properties to the request body.
     },
@@ -25,23 +26,19 @@ authorize(function(authClient) {
     auth: authClient,
   };
 
-  vision.images.annotate(request, function(err, response) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-
+  try {
+    const response = (await vision.images.annotate(request)).data;
     // TODO: Change code below to process the `response` object:
     console.log(JSON.stringify(response, null, 2));
-  });
-});
+  } catch (err) {
+    console.error(err);
+  }
+}
+main();
 
-function authorize(callback) {
-  google.auth.getClient({
+async function authorize() {
+  const auth = new google.auth.GoogleAuth({
     scopes: ['https://www.googleapis.com/auth/cloud-platform']
-  }).then(client => {
-    callback(client);
-  }).catch(err => {
-    console.error('authentication failed: ', err);
   });
+  return await auth.getClient();
 }

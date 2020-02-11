@@ -20,11 +20,14 @@
   @end
 
   const {{@class.googleImportVarName}} = require('googleapis');
-  var {@class.serviceVarName} = {@class.googleImportVarName}.{@class.serviceTypeName}('{@class.apiVersion}');
+  const {@class.serviceVarName} = {@class.googleImportVarName}.{@class.serviceTypeName}('{@class.apiVersion}');
 
   @switch class.auth.type
   @case "NONE"
-    {@mainFuncBody(class)}
+    async function main () {
+      {@mainFuncBody(class)}
+    }
+    main();
   @case "APPLICATION_DEFAULT_CREDENTIALS"
     {@mainFunc(class)}
 
@@ -34,20 +37,25 @@
 
     {@authFunc_OAuth3L(class)}
   @case "API_KEY"
-    var {@class.auth.authVarName} = '';  // TODO: Update placeholder with desired API key.
+    const {@class.auth.authVarName} = '';  // TODO: Update placeholder with desired API key.
 
-    {@mainFuncBody(class)}
+    async function main () {
+      {@mainFuncBody(class)}
+    }
+    main();
   @end
 @end
 
 @private mainFunc(class)
-  {@class.auth.authFuncName}(function({@class.auth.authVarName}) {
+  async function main () {
+    const {@class.auth.authVarName} = await {@class.auth.authFuncName}();
     {@mainFuncBody(class)}
-  });
+  }
+  main();
 @end
 
 @private mainFuncBody(class)
-  var {@class.requestVarName} = {
+  const {@class.requestVarName} = {
     @join field : class.requiredFields if class.requiredFields
       {@field(field)}
 
@@ -99,58 +107,42 @@
   };
 
   @if class.isPageStreaming
-    var {@class.pageStreaming.handlePageVarName} = function(err, {@class.responseVarName}) {
-      if (err) {
-        console.error(err);
-        return;
+    let {@class.responseVarName};
+    do {
+      if ({@class.responseVarName} && {@class.responseVarName}.{@class.pageStreaming.nextPageTokenName}) {
+        {@pageToken(class)} = {@class.responseVarName}.{@class.pageStreaming.nextPageTokenName};
       }
-
-      var {@class.pageStreaming.pageVarName} = {@class.responseVarName}['{@class.pageStreaming.resourceFieldName}'];
-      if (!{@class.pageStreaming.pageVarName}) {
-        return;
-      }
-      @if class.pageStreaming.isResourceRepeated
+      {@class.responseVarName} = (await {@class.serviceVarName}.{@callChain(class.methodNameComponents)}({@class.requestVarName})).data;
+      const {@class.pageStreaming.pageVarName} = {@class.responseVarName}.{@class.pageStreaming.resourceFieldName};
+      if ({@class.pageStreaming.pageVarName}) {
         @if class.pageStreaming.isResourceMap
           Object.keys({@class.pageStreaming.pageVarName}).forEach(function({@class.pageStreaming.resourceKeyVarName}) {
             // TODO: Change code below to process each `{@class.pageStreaming.resourceKeyVarName}` property:
             console.log({@class.pageStreaming.resourceKeyVarName} + ': ' + JSON.stringify({@class.pageStreaming.pageVarName}[{@class.pageStreaming.resourceKeyVarName}], null, 2));
           });
         @else
-          for (var i = 0; i < {@class.pageStreaming.pageVarName}.length; i++) {
+          for (let i = 0; i < {@class.pageStreaming.pageVarName}.length; i++) {
             // TODO: Change code below to process each resource in `{@class.pageStreaming.pageVarName}`:
             console.log(JSON.stringify({@class.pageStreaming.pageVarName}[i], null, 2));
           }
         @end
-      @else
-        // TODO: Change code below to process each `{@class.pageStreaming.pageVarName}` resource:
-        console.log({@class.pageStreaming.pageVarName});
-      @end
-
-      if ({@class.responseVarName}.{@class.pageStreaming.nextPageTokenName}) {
-        {@pageToken(class)} = {@class.responseVarName}.{@class.pageStreaming.nextPageTokenName};
-        {@class.serviceVarName}.{@callChain(class.methodNameComponents)}({@class.requestVarName}, {@class.pageStreaming.handlePageVarName});
       }
-    };
-
-    {@class.serviceVarName}.{@callChain(class.methodNameComponents)}({@class.requestVarName}, {@class.pageStreaming.handlePageVarName});
+    } while ({@class.responseVarName}.{@class.pageStreaming.nextPageTokenName});
   @else
     @if class.hasResponse
-      {@class.serviceVarName}.{@callChain(class.methodNameComponents)}({@class.requestVarName}, function(err, {@class.responseVarName}) {
-        if (err) {
-          console.error(err);
-          return;
-        }
-
+      try {
+        const {@class.responseVarName} = (await {@class.serviceVarName}.{@callChain(class.methodNameComponents)}({@class.requestVarName})).data;
         // TODO: Change code below to process the `{@class.responseVarName}` object:
         console.log(JSON.stringify({@class.responseVarName}, null, 2));
-      });
+      } catch (err) {
+        console.error(err);
+      }
     @else
-      {@class.serviceVarName}.{@callChain(class.methodNameComponents)}({@class.requestVarName}, function(err) {
-        if (err) {
-          console.error(err);
-          return;
-        }
-      });
+      try {
+        await {@class.serviceVarName}.{@callChain(class.methodNameComponents)}({@class.requestVarName});
+      } catch (err) {
+        console.error(err);
+      }
     @end
   @end
 @end
@@ -164,19 +156,16 @@
 @end
 
 @private authFunc_ADC(class)
-  function {@class.auth.authFuncName}(callback) {
-    google.auth.getClient({
+  async function {@class.auth.authFuncName}() {
+    const auth = new google.auth.GoogleAuth({
       scopes: ['https://www.googleapis.com/auth/cloud-platform']
-    }).then(client => {
-      callback(client);
-    }).catch(err => {
-      console.error('authentication failed: ', err);
     });
+    return await auth.getClient();
   }
 @end
 
 @private authFunc_OAuth3L(class)
-  function {@class.auth.authFuncName}(callback) {
+  async function {@class.auth.authFuncName}() {
     // TODO: Change placeholder below to generate authentication credentials. See
     // {@class.auth.instructionsUrl}
     //
@@ -188,13 +177,13 @@
     @join scope : class.auth.scopes
       //   '{@scope}'
     @end
-    var authClient = null;
+    let authClient = null;
 
     if (authClient == null) {
-      console.log('authentication failed');
-      return;
+      throw Error('authentication failed');
     }
-    callback(authClient);
+
+    return authClient;
   }
 @end
 
