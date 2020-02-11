@@ -24,7 +24,10 @@
 
   @switch class.auth.type
   @case "NONE"
-    {@mainFuncBody(class)}
+    async function main () {
+      {@mainFuncBody(class)}
+    }
+    main();
   @case "APPLICATION_DEFAULT_CREDENTIALS"
     {@mainFunc(class)}
 
@@ -34,9 +37,12 @@
 
     {@authFunc_OAuth3L(class)}
   @case "API_KEY"
-    var {@class.auth.authVarName} = '';  // TODO: Update placeholder with desired API key.
+    const {@class.auth.authVarName} = '';  // TODO: Update placeholder with desired API key.
 
-    {@mainFuncBody(class)}
+    async function main () {
+      {@mainFuncBody(class)}
+    }
+    main();
   @end
 @end
 
@@ -107,7 +113,7 @@
         {@pageToken(class)} = {@class.responseVarName}.{@class.pageStreaming.nextPageTokenName};
       }
       {@class.responseVarName} = (await {@class.serviceVarName}.{@callChain(class.methodNameComponents)}({@class.requestVarName})).data;
-      const {@class.pageStreaming.pageVarName} = {@class.responseVarName}['{@class.pageStreaming.resourceFieldName}'];
+      const {@class.pageStreaming.pageVarName} = {@class.responseVarName}.{@class.pageStreaming.resourceFieldName};
       if ({@class.pageStreaming.pageVarName}) {
         @if class.pageStreaming.isResourceMap
           Object.keys({@class.pageStreaming.pageVarName}).forEach(function({@class.pageStreaming.resourceKeyVarName}) {
@@ -132,12 +138,11 @@
         console.error(err);
       }
     @else
-      {@class.serviceVarName}.{@callChain(class.methodNameComponents)}({@class.requestVarName}, function(err) {
-        if (err) {
-          console.error(err);
-          return;
-        }
-      });
+      try {
+        await {@class.serviceVarName}.{@callChain(class.methodNameComponents)}({@class.requestVarName});
+      } catch (err) {
+        console.error(err);
+      }
     @end
   @end
 @end

@@ -18,7 +18,7 @@ const logging = google.logging('v2beta1');
 
 async function main () {
   const authClient = await authorize();
-  var request = {
+  const request = {
     // Required. The resource name of the log to delete:
     // "projects/[PROJECT_ID]/logs/[LOG_ID]"
     // "organizations/[ORGANIZATION_ID]/logs/[LOG_ID]"
@@ -30,12 +30,11 @@ async function main () {
     auth: authClient,
   };
 
-  logging.billingAccounts.logs.delete(request, function(err) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-  });
+  try {
+    await logging.billingAccounts.logs.delete(request);
+  } catch (err) {
+    console.error(err);
+  }
 }
 main();
 
@@ -64,7 +63,7 @@ const logging = google.logging('v2beta1');
 
 async function main () {
   const authClient = await authorize();
-  var request = {
+  const request = {
     // Required. The resource name that owns the logs:
     // "projects/[PROJECT_ID]"
     // "organizations/[ORGANIZATION_ID]"
@@ -73,28 +72,20 @@ async function main () {
     auth: authClient,
   };
 
-  var handlePage = function(err, response) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-
-    var logNamesPage = response['logNames'];
-    if (!logNamesPage) {
-      return;
-    }
-    for (var i = 0; i < logNamesPage.length; i++) {
-      // TODO: Change code below to process each resource in `logNamesPage`:
-      console.log(JSON.stringify(logNamesPage[i], null, 2));
-    }
-
-    if (response.nextPageToken) {
+  let response;
+  do {
+    if (response && response.nextPageToken) {
       request.pageToken = response.nextPageToken;
-      logging.billingAccounts.logs.list(request, handlePage);
     }
-  };
-
-  logging.billingAccounts.logs.list(request, handlePage);
+    response = (await logging.billingAccounts.logs.list(request)).data;
+    const logNamesPage = response.logNames;
+    if (logNamesPage) {
+      for (let i = 0; i < logNamesPage.length; i++) {
+        // TODO: Change code below to process each resource in `logNamesPage`:
+        console.log(JSON.stringify(logNamesPage[i], null, 2));
+      }
+    }
+  } while (response.nextPageToken);
 }
 main();
 
@@ -123,7 +114,7 @@ const logging = google.logging('v2beta1');
 
 async function main () {
   const authClient = await authorize();
-  var request = {
+  const request = {
     resource: {
       // TODO: Add desired properties to the request body.
     },
@@ -131,28 +122,20 @@ async function main () {
     auth: authClient,
   };
 
-  var handlePage = function(err, response) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-
-    var entriesPage = response['entries'];
-    if (!entriesPage) {
-      return;
-    }
-    for (var i = 0; i < entriesPage.length; i++) {
-      // TODO: Change code below to process each resource in `entriesPage`:
-      console.log(JSON.stringify(entriesPage[i], null, 2));
-    }
-
-    if (response.nextPageToken) {
+  let response;
+  do {
+    if (response && response.nextPageToken) {
       request.resource.pageToken = response.nextPageToken;
-      logging.entries.list(request, handlePage);
     }
-  };
-
-  logging.entries.list(request, handlePage);
+    response = (await logging.entries.list(request)).data;
+    const entriesPage = response.entries;
+    if (entriesPage) {
+      for (let i = 0; i < entriesPage.length; i++) {
+        // TODO: Change code below to process each resource in `entriesPage`:
+        console.log(JSON.stringify(entriesPage[i], null, 2));
+      }
+    }
+  } while (response.nextPageToken);
 }
 main();
 
@@ -181,7 +164,7 @@ const logging = google.logging('v2beta1');
 
 async function main () {
   const authClient = await authorize();
-  var request = {
+  const request = {
     resource: {
       // TODO: Add desired properties to the request body.
     },
@@ -189,15 +172,13 @@ async function main () {
     auth: authClient,
   };
 
-  logging.entries.write(request, function(err, response) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-
+  try {
+    const response = (await logging.entries.write(request)).data;
     // TODO: Change code below to process the `response` object:
     console.log(JSON.stringify(response, null, 2));
-  });
+  } catch (err) {
+    console.error(err);
+  }
 }
 main();
 
@@ -226,32 +207,24 @@ const logging = google.logging('v2beta1');
 
 async function main () {
   const authClient = await authorize();
-  var request = {
+  const request = {
     auth: authClient,
   };
 
-  var handlePage = function(err, response) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-
-    var resourceDescriptorsPage = response['resourceDescriptors'];
-    if (!resourceDescriptorsPage) {
-      return;
-    }
-    for (var i = 0; i < resourceDescriptorsPage.length; i++) {
-      // TODO: Change code below to process each resource in `resourceDescriptorsPage`:
-      console.log(JSON.stringify(resourceDescriptorsPage[i], null, 2));
-    }
-
-    if (response.nextPageToken) {
+  let response;
+  do {
+    if (response && response.nextPageToken) {
       request.pageToken = response.nextPageToken;
-      logging.monitoredResourceDescriptors.list(request, handlePage);
     }
-  };
-
-  logging.monitoredResourceDescriptors.list(request, handlePage);
+    response = (await logging.monitoredResourceDescriptors.list(request)).data;
+    const resourceDescriptorsPage = response.resourceDescriptors;
+    if (resourceDescriptorsPage) {
+      for (let i = 0; i < resourceDescriptorsPage.length; i++) {
+        // TODO: Change code below to process each resource in `resourceDescriptorsPage`:
+        console.log(JSON.stringify(resourceDescriptorsPage[i], null, 2));
+      }
+    }
+  } while (response.nextPageToken);
 }
 main();
 
@@ -280,7 +253,7 @@ const logging = google.logging('v2beta1');
 
 async function main () {
   const authClient = await authorize();
-  var request = {
+  const request = {
     // Required. The resource name of the log to delete:
     // "projects/[PROJECT_ID]/logs/[LOG_ID]"
     // "organizations/[ORGANIZATION_ID]/logs/[LOG_ID]"
@@ -292,12 +265,11 @@ async function main () {
     auth: authClient,
   };
 
-  logging.organizations.logs.delete(request, function(err) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-  });
+  try {
+    await logging.organizations.logs.delete(request);
+  } catch (err) {
+    console.error(err);
+  }
 }
 main();
 
@@ -326,7 +298,7 @@ const logging = google.logging('v2beta1');
 
 async function main () {
   const authClient = await authorize();
-  var request = {
+  const request = {
     // Required. The resource name that owns the logs:
     // "projects/[PROJECT_ID]"
     // "organizations/[ORGANIZATION_ID]"
@@ -335,28 +307,20 @@ async function main () {
     auth: authClient,
   };
 
-  var handlePage = function(err, response) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-
-    var logNamesPage = response['logNames'];
-    if (!logNamesPage) {
-      return;
-    }
-    for (var i = 0; i < logNamesPage.length; i++) {
-      // TODO: Change code below to process each resource in `logNamesPage`:
-      console.log(JSON.stringify(logNamesPage[i], null, 2));
-    }
-
-    if (response.nextPageToken) {
+  let response;
+  do {
+    if (response && response.nextPageToken) {
       request.pageToken = response.nextPageToken;
-      logging.organizations.logs.list(request, handlePage);
     }
-  };
-
-  logging.organizations.logs.list(request, handlePage);
+    response = (await logging.organizations.logs.list(request)).data;
+    const logNamesPage = response.logNames;
+    if (logNamesPage) {
+      for (let i = 0; i < logNamesPage.length; i++) {
+        // TODO: Change code below to process each resource in `logNamesPage`:
+        console.log(JSON.stringify(logNamesPage[i], null, 2));
+      }
+    }
+  } while (response.nextPageToken);
 }
 main();
 
@@ -385,7 +349,7 @@ const logging = google.logging('v2beta1');
 
 async function main () {
   const authClient = await authorize();
-  var request = {
+  const request = {
     // Required. The resource name of the log to delete:
     // "projects/[PROJECT_ID]/logs/[LOG_ID]"
     // "organizations/[ORGANIZATION_ID]/logs/[LOG_ID]"
@@ -397,12 +361,11 @@ async function main () {
     auth: authClient,
   };
 
-  logging.projects.logs.delete(request, function(err) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-  });
+  try {
+    await logging.projects.logs.delete(request);
+  } catch (err) {
+    console.error(err);
+  }
 }
 main();
 
@@ -431,7 +394,7 @@ const logging = google.logging('v2beta1');
 
 async function main () {
   const authClient = await authorize();
-  var request = {
+  const request = {
     // Required. The resource name that owns the logs:
     // "projects/[PROJECT_ID]"
     // "organizations/[ORGANIZATION_ID]"
@@ -440,28 +403,20 @@ async function main () {
     auth: authClient,
   };
 
-  var handlePage = function(err, response) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-
-    var logNamesPage = response['logNames'];
-    if (!logNamesPage) {
-      return;
-    }
-    for (var i = 0; i < logNamesPage.length; i++) {
-      // TODO: Change code below to process each resource in `logNamesPage`:
-      console.log(JSON.stringify(logNamesPage[i], null, 2));
-    }
-
-    if (response.nextPageToken) {
+  let response;
+  do {
+    if (response && response.nextPageToken) {
       request.pageToken = response.nextPageToken;
-      logging.projects.logs.list(request, handlePage);
     }
-  };
-
-  logging.projects.logs.list(request, handlePage);
+    response = (await logging.projects.logs.list(request)).data;
+    const logNamesPage = response.logNames;
+    if (logNamesPage) {
+      for (let i = 0; i < logNamesPage.length; i++) {
+        // TODO: Change code below to process each resource in `logNamesPage`:
+        console.log(JSON.stringify(logNamesPage[i], null, 2));
+      }
+    }
+  } while (response.nextPageToken);
 }
 main();
 
@@ -490,7 +445,7 @@ const logging = google.logging('v2beta1');
 
 async function main () {
   const authClient = await authorize();
-  var request = {
+  const request = {
     // The resource name of the project in which to create the metric:
     // "projects/[PROJECT_ID]"
     // The new metric must be provided in the request.
@@ -503,15 +458,13 @@ async function main () {
     auth: authClient,
   };
 
-  logging.projects.metrics.create(request, function(err, response) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-
+  try {
+    const response = (await logging.projects.metrics.create(request)).data;
     // TODO: Change code below to process the `response` object:
     console.log(JSON.stringify(response, null, 2));
-  });
+  } catch (err) {
+    console.error(err);
+  }
 }
 main();
 
@@ -540,7 +493,7 @@ const logging = google.logging('v2beta1');
 
 async function main () {
   const authClient = await authorize();
-  var request = {
+  const request = {
     // The resource name of the metric to delete:
     // "projects/[PROJECT_ID]/metrics/[METRIC_ID]"
     metricName: 'projects/my-project/metrics/my-metric',  // TODO: Update placeholder value.
@@ -548,12 +501,11 @@ async function main () {
     auth: authClient,
   };
 
-  logging.projects.metrics.delete(request, function(err) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-  });
+  try {
+    await logging.projects.metrics.delete(request);
+  } catch (err) {
+    console.error(err);
+  }
 }
 main();
 
@@ -582,7 +534,7 @@ const logging = google.logging('v2beta1');
 
 async function main () {
   const authClient = await authorize();
-  var request = {
+  const request = {
     // The resource name of the desired metric:
     // "projects/[PROJECT_ID]/metrics/[METRIC_ID]"
     metricName: 'projects/my-project/metrics/my-metric',  // TODO: Update placeholder value.
@@ -590,15 +542,13 @@ async function main () {
     auth: authClient,
   };
 
-  logging.projects.metrics.get(request, function(err, response) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-
+  try {
+    const response = (await logging.projects.metrics.get(request)).data;
     // TODO: Change code below to process the `response` object:
     console.log(JSON.stringify(response, null, 2));
-  });
+  } catch (err) {
+    console.error(err);
+  }
 }
 main();
 
@@ -627,7 +577,7 @@ const logging = google.logging('v2beta1');
 
 async function main () {
   const authClient = await authorize();
-  var request = {
+  const request = {
     // Required. The name of the project containing the metrics:
     // "projects/[PROJECT_ID]"
     parent: 'projects/my-project',  // TODO: Update placeholder value.
@@ -635,28 +585,20 @@ async function main () {
     auth: authClient,
   };
 
-  var handlePage = function(err, response) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-
-    var metricsPage = response['metrics'];
-    if (!metricsPage) {
-      return;
-    }
-    for (var i = 0; i < metricsPage.length; i++) {
-      // TODO: Change code below to process each resource in `metricsPage`:
-      console.log(JSON.stringify(metricsPage[i], null, 2));
-    }
-
-    if (response.nextPageToken) {
+  let response;
+  do {
+    if (response && response.nextPageToken) {
       request.pageToken = response.nextPageToken;
-      logging.projects.metrics.list(request, handlePage);
     }
-  };
-
-  logging.projects.metrics.list(request, handlePage);
+    response = (await logging.projects.metrics.list(request)).data;
+    const metricsPage = response.metrics;
+    if (metricsPage) {
+      for (let i = 0; i < metricsPage.length; i++) {
+        // TODO: Change code below to process each resource in `metricsPage`:
+        console.log(JSON.stringify(metricsPage[i], null, 2));
+      }
+    }
+  } while (response.nextPageToken);
 }
 main();
 
@@ -685,7 +627,7 @@ const logging = google.logging('v2beta1');
 
 async function main () {
   const authClient = await authorize();
-  var request = {
+  const request = {
     // The resource name of the metric to update:
     // "projects/[PROJECT_ID]/metrics/[METRIC_ID]"
     // The updated metric must be provided in the request and it's name field must be the same as
@@ -700,15 +642,13 @@ async function main () {
     auth: authClient,
   };
 
-  logging.projects.metrics.update(request, function(err, response) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-
+  try {
+    const response = (await logging.projects.metrics.update(request)).data;
     // TODO: Change code below to process the `response` object:
     console.log(JSON.stringify(response, null, 2));
-  });
+  } catch (err) {
+    console.error(err);
+  }
 }
 main();
 
@@ -737,7 +677,7 @@ const logging = google.logging('v2beta1');
 
 async function main () {
   const authClient = await authorize();
-  var request = {
+  const request = {
     // Required. The resource in which to create the sink:
     // "projects/[PROJECT_ID]"
     // "organizations/[ORGANIZATION_ID]"
@@ -751,15 +691,13 @@ async function main () {
     auth: authClient,
   };
 
-  logging.projects.sinks.create(request, function(err, response) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-
+  try {
+    const response = (await logging.projects.sinks.create(request)).data;
     // TODO: Change code below to process the `response` object:
     console.log(JSON.stringify(response, null, 2));
-  });
+  } catch (err) {
+    console.error(err);
+  }
 }
 main();
 
@@ -788,7 +726,7 @@ const logging = google.logging('v2beta1');
 
 async function main () {
   const authClient = await authorize();
-  var request = {
+  const request = {
     // Required. The full resource name of the sink to delete, including the parent resource and the sink
     // identifier:
     // "projects/[PROJECT_ID]/sinks/[SINK_ID]"
@@ -800,12 +738,11 @@ async function main () {
     auth: authClient,
   };
 
-  logging.projects.sinks.delete(request, function(err) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-  });
+  try {
+    await logging.projects.sinks.delete(request);
+  } catch (err) {
+    console.error(err);
+  }
 }
 main();
 
@@ -834,7 +771,7 @@ const logging = google.logging('v2beta1');
 
 async function main () {
   const authClient = await authorize();
-  var request = {
+  const request = {
     // Required. The parent resource name of the sink:
     // "projects/[PROJECT_ID]/sinks/[SINK_ID]"
     // "organizations/[ORGANIZATION_ID]/sinks/[SINK_ID]"
@@ -844,15 +781,13 @@ async function main () {
     auth: authClient,
   };
 
-  logging.projects.sinks.get(request, function(err, response) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-
+  try {
+    const response = (await logging.projects.sinks.get(request)).data;
     // TODO: Change code below to process the `response` object:
     console.log(JSON.stringify(response, null, 2));
-  });
+  } catch (err) {
+    console.error(err);
+  }
 }
 main();
 
@@ -881,7 +816,7 @@ const logging = google.logging('v2beta1');
 
 async function main () {
   const authClient = await authorize();
-  var request = {
+  const request = {
     // Required. The parent resource whose sinks are to be listed. Examples:
     // "projects/my-logging-project", "organizations/123456789".
     parent: 'projects/my-project',  // TODO: Update placeholder value.
@@ -889,28 +824,20 @@ async function main () {
     auth: authClient,
   };
 
-  var handlePage = function(err, response) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-
-    var sinksPage = response['sinks'];
-    if (!sinksPage) {
-      return;
-    }
-    for (var i = 0; i < sinksPage.length; i++) {
-      // TODO: Change code below to process each resource in `sinksPage`:
-      console.log(JSON.stringify(sinksPage[i], null, 2));
-    }
-
-    if (response.nextPageToken) {
+  let response;
+  do {
+    if (response && response.nextPageToken) {
       request.pageToken = response.nextPageToken;
-      logging.projects.sinks.list(request, handlePage);
     }
-  };
-
-  logging.projects.sinks.list(request, handlePage);
+    response = (await logging.projects.sinks.list(request)).data;
+    const sinksPage = response.sinks;
+    if (sinksPage) {
+      for (let i = 0; i < sinksPage.length; i++) {
+        // TODO: Change code below to process each resource in `sinksPage`:
+        console.log(JSON.stringify(sinksPage[i], null, 2));
+      }
+    }
+  } while (response.nextPageToken);
 }
 main();
 
@@ -939,7 +866,7 @@ const logging = google.logging('v2beta1');
 
 async function main () {
   const authClient = await authorize();
-  var request = {
+  const request = {
     // Required. The full resource name of the sink to update, including the parent resource and the sink
     // identifier:
     // "projects/[PROJECT_ID]/sinks/[SINK_ID]"
@@ -955,15 +882,13 @@ async function main () {
     auth: authClient,
   };
 
-  logging.projects.sinks.update(request, function(err, response) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-
+  try {
+    const response = (await logging.projects.sinks.update(request)).data;
     // TODO: Change code below to process the `response` object:
     console.log(JSON.stringify(response, null, 2));
-  });
+  } catch (err) {
+    console.error(err);
+  }
 }
 main();
 

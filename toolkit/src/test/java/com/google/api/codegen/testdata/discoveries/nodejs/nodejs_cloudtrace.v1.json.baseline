@@ -18,7 +18,7 @@ const cloudtrace = google.cloudtrace('v1');
 
 async function main () {
   const authClient = await authorize();
-  var request = {
+  const request = {
     // ID of the Cloud project where the trace data is stored.
     projectId: 'my-project-id',  // TODO: Update placeholder value.
 
@@ -30,12 +30,11 @@ async function main () {
     auth: authClient,
   };
 
-  cloudtrace.projects.patchTraces(request, function(err) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-  });
+  try {
+    await cloudtrace.projects.patchTraces(request);
+  } catch (err) {
+    console.error(err);
+  }
 }
 main();
 
@@ -64,7 +63,7 @@ const cloudtrace = google.cloudtrace('v1');
 
 async function main () {
   const authClient = await authorize();
-  var request = {
+  const request = {
     // ID of the Cloud project where the trace data is stored.
     projectId: 'my-project-id',  // TODO: Update placeholder value.
 
@@ -74,15 +73,13 @@ async function main () {
     auth: authClient,
   };
 
-  cloudtrace.projects.traces.get(request, function(err, response) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-
+  try {
+    const response = (await cloudtrace.projects.traces.get(request)).data;
     // TODO: Change code below to process the `response` object:
     console.log(JSON.stringify(response, null, 2));
-  });
+  } catch (err) {
+    console.error(err);
+  }
 }
 main();
 
@@ -111,35 +108,27 @@ const cloudtrace = google.cloudtrace('v1');
 
 async function main () {
   const authClient = await authorize();
-  var request = {
+  const request = {
     // ID of the Cloud project where the trace data is stored.
     projectId: 'my-project-id',  // TODO: Update placeholder value.
 
     auth: authClient,
   };
 
-  var handlePage = function(err, response) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-
-    var tracesPage = response['traces'];
-    if (!tracesPage) {
-      return;
-    }
-    for (var i = 0; i < tracesPage.length; i++) {
-      // TODO: Change code below to process each resource in `tracesPage`:
-      console.log(JSON.stringify(tracesPage[i], null, 2));
-    }
-
-    if (response.nextPageToken) {
+  let response;
+  do {
+    if (response && response.nextPageToken) {
       request.pageToken = response.nextPageToken;
-      cloudtrace.projects.traces.list(request, handlePage);
     }
-  };
-
-  cloudtrace.projects.traces.list(request, handlePage);
+    response = (await cloudtrace.projects.traces.list(request)).data;
+    const tracesPage = response.traces;
+    if (tracesPage) {
+      for (let i = 0; i < tracesPage.length; i++) {
+        // TODO: Change code below to process each resource in `tracesPage`:
+        console.log(JSON.stringify(tracesPage[i], null, 2));
+      }
+    }
+  } while (response.nextPageToken);
 }
 main();
 
