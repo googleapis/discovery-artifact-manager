@@ -49,7 +49,7 @@
 @end
 
 @private mainFuncBody(class)
-  var {@class.requestVarName} = {
+  const {@class.requestVarName} = {
     @join field : class.requiredFields if class.requiredFields
       {@field(field)}
 
@@ -101,51 +101,36 @@
   };
 
   @if class.isPageStreaming
-    var {@class.pageStreaming.handlePageVarName} = function(err, {@class.responseVarName}) {
-      if (err) {
-        console.error(err);
-        return;
+    let {@class.responseVarName};
+    do {
+      if ({@class.responseVarName} && {@class.responseVarName}.{@class.pageStreaming.nextPageTokenName}) {
+        {@pageToken(class)} = {@class.responseVarName}.{@class.pageStreaming.nextPageTokenName};
       }
-
-      var {@class.pageStreaming.pageVarName} = {@class.responseVarName}['{@class.pageStreaming.resourceFieldName}'];
-      if (!{@class.pageStreaming.pageVarName}) {
-        return;
-      }
-      @if class.pageStreaming.isResourceRepeated
+      {@class.responseVarName} = (await {@class.serviceVarName}.{@callChain(class.methodNameComponents)}({@class.requestVarName})).data;
+      const {@class.pageStreaming.pageVarName} = {@class.responseVarName}['{@class.pageStreaming.resourceFieldName}'];
+      if ({@class.pageStreaming.pageVarName}) {
         @if class.pageStreaming.isResourceMap
           Object.keys({@class.pageStreaming.pageVarName}).forEach(function({@class.pageStreaming.resourceKeyVarName}) {
             // TODO: Change code below to process each `{@class.pageStreaming.resourceKeyVarName}` property:
             console.log({@class.pageStreaming.resourceKeyVarName} + ': ' + JSON.stringify({@class.pageStreaming.pageVarName}[{@class.pageStreaming.resourceKeyVarName}], null, 2));
           });
         @else
-          for (var i = 0; i < {@class.pageStreaming.pageVarName}.length; i++) {
+          for (let i = 0; i < {@class.pageStreaming.pageVarName}.length; i++) {
             // TODO: Change code below to process each resource in `{@class.pageStreaming.pageVarName}`:
             console.log(JSON.stringify({@class.pageStreaming.pageVarName}[i], null, 2));
           }
         @end
-      @else
-        // TODO: Change code below to process each `{@class.pageStreaming.pageVarName}` resource:
-        console.log({@class.pageStreaming.pageVarName});
-      @end
-
-      if ({@class.responseVarName}.{@class.pageStreaming.nextPageTokenName}) {
-        {@pageToken(class)} = {@class.responseVarName}.{@class.pageStreaming.nextPageTokenName};
-        {@class.serviceVarName}.{@callChain(class.methodNameComponents)}({@class.requestVarName}, {@class.pageStreaming.handlePageVarName});
       }
-    };
-
-    {@class.serviceVarName}.{@callChain(class.methodNameComponents)}({@class.requestVarName}, {@class.pageStreaming.handlePageVarName});
+    } while ({@class.responseVarName}.{@class.pageStreaming.nextPageTokenName});
   @else
     @if class.hasResponse
-      {@class.serviceVarName}.{@callChain(class.methodNameComponents)}({@class.requestVarName}, function(err, {@class.responseVarName}) {
-        if (err) {
-          console.error(err);
-          return;
-        }
-
+      try {
+        const {@class.responseVarName} = (await {@class.serviceVarName}.{@callChain(class.methodNameComponents)}({@class.requestVarName})).data;
         // TODO: Change code below to process the `{@class.responseVarName}` object:
         console.log(JSON.stringify({@class.responseVarName}, null, 2));
-      });
+      } catch (err) {
+        console.error(err);
+      }
     @else
       {@class.serviceVarName}.{@callChain(class.methodNameComponents)}({@class.requestVarName}, function(err) {
         if (err) {
@@ -175,7 +160,7 @@
 @end
 
 @private authFunc_OAuth3L(class)
-  function {@class.auth.authFuncName}() {
+  async function {@class.auth.authFuncName}() {
     // TODO: Change placeholder below to generate authentication credentials. See
     // {@class.auth.instructionsUrl}
     //
@@ -187,7 +172,7 @@
     @join scope : class.auth.scopes
       //   '{@scope}'
     @end
-    var authClient = null;
+    let authClient = null;
 
     if (authClient == null) {
       throw Error('authentication failed');
