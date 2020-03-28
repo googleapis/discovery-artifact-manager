@@ -1,96 +1,103 @@
-# IMPORTANT INFORMATION!
-#
-# This workspace configuration assumes `--experimental_enable_repo_mapping` command line argument
-# on every build of anything under this workspace. The repo mapping is a recently released feature
-# (bazel >= 0.16.0) and allows to solve two very nasty problems:
-#     1) Allowing two or more workspaces with dependency conflicts (same dependency name but
-#        different version) to coexist under same project (when one workspace imports another via
-#        `*_reporitory()` workspace rules). Example: `gapic-generator` and `grpc-java` have a guava
-#         dependency conflict (grpc-java uses latest java7 compatible version, while gapic-generator
-#         uses fresher (java8 compatible) version)
-#     2) Allowing two or more workspaces to have same dependency, but assign different names to it
-#       (i.e. at least one of the workspaces does not follow naming conventions).
-#
-# Even if the experimental feature will be eventually cancelled, there will still be a solution
-# for solving the problems desribed above, so it is relatively safe to structure workspaces and
-# packages under assumption that the dependencies naming conflicts can be solved in the "outer"
-# workspace (the one, which imports the "inner" workspace via `*_repository` rule).
-#
-# Note, the rule arguments related to the repo mapping feature (like repo_mapping arument in
-# `*_repository` rules) are currently highlighted as erroneous by IDE plugins (is expected taking
-# into account that the feature is new and experimental). This problem is temporary and will go
-# away once the repo mapping feature (or its "better" replacement) is stabilized.
-#
-# To fix enable bazel project sync in IntelliJ plugin add the following lines to .bazelproject file:
-#
-# build_flags:
-#  --experimental_enable_repo_mapping
+workspace(name = "discovery_artifact_manager")
 
-workspace(name = "com_google_discovery_artifact_manager")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-#
-# Java GAPIC (gapic-generator generated artifacts) dependencies. The dependencies may clash with
-# gapic-generator and have different versions, especially taking into account that generated
-# artifacts are Java 1.7 and gapic-generator is Java 1.8 compatible.
-#
-maven_jar(
-    name = "com_google_guava_guava__com_google_api_codegen",
-    artifact = "com.google.guava:guava:26.0-jre",
+##############################################################################
+# Common
+##############################################################################
+# Protobuf depends on very old version of bazel_skylib (forward compatible with the new one).
+# Importing older version of bazel_skylib first (this is one of the things that protobuf_deps() call
+# below will do) breaks the grpc repositories, so importing the proper version explicitly before
+# everything else.
+http_archive(
+    name = "bazel_skylib",
+    urls = ["https://github.com/bazelbuild/bazel-skylib/releases/download/0.9.0/bazel_skylib-0.9.0.tar.gz"],
 )
 
-maven_jar(
-    name = "com_google_api_grpc_proto_google_common_protos__com_google_api_codegen",
-    artifact = "com.google.api.grpc:proto-google-common-protos:1.13.0-pre2",
+http_archive(
+    name = "com_google_protobuf",
+    strip_prefix = "protobuf-fe1790ca0df67173702f70d5646b82f48f412b99",  # this is 3.11.2
+    urls = ["https://github.com/protocolbuffers/protobuf/archive/fe1790ca0df67173702f70d5646b82f48f412b99.zip"],
 )
 
-git_repository(
+load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
+
+protobuf_deps()
+
+http_archive(
+    name = "rules_proto",
+    sha256 = "602e7161d9195e50246177e7c55b2f39950a9cf7366f74ed5f22fd45750cd208",
+    strip_prefix = "rules_proto-97d8af4dc474595af3900dd85cb3a29ad28cc313",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_proto/archive/97d8af4dc474595af3900dd85cb3a29ad28cc313.tar.gz",
+        "https://github.com/bazelbuild/rules_proto/archive/97d8af4dc474595af3900dd85cb3a29ad28cc313.tar.gz",
+    ],
+)
+
+load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
+
+rules_proto_dependencies()
+
+rules_proto_toolchains()
+
+# Note gapic-generator contains java-specific and common code, that is why it is imported in common
+# section
+http_archive(
     name = "com_google_api_codegen",
-    remote = "https://github.com/googleapis/gapic-generator.git",
-    commit = "4ae22668fb8dafbe6ecb476c0ffe83a28d2121fb",
-    repo_mapping = {
-        "@com_google_guava_guava": "@com_google_guava_guava__com_google_api_codegen",
-        "@com_google_api_grpc_proto_google_common_protos": "@com_google_api_grpc_proto_google_common_protos__com_google_api_codegen",
-    },
+    strip_prefix = "gapic-generator-128224d3c06a23fe55a32abd5d3760515974291d",
+    urls = ["https://github.com/googleapis/gapic-generator/archive/128224d3c06a23fe55a32abd5d3760515974291d.zip"],
 )
 
+##############################################################################
+# Java
+##############################################################################
+http_archive(
+    name = "com_google_api_gax_java",
+    strip_prefix = "gax-java-1.54.0",
+    urls = ["https://github.com/googleapis/gax-java/archive/v1.54.0.zip"],
+)
+
+load("@com_google_api_gax_java//:repository_rules.bzl", "com_google_api_gax_java_properties")
+
+com_google_api_gax_java_properties(
+    name = "com_google_api_gax_java_properties",
+    file = "@com_google_api_gax_java//:dependencies.properties",
+)
+
+load("@com_google_api_gax_java//:repositories.bzl", "com_google_api_gax_java_repositories")
+
+com_google_api_gax_java_repositories()
+
+# gapic-generator transitive
+# (goes AFTER java-gax, since both java gax and gapic-generator are written in java and may conflict)
+load("@com_google_api_codegen//:repository_rules.bzl", "com_google_api_codegen_properties")
+
+com_google_api_codegen_properties(
+    name = "com_google_api_codegen_properties",
+    file = "@com_google_api_codegen//:dependencies.properties",
+)
+
+load("@com_google_api_codegen//:repositories.bzl", "com_google_api_codegen_repositories")
+
+http_archive(
+    name = "com_google_protoc_java_resource_names_plugin",
+    strip_prefix = "protoc-java-resource-names-plugin-7632facb0a1d9f76d9152eefe21422dc55e36524",
+    urls = ["https://github.com/googleapis/protoc-java-resource-names-plugin/archive/7632facb0a1d9f76d9152eefe21422dc55e36524.zip"],
+)
+
+com_google_api_codegen_repositories()
+
+load("@com_google_googleapis//:repository_rules.bzl", "switched_rules_by_language")
+
+switched_rules_by_language(
+    name = "com_google_googleapis_imports",
+)
+
+# protoc-java-resource-names-plugin (loaded in com_google_api_codegen_repositories())
+# (required to support resource names feature in gapic generator)
 load(
-    "@com_google_api_codegen//rules_gapic/java:java_gapic_pkg_repos.bzl",
-    "java_gapic_direct_repositories",
-    "java_gapic_gax_repositories",
+    "@com_google_protoc_java_resource_names_plugin//:repositories.bzl",
+    "com_google_protoc_java_resource_names_plugin_repositories",
 )
 
-java_gapic_direct_repositories(
-    omit_junit_junit = True,
-    omit_com_google_api_gax_grpc = True,
-    omit_com_google_api_gax_grpc_testlib = True,
-)
-
-java_gapic_gax_repositories(
-    omit_com_fasterxml_jackson_core_jackson_core = True,
-)
-
-#
-# gapic-generator repository dependencies (required to compile and run gapic-generator)
-#
-load(
-    "@com_google_api_codegen//:repositories.bzl",
-    "com_google_api_codegen_repositories",
-    "com_google_api_codegen_test_repositories",
-    "com_google_api_codegen_tools_repositories",
-)
-
-#TODO:  Update all omitted dependencies in gapic_generator so they match the newer versions used by
-#       grpc-java and gax
-com_google_api_codegen_repositories(
-    omit_com_google_api_api_common = True,
-    omit_com_google_api_grpc_proto_google_common_protos = True,
-    omit_com_google_code_findbugs_jsr305 = True,
-    omit_com_google_code_gson_gson = True,
-    omit_com_google_guava_guava = True,
-    omit_io_grpc_grpc_core = True,
-    omit_org_threeten_threetenbp = True,
-)
-
-com_google_api_codegen_test_repositories()
-
-com_google_api_codegen_tools_repositories()
+com_google_protoc_java_resource_names_plugin_repositories()
