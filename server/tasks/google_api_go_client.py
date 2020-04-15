@@ -40,6 +40,7 @@ def update(filepath, github_account):
                  env=env)
     repo = _git.Repository(join(filepath, 'src/google.golang.org/api'))
     generator_filepath = join(repo.filepath, 'google-api-go-generator')
+    env['GO111MODULE'] = 'on'
     check_output(['make', 'all'], cwd=generator_filepath, env=env)
     repo.add(['.'])
     added, deleted, updated = set(), set(), set()
