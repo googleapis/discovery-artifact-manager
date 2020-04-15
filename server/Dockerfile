@@ -31,8 +31,8 @@ RUN curl https://getcomposer.org/download/1.5.2/composer.phar \
 RUN chmod +x /usr/local/bin/composer
 
 # Install pip and setup /env.
-RUN apt-get install -y python-pip
-RUN pip install virtualenv
+RUN apt-get install -y python3-pip
+RUN pip3 install virtualenv
 RUN virtualenv /env -p python3
 
 # Install Ruby 2.6.5 and Bundler.
