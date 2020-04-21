@@ -17,6 +17,7 @@ RUN wget https://storage.googleapis.com/golang/go1.12.linux-amd64.tar.gz
 RUN tar -xvf go1.12.linux-amd64.tar.gz
 RUN mv go /usr/local
 ENV PATH /usr/local/go/bin:$PATH
+ENV GO111MODULE on
 
 # Install Node.js 8.x.
 # We need to use 8.x because generate.ts in google-cloud-nodejs-client
