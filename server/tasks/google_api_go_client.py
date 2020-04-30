@@ -35,7 +35,9 @@ def update(filepath, github_account):
         github_account (GitHubAccount): the GitHub account to commit with.
     """
     env = os.environ.copy()
-    repo = _git.clone('https://code.googlesource.com/google-api-go-client', join(filepath, 'google-api-go-client'))
+    env['GO111MODULE'] = 'on'
+    repo = _git.clone('https://code.googlesource.com/google-api-go-client',
+                      join(filepath, 'google-api-go-client'))
     generator_filepath = join(repo.filepath, 'google-api-go-generator')
     check_output(['make', 'all'], cwd=generator_filepath, env=env)
     repo.add(['.'])
