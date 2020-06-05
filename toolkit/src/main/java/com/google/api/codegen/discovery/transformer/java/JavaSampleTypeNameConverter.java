@@ -73,7 +73,15 @@ class JavaSampleTypeNameConverter implements SampleTypeNameConverter {
 
   @Override
   public TypeName getServiceTypeName(String apiTypeName) {
-    return typeNameConverter.getTypeName(Joiner.on('.').join(packagePrefix, apiTypeName));
+    return typeNameConverter.getTypeName(
+        Joiner.on('.').join(packagePrefix, capitalize(apiTypeName)));
+  }
+
+  public static String capitalize(String str) {
+    if (str == null || str.isEmpty()) {
+      return str;
+    }
+    return str.substring(0, 1).toUpperCase() + str.substring(1);
   }
 
   @Override
