@@ -77,7 +77,7 @@ class JavaSampleTypeNameConverter implements SampleTypeNameConverter {
         Joiner.on('.').join(packagePrefix, capitalize(apiTypeName)));
   }
 
-  public static String capitalize(String str) {
+  private static String capitalize(String str) {
     if (str == null || str.isEmpty()) {
       return str;
     }
