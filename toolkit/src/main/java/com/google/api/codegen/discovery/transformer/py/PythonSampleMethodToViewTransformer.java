@@ -122,8 +122,10 @@ public class PythonSampleMethodToViewTransformer implements SampleMethodToViewTr
       case API_KEY:
         discoveryBuildParams.add("developerKey=" + credentialsVarName);
         break;
-      default:
+      case OAUTH_3L:
         discoveryBuildParams.add("credentials=" + credentialsVarName);
+        break;
+      default:
         break;
     }
     String discoveryDocUrl = config.discoveryDocUrl();

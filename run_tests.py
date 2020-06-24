@@ -690,7 +690,7 @@ def _load_python(test_dir, ctxs):
         src_dir = _make_src_dir(test_dir, ctx.name, ctx.version, _PYTHON)
         # Create a virtualenv.
         _call('virtualenv venv', cwd=src_dir)
-        _call('venv/bin/pip install google-api-python-client', cwd=src_dir)
+        _call('venv/bin/pip install google-api-python-client google-auth', cwd=src_dir)
 
         for filename in sample_filenames:
             method_id = _parse_method_id_from_sample_filename(filename)
@@ -701,6 +701,7 @@ def _load_python(test_dir, ctxs):
             cmd = 'venv/bin/python {}'.format(new_filename)
             sample_cmds[ctx.id_].append(SampleCommand(method_id, cmd, src_dir))
 
+        print('Generated {} samples in {}'.format(len(sample_filenames), src_dir))
     return sample_cmds
 
 
