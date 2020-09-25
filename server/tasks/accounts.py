@@ -14,6 +14,7 @@
 
 """Contains definitions/getters for GitHub and package manager accounts."""
 
+import os
 from collections import namedtuple
 
 from google.cloud import datastore
@@ -36,6 +37,16 @@ def get_github_account():
     Returns:
         GitHubAccount: a GitHub account.
     """
+    # Allow environment variables to set github details for
+    # easy local debugging.
+    env = os.environ  # for brevity
+    github_token = env.get("GITHUB_TOKEN")
+    if github_token:
+        return GitHubAccount(
+            env["GITHUB_USER"], 
+            env["GITHUB_EMAIL"],
+            env["GITHUB_USERNAME"],
+            github_token)
     return _get(GitHubAccount)
 
 

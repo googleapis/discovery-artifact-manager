@@ -48,6 +48,15 @@ def cron_discoveries():
     return ''
 
 
+@app.route('/cron/discoveries-pr')
+@verify_cron_header
+def cron_discoveries_pr():
+    github_account = accounts.get_github_account()
+    with TemporaryDirectory() as filepath:
+        discovery_artifact_manager.create_pull_request(filepath, github_account)
+    return ''
+
+
 def nodejs_release(filepath, github_account, force):
     """Wrapper over the Node.js release function to standardize parameters."""
     npm_account = accounts.get_npm_account()
