@@ -1,0 +1,40 @@
+name: Update Discovery
+
+on:
+  schedule:
+    - cron: "0 */3 * * *"
+  workflow_dispatch:
+
+jobs:
+  update-discovery:
+    if: ${{ github.repository_owner == 'googleapis' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - run: npm install
+      - run: npm run update-discovery
+      - name: Push changes to branch
+        run: |
+          git config --global user.email "yoshi-automation@google.com"
+          git config --global user.name "Yoshi Automation Bot"
+          git checkout -b action/auto-update-discovery
+          git commit -a -m "chore: automatic update of discovery json"
+          git push -f origin action/auto-update-discovery
+      - name: Open PR
+        uses: actions/github-script@v2
+        with:
+          github-token: ${{ secrets.YOSHI_CODE_BOT_TOKEN }}
+          script: |
+            const result = await github.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: "chore: automatic update of discovery json",
+              head: context.repo.owner + ":action/auto-update-discovery",
+              base: "master",
+              maintainer_can_modify: true,
+              body: "This was created by a GitHub Action 🤖"
+            });
+            core.info(`Created PR ${result.data.number}`);

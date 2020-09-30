@@ -1,0 +1,41 @@
+name: AutoApprove
+
+on:
+  pull_request:
+    branches:
+      - master
+    types:
+      - opened
+
+jobs:
+  auto-approve:
+    runs-on: ubuntu-latest
+    steps:
+      - name: AutoApprove
+        uses: actions/github-script@v2
+        with:
+          github-token: ${{secrets.YOSHI_APPROVER_TOKEN}}
+          script: |
+            if (context.payload.sender.login != "yoshi-automation") {
+              core.error("AutoApprove: Not running for this sender.");
+              return;
+            }
+            if (!context.payload.pull_request.title.startsWith("chore: automatic update of discovery json")) {
+              core.error("AutoApprove: Not running for this PR title.");
+              return;
+            }
+            await github.pulls.createReview({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: "AutoApprove: Rubber stamped discovery json download!",
+              pull_number: context.payload.pull_request.number,
+              event: "APPROVE"
+            });
+            core.info("AutoApprove: Rubber stamped discovery json download!");
+            await github.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              labels: ["automerge"]
+            });
+            core.info("AutoApprove: Applied automerge label!");
