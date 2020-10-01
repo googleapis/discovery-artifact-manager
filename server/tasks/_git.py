@@ -116,6 +116,17 @@ class Repository(object):
         """
         check_output(['git', 'checkout', branch], cwd=self.filepath)
 
+    def checkout_new(self, branch):
+        """Create a new branch and switch to it.
+
+        Args:
+            branch (str): the name of the branch to checkout.
+
+        Raises:
+            CallError: if the call returns a non-zero return code.
+        """
+        check_output(['git', 'checkout', '-b', branch], cwd=self.filepath)
+
     def commit(self, message, name, email):
         """Records changes to the repository.
 
