@@ -97,7 +97,7 @@ def update(filepath, github_account):
     """
     repo = _git.clone_from_github(
         _repo_path(), join(filepath, _repo_name()), github_account=github_account)
-    if _update_disco(repo, github_account):
+    if _update_disco(repo, github_account) > 0:
         repo.push()
 
 def _update_disco(repo: _git.Repository, github_account: accounts.GitHubAccount) -> int:
@@ -133,7 +133,7 @@ def create_pull_request(filepath, github_account):
     branch = ('update-discovery-artifacts-' +
         datetime.datetime.now().strftime('%Y%m%d-%H%M%S'))
     repo.checkout_new(branch)
-    if _update_disco(repo, github_account):
+    if _update_disco(repo, github_account) > 0:
         repo.push(branch=branch)
         gh = Github(github_account.personal_access_token)
         gh_repo = gh.get_repo(_repo_path())
