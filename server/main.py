@@ -21,7 +21,6 @@ from flask import Flask, abort, request
 
 from tasks import (accounts,
                    discovery_artifact_manager,
-                   google_api_go_client,
                    google_api_nodejs_client,
                    google_api_php_client_services,
                    google_api_ruby_client)
@@ -83,7 +82,6 @@ def ruby_release(filepath, github_account, force):
 @verify_cron_header
 def cron_clients_lang_update(lang):
     update = {
-        'go': google_api_go_client.update,
         'nodejs': google_api_nodejs_client.update,
         'php': php_update,
         'ruby': google_api_ruby_client.update,
