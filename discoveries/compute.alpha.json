@@ -1,11 +1,11 @@
 {
  "kind": "discovery#restDescription",
- "etag": "\"uWj2hSb4GVjzdDlAnRd2gbM1ZQ8/pyrls0FjB-CHfiQixrG9Uhuqqcg\"",
+ "etag": "\"uWj2hSb4GVjzdDlAnRd2gbM1ZQ8/Mq4cNvce9qBOJ6t-azIzdxinXfA\"",
  "discoveryVersion": "v1",
  "id": "compute:alpha",
  "name": "compute",
  "version": "alpha",
- "revision": "20210322",
+ "revision": "20210327",
  "title": "Compute Engine API",
  "description": "Creates and runs virtual machines on Google Cloud Platform.",
  "ownerDomain": "google.com",
@@ -1231,22 +1231,6 @@
     "instanceProperties": {
      "$ref": "AllocationSpecificSKUAllocationReservedInstanceProperties",
      "description": "The instance properties for the reservation."
-    }
-   }
-  },
-  "Any": {
-   "id": "Any",
-   "type": "object",
-   "description": "`Any` contains an arbitrary serialized protocol buffer message along with a URL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form of utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\nFoo foo = ...; Any any; any.PackFrom(foo); ... if (any.UnpackTo(&foo)) { ... }\n\nExample 2: Pack and unpack a message in Java.\n\nFoo foo = ...; Any any = Any.pack(foo); ... if (any.is(Foo.class)) { foo = any.unpack(Foo.class); }\n\nExample 3: Pack and unpack a message in Python.\n\nfoo = Foo(...) any = Any() any.Pack(foo) ... if any.Is(Foo.DESCRIPTOR): any.Unpack(foo) ...\n\nExample 4: Pack and unpack a message in Go\n\nfoo := &pb.Foo{...} any, err := anypb.New(foo) if err != nil { ... } ... foo := &pb.Foo{} if err := any.UnmarshalTo(foo); err != nil { ... }\n\nThe pack methods provided by protobuf library will by default use 'type.googleapis.com/full.type.name' as the type URL and the unpack methods only use the fully qualified type name after the last '/' in the type URL, for example \"foo.bar.com/x/y.z\" will yield type name \"y.z\".\n\n\n\nJSON ==== The JSON representation of an `Any` value uses the regular representation of the deserialized, embedded message, with an additional field `@type` which contains the type URL. Example:\n\npackage google.profile; message Person { string first_name = 1; string last_name = 2; }\n\n{ \"@type\": \"type.googleapis.com/google.profile.Person\", \"firstName\": , \"lastName\":  }\n\nIf the embedded message type is well-known and has a custom JSON representation, that representation will be embedded adding a field `value` which holds the custom JSON in addition to the `@type` field. Example (for message [google.protobuf.Duration][]):\n\n{ \"@type\": \"type.googleapis.com/google.protobuf.Duration\", \"value\": \"1.212s\" }",
-   "properties": {
-    "typeUrl": {
-     "type": "string",
-     "description": "A URL/resource name that uniquely identifies the type of the serialized protocol buffer message. This string must contain at least one \"/\" character. The last segment of the URL's path must represent the fully qualified name of the type (as in `path/google.protobuf.Duration`). The name should be in a canonical form (e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they expect it to use in the context of Any. However, for URLs which use the scheme `http`, `https`, or no scheme, one can optionally set up a type server that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed. * An HTTP GET on the URL must yield a [google.protobuf.Type][] value in binary format, or produce an error. * Applications are allowed to cache lookup results based on the URL, or have them precompiled into a binary to avoid any lookup. Therefore, binary compatibility needs to be preserved on changes to types. (Use versioned type names to manage breaking changes.)\n\nNote: this functionality is not currently available in the official protobuf release, and it is not used for type URLs beginning with type.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be used with implementation specific semantics."
-    },
-    "value": {
-     "type": "string",
-     "description": "Must be a valid serialized protocol buffer of the above specified type.",
-     "format": "byte"
     }
    }
   },
@@ -16848,6 +16832,24 @@
      "type": "string",
      "description": "[Output Only] Tag describing the version."
     },
+    "targetStatus": {
+     "type": "string",
+     "description": "[Output Only] The eventual status of the instance. The instance group manager will not be identified as stable till each managed instance reaches its targetStatus.",
+     "enum": [
+      "ABANDONED",
+      "DELETED",
+      "RUNNING",
+      "STOPPED",
+      "SUSPENDED"
+     ],
+     "enumDescriptions": [
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
     "version": {
      "$ref": "ManagedInstanceVersion",
      "description": "[Output Only] Intended version of this instance."
@@ -20500,10 +20502,6 @@
      "type": "string",
      "description": "[Output Only] Type of the resource. Always `compute#operation` for Operation resources.",
      "default": "compute#operation"
-    },
-    "metadata": {
-     "$ref": "Any",
-     "description": "[Output Only] Service-specific metadata attached to this operation."
     },
     "name": {
      "type": "string",
@@ -28593,6 +28591,13 @@
    "type": "object",
    "description": "Represents a ServiceAttachment resource.\n\nA service attachment represents a service that a producer has exposed. It encapsulates the load balancer which fronts the service runs and a list of NAT IP ranges that the producers uses to represent the consumers connecting to the service. next tag = 19",
    "properties": {
+    "connectedEndpoints": {
+     "type": "array",
+     "description": "[Output Only] An array of connections for all the consumers connected to this service attachment.",
+     "items": {
+      "$ref": "ServiceAttachmentConnectedEndpoint"
+     }
+    },
     "connectionPreference": {
      "type": "string",
      "description": "The connection preference of service attachment. The value can be set to ACCEPT_AUTOMATIC. An ACCEPT_AUTOMATIC service attachment is one that always accepts the connection from consumer forwarding rules.",
@@ -28675,6 +28680,10 @@
     "producerForwardingRule": {
      "type": "string",
      "description": "The URL of a forwarding rule with loadBalancingScheme INTERNAL* that is serving the endpoint identified by this service attachment."
+    },
+    "pscServiceAttachmentId": {
+     "$ref": "Uint128",
+     "description": "[Output Only] An 128-bit global unique ID of the PSC service attachment."
     },
     "region": {
      "type": "string",
@@ -28814,6 +28823,44 @@
     }
    }
   },
+  "ServiceAttachmentConnectedEndpoint": {
+   "id": "ServiceAttachmentConnectedEndpoint",
+   "type": "object",
+   "description": "[Output Only] A connection connected to this service attachment.",
+   "properties": {
+    "endpoint": {
+     "type": "string",
+     "description": "The url of a connected endpoint."
+    },
+    "forwardingRule": {
+     "type": "string",
+     "description": "The url of a consumer forwarding rule. [Deprecated] Do not use."
+    },
+    "pscConnectionId": {
+     "type": "string",
+     "description": "The PSC connection id of the connected endpoint.",
+     "format": "uint64"
+    },
+    "status": {
+     "type": "string",
+     "description": "The status of a connected endpoint to this service attachment.",
+     "enum": [
+      "ACCEPTED",
+      "CLOSED",
+      "PENDING",
+      "REJECTED",
+      "STATUS_UNSPECIFIED"
+     ],
+     "enumDescriptions": [
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    }
+   }
+  },
   "ServiceAttachmentConsumerForwardingRule": {
    "id": "ServiceAttachmentConsumerForwardingRule",
    "type": "object",
@@ -28822,6 +28869,11 @@
     "forwardingRule": {
      "type": "string",
      "description": "The url of a consumer forwarding rule."
+    },
+    "pscConnectionId": {
+     "type": "string",
+     "description": "The PSC connection id of the PSC Forwarding Rule.",
+     "format": "uint64"
     },
     "status": {
      "type": "string",
@@ -34253,6 +34305,20 @@
     "response": {
      "type": "string",
      "description": "The bytes to match against the beginning of the response data. It is an error if this is empty. The response data can only be ASCII."
+    }
+   }
+  },
+  "Uint128": {
+   "id": "Uint128",
+   "type": "object",
+   "properties": {
+    "high": {
+     "type": "string",
+     "format": "uint64"
+    },
+    "low": {
+     "type": "string",
+     "format": "uint64"
     }
    }
   },
