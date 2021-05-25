@@ -1,69 +1,91 @@
 {
+  "mtlsRootUrl": "https://realtimebidding.mtls.googleapis.com/",
+  "title": "Real-time Bidding API",
   "icons": {
-    "x32": "http://www.google.com/images/icons/product/search-32.gif",
-    "x16": "http://www.google.com/images/icons/product/search-16.gif"
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
   },
-  "baseUrl": "https://realtimebidding.googleapis.com/",
-  "version": "v1alpha",
-  "ownerName": "Google",
-  "schemas": {
-    "ListBiddingFunctionsResponse": {
-      "description": "A response containing a list of a bidder's bidding functions.",
-      "type": "object",
-      "id": "ListBiddingFunctionsResponse",
-      "properties": {
-        "biddingFunctions": {
-          "items": {
-            "$ref": "BiddingFunction"
-          },
-          "description": "A list of a bidder's bidding functions.",
-          "type": "array"
-        },
-        "nextPageToken": {
-          "type": "string",
-          "description": "A token which can be passed to a subsequent call to the `ListBiddingFunctions` method to retrieve the next page of results in ListBiddingFunctionsRequest.pageToken."
-        }
-      }
+  "rootUrl": "https://realtimebidding.googleapis.com/",
+  "version_module": true,
+  "basePath": "",
+  "parameters": {
+    "upload_protocol": {
+      "location": "query",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
+      "type": "string"
     },
-    "BiddingFunction": {
-      "id": "BiddingFunction",
-      "properties": {
-        "name": {
-          "description": "The name of the bidding function that must follow the pattern: `bidders/{bidder_account_id}/biddingFunctions/{bidding_function_name}`.",
-          "type": "string"
-        },
-        "biddingFunction": {
-          "description": "The raw Javascript source code of the bidding function.",
-          "type": "string"
-        },
-        "type": {
-          "enumDescriptions": [
-            "Default value that should not be used.",
-            "Bidding function that can be used by Authorized Buyers in the original TURTLEDOVE simulation. See The function takes in a Javascript object, `inputs`, that contains the following named fields: `openrtbContextualBidRequest` OR `googleContextualBidRequest`, `customContextualSignal`, `interestBasedBidData`, `interestGroupData`, `recentImpressionAges`, and returns the bid price CPM. Example: ``` /* Returns a bid price CPM. * * @param {Object} inputs an object with the * following named fields: * - openrtbContextualBidRequest * OR googleContextualBidRequest * - customContextualSignal * - interestBasedBidData * - interestGroupData * - recentImpressionAges */ function biddingFunction(inputs) { ... return inputs.interestBasedBidData.cpm * inputs.customContextualSignals.placementMultiplier; } ```",
-            "Buyer's interest group bidding function that can be used by Authorized Buyers in the FLEDGE simulation. See the FLEDGE explainer at https://github.com/WICG/turtledove/blob/main/FLEDGE.md#32-on-device-bidding. The function takes one argument, `inputs`, that contains an object with the following named fields of the form: ``` { \"interestGroup\" : [ { \"buyerCreativeId\": \"...\", # Ad creative ID \"adData\": { # any JSON of your choosing }, \"userBiddingSignals\": { . # any JSON of your choosing } } ], \"auctionSignals\": { \"url: # string, \"slotVisibility\": # enum value, \"slotDimensions\": [ { \"height\": # number value \"width\": # number value } ] }, \"perBuyerSignals\": { # Any JSON }, \"trustedBiddingSignals\": { # Any JSON }, \"browserSignals\": { \"recent_impression_ages_secs: [ # number ] } } ``` `interestGroup`: An object containing a list of `ad` objects, which contain the following named fields: - `buyerCreativeId`: The ad creative ID string. - `adData`: Any JSON value of the bidder's choosing to contain data associated with an ad provided in `BidResponse.ad.adslot.ad_data` for the Google Authorized Buyers protocol and `BidResponse.seatbid.bid.ext.ad_data` for the OpenRTB protocol. - `userBiddingSignals`: Any JSON value of the bidder's choosing containing interest group data that corresponds to user_bidding_signals (as in FLEDGE). This field will be populated from `BidResponse.interest_group_map.user_bidding_signals` for Google Authorized Buyers protocol and `BidResponse.ext.interest_group_map.user_bidding_signals` for the OpenRTB protocol. `auctionSignals`: Contains data from the seller. It corresponds to the auction signals data described in the FLEDGE proposal. It is an object containing the following named fields: - `url`: The string URL of the page with parameters removed. - `slotVisibility`: Enum of one of the following potential values: - NO_DETECTION = 0 - ABOVE_THE_FOLD = 1 - BELOW_THE_FOLD = 2 - `slotDimensions`: A list of objects containing containing width and height pairs in `width` and `height` fields, respectively, from `BidRequest.adslot.width` and `BidRequest.adslot.height` for the Google Authorized Buyers protocol and `BidRequest.imp.banner.format.w` and `BidRequest.imp.banner.format.h` for the OpenRTB protocol. `perBuyerSignals`: The contextual signals from the bid response that are populated in `BidResponse.interest_group_bidding.interest_group_buyers.per_buyer_signals` for the Google Authorized Buyers protocol and `BidResponse.ext.interest_group_bidding.interest_group_buyers.per_buyer_signals` for the OpenRTB protocol. These signals can be of any JSON format of your choosing, however, the buyer's domain name must match between: - the interest group response in `BidResponse.interest_group_map.buyer_domain` for the Google Authorized Buyers protocol or in `BidResponse.ext.interest_group_map.buyer_domain` for the OpenRTB protocol. - the contextual response as a key to the map in `BidResponse.interest_group_bidding.interest_group_buyers` for the Google Authorized Buyers protocol or in `BidResponse.ext.interest_group_bidding.interest_group_buyers` for the OpenRTB protocol. In other words, there must be a match between the buyer domain of the contextual per_buyer_signals and the domain of an interest group. `trustedBiddingSignals`: The trusted bidding signals that corresponds to the trusted_bidding_signals in the FLEDGE proposal. It is provided in the interest group response as `BidResponse.interest_group_map.user_bidding_signals` for the Google Authorized Buyers protocol and `BidResponse.ext.interest_group_map.user_bidding_signals` for the OpenRTB protocol. This field can be any JSON format of your choosing. `browserSignals`: An object of simulated browser-provider signals. It is an object with a single named field, `recent_impression_ages_secs`, that contains a list of estimated number value recent impression ages in seconds for a given interest group. The function returns the string creative ID of the selected ad, the bid price CPM, and (optionally) selected product IDs. In addition, the bidding function may populate an optional string debug token that may be useful for remote debugging of a bidding function performing unexpectedly. This debug string is available in `BidResponseFeedback` (https://developers.google.com/authorized-buyers/rtb/realtime-bidding-guide#bidresponsefeedback-object) and BidFeedback (https://developers.google.com/authorized-buyers/rtb/openrtb-guide#bidfeedback), for the Google protocol and openRTB protocol respectively. Example: ``` function biddingFunction(inputs) { ... return { \"buyerCreativeId\": \"ad_creative_id_1\", \"bidPriceCpm\": 0.3, \"productIds\": [\"product_id_1\", \"product_id_2\", \"product_id_3\"] \"debugString\": \"Bidding function executed successfully!\" } } ```"
-          ],
-          "description": "The type of the bidding function to be created.",
-          "enum": [
-            "FUNCTION_TYPE_UNSPECIFIED",
-            "TURTLEDOVE_SIMULATION_BIDDING_FUNCTION",
-            "FLEDGE_BIDDING_FUNCTION"
-          ],
-          "type": "string"
-        }
-      },
-      "type": "object",
-      "description": "The bidding function to be executed as part of the TURTLEDOVE simulation experiment bidding flow."
+    "quotaUser": {
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
+      "location": "query",
+      "type": "string"
+    },
+    "callback": {
+      "type": "string",
+      "location": "query",
+      "description": "JSONP"
+    },
+    "prettyPrint": {
+      "description": "Returns response with indentations and line breaks.",
+      "type": "boolean",
+      "default": "true",
+      "location": "query"
+    },
+    "alt": {
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "description": "Data format for response.",
+      "type": "string",
+      "default": "json",
+      "location": "query"
+    },
+    "$.xgafv": {
+      "location": "query",
+      "type": "string",
+      "description": "V1 error format.",
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "enum": [
+        "1",
+        "2"
+      ]
+    },
+    "fields": {
+      "location": "query",
+      "description": "Selector specifying which fields to include in a partial response.",
+      "type": "string"
+    },
+    "uploadType": {
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
+      "location": "query",
+      "type": "string"
+    },
+    "oauth_token": {
+      "description": "OAuth 2.0 token for the current user.",
+      "type": "string",
+      "location": "query"
+    },
+    "access_token": {
+      "type": "string",
+      "description": "OAuth access token.",
+      "location": "query"
+    },
+    "key": {
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+      "location": "query",
+      "type": "string"
     }
   },
-  "ownerDomain": "google.com",
-  "kind": "discovery#restDescription",
-  "documentationLink": "https://developers.google.com/authorized-buyers/apis/realtimebidding/reference/rest/",
-  "discoveryVersion": "v1",
-  "description": "Allows external bidders to manage their RTB integration with Google. This includes managing bidder endpoints, QPS quotas, configuring what ad inventory to receive via pretargeting, submitting creatives for verification, and accessing creative metadata such as approval status.",
-  "title": "Real-time Bidding API",
-  "id": "realtimebidding:v1alpha",
-  "version_module": true,
-  "batchPath": "batch",
+  "servicePath": "",
   "auth": {
     "oauth2": {
       "scopes": {
@@ -73,164 +95,142 @@
       }
     }
   },
-  "name": "realtimebidding",
-  "revision": "20210518",
-  "mtlsRootUrl": "https://realtimebidding.mtls.googleapis.com/",
-  "rootUrl": "https://realtimebidding.googleapis.com/",
+  "kind": "discovery#restDescription",
+  "revision": "20210525",
   "fullyEncodeReservedExpansion": true,
-  "canonicalName": "Real-time Bidding",
   "resources": {
     "bidders": {
       "resources": {
         "biddingFunctions": {
           "methods": {
-            "list": {
+            "create": {
               "flatPath": "v1alpha/bidders/{biddersId}/biddingFunctions",
-              "path": "v1alpha/{+parent}/biddingFunctions",
               "parameterOrder": [
                 "parent"
               ],
+              "scopes": [
+                "https://www.googleapis.com/auth/realtime-bidding"
+              ],
+              "response": {
+                "$ref": "BiddingFunction"
+              },
+              "path": "v1alpha/{+parent}/biddingFunctions",
               "parameters": {
+                "parent": {
+                  "description": "Required. The name of the bidder for which to create the bidding function. Format: `bidders/{bidderAccountId}`",
+                  "pattern": "^bidders/[^/]+$",
+                  "type": "string",
+                  "required": true,
+                  "location": "path"
+                }
+              },
+              "httpMethod": "POST",
+              "id": "realtimebidding.bidders.biddingFunctions.create",
+              "request": {
+                "$ref": "BiddingFunction"
+              },
+              "description": "Creates a new bidding function."
+            },
+            "list": {
+              "parameters": {
+                "parent": {
+                  "type": "string",
+                  "pattern": "^bidders/[^/]+$",
+                  "description": "Required. Name of the bidder whose bidding functions will be listed. Format: `bidders/{bidder_account_id}`",
+                  "required": true,
+                  "location": "path"
+                },
+                "pageSize": {
+                  "format": "int32",
+                  "description": "The maximum number of bidding functions to return.",
+                  "type": "integer",
+                  "location": "query"
+                },
                 "pageToken": {
                   "type": "string",
                   "location": "query",
                   "description": "A token identifying a page of results the server should return. This value is received from a previous `ListBiddingFunctions` call in ListBiddingFunctionsResponse.nextPageToken."
-                },
-                "parent": {
-                  "required": true,
-                  "type": "string",
-                  "location": "path",
-                  "description": "Required. Name of the bidder whose bidding functions will be listed. Format: `bidders/{bidder_account_id}`",
-                  "pattern": "^bidders/[^/]+$"
-                },
-                "pageSize": {
-                  "type": "integer",
-                  "location": "query",
-                  "description": "The maximum number of bidding functions to return.",
-                  "format": "int32"
                 }
               },
-              "description": "Lists the bidding functions that a bidder currently has registered.",
-              "id": "realtimebidding.bidders.biddingFunctions.list",
-              "httpMethod": "GET",
-              "response": {
-                "$ref": "ListBiddingFunctionsResponse"
-              },
-              "scopes": [
-                "https://www.googleapis.com/auth/realtime-bidding"
-              ]
-            },
-            "create": {
-              "scopes": [
-                "https://www.googleapis.com/auth/realtime-bidding"
-              ],
-              "id": "realtimebidding.bidders.biddingFunctions.create",
+              "flatPath": "v1alpha/bidders/{biddersId}/biddingFunctions",
               "parameterOrder": [
                 "parent"
               ],
-              "parameters": {
-                "parent": {
-                  "required": true,
-                  "description": "Required. The name of the bidder for which to create the bidding function. Format: `bidders/{bidderAccountId}`",
-                  "location": "path",
-                  "type": "string",
-                  "pattern": "^bidders/[^/]+$"
-                }
-              },
-              "request": {
-                "$ref": "BiddingFunction"
-              },
-              "description": "Creates a new bidding function.",
-              "response": {
-                "$ref": "BiddingFunction"
-              },
+              "id": "realtimebidding.bidders.biddingFunctions.list",
               "path": "v1alpha/{+parent}/biddingFunctions",
-              "flatPath": "v1alpha/bidders/{biddersId}/biddingFunctions",
-              "httpMethod": "POST"
+              "httpMethod": "GET",
+              "scopes": [
+                "https://www.googleapis.com/auth/realtime-bidding"
+              ],
+              "response": {
+                "$ref": "ListBiddingFunctionsResponse"
+              },
+              "description": "Lists the bidding functions that a bidder currently has registered."
             }
           }
         }
       }
     }
   },
+  "batchPath": "batch",
+  "canonicalName": "Real-time Bidding",
+  "name": "realtimebidding",
+  "discoveryVersion": "v1",
   "protocol": "rest",
-  "servicePath": "",
-  "parameters": {
-    "alt": {
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "type": "string",
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ],
-      "default": "json",
-      "location": "query",
-      "description": "Data format for response."
+  "id": "realtimebidding:v1alpha",
+  "description": "Allows external bidders to manage their RTB integration with Google. This includes managing bidder endpoints, QPS quotas, configuring what ad inventory to receive via pretargeting, submitting creatives for verification, and accessing creative metadata such as approval status.",
+  "version": "v1alpha",
+  "ownerDomain": "google.com",
+  "schemas": {
+    "BiddingFunction": {
+      "type": "object",
+      "id": "BiddingFunction",
+      "properties": {
+        "biddingFunction": {
+          "description": "The raw Javascript source code of the bidding function.",
+          "type": "string"
+        },
+        "name": {
+          "description": "The name of the bidding function that must follow the pattern: `bidders/{bidder_account_id}/biddingFunctions/{bidding_function_name}`.",
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "FUNCTION_TYPE_UNSPECIFIED",
+            "TURTLEDOVE_SIMULATION_BIDDING_FUNCTION",
+            "FLEDGE_BIDDING_FUNCTION"
+          ],
+          "type": "string",
+          "description": "The type of the bidding function to be created.",
+          "enumDescriptions": [
+            "Default value that should not be used.",
+            "Bidding function that can be used by Authorized Buyers in the original TURTLEDOVE simulation. See documentation on the TURTLEDOVE simulation at https://developers.google.com/authorized-buyers/rtb/turtledove. The function takes in a Javascript object, `inputs`, that contains the following named fields: `openrtbContextualBidRequest` OR `googleContextualBidRequest`, `customContextualSignal`, `interestBasedBidData`, `interestGroupData`, and returns the bid price CPM. Example: ``` /* Returns a bid price CPM. * * @param {Object} inputs an object with the * following named fields: * - openrtbContextualBidRequest * OR googleContextualBidRequest * - customContextualSignal * - interestBasedBidData * - interestGroupData */ function biddingFunction(inputs) { ... return inputs.interestBasedBidData.cpm * inputs.customContextualSignals.placementMultiplier; } ```",
+            "Buyer's interest group bidding function that can be used by Authorized Buyers in the FLEDGE simulation. See the FLEDGE explainer at https://github.com/WICG/turtledove/blob/main/FLEDGE.md#32-on-device-bidding. The function takes one argument, `inputs`, that contains an object with the following named fields of the form: ``` { \"interestGroup\" : { \"ad\" : [ \"buyerCreativeId\": \"...\", # Ad creative ID \"adData\": { # JSON object } ], \"userBiddingSignals\": { . # JSON object } }, \"auctionSignals\": { \"url\": # string, \"slotVisibility\": # enum value, \"slotDimensions\": [ { \"height\": # number value \"width\": # number value } ] }, \"perBuyerSignals\": { # JSON object }, \"trustedBiddingSignals\": { # JSON object }, \"browserSignals\": { \"recent_impression_ages_secs\": [ # Array of integers. Not yet populated. ] } } ``` `interestGroup`: An object containing a list of `ad` objects, which contain the following named fields: - `buyerCreativeId`: The ad creative ID string. - `adData`: Any JSON value of the bidder's choosing to contain data associated with an ad provided in `BidResponse.ad.adslot.ad_data` for the Google Authorized Buyers protocol and `BidResponse.seatbid.bid.ext.ad_data` for the OpenRTB protocol. - `userBiddingSignals`: Any JSON value of the bidder's choosing containing interest group data that corresponds to user_bidding_signals (as in FLEDGE). This field will be populated from `BidResponse.interest_group_map.user_bidding_signals` for Google Authorized Buyers protocol and `BidResponse.ext.interest_group_map.user_bidding_signals` for the OpenRTB protocol. `auctionSignals`: Contains data from the seller. It corresponds to the auction signals data described in the FLEDGE proposal. It is an object containing the following named fields: - `url`: The string URL of the page with parameters removed. - `slotVisibility`: Enum of one of the following potential values: - NO_DETECTION = 0 - ABOVE_THE_FOLD = 1 - BELOW_THE_FOLD = 2 - `slotDimensions`: A list of objects containing containing width and height pairs in `width` and `height` fields, respectively, from `BidRequest.adslot.width` and `BidRequest.adslot.height` for the Google Authorized Buyers protocol and `BidRequest.imp.banner.format.w` and `BidRequest.imp.banner.format.h` for the OpenRTB protocol. `perBuyerSignals`: The contextual signals from the bid response that are populated in `BidResponse.interest_group_bidding.interest_group_buyers.per_buyer_signals` for the Google Authorized Buyers protocol and `BidResponse.ext.interest_group_bidding.interest_group_buyers.per_buyer_signals` for the OpenRTB protocol. These signals can be of any JSON format of your choosing, however, the buyer's domain name must match between: - the interest group response in `BidResponse.interest_group_map.buyer_domain` for the Google Authorized Buyers protocol or in `BidResponse.ext.interest_group_map.buyer_domain` for the OpenRTB protocol. - the contextual response as a key to the map in `BidResponse.interest_group_bidding.interest_group_buyers` for the Google Authorized Buyers protocol or in `BidResponse.ext.interest_group_bidding.interest_group_buyers` for the OpenRTB protocol. In other words, there must be a match between the buyer domain of the contextual per_buyer_signals and the domain of an interest group. `trustedBiddingSignals`: The trusted bidding signals that corresponds to the trusted_bidding_signals in the FLEDGE proposal. It is provided in the interest group response as `BidResponse.interest_group_map.user_bidding_signals` for the Google Authorized Buyers protocol and `BidResponse.ext.interest_group_map.user_bidding_signals` for the OpenRTB protocol. This field can be any JSON format of your choosing. `browserSignals`: An object of simulated browser-provider signals. It is an object with a single named field, `recent_impression_ages_secs`, that contains a list of estimated number value recent impression ages in seconds for a given interest group. `recent_impression_ages_secs` is not yet populated. The function returns the string creative ID of the selected ad, the bid price CPM, and (optionally) selected product IDs. In addition, the bidding function may populate an optional string debug token that may be useful for remote debugging of a bidding function performing unexpectedly. This debug string is available in `BidResponseFeedback` (https://developers.google.com/authorized-buyers/rtb/realtime-bidding-guide#bidresponsefeedback-object) and BidFeedback (https://developers.google.com/authorized-buyers/rtb/openrtb-guide#bidfeedback), for the Google protocol and openRTB protocol respectively. Example: ``` function biddingFunction(inputs) { ... return { \"buyerCreativeId\": \"ad_creative_id_1\", \"bidPriceCpm\": 0.3, \"productIds\": [\"product_id_1\", \"product_id_2\", \"product_id_3\"] \"debugString\": \"Bidding function executed successfully!\" } } ```"
+          ]
+        }
+      },
+      "description": "The bidding function to be executed as part of the TURTLEDOVE simulation experiment bidding flow."
     },
-    "access_token": {
-      "description": "OAuth access token.",
-      "type": "string",
-      "location": "query"
-    },
-    "$.xgafv": {
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ],
-      "type": "string",
-      "description": "V1 error format.",
-      "enum": [
-        "1",
-        "2"
-      ],
-      "location": "query"
-    },
-    "quotaUser": {
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
-      "location": "query",
-      "type": "string"
-    },
-    "fields": {
-      "description": "Selector specifying which fields to include in a partial response.",
-      "type": "string",
-      "location": "query"
-    },
-    "key": {
-      "type": "string",
-      "location": "query",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token."
-    },
-    "callback": {
-      "description": "JSONP",
-      "location": "query",
-      "type": "string"
-    },
-    "upload_protocol": {
-      "location": "query",
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\")."
-    },
-    "prettyPrint": {
-      "description": "Returns response with indentations and line breaks.",
-      "type": "boolean",
-      "default": "true",
-      "location": "query"
-    },
-    "oauth_token": {
-      "description": "OAuth 2.0 token for the current user.",
-      "location": "query",
-      "type": "string"
-    },
-    "uploadType": {
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
-      "location": "query",
-      "type": "string"
+    "ListBiddingFunctionsResponse": {
+      "type": "object",
+      "id": "ListBiddingFunctionsResponse",
+      "description": "A response containing a list of a bidder's bidding functions.",
+      "properties": {
+        "nextPageToken": {
+          "description": "A token which can be passed to a subsequent call to the `ListBiddingFunctions` method to retrieve the next page of results in ListBiddingFunctionsRequest.pageToken.",
+          "type": "string"
+        },
+        "biddingFunctions": {
+          "description": "A list of a bidder's bidding functions.",
+          "items": {
+            "$ref": "BiddingFunction"
+          },
+          "type": "array"
+        }
+      }
     }
   },
-  "basePath": ""
+  "ownerName": "Google",
+  "baseUrl": "https://realtimebidding.googleapis.com/",
+  "documentationLink": "https://developers.google.com/authorized-buyers/apis/realtimebidding/reference/rest/"
 }
