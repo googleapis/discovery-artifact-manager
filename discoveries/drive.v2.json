@@ -1,11 +1,11 @@
 {
  "kind": "discovery#restDescription",
- "etag": "\"uWj2hSb4GVjzdDlAnRd2gbM1ZQ8/WyBZdYbE0D4DynBiI0u-hsaxEpU\"",
+ "etag": "\"uWj2hSb4GVjzdDlAnRd2gbM1ZQ8/Dp2bPJMp8Fmx1gY2Dos9-f3_ieQ\"",
  "discoveryVersion": "v1",
  "id": "drive:v2",
  "name": "drive",
  "version": "v2",
- "revision": "20210315",
+ "revision": "20210628",
  "title": "Drive API",
  "description": "Manages files in Drive including uploading, downloading, searching, detecting changes, and updating sharing permissions.",
  "ownerDomain": "google.com",
@@ -764,7 +764,7 @@
    "properties": {
     "anchor": {
      "type": "string",
-     "description": "A region of the document represented as a JSON string. See anchor documentation for details on how to define and interpret anchor properties."
+     "description": "A region of the document represented as a JSON string. For details on defining anchor properties, refer to  Add comments and replies."
     },
     "author": {
      "$ref": "User",
@@ -1228,6 +1228,10 @@
        "type": "boolean",
        "description": "Deprecated"
       },
+      "canChangeSecurityUpdateEnabled": {
+       "type": "boolean",
+       "description": "Whether the current user can change the securityUpdateEnabled field on link share metadata."
+      },
       "canComment": {
        "type": "boolean",
        "description": "Whether the current user can comment on this file."
@@ -1401,6 +1405,7 @@
     "exportLinks": {
      "type": "object",
      "description": "Links for exporting Docs Editors files to specific formats.",
+     "readOnly": true,
      "additionalProperties": {
       "type": "string",
       "description": "A mapping from export format to URL"
@@ -1622,6 +1627,20 @@
      "description": "Last time this file was viewed by the user (formatted RFC 3339 timestamp).",
      "format": "date-time"
     },
+    "linkShareMetadata": {
+     "type": "object",
+     "description": "Contains details about the link URLs that clients are using to refer to this item.",
+     "properties": {
+      "securityUpdateEligible": {
+       "type": "boolean",
+       "description": "Whether the file is eligible for security update."
+      },
+      "securityUpdateEnabled": {
+       "type": "boolean",
+       "description": "Whether the security update is enabled for this file."
+      }
+     }
+    },
     "markedViewedByMeDate": {
      "type": "string",
      "description": "Deprecated.",
@@ -1669,7 +1688,7 @@
     },
     "owners": {
      "type": "array",
-     "description": "The owner(s) of this file. Not populated for items in shared drives.",
+     "description": "The owner of this file. Only certain legacy files may have more than one owner. This field isn't populated for items in shared drives.",
      "items": {
       "$ref": "User"
      }
@@ -1707,6 +1726,10 @@
      "description": "The number of quota bytes used by this file.",
      "format": "int64"
     },
+    "resourceKey": {
+     "type": "string",
+     "description": "A key needed to access the item via a shared link."
+    },
     "selfLink": {
      "type": "string",
      "description": "A link back to this file."
@@ -1739,6 +1762,10 @@
       "targetMimeType": {
        "type": "string",
        "description": "The MIME type of the file that this shortcut points to. The value of this field is a snapshot of the target's MIME type, captured when the shortcut is created."
+      },
+      "targetResourceKey": {
+       "type": "string",
+       "description": "The ResourceKey for the target file."
       }
      }
     },
@@ -2009,6 +2036,7 @@
     "permissionDetails": {
      "type": "array",
      "description": "Details of whether the permissions on this shared drive item are inherited or directly on this item. This is an output-only field which is present only for shared drive items.",
+     "readOnly": true,
      "items": {
       "type": "object",
       "properties": {
@@ -2058,6 +2086,7 @@
     "teamDrivePermissionDetails": {
      "type": "array",
      "description": "Deprecated - use permissionDetails instead.",
+     "readOnly": true,
      "items": {
       "type": "object",
       "properties": {
@@ -2282,7 +2311,7 @@
     },
     "pinned": {
      "type": "boolean",
-     "description": "Whether this revision is pinned to prevent automatic purging. This will only be populated and can only be modified on files with content stored in Drive, excluding Docs Editors files. Revisions can also be pinned when they are created through the drive.files.insert/update/copy by using the pinned query parameter. Pinned revisions are stored indefinitely using additional storage quota, up to a maximum of 200 revisions."
+     "description": "Whether this revision is pinned to prevent automatic purging. If not set, the revision is automatically purged 30 days after newer content is uploaded. This field can only be modified on files with content stored in Drive, excluding Docs Editors files. Revisions can also be pinned when they are created through the drive.files.insert/update/copy by using the pinned query parameter. Pinned revisions are stored indefinitely using additional storage quota, up to a maximum of 200 revisions."
     },
     "publishAuto": {
      "type": "boolean",
@@ -3522,7 +3551,7 @@
      "parameters": {
       "maxResults": {
        "type": "integer",
-       "description": "Maximum number of shared drives to return.",
+       "description": "Maximum number of shared drives to return per page.",
        "default": "10",
        "format": "int32",
        "minimum": "1",
@@ -3817,8 +3846,14 @@
       },
       "space": {
        "type": "string",
-       "description": "The space in which the IDs can be used to create new files. Supported values are 'drive' and 'appDataFolder'.",
+       "description": "The space in which the IDs can be used to create new files. Supported values are 'drive' and 'appDataFolder'. (Default: 'drive')",
        "default": "drive",
+       "location": "query"
+      },
+      "type": {
+       "type": "string",
+       "description": "The type of items which the IDs can be used for. Supported values are 'files' and 'shortcuts'. Note that 'shortcuts' are only supported in the drive 'space'. (Default: 'files')",
+       "default": "files",
        "location": "query"
       }
      },
@@ -3835,7 +3870,7 @@
      "id": "drive.files.get",
      "path": "files/{fileId}",
      "httpMethod": "GET",
-     "description": "Gets a file's metadata by ID.",
+     "description": "Gets a file's metadata or content by ID.",
      "parameters": {
       "acknowledgeAbuse": {
        "type": "boolean",
