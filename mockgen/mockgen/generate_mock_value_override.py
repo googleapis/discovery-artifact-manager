@@ -24,7 +24,7 @@ def _gen_fields(method, quote='"'):
     If a required field specifies a regex pattern that is not a path template,
     the non-zero value will be a random string that matches that regex. Note
     that this function uses a fixed seed, so two parameters that specify the
-    same regex will be overriden with the same value.
+    same regex will be overridden with the same value.
 
     If a required field specifies a string which is an enum, the first valid
     enum value is used.
