@@ -1,42 +1,130 @@
 {
-  "rootUrl": "https://admin.googleapis.com/",
-  "revision": "20210413",
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/admin.reports.usage.readonly": {
+          "description": "View usage reports for your G Suite domain"
+        },
+        "https://www.googleapis.com/auth/admin.reports.audit.readonly": {
+          "description": "View audit reports for your G Suite domain"
+        }
+      }
+    }
+  },
+  "id": "admin:reports_v1",
+  "mtlsRootUrl": "https://admin.mtls.googleapis.com/",
   "resources": {
     "userUsageReport": {
       "methods": {
         "get": {
+          "id": "reports.userUsageReport.get",
+          "description": "Retrieves a report which is a collection of properties and statistics for a set of users with the account. For more information, see the User Usage Report guide. For more information about the user report's parameters, see the Users Usage parameters reference guides.",
+          "flatPath": "admin/reports/v1/usage/users/{userKey}/dates/{date}",
+          "scopes": [
+            "https://www.googleapis.com/auth/admin.reports.usage.readonly"
+          ],
+          "path": "admin/reports/v1/usage/users/{userKey}/dates/{date}",
+          "parameters": {
+            "parameters": {
+              "type": "string",
+              "pattern": "(((accounts)|(classroom)|(cros)|(gmail)|(calendar)|(docs)|(gplus)|(sites)|(device_management)|(drive)):[^,]+,)*(((accounts)|(classroom)|(cros)|(gmail)|(calendar)|(docs)|(gplus)|(sites)|(device_management)|(drive)):[^,]+)",
+              "description": "The `parameters` query string is a comma-separated list of event parameters that refine a report's results. The parameter is associated with a specific application. The application values for the Customers Usage report include `accounts`, `app_maker`, `apps_scripts`, `calendar`, `classroom`, `cros`, `docs`, `gmail`, `gplus`, `device_management`, `meet`, and `sites`. A `parameters` query string is in the CSV form of `app_name1:param_name1, app_name2:param_name2`. *Note:* The API doesn't accept multiple values of a parameter. If a particular parameter is supplied more than once in the API request, the API only accepts the last value of that request parameter. In addition, if an invalid request parameter is supplied in the API request, the API ignores that request parameter and returns the response corresponding to the remaining valid request parameters. An example of an invalid request parameter is one that does not belong to the application. If no parameters are requested, all parameters are returned. ",
+              "location": "query"
+            },
+            "pageToken": {
+              "description": "Token to specify next page. A report with multiple pages has a `nextPageToken` property in the response. In your follow-on request getting the next page of the report, enter the `nextPageToken` value in the `pageToken` query string.",
+              "type": "string",
+              "location": "query"
+            },
+            "groupIdFilter": {
+              "description": "Comma separated group ids (obfuscated) on which user activities are filtered, i.e. the response will contain activities for only those users that are a part of at least one of the group ids mentioned here. Format: \"id:abc123,id:xyz456\"",
+              "pattern": "(id:[a-z0-9]+(,id:[a-z0-9]+)*)",
+              "type": "string",
+              "location": "query"
+            },
+            "orgUnitID": {
+              "pattern": "(id:[a-z0-9]+)",
+              "description": "ID of the organizational unit to report on. User activity will be shown only for users who belong to the specified organizational unit. Data before Dec 17, 2018 doesn't appear in the filtered results.",
+              "location": "query",
+              "default": "",
+              "type": "string"
+            },
+            "date": {
+              "type": "string",
+              "description": "Represents the date the usage occurred. The timestamp is in the ISO 8601 format, yyyy-mm-dd. We recommend you use your account's time zone for this.",
+              "location": "path",
+              "required": true,
+              "pattern": "(\\d){4}-(\\d){2}-(\\d){2}"
+            },
+            "maxResults": {
+              "default": "1000",
+              "format": "uint32",
+              "minimum": "1",
+              "maximum": "1000",
+              "description": "Determines how many activity records are shown on each response page. For example, if the request sets `maxResults=1` and the report has two activities, the report has two pages. The response's `nextPageToken` property has the token to the second page. The `maxResults` query string is optional.",
+              "location": "query",
+              "type": "integer"
+            },
+            "filters": {
+              "pattern": "(((accounts)|(classroom)|(cros)|(gmail)|(calendar)|(docs)|(gplus)|(sites)|(device_management)|(drive)):[a-z0-9_]+[\u003c,\u003c=,==,\u003e=,\u003e,!=][^,]+,)*(((accounts)|(classroom)|(cros)|(gmail)|(calendar)|(docs)|(gplus)|(sites)|(device_management)|(drive)):[a-z0-9_]+[\u003c,\u003c=,==,\u003e=,\u003e,!=][^,]+)",
+              "type": "string",
+              "description": "The `filters` query string is a comma-separated list of an application's event parameters where the parameter's value is manipulated by a relational operator. The `filters` query string includes the name of the application whose usage is returned in the report. The application values for the Users Usage Report include `accounts`, `docs`, and `gmail`. Filters are in the form `[application name]:parameter name[parameter value],...`. In this example, the `\u003c\u003e` 'not equal to' operator is URL-encoded in the request's query string (%3C%3E): GET https://www.googleapis.com/admin/reports/v1/usage/users/all/dates/2013-03-03 ?parameters=accounts:last_login_time &filters=accounts:last_login_time%3C%3E2010-10-28T10:26:35.000Z The relational operators include: - `==` - 'equal to'. - `\u003c\u003e` - 'not equal to'. It is URL-encoded (%3C%3E). - `\u003c` - 'less than'. It is URL-encoded (%3C). - `\u003c=` - 'less than or equal to'. It is URL-encoded (%3C=). - `\u003e` - 'greater than'. It is URL-encoded (%3E). - `\u003e=` - 'greater than or equal to'. It is URL-encoded (%3E=). ",
+              "location": "query"
+            },
+            "customerId": {
+              "type": "string",
+              "description": "The unique ID of the customer to retrieve data for.",
+              "location": "query",
+              "pattern": "C.+|my_customer"
+            },
+            "userKey": {
+              "required": true,
+              "location": "path",
+              "description": "Represents the profile ID or the user email for which the data should be filtered. Can be `all` for all information, or `userKey` for a user's unique Google Workspace profile ID or their primary email address. Must not be a deleted user. For a deleted user, call `users.list` in Directory API with `showDeleted=true`, then use the returned `ID` as the `userKey`.",
+              "type": "string"
+            }
+          },
           "parameterOrder": [
             "userKey",
             "date"
           ],
-          "path": "admin/reports/v1/usage/users/{userKey}/dates/{date}",
-          "id": "reports.userUsageReport.get",
+          "httpMethod": "GET",
           "response": {
             "$ref": "UsageReports"
-          },
+          }
+        }
+      }
+    },
+    "entityUsageReports": {
+      "methods": {
+        "get": {
           "scopes": [
             "https://www.googleapis.com/auth/admin.reports.usage.readonly"
           ],
+          "path": "admin/reports/v1/usage/{entityType}/{entityKey}/dates/{date}",
+          "description": "Retrieves a report which is a collection of properties and statistics for entities used by users within the account. For more information, see the Entities Usage Report guide. For more information about the entities report's parameters, see the Entities Usage parameters reference guides.",
+          "id": "reports.entityUsageReports.get",
+          "flatPath": "admin/reports/v1/usage/{entityType}/{entityKey}/dates/{date}",
           "parameters": {
-            "date": {
-              "type": "string",
-              "location": "path",
-              "pattern": "(\\d){4}-(\\d){2}-(\\d){2}",
-              "description": "Represents the date the usage occurred. The timestamp is in the ISO 8601 format, yyyy-mm-dd. We recommend you use your account's time zone for this.",
-              "required": true
-            },
-            "orgUnitID": {
-              "default": "",
-              "pattern": "(id:[a-z0-9]+)",
-              "type": "string",
-              "description": "ID of the organizational unit to report on. User activity will be shown only for users who belong to the specified organizational unit. Data before Dec 17, 2018 doesn't appear in the filtered results.",
-              "location": "query"
-            },
             "parameters": {
+              "pattern": "(((gplus)):[^,]+,)*(((gplus)):[^,]+)",
+              "description": "The `parameters` query string is a comma-separated list of event parameters that refine a report's results. The parameter is associated with a specific application. The application values for the Entities usage report are only `gplus`. A `parameter` query string is in the CSV form of `[app_name1:param_name1], [app_name2:param_name2]...`. *Note:* The API doesn't accept multiple values of a parameter. If a particular parameter is supplied more than once in the API request, the API only accepts the last value of that request parameter. In addition, if an invalid request parameter is supplied in the API request, the API ignores that request parameter and returns the response corresponding to the remaining valid request parameters. An example of an invalid request parameter is one that does not belong to the application. If no parameters are requested, all parameters are returned. ",
               "location": "query",
-              "description": "The `parameters` query string is a comma-separated list of event parameters that refine a report's results. The parameter is associated with a specific application. The application values for the Customers Usage report include `accounts`, `app_maker`, `apps_scripts`, `calendar`, `classroom`, `cros`, `docs`, `gmail`, `gplus`, `device_management`, `meet`, and `sites`. A `parameters` query string is in the CSV form of `app_name1:param_name1, app_name2:param_name2`. *Note:* The API doesn't accept multiple values of a parameter. If a particular parameter is supplied more than once in the API request, the API only accepts the last value of that request parameter. In addition, if an invalid request parameter is supplied in the API request, the API ignores that request parameter and returns the response corresponding to the remaining valid request parameters. An example of an invalid request parameter is one that does not belong to the application. If no parameters are requested, all parameters are returned. ",
+              "type": "string"
+            },
+            "entityKey": {
+              "enum": [
+                "all",
+                "entityKey"
+              ],
               "type": "string",
-              "pattern": "(((accounts)|(classroom)|(cros)|(gmail)|(calendar)|(docs)|(gplus)|(sites)|(device_management)|(drive)):[^,]+,)*(((accounts)|(classroom)|(cros)|(gmail)|(calendar)|(docs)|(gplus)|(sites)|(device_management)|(drive)):[^,]+)"
+              "enumDescriptions": [
+                "Returns activity events for all users.",
+                "Represents an app-specific identifier for the entity. For details on how to obtain the `entityKey` for a particular `entityType`, see the Entities Usage parameters reference guides."
+              ],
+              "description": "Represents the key of the object to filter the data with.",
+              "required": true,
+              "location": "path"
             },
             "pageToken": {
               "location": "query",
@@ -44,125 +132,156 @@
               "description": "Token to specify next page. A report with multiple pages has a `nextPageToken` property in the response. In your follow-on request getting the next page of the report, enter the `nextPageToken` value in the `pageToken` query string."
             },
             "filters": {
-              "type": "string",
               "location": "query",
-              "description": "The `filters` query string is a comma-separated list of an application's event parameters where the parameter's value is manipulated by a relational operator. The `filters` query string includes the name of the application whose usage is returned in the report. The application values for the Users Usage Report include `accounts`, `docs`, and `gmail`. Filters are in the form `[application name]:parameter name[parameter value],...`. In this example, the `\u003c\u003e` 'not equal to' operator is URL-encoded in the request's query string (%3C%3E): GET https://www.googleapis.com/admin/reports/v1/usage/users/all/dates/2013-03-03 ?parameters=accounts:last_login_time &filters=accounts:last_login_time%3C%3E2010-10-28T10:26:35.000Z The relational operators include: - `==` - 'equal to'. - `\u003c\u003e` - 'not equal to'. It is URL-encoded (%3C%3E). - `\u003c` - 'less than'. It is URL-encoded (%3C). - `\u003c=` - 'less than or equal to'. It is URL-encoded (%3C=). - `\u003e` - 'greater than'. It is URL-encoded (%3E). - `\u003e=` - 'greater than or equal to'. It is URL-encoded (%3E=). ",
-              "pattern": "(((accounts)|(classroom)|(cros)|(gmail)|(calendar)|(docs)|(gplus)|(sites)|(device_management)|(drive)):[a-z0-9_]+[\u003c,\u003c=,==,\u003e=,\u003e,!=][^,]+,)*(((accounts)|(classroom)|(cros)|(gmail)|(calendar)|(docs)|(gplus)|(sites)|(device_management)|(drive)):[a-z0-9_]+[\u003c,\u003c=,==,\u003e=,\u003e,!=][^,]+)"
-            },
-            "userKey": {
-              "location": "path",
-              "description": "Represents the profile ID or the user email for which the data should be filtered. Can be `all` for all information, or `userKey` for a user's unique Google Workspace profile ID or their primary email address.",
+              "pattern": "(((gplus)):[a-z0-9_]+[\u003c,\u003c=,==,\u003e=,\u003e,!=][^,]+,)*(((gplus)):[a-z0-9_]+[\u003c,\u003c=,==,\u003e=,\u003e,!=][^,]+)",
               "type": "string",
+              "description": "The `filters` query string is a comma-separated list of an application's event parameters where the parameter's value is manipulated by a relational operator. The `filters` query string includes the name of the application whose usage is returned in the report. The application values for the Entities usage report include `accounts`, `docs`, and `gmail`. Filters are in the form `[application name]:parameter name[parameter value],...`. In this example, the `\u003c\u003e` 'not equal to' operator is URL-encoded in the request's query string (%3C%3E): GET https://www.googleapis.com/admin/reports/v1/usage/gplus_communities/all/dates/2017-12-01 ?parameters=gplus:community_name,gplus:num_total_members &filters=gplus:num_total_members%3C%3E0 The relational operators include: - `==` - 'equal to'. - `\u003c\u003e` - 'not equal to'. It is URL-encoded (%3C%3E). - `\u003c` - 'less than'. It is URL-encoded (%3C). - `\u003c=` - 'less than or equal to'. It is URL-encoded (%3C=). - `\u003e` - 'greater than'. It is URL-encoded (%3E). - `\u003e=` - 'greater than or equal to'. It is URL-encoded (%3E=). Filters can only be applied to numeric parameters."
+            },
+            "entityType": {
+              "pattern": "(gplus_communities)",
+              "enumDescriptions": [
+                "Returns a report on Google+ communities."
+              ],
+              "type": "string",
+              "enum": [
+                "gplus_communities"
+              ],
+              "location": "path",
+              "description": "Represents the type of entity for the report.",
               "required": true
             },
-            "customerId": {
-              "location": "query",
-              "pattern": "C.+|my_customer",
-              "description": "The unique ID of the customer to retrieve data for.",
-              "type": "string"
-            },
-            "groupIdFilter": {
-              "pattern": "(id:[a-z0-9]+(,id:[a-z0-9]+)*)",
+            "date": {
+              "required": true,
               "type": "string",
-              "description": "Comma separated group ids (obfuscated) on which user activities are filtered, i.e, the response will contain activities for only those users that are a part of at least one of the group ids mentioned here. Format: \"id:abc123,id:xyz456\"",
-              "location": "query"
+              "pattern": "(\\d){4}-(\\d){2}-(\\d){2}",
+              "description": "Represents the date the usage occurred. The timestamp is in the ISO 8601 format, yyyy-mm-dd. We recommend you use your account's time zone for this.",
+              "location": "path"
             },
             "maxResults": {
+              "location": "query",
               "maximum": "1000",
+              "minimum": "1",
+              "description": "Determines how many activity records are shown on each response page. For example, if the request sets `maxResults=1` and the report has two activities, the report has two pages. The response's `nextPageToken` property has the token to the second page.",
               "default": "1000",
               "type": "integer",
-              "location": "query",
-              "minimum": "1",
-              "description": "Determines how many activity records are shown on each response page. For example, if the request sets `maxResults=1` and the report has two activities, the report has two pages. The response's `nextPageToken` property has the token to the second page. The `maxResults` query string is optional.",
               "format": "uint32"
+            },
+            "customerId": {
+              "pattern": "C.+|my_customer",
+              "description": "The unique ID of the customer to retrieve data for.",
+              "type": "string",
+              "location": "query"
             }
           },
-          "description": "Retrieves a report which is a collection of properties and statistics for a set of users with the account. For more information, see the User Usage Report guide. For more information about the user report's parameters, see the Users Usage parameters reference guides.",
+          "parameterOrder": [
+            "entityType",
+            "entityKey",
+            "date"
+          ],
           "httpMethod": "GET",
-          "flatPath": "admin/reports/v1/usage/users/{userKey}/dates/{date}"
+          "response": {
+            "$ref": "UsageReports"
+          }
         }
       }
     },
     "customerUsageReports": {
       "methods": {
         "get": {
+          "path": "admin/reports/v1/usage/dates/{date}",
           "response": {
             "$ref": "UsageReports"
           },
-          "flatPath": "admin/reports/v1/usage/dates/{date}",
-          "parameters": {
-            "parameters": {
-              "type": "string",
-              "pattern": "(((accounts)|(app_maker)|(apps_scripts)|(classroom)|(cros)|(gmail)|(calendar)|(docs)|(gplus)|(sites)|(device_management)|(drive)|(meet)):[^,]+,)*(((accounts)|(app_maker)|(apps_scripts)|(classroom)|(cros)|(gmail)|(calendar)|(docs)|(gplus)|(sites)|(device_management)|(drive)|(meet)):[^,]+)",
-              "location": "query",
-              "description": "The `parameters` query string is a comma-separated list of event parameters that refine a report's results. The parameter is associated with a specific application. The application values for the Customers usage report include `accounts`, `app_maker`, `apps_scripts`, `calendar`, `classroom`, `cros`, `docs`, `gmail`, `gplus`, `device_management`, `meet`, and `sites`. A `parameters` query string is in the CSV form of `app_name1:param_name1, app_name2:param_name2`. *Note:* The API doesn't accept multiple values of a parameter. If a particular parameter is supplied more than once in the API request, the API only accepts the last value of that request parameter. In addition, if an invalid request parameter is supplied in the API request, the API ignores that request parameter and returns the response corresponding to the remaining valid request parameters. An example of an invalid request parameter is one that does not belong to the application. If no parameters are requested, all parameters are returned. "
-            },
-            "pageToken": {
-              "description": "Token to specify next page. A report with multiple pages has a `nextPageToken` property in the response. For your follow-on requests getting all of the report's pages, enter the `nextPageToken` value in the `pageToken` query string.",
-              "location": "query",
-              "type": "string"
-            },
-            "date": {
-              "description": "Represents the date the usage occurred. The timestamp is in the ISO 8601 format, yyyy-mm-dd. We recommend you use your account's time zone for this.",
-              "required": true,
-              "pattern": "(\\d){4}-(\\d){2}-(\\d){2}",
-              "location": "path",
-              "type": "string"
-            },
-            "customerId": {
-              "type": "string",
-              "description": "The unique ID of the customer to retrieve data for.",
-              "location": "query",
-              "pattern": "C.+|my_customer"
-            }
-          },
-          "path": "admin/reports/v1/usage/dates/{date}",
-          "parameterOrder": [
-            "date"
-          ],
           "description": "Retrieves a report which is a collection of properties and statistics for a specific customer's account. For more information, see the Customers Usage Report guide. For more information about the customer report's parameters, see the Customers Usage parameters reference guides. ",
-          "httpMethod": "GET",
+          "id": "reports.customerUsageReports.get",
           "scopes": [
             "https://www.googleapis.com/auth/admin.reports.usage.readonly"
           ],
-          "id": "reports.customerUsageReports.get"
+          "parameters": {
+            "date": {
+              "description": "Represents the date the usage occurred. The timestamp is in the ISO 8601 format, yyyy-mm-dd. We recommend you use your account's time zone for this.",
+              "pattern": "(\\d){4}-(\\d){2}-(\\d){2}",
+              "type": "string",
+              "required": true,
+              "location": "path"
+            },
+            "pageToken": {
+              "type": "string",
+              "location": "query",
+              "description": "Token to specify next page. A report with multiple pages has a `nextPageToken` property in the response. For your follow-on requests getting all of the report's pages, enter the `nextPageToken` value in the `pageToken` query string."
+            },
+            "customerId": {
+              "pattern": "C.+|my_customer",
+              "description": "The unique ID of the customer to retrieve data for.",
+              "location": "query",
+              "type": "string"
+            },
+            "parameters": {
+              "description": "The `parameters` query string is a comma-separated list of event parameters that refine a report's results. The parameter is associated with a specific application. The application values for the Customers usage report include `accounts`, `app_maker`, `apps_scripts`, `calendar`, `classroom`, `cros`, `docs`, `gmail`, `gplus`, `device_management`, `meet`, and `sites`. A `parameters` query string is in the CSV form of `app_name1:param_name1, app_name2:param_name2`. *Note:* The API doesn't accept multiple values of a parameter. If a particular parameter is supplied more than once in the API request, the API only accepts the last value of that request parameter. In addition, if an invalid request parameter is supplied in the API request, the API ignores that request parameter and returns the response corresponding to the remaining valid request parameters. An example of an invalid request parameter is one that does not belong to the application. If no parameters are requested, all parameters are returned. ",
+              "type": "string",
+              "pattern": "(((accounts)|(app_maker)|(apps_scripts)|(classroom)|(cros)|(gmail)|(calendar)|(docs)|(gplus)|(sites)|(device_management)|(drive)|(meet)):[^,]+,)*(((accounts)|(app_maker)|(apps_scripts)|(classroom)|(cros)|(gmail)|(calendar)|(docs)|(gplus)|(sites)|(device_management)|(drive)|(meet)):[^,]+)",
+              "location": "query"
+            }
+          },
+          "httpMethod": "GET",
+          "parameterOrder": [
+            "date"
+          ],
+          "flatPath": "admin/reports/v1/usage/dates/{date}"
+        }
+      }
+    },
+    "channels": {
+      "methods": {
+        "stop": {
+          "request": {
+            "$ref": "Channel"
+          },
+          "path": "admin/reports_v1/channels/stop",
+          "httpMethod": "POST",
+          "id": "admin.channels.stop",
+          "parameterOrder": [],
+          "flatPath": "admin/reports_v1/channels/stop",
+          "parameters": {},
+          "description": "Stop watching resources through this channel.",
+          "scopes": [
+            "https://www.googleapis.com/auth/admin.reports.audit.readonly"
+          ]
         }
       }
     },
     "activities": {
       "methods": {
         "watch": {
+          "parameterOrder": [
+            "userKey",
+            "applicationName"
+          ],
+          "description": "Start receiving notifications for account activities. For more information, see Receiving Push Notifications.",
+          "id": "reports.activities.watch",
+          "httpMethod": "POST",
+          "path": "admin/reports/v1/activity/users/{userKey}/applications/{applicationName}/watch",
           "flatPath": "admin/reports/v1/activity/users/{userKey}/applications/{applicationName}/watch",
+          "response": {
+            "$ref": "Channel"
+          },
+          "request": {
+            "$ref": "Channel"
+          },
+          "scopes": [
+            "https://www.googleapis.com/auth/admin.reports.audit.readonly"
+          ],
           "parameters": {
-            "groupIdFilter": {
-              "description": "Comma separated group ids (obfuscated) on which user activities are filtered, i.e, the response will contain activities for only those users that are a part of at least one of the group ids mentioned here. Format: \"id:abc123,id:xyz456\"",
-              "type": "string",
-              "pattern": "(id:[a-z0-9]+(,id:[a-z0-9]+)*)",
-              "location": "query"
-            },
-            "orgUnitID": {
-              "description": "ID of the organizational unit to report on. Activity records will be shown only for users who belong to the specified organizational unit. Data before Dec 17, 2018 doesn't appear in the filtered results.",
-              "pattern": "(id:[a-z0-9]+)",
-              "default": "",
-              "type": "string",
-              "location": "query"
-            },
             "pageToken": {
-              "type": "string",
-              "location": "query",
-              "description": "The token to specify next page. A report with multiple pages has a `nextPageToken` property in the response. In your follow-on request getting the next page of the report, enter the `nextPageToken` value in the `pageToken` query string."
-            },
-            "customerId": {
-              "description": "The unique ID of the customer to retrieve data for.",
-              "pattern": "C.+|my_customer",
+              "description": "The token to specify next page. A report with multiple pages has a `nextPageToken` property in the response. In your follow-on request getting the next page of the report, enter the `nextPageToken` value in the `pageToken` query string.",
               "type": "string",
               "location": "query"
             },
-            "userKey": {
-              "required": true,
-              "location": "path",
-              "description": "Represents the profile ID or the user email for which the data should be filtered. Can be `all` for all information, or `userKey` for a user's unique Google Workspace profile ID or their primary email address.",
-              "type": "string"
+            "filters": {
+              "location": "query",
+              "type": "string",
+              "description": "The `filters` query string is a comma-separated list. The list is composed of event parameters that are manipulated by relational operators. Event parameters are in the form `parameter1 name[parameter1 value],parameter2 name[parameter2 value],...` These event parameters are associated with a specific `eventName`. An empty report is returned if the filtered request's parameter does not belong to the `eventName`. For more information about `eventName` parameters, see the list of event names for various applications above in `applicationName`. In the following Admin Activity example, the \u003c\u003e operator is URL-encoded in the request's query string (%3C%3E): GET...&eventName=CHANGE_CALENDAR_SETTING &filters=NEW_VALUE%3C%3EREAD_ONLY_ACCESS In the following Drive example, the list can be a view or edit event's `doc_id` parameter with a value that is manipulated by an 'equal to' (==) or 'not equal to' (\u003c\u003e) relational operator. In the first example, the report returns each edited document's `doc_id`. In the second example, the report returns each viewed document's `doc_id` that equals the value 12345 and does not return any viewed document's which have a `doc_id` value of 98765. The \u003c\u003e operator is URL-encoded in the request's query string (%3C%3E): GET...&eventName=edit&filters=doc_id GET...&eventName=view&filters=doc_id==12345,doc_id%3C%3E98765 The relational operators include: - `==` - 'equal to'. - `\u003c\u003e` - 'not equal to'. It is URL-encoded (%3C%3E). - `\u003c` - 'less than'. It is URL-encoded (%3C). - `\u003c=` - 'less than or equal to'. It is URL-encoded (%3C=). - `\u003e` - 'greater than'. It is URL-encoded (%3E). - `\u003e=` - 'greater than or equal to'. It is URL-encoded (%3E=). *Note:* The API doesn't accept multiple values of a parameter. If a particular parameter is supplied more than once in the API request, the API only accepts the last value of that request parameter. In addition, if an invalid request parameter is supplied in the API request, the API ignores that request parameter and returns the response corresponding to the remaining valid request parameters. If no parameters are requested, all parameters are returned. ",
+              "pattern": "(.+[\u003c,\u003c=,==,\u003e=,\u003e,\u003c\u003e].+,)*(.+[\u003c,\u003c=,==,\u003e=,\u003e,\u003c\u003e].+)"
             },
             "applicationName": {
               "enumDescriptions": [
@@ -188,146 +307,11 @@
                 "The Data Studio activity reports return information about various types of Data Studio activity events.",
                 "The Keep application's activity reports return information about various Google Keep activity events. The Keep activity report is only available for Google Workspace Business and Enterprise customers."
               ],
-              "pattern": "(access_transparency)|(admin)|(calendar)|(chat)|(chrome)|(context_aware_access)|(data_studio)|(drive)|(gcp)|(gplus)|(groups)|(groups_enterprise)|(jamboard)|(keep)|(login)|(meet)|(mobile)|(rules)|(saml)|(token)|(user_accounts)",
+              "type": "string",
               "required": true,
-              "description": "Application name for which the events are to be retrieved.",
-              "type": "string",
-              "enum": [
-                "access_transparency",
-                "admin",
-                "calendar",
-                "chat",
-                "drive",
-                "gcp",
-                "gplus",
-                "groups",
-                "groups_enterprise",
-                "jamboard",
-                "login",
-                "meet",
-                "mobile",
-                "rules",
-                "saml",
-                "token",
-                "user_accounts",
-                "context_aware_access",
-                "chrome",
-                "data_studio",
-                "keep"
-              ],
-              "location": "path"
-            },
-            "filters": {
-              "location": "query",
-              "type": "string",
-              "description": "The `filters` query string is a comma-separated list. The list is composed of event parameters that are manipulated by relational operators. Event parameters are in the form `parameter1 name[parameter1 value],parameter2 name[parameter2 value],...` These event parameters are associated with a specific `eventName`. An empty report is returned if the filtered request's parameter does not belong to the `eventName`. For more information about `eventName` parameters, see the list of event names for various applications above in `applicationName`. In the following Admin Activity example, the \u003c\u003e operator is URL-encoded in the request's query string (%3C%3E): GET...&eventName=CHANGE_CALENDAR_SETTING &filters=NEW_VALUE%3C%3EREAD_ONLY_ACCESS In the following Drive example, the list can be a view or edit event's `doc_id` parameter with a value that is manipulated by an 'equal to' (==) or 'not equal to' (\u003c\u003e) relational operator. In the first example, the report returns each edited document's `doc_id`. In the second example, the report returns each viewed document's `doc_id` that equals the value 12345 and does not return any viewed document's which have a `doc_id` value of 98765. The \u003c\u003e operator is URL-encoded in the request's query string (%3C%3E): GET...&eventName=edit&filters=doc_id GET...&eventName=view&filters=doc_id==12345,doc_id%3C%3E98765 The relational operators include: - `==` - 'equal to'. - `\u003c\u003e` - 'not equal to'. It is URL-encoded (%3C%3E). - `\u003c` - 'less than'. It is URL-encoded (%3C). - `\u003c=` - 'less than or equal to'. It is URL-encoded (%3C=). - `\u003e` - 'greater than'. It is URL-encoded (%3E). - `\u003e=` - 'greater than or equal to'. It is URL-encoded (%3E=). *Note:* The API doesn't accept multiple values of a parameter. If a particular parameter is supplied more than once in the API request, the API only accepts the last value of that request parameter. In addition, if an invalid request parameter is supplied in the API request, the API ignores that request parameter and returns the response corresponding to the remaining valid request parameters. If no parameters are requested, all parameters are returned. ",
-              "pattern": "(.+[\u003c,\u003c=,==,\u003e=,\u003e,\u003c\u003e].+,)*(.+[\u003c,\u003c=,==,\u003e=,\u003e,\u003c\u003e].+)"
-            },
-            "startTime": {
-              "location": "query",
-              "pattern": "(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)T(\\d\\d):(\\d\\d):(\\d\\d)(?:\\.(\\d+))?(?:(Z)|([-+])(\\d\\d):(\\d\\d))",
-              "description": "Sets the beginning of the range of time shown in the report. The date is in the RFC 3339 format, for example 2010-10-28T10:26:35.000Z. The report returns all activities from `startTime` until `endTime`. The `startTime` must be before the `endTime` (if specified) and the current time when the request is made, or the API returns an error.",
-              "type": "string"
-            },
-            "maxResults": {
-              "maximum": "1000",
-              "format": "int32",
-              "description": "Determines how many activity records are shown on each response page. For example, if the request sets `maxResults=1` and the report has two activities, the report has two pages. The response's `nextPageToken` property has the token to the second page. The `maxResults` query string is optional in the request. The default value is 1000.",
-              "minimum": "1",
-              "type": "integer",
-              "default": "1000",
-              "location": "query"
-            },
-            "actorIpAddress": {
-              "type": "string",
-              "location": "query",
-              "description": "The Internet Protocol (IP) Address of host where the event was performed. This is an additional way to filter a report's summary using the IP address of the user whose activity is being reported. This IP address may or may not reflect the user's physical location. For example, the IP address can be the user's proxy server's address or a virtual private network (VPN) address. This parameter supports both IPv4 and IPv6 address versions."
-            },
-            "endTime": {
-              "type": "string",
-              "location": "query",
-              "description": "Sets the end of the range of time shown in the report. The date is in the RFC 3339 format, for example 2010-10-28T10:26:35.000Z. The default value is the approximate time of the API request. An API report has three basic time concepts: - *Date of the API's request for a report*: When the API created and retrieved the report. - *Report's start time*: The beginning of the timespan shown in the report. The `startTime` must be before the `endTime` (if specified) and the current time when the request is made, or the API returns an error. - *Report's end time*: The end of the timespan shown in the report. For example, the timespan of events summarized in a report can start in April and end in May. The report itself can be requested in August. If the `endTime` is not specified, the report returns all activities from the `startTime` until the current time or the most recent 180 days if the `startTime` is more than 180 days in the past.",
-              "pattern": "(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)T(\\d\\d):(\\d\\d):(\\d\\d)(?:\\.(\\d+))?(?:(Z)|([-+])(\\d\\d):(\\d\\d))"
-            },
-            "eventName": {
-              "location": "query",
-              "description": "The name of the event being queried by the API. Each `eventName` is related to a specific Google Workspace service or feature which the API organizes into types of events. An example is the Google Calendar events in the Admin console application's reports. The Calendar Settings `type` structure has all of the Calendar `eventName` activities reported by the API. When an administrator changes a Calendar setting, the API reports this activity in the Calendar Settings `type` and `eventName` parameters. For more information about `eventName` query strings and parameters, see the list of event names for various applications above in `applicationName`.",
-              "type": "string"
-            }
-          },
-          "path": "admin/reports/v1/activity/users/{userKey}/applications/{applicationName}/watch",
-          "scopes": [
-            "https://www.googleapis.com/auth/admin.reports.audit.readonly"
-          ],
-          "parameterOrder": [
-            "userKey",
-            "applicationName"
-          ],
-          "description": "Start receiving notifications for account activities. For more information, see Receiving Push Notifications.",
-          "httpMethod": "POST",
-          "id": "reports.activities.watch",
-          "response": {
-            "$ref": "Channel"
-          },
-          "request": {
-            "$ref": "Channel"
-          }
-        },
-        "list": {
-          "parameterOrder": [
-            "userKey",
-            "applicationName"
-          ],
-          "id": "reports.activities.list",
-          "scopes": [
-            "https://www.googleapis.com/auth/admin.reports.audit.readonly"
-          ],
-          "httpMethod": "GET",
-          "response": {
-            "$ref": "Activities"
-          },
-          "parameters": {
-            "startTime": {
-              "location": "query",
-              "type": "string",
-              "description": "Sets the beginning of the range of time shown in the report. The date is in the RFC 3339 format, for example 2010-10-28T10:26:35.000Z. The report returns all activities from `startTime` until `endTime`. The `startTime` must be before the `endTime` (if specified) and the current time when the request is made, or the API returns an error.",
-              "pattern": "(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)T(\\d\\d):(\\d\\d):(\\d\\d)(?:\\.(\\d+))?(?:(Z)|([-+])(\\d\\d):(\\d\\d))"
-            },
-            "endTime": {
-              "location": "query",
-              "type": "string",
-              "description": "Sets the end of the range of time shown in the report. The date is in the RFC 3339 format, for example 2010-10-28T10:26:35.000Z. The default value is the approximate time of the API request. An API report has three basic time concepts: - *Date of the API's request for a report*: When the API created and retrieved the report. - *Report's start time*: The beginning of the timespan shown in the report. The `startTime` must be before the `endTime` (if specified) and the current time when the request is made, or the API returns an error. - *Report's end time*: The end of the timespan shown in the report. For example, the timespan of events summarized in a report can start in April and end in May. The report itself can be requested in August. If the `endTime` is not specified, the report returns all activities from the `startTime` until the current time or the most recent 180 days if the `startTime` is more than 180 days in the past.",
-              "pattern": "(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)T(\\d\\d):(\\d\\d):(\\d\\d)(?:\\.(\\d+))?(?:(Z)|([-+])(\\d\\d):(\\d\\d))"
-            },
-            "applicationName": {
               "pattern": "(access_transparency)|(admin)|(calendar)|(chat)|(chrome)|(context_aware_access)|(data_studio)|(drive)|(gcp)|(gplus)|(groups)|(groups_enterprise)|(jamboard)|(keep)|(login)|(meet)|(mobile)|(rules)|(saml)|(token)|(user_accounts)",
-              "description": "Application name for which the events are to be retrieved.",
-              "enumDescriptions": [
-                "The Google Workspace Access Transparency activity reports return information about different types of Access Transparency activity events.",
-                "The Admin console application's activity reports return account information about different types of administrator activity events.",
-                "The Google Calendar application's activity reports return information about various Calendar activity events.",
-                "The Chat activity reports return information about various Chat activity events.",
-                "The Google Drive application's activity reports return information about various Google Drive activity events. The Drive activity report is only available for Google Workspace Business and Enterprise customers.",
-                "The Google Cloud Platform application's activity reports return information about various GCP activity events.",
-                "The Google+ application's activity reports return information about various Google+ activity events.",
-                "The Google Groups application's activity reports return information about various Groups activity events.",
-                "The Enterprise Groups activity reports return information about various Enterprise group activity events.",
-                "The Jamboard activity reports return information about various Jamboard activity events.",
-                "The Login application's activity reports return account information about different types of Login activity events.",
-                "The Meet Audit activity report return information about different types of Meet Audit activity events.",
-                "The Mobile Audit activity report return information about different types of Mobile Audit activity events.",
-                "The Rules activity report return information about different types of Rules activity events.",
-                "The SAML activity report return information about different types of SAML activity events.",
-                "The Token application's activity reports return account information about different types of Token activity events.",
-                "The User Accounts application's activity reports return account information about different types of User Accounts activity events.",
-                "The Context-aware access activity reports return information about users' access denied events due to Context-aware access rules.",
-                "The Chrome activity reports return information about unsafe events reported in the context of the WebProtect features of BeyondCorp.",
-                "The Data Studio activity reports return information about various types of Data Studio activity events.",
-                "The Keep application's activity reports return information about various Google Keep activity events. The Keep activity report is only available for Google Workspace Business and Enterprise customers."
-              ],
-              "type": "string",
               "location": "path",
-              "required": true,
+              "description": "Application name for which the events are to be retrieved.",
               "enum": [
                 "access_transparency",
                 "admin",
@@ -352,552 +336,578 @@
                 "keep"
               ]
             },
-            "filters": {
-              "type": "string",
-              "location": "query",
-              "pattern": "(.+[\u003c,\u003c=,==,\u003e=,\u003e,\u003c\u003e].+,)*(.+[\u003c,\u003c=,==,\u003e=,\u003e,\u003c\u003e].+)",
-              "description": "The `filters` query string is a comma-separated list. The list is composed of event parameters that are manipulated by relational operators. Event parameters are in the form `parameter1 name[parameter1 value],parameter2 name[parameter2 value],...` These event parameters are associated with a specific `eventName`. An empty report is returned if the filtered request's parameter does not belong to the `eventName`. For more information about `eventName` parameters, see the list of event names for various applications above in `applicationName`. In the following Admin Activity example, the \u003c\u003e operator is URL-encoded in the request's query string (%3C%3E): GET...&eventName=CHANGE_CALENDAR_SETTING &filters=NEW_VALUE%3C%3EREAD_ONLY_ACCESS In the following Drive example, the list can be a view or edit event's `doc_id` parameter with a value that is manipulated by an 'equal to' (==) or 'not equal to' (\u003c\u003e) relational operator. In the first example, the report returns each edited document's `doc_id`. In the second example, the report returns each viewed document's `doc_id` that equals the value 12345 and does not return any viewed document's which have a `doc_id` value of 98765. The \u003c\u003e operator is URL-encoded in the request's query string (%3C%3E): GET...&eventName=edit&filters=doc_id GET...&eventName=view&filters=doc_id==12345,doc_id%3C%3E98765 The relational operators include: - `==` - 'equal to'. - `\u003c\u003e` - 'not equal to'. It is URL-encoded (%3C%3E). - `\u003c` - 'less than'. It is URL-encoded (%3C). - `\u003c=` - 'less than or equal to'. It is URL-encoded (%3C=). - `\u003e` - 'greater than'. It is URL-encoded (%3E). - `\u003e=` - 'greater than or equal to'. It is URL-encoded (%3E=). *Note:* The API doesn't accept multiple values of a parameter. If a particular parameter is supplied more than once in the API request, the API only accepts the last value of that request parameter. In addition, if an invalid request parameter is supplied in the API request, the API ignores that request parameter and returns the response corresponding to the remaining valid request parameters. If no parameters are requested, all parameters are returned. "
-            },
-            "customerId": {
-              "description": "The unique ID of the customer to retrieve data for.",
-              "type": "string",
-              "location": "query",
-              "pattern": "C.+|my_customer"
-            },
-            "groupIdFilter": {
-              "description": "Comma separated group ids (obfuscated) on which user activities are filtered, i.e, the response will contain activities for only those users that are a part of at least one of the group ids mentioned here. Format: \"id:abc123,id:xyz456\"",
-              "type": "string",
-              "location": "query",
-              "pattern": "(id:[a-z0-9]+(,id:[a-z0-9]+)*)"
-            },
-            "userKey": {
-              "type": "string",
-              "location": "path",
-              "required": true,
-              "description": "Represents the profile ID or the user email for which the data should be filtered. Can be `all` for all information, or `userKey` for a user's unique Google Workspace profile ID or their primary email address."
-            },
-            "orgUnitID": {
-              "default": "",
-              "type": "string",
-              "location": "query",
-              "description": "ID of the organizational unit to report on. Activity records will be shown only for users who belong to the specified organizational unit. Data before Dec 17, 2018 doesn't appear in the filtered results.",
-              "pattern": "(id:[a-z0-9]+)"
-            },
             "actorIpAddress": {
               "location": "query",
               "description": "The Internet Protocol (IP) Address of host where the event was performed. This is an additional way to filter a report's summary using the IP address of the user whose activity is being reported. This IP address may or may not reflect the user's physical location. For example, the IP address can be the user's proxy server's address or a virtual private network (VPN) address. This parameter supports both IPv4 and IPv6 address versions.",
               "type": "string"
             },
-            "maxResults": {
-              "format": "int32",
-              "maximum": "1000",
-              "description": "Determines how many activity records are shown on each response page. For example, if the request sets `maxResults=1` and the report has two activities, the report has two pages. The response's `nextPageToken` property has the token to the second page. The `maxResults` query string is optional in the request. The default value is 1000.",
-              "type": "integer",
-              "default": "1000",
-              "location": "query",
-              "minimum": "1"
-            },
-            "pageToken": {
+            "orgUnitID": {
+              "pattern": "(id:[a-z0-9]+)",
               "type": "string",
               "location": "query",
+              "default": "",
+              "description": "ID of the organizational unit to report on. Activity records will be shown only for users who belong to the specified organizational unit. Data before Dec 17, 2018 doesn't appear in the filtered results."
+            },
+            "customerId": {
+              "description": "The unique ID of the customer to retrieve data for.",
+              "pattern": "C.+|my_customer",
+              "location": "query",
+              "type": "string"
+            },
+            "userKey": {
+              "description": "Represents the profile ID or the user email for which the data should be filtered. Can be `all` for all information, or `userKey` for a user's unique Google Workspace profile ID or their primary email address. Must not be a deleted user. For a deleted user, call `users.list` in Directory API with `showDeleted=true`, then use the returned `ID` as the `userKey`.",
+              "type": "string",
+              "required": true,
+              "location": "path"
+            },
+            "endTime": {
+              "location": "query",
+              "pattern": "(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)T(\\d\\d):(\\d\\d):(\\d\\d)(?:\\.(\\d+))?(?:(Z)|([-+])(\\d\\d):(\\d\\d))",
+              "type": "string",
+              "description": "Sets the end of the range of time shown in the report. The date is in the RFC 3339 format, for example 2010-10-28T10:26:35.000Z. The default value is the approximate time of the API request. An API report has three basic time concepts: - *Date of the API's request for a report*: When the API created and retrieved the report. - *Report's start time*: The beginning of the timespan shown in the report. The `startTime` must be before the `endTime` (if specified) and the current time when the request is made, or the API returns an error. - *Report's end time*: The end of the timespan shown in the report. For example, the timespan of events summarized in a report can start in April and end in May. The report itself can be requested in August. If the `endTime` is not specified, the report returns all activities from the `startTime` until the current time or the most recent 180 days if the `startTime` is more than 180 days in the past."
+            },
+            "groupIdFilter": {
+              "type": "string",
+              "location": "query",
+              "pattern": "(id:[a-z0-9]+(,id:[a-z0-9]+)*)",
+              "description": "Comma separated group ids (obfuscated) on which user activities are filtered, i.e. the response will contain activities for only those users that are a part of at least one of the group ids mentioned here. Format: \"id:abc123,id:xyz456\""
+            },
+            "maxResults": {
+              "maximum": "1000",
+              "type": "integer",
+              "format": "int32",
+              "minimum": "1",
+              "location": "query",
+              "default": "1000",
+              "description": "Determines how many activity records are shown on each response page. For example, if the request sets `maxResults=1` and the report has two activities, the report has two pages. The response's `nextPageToken` property has the token to the second page. The `maxResults` query string is optional in the request. The default value is 1000."
+            },
+            "eventName": {
+              "location": "query",
+              "description": "The name of the event being queried by the API. Each `eventName` is related to a specific Google Workspace service or feature which the API organizes into types of events. An example is the Google Calendar events in the Admin console application's reports. The Calendar Settings `type` structure has all of the Calendar `eventName` activities reported by the API. When an administrator changes a Calendar setting, the API reports this activity in the Calendar Settings `type` and `eventName` parameters. For more information about `eventName` query strings and parameters, see the list of event names for various applications above in `applicationName`.",
+              "type": "string"
+            },
+            "startTime": {
+              "location": "query",
+              "description": "Sets the beginning of the range of time shown in the report. The date is in the RFC 3339 format, for example 2010-10-28T10:26:35.000Z. The report returns all activities from `startTime` until `endTime`. The `startTime` must be before the `endTime` (if specified) and the current time when the request is made, or the API returns an error.",
+              "type": "string",
+              "pattern": "(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)T(\\d\\d):(\\d\\d):(\\d\\d)(?:\\.(\\d+))?(?:(Z)|([-+])(\\d\\d):(\\d\\d))"
+            }
+          }
+        },
+        "list": {
+          "parameterOrder": [
+            "userKey",
+            "applicationName"
+          ],
+          "response": {
+            "$ref": "Activities"
+          },
+          "httpMethod": "GET",
+          "path": "admin/reports/v1/activity/users/{userKey}/applications/{applicationName}",
+          "parameters": {
+            "applicationName": {
+              "enumDescriptions": [
+                "The Google Workspace Access Transparency activity reports return information about different types of Access Transparency activity events.",
+                "The Admin console application's activity reports return account information about different types of administrator activity events.",
+                "The Google Calendar application's activity reports return information about various Calendar activity events.",
+                "The Chat activity reports return information about various Chat activity events.",
+                "The Google Drive application's activity reports return information about various Google Drive activity events. The Drive activity report is only available for Google Workspace Business and Enterprise customers.",
+                "The Google Cloud Platform application's activity reports return information about various GCP activity events.",
+                "The Google+ application's activity reports return information about various Google+ activity events.",
+                "The Google Groups application's activity reports return information about various Groups activity events.",
+                "The Enterprise Groups activity reports return information about various Enterprise group activity events.",
+                "The Jamboard activity reports return information about various Jamboard activity events.",
+                "The Login application's activity reports return account information about different types of Login activity events.",
+                "The Meet Audit activity report return information about different types of Meet Audit activity events.",
+                "The Mobile Audit activity report return information about different types of Mobile Audit activity events.",
+                "The Rules activity report return information about different types of Rules activity events.",
+                "The SAML activity report return information about different types of SAML activity events.",
+                "The Token application's activity reports return account information about different types of Token activity events.",
+                "The User Accounts application's activity reports return account information about different types of User Accounts activity events.",
+                "The Context-aware access activity reports return information about users' access denied events due to Context-aware access rules.",
+                "The Chrome activity reports return information about unsafe events reported in the context of the WebProtect features of BeyondCorp.",
+                "The Data Studio activity reports return information about various types of Data Studio activity events.",
+                "The Keep application's activity reports return information about various Google Keep activity events. The Keep activity report is only available for Google Workspace Business and Enterprise customers."
+              ],
+              "pattern": "(access_transparency)|(admin)|(calendar)|(chat)|(chrome)|(context_aware_access)|(data_studio)|(drive)|(gcp)|(gplus)|(groups)|(groups_enterprise)|(jamboard)|(keep)|(login)|(meet)|(mobile)|(rules)|(saml)|(token)|(user_accounts)",
+              "required": true,
+              "enum": [
+                "access_transparency",
+                "admin",
+                "calendar",
+                "chat",
+                "drive",
+                "gcp",
+                "gplus",
+                "groups",
+                "groups_enterprise",
+                "jamboard",
+                "login",
+                "meet",
+                "mobile",
+                "rules",
+                "saml",
+                "token",
+                "user_accounts",
+                "context_aware_access",
+                "chrome",
+                "data_studio",
+                "keep"
+              ],
+              "location": "path",
+              "type": "string",
+              "description": "Application name for which the events are to be retrieved."
+            },
+            "groupIdFilter": {
+              "location": "query",
+              "type": "string",
+              "pattern": "(id:[a-z0-9]+(,id:[a-z0-9]+)*)",
+              "description": "Comma separated group ids (obfuscated) on which user activities are filtered, i.e. the response will contain activities for only those users that are a part of at least one of the group ids mentioned here. Format: \"id:abc123,id:xyz456\""
+            },
+            "filters": {
+              "description": "The `filters` query string is a comma-separated list. The list is composed of event parameters that are manipulated by relational operators. Event parameters are in the form `parameter1 name[parameter1 value],parameter2 name[parameter2 value],...` These event parameters are associated with a specific `eventName`. An empty report is returned if the filtered request's parameter does not belong to the `eventName`. For more information about `eventName` parameters, see the list of event names for various applications above in `applicationName`. In the following Admin Activity example, the \u003c\u003e operator is URL-encoded in the request's query string (%3C%3E): GET...&eventName=CHANGE_CALENDAR_SETTING &filters=NEW_VALUE%3C%3EREAD_ONLY_ACCESS In the following Drive example, the list can be a view or edit event's `doc_id` parameter with a value that is manipulated by an 'equal to' (==) or 'not equal to' (\u003c\u003e) relational operator. In the first example, the report returns each edited document's `doc_id`. In the second example, the report returns each viewed document's `doc_id` that equals the value 12345 and does not return any viewed document's which have a `doc_id` value of 98765. The \u003c\u003e operator is URL-encoded in the request's query string (%3C%3E): GET...&eventName=edit&filters=doc_id GET...&eventName=view&filters=doc_id==12345,doc_id%3C%3E98765 The relational operators include: - `==` - 'equal to'. - `\u003c\u003e` - 'not equal to'. It is URL-encoded (%3C%3E). - `\u003c` - 'less than'. It is URL-encoded (%3C). - `\u003c=` - 'less than or equal to'. It is URL-encoded (%3C=). - `\u003e` - 'greater than'. It is URL-encoded (%3E). - `\u003e=` - 'greater than or equal to'. It is URL-encoded (%3E=). *Note:* The API doesn't accept multiple values of a parameter. If a particular parameter is supplied more than once in the API request, the API only accepts the last value of that request parameter. In addition, if an invalid request parameter is supplied in the API request, the API ignores that request parameter and returns the response corresponding to the remaining valid request parameters. If no parameters are requested, all parameters are returned. ",
+              "location": "query",
+              "type": "string",
+              "pattern": "(.+[\u003c,\u003c=,==,\u003e=,\u003e,\u003c\u003e].+,)*(.+[\u003c,\u003c=,==,\u003e=,\u003e,\u003c\u003e].+)"
+            },
+            "maxResults": {
+              "default": "1000",
+              "minimum": "1",
+              "maximum": "1000",
+              "format": "int32",
+              "description": "Determines how many activity records are shown on each response page. For example, if the request sets `maxResults=1` and the report has two activities, the report has two pages. The response's `nextPageToken` property has the token to the second page. The `maxResults` query string is optional in the request. The default value is 1000.",
+              "location": "query",
+              "type": "integer"
+            },
+            "actorIpAddress": {
+              "type": "string",
+              "location": "query",
+              "description": "The Internet Protocol (IP) Address of host where the event was performed. This is an additional way to filter a report's summary using the IP address of the user whose activity is being reported. This IP address may or may not reflect the user's physical location. For example, the IP address can be the user's proxy server's address or a virtual private network (VPN) address. This parameter supports both IPv4 and IPv6 address versions."
+            },
+            "userKey": {
+              "type": "string",
+              "location": "path",
+              "description": "Represents the profile ID or the user email for which the data should be filtered. Can be `all` for all information, or `userKey` for a user's unique Google Workspace profile ID or their primary email address. Must not be a deleted user. For a deleted user, call `users.list` in Directory API with `showDeleted=true`, then use the returned `ID` as the `userKey`.",
+              "required": true
+            },
+            "orgUnitID": {
+              "location": "query",
+              "default": "",
+              "description": "ID of the organizational unit to report on. Activity records will be shown only for users who belong to the specified organizational unit. Data before Dec 17, 2018 doesn't appear in the filtered results.",
+              "type": "string",
+              "pattern": "(id:[a-z0-9]+)"
+            },
+            "customerId": {
+              "type": "string",
+              "description": "The unique ID of the customer to retrieve data for.",
+              "location": "query",
+              "pattern": "C.+|my_customer"
+            },
+            "startTime": {
+              "type": "string",
+              "location": "query",
+              "description": "Sets the beginning of the range of time shown in the report. The date is in the RFC 3339 format, for example 2010-10-28T10:26:35.000Z. The report returns all activities from `startTime` until `endTime`. The `startTime` must be before the `endTime` (if specified) and the current time when the request is made, or the API returns an error.",
+              "pattern": "(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)T(\\d\\d):(\\d\\d):(\\d\\d)(?:\\.(\\d+))?(?:(Z)|([-+])(\\d\\d):(\\d\\d))"
+            },
+            "pageToken": {
+              "location": "query",
+              "type": "string",
               "description": "The token to specify next page. A report with multiple pages has a `nextPageToken` property in the response. In your follow-on request getting the next page of the report, enter the `nextPageToken` value in the `pageToken` query string."
             },
             "eventName": {
               "location": "query",
-              "type": "string",
-              "description": "The name of the event being queried by the API. Each `eventName` is related to a specific Google Workspace service or feature which the API organizes into types of events. An example is the Google Calendar events in the Admin console application's reports. The Calendar Settings `type` structure has all of the Calendar `eventName` activities reported by the API. When an administrator changes a Calendar setting, the API reports this activity in the Calendar Settings `type` and `eventName` parameters. For more information about `eventName` query strings and parameters, see the list of event names for various applications above in `applicationName`."
+              "description": "The name of the event being queried by the API. Each `eventName` is related to a specific Google Workspace service or feature which the API organizes into types of events. An example is the Google Calendar events in the Admin console application's reports. The Calendar Settings `type` structure has all of the Calendar `eventName` activities reported by the API. When an administrator changes a Calendar setting, the API reports this activity in the Calendar Settings `type` and `eventName` parameters. For more information about `eventName` query strings and parameters, see the list of event names for various applications above in `applicationName`.",
+              "type": "string"
+            },
+            "endTime": {
+              "location": "query",
+              "pattern": "(\\d\\d\\d\\d)-(\\d\\d)-(\\d\\d)T(\\d\\d):(\\d\\d):(\\d\\d)(?:\\.(\\d+))?(?:(Z)|([-+])(\\d\\d):(\\d\\d))",
+              "description": "Sets the end of the range of time shown in the report. The date is in the RFC 3339 format, for example 2010-10-28T10:26:35.000Z. The default value is the approximate time of the API request. An API report has three basic time concepts: - *Date of the API's request for a report*: When the API created and retrieved the report. - *Report's start time*: The beginning of the timespan shown in the report. The `startTime` must be before the `endTime` (if specified) and the current time when the request is made, or the API returns an error. - *Report's end time*: The end of the timespan shown in the report. For example, the timespan of events summarized in a report can start in April and end in May. The report itself can be requested in August. If the `endTime` is not specified, the report returns all activities from the `startTime` until the current time or the most recent 180 days if the `startTime` is more than 180 days in the past.",
+              "type": "string"
             }
-          },
-          "description": "Retrieves a list of activities for a specific customer's account and application such as the Admin console application or the Google Drive application. For more information, see the guides for administrator and Google Drive activity reports. For more information about the activity report's parameters, see the activity parameters reference guides. ",
-          "path": "admin/reports/v1/activity/users/{userKey}/applications/{applicationName}",
-          "flatPath": "admin/reports/v1/activity/users/{userKey}/applications/{applicationName}"
-        }
-      }
-    },
-    "channels": {
-      "methods": {
-        "stop": {
-          "id": "admin.channels.stop",
-          "description": "Stop watching resources through this channel.",
-          "parameterOrder": [],
-          "parameters": {},
-          "path": "admin/reports_v1/channels/stop",
-          "flatPath": "admin/reports_v1/channels/stop",
-          "httpMethod": "POST",
-          "request": {
-            "$ref": "Channel"
           },
           "scopes": [
             "https://www.googleapis.com/auth/admin.reports.audit.readonly"
-          ]
-        }
-      }
-    },
-    "entityUsageReports": {
-      "methods": {
-        "get": {
-          "response": {
-            "$ref": "UsageReports"
-          },
-          "path": "admin/reports/v1/usage/{entityType}/{entityKey}/dates/{date}",
-          "description": "Retrieves a report which is a collection of properties and statistics for entities used by users within the account. For more information, see the Entities Usage Report guide. For more information about the entities report's parameters, see the Entities Usage parameters reference guides.",
-          "scopes": [
-            "https://www.googleapis.com/auth/admin.reports.usage.readonly"
           ],
-          "id": "reports.entityUsageReports.get",
-          "httpMethod": "GET",
-          "parameterOrder": [
-            "entityType",
-            "entityKey",
-            "date"
-          ],
-          "flatPath": "admin/reports/v1/usage/{entityType}/{entityKey}/dates/{date}",
-          "parameters": {
-            "maxResults": {
-              "default": "1000",
-              "description": "Determines how many activity records are shown on each response page. For example, if the request sets `maxResults=1` and the report has two activities, the report has two pages. The response's `nextPageToken` property has the token to the second page.",
-              "minimum": "1",
-              "maximum": "1000",
-              "format": "uint32",
-              "type": "integer",
-              "location": "query"
-            },
-            "pageToken": {
-              "location": "query",
-              "type": "string",
-              "description": "Token to specify next page. A report with multiple pages has a `nextPageToken` property in the response. In your follow-on request getting the next page of the report, enter the `nextPageToken` value in the `pageToken` query string."
-            },
-            "entityType": {
-              "description": "Represents the type of entity for the report.",
-              "pattern": "(gplus_communities)",
-              "required": true,
-              "location": "path",
-              "enum": [
-                "gplus_communities"
-              ],
-              "enumDescriptions": [
-                "Returns a report on Google+ communities."
-              ],
-              "type": "string"
-            },
-            "parameters": {
-              "pattern": "(((gplus)):[^,]+,)*(((gplus)):[^,]+)",
-              "location": "query",
-              "description": "The `parameters` query string is a comma-separated list of event parameters that refine a report's results. The parameter is associated with a specific application. The application values for the Entities usage report are only `gplus`. A `parameter` query string is in the CSV form of `[app_name1:param_name1], [app_name2:param_name2]...`. *Note:* The API doesn't accept multiple values of a parameter. If a particular parameter is supplied more than once in the API request, the API only accepts the last value of that request parameter. In addition, if an invalid request parameter is supplied in the API request, the API ignores that request parameter and returns the response corresponding to the remaining valid request parameters. An example of an invalid request parameter is one that does not belong to the application. If no parameters are requested, all parameters are returned. ",
-              "type": "string"
-            },
-            "entityKey": {
-              "location": "path",
-              "enum": [
-                "all",
-                "entityKey"
-              ],
-              "required": true,
-              "description": "Represents the key of the object to filter the data with.",
-              "enumDescriptions": [
-                "Returns activity events for all users.",
-                "Represents an app-specific identifier for the entity. For details on how to obtain the `entityKey` for a particular `entityType`, see the Entities Usage parameters reference guides."
-              ],
-              "type": "string"
-            },
-            "customerId": {
-              "description": "The unique ID of the customer to retrieve data for.",
-              "location": "query",
-              "type": "string",
-              "pattern": "C.+|my_customer"
-            },
-            "filters": {
-              "location": "query",
-              "pattern": "(((gplus)):[a-z0-9_]+[\u003c,\u003c=,==,\u003e=,\u003e,!=][^,]+,)*(((gplus)):[a-z0-9_]+[\u003c,\u003c=,==,\u003e=,\u003e,!=][^,]+)",
-              "type": "string",
-              "description": "The `filters` query string is a comma-separated list of an application's event parameters where the parameter's value is manipulated by a relational operator. The `filters` query string includes the name of the application whose usage is returned in the report. The application values for the Entities usage report include `accounts`, `docs`, and `gmail`. Filters are in the form `[application name]:parameter name[parameter value],...`. In this example, the `\u003c\u003e` 'not equal to' operator is URL-encoded in the request's query string (%3C%3E): GET https://www.googleapis.com/admin/reports/v1/usage/gplus_communities/all/dates/2017-12-01 ?parameters=gplus:community_name,gplus:num_total_members &filters=gplus:num_total_members%3C%3E0 The relational operators include: - `==` - 'equal to'. - `\u003c\u003e` - 'not equal to'. It is URL-encoded (%3C%3E). - `\u003c` - 'less than'. It is URL-encoded (%3C). - `\u003c=` - 'less than or equal to'. It is URL-encoded (%3C=). - `\u003e` - 'greater than'. It is URL-encoded (%3E). - `\u003e=` - 'greater than or equal to'. It is URL-encoded (%3E=). Filters can only be applied to numeric parameters."
-            },
-            "date": {
-              "required": true,
-              "pattern": "(\\d){4}-(\\d){2}-(\\d){2}",
-              "location": "path",
-              "type": "string",
-              "description": "Represents the date the usage occurred. The timestamp is in the ISO 8601 format, yyyy-mm-dd. We recommend you use your account's time zone for this."
-            }
-          }
+          "flatPath": "admin/reports/v1/activity/users/{userKey}/applications/{applicationName}",
+          "id": "reports.activities.list",
+          "description": "Retrieves a list of activities for a specific customer's account and application such as the Admin console application or the Google Drive application. For more information, see the guides for administrator and Google Drive activity reports. For more information about the activity report's parameters, see the activity parameters reference guides. "
         }
       }
     }
   },
-  "canonicalName": "reports",
-  "parameters": {
-    "prettyPrint": {
-      "description": "Returns response with indentations and line breaks.",
-      "type": "boolean",
-      "location": "query",
-      "default": "true"
-    },
-    "key": {
-      "location": "query",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
-      "type": "string"
-    },
-    "quotaUser": {
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
-      "location": "query",
-      "type": "string"
-    },
-    "uploadType": {
-      "location": "query",
-      "type": "string",
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\")."
-    },
-    "oauth_token": {
-      "description": "OAuth 2.0 token for the current user.",
-      "location": "query",
-      "type": "string"
-    },
-    "upload_protocol": {
-      "location": "query",
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\")."
-    },
-    "access_token": {
-      "location": "query",
-      "type": "string",
-      "description": "OAuth access token."
-    },
-    "$.xgafv": {
-      "type": "string",
-      "location": "query",
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ],
-      "enum": [
-        "1",
-        "2"
-      ],
-      "description": "V1 error format."
-    },
-    "callback": {
-      "location": "query",
-      "description": "JSONP",
-      "type": "string"
-    },
-    "fields": {
-      "location": "query",
-      "description": "Selector specifying which fields to include in a partial response.",
-      "type": "string"
-    },
-    "alt": {
-      "type": "string",
-      "description": "Data format for response.",
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ],
-      "location": "query",
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "default": "json"
-    }
-  },
-  "discoveryVersion": "v1",
-  "ownerName": "Google",
-  "description": "Admin SDK lets administrators of enterprise domains to view and manage resources like user, groups etc. It also provides audit and usage reports of domain.",
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/admin.reports.usage.readonly": {
-          "description": "View usage reports for your G Suite domain"
-        },
-        "https://www.googleapis.com/auth/admin.reports.audit.readonly": {
-          "description": "View audit reports for your G Suite domain"
-        }
-      }
-    }
-  },
-  "fullyEncodeReservedExpansion": true,
   "baseUrl": "https://admin.googleapis.com/",
-  "servicePath": "",
-  "basePath": "",
-  "protocol": "rest",
-  "mtlsRootUrl": "https://admin.mtls.googleapis.com/",
-  "packagePath": "admin",
-  "version": "reports_v1",
-  "documentationLink": "http://developers.google.com/admin-sdk/",
-  "ownerDomain": "google.com",
+  "description": "Admin SDK lets administrators of enterprise domains to view and manage resources like user, groups etc. It also provides audit and usage reports of domain.",
   "title": "Admin SDK API",
-  "id": "admin:reports_v1",
-  "batchPath": "batch",
   "schemas": {
-    "UsageReport": {
-      "id": "UsageReport",
+    "Activities": {
       "properties": {
-        "date": {
-          "readOnly": true,
-          "type": "string",
-          "description": "Output only. The date of the report request."
-        },
-        "entity": {
-          "description": "Output only. Information about the type of the item.",
-          "type": "object",
-          "properties": {
-            "entityId": {
-              "type": "string",
-              "description": "Output only. Object key. Only relevant if entity.type = \"OBJECT\" Note: external-facing name of report is \"Entities\" rather than \"Objects\".",
-              "readOnly": true
-            },
-            "type": {
-              "readOnly": true,
-              "type": "string",
-              "description": "Output only. The type of item. The value is `user`."
-            },
-            "customerId": {
-              "readOnly": true,
-              "type": "string",
-              "description": "Output only. The unique identifier of the customer's account."
-            },
-            "userEmail": {
-              "readOnly": true,
-              "description": "Output only. The user's email address. Only relevant if entity.type = \"USER\"",
-              "type": "string"
-            },
-            "profileId": {
-              "description": "Output only. The user's immutable Google Workspace profile identifier.",
-              "type": "string",
-              "readOnly": true
-            }
+        "items": {
+          "description": "Each activity record in the response.",
+          "items": {
+            "$ref": "Activity"
           },
-          "readOnly": true
+          "type": "array"
+        },
+        "nextPageToken": {
+          "type": "string",
+          "description": "Token for retrieving the follow-on next page of the report. The `nextPageToken` value is used in the request's `pageToken` query string."
         },
         "etag": {
           "description": "ETag of the resource.",
           "type": "string"
         },
         "kind": {
+          "default": "admin#reports#activities",
           "type": "string",
-          "description": "The type of API resource. For a usage report, the value is `admin#reports#usageReport`.",
-          "default": "admin#reports#usageReport"
+          "description": "The type of API resource. For an activity report, the value is `reports#activities`."
+        }
+      },
+      "description": "JSON template for a collection of activities.",
+      "id": "Activities",
+      "type": "object"
+    },
+    "Channel": {
+      "id": "Channel",
+      "type": "object",
+      "properties": {
+        "expiration": {
+          "description": "Date and time of notification channel expiration, expressed as a Unix timestamp, in milliseconds. Optional.",
+          "format": "int64",
+          "type": "string"
         },
-        "parameters": {
-          "description": "Output only. Parameter value pairs for various applications. For the Entity Usage Report parameters and values, see [the Entity Usage parameters reference](/admin-sdk/reports/v1/reference/usage-ref-appendix-a/entities).",
+        "id": {
+          "type": "string",
+          "description": "A UUID or similar unique string that identifies this channel."
+        },
+        "payload": {
+          "description": "A Boolean value to indicate whether payload is wanted. Optional.",
+          "type": "boolean"
+        },
+        "resourceId": {
+          "description": "An opaque ID that identifies the resource being watched on this channel. Stable across different API versions.",
+          "type": "string"
+        },
+        "address": {
+          "type": "string",
+          "description": "The address where notifications are delivered for this channel."
+        },
+        "type": {
+          "description": "The type of delivery mechanism used for this channel. The value should be set to `\"web_hook\"`.",
+          "type": "string"
+        },
+        "token": {
+          "type": "string",
+          "description": "An arbitrary string delivered to the target address with each notification delivered over this channel. Optional."
+        },
+        "params": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Additional parameters controlling delivery channel behavior. Optional.",
+          "type": "object"
+        },
+        "resourceUri": {
+          "type": "string",
+          "description": "A version-specific identifier for the watched resource."
+        },
+        "kind": {
+          "description": "Identifies this as a notification channel used to watch for changes to a resource, which is \"`api#channel`\".",
+          "default": "api#channel",
+          "type": "string"
+        }
+      },
+      "description": "A notification channel used to watch for resource changes."
+    },
+    "UsageReports": {
+      "properties": {
+        "warnings": {
+          "type": "array",
+          "description": "Warnings, if any.",
           "items": {
             "type": "object",
             "properties": {
-              "boolValue": {
-                "type": "boolean",
-                "description": "Output only. Boolean value of the parameter.",
-                "readOnly": true
-              },
-              "stringValue": {
+              "code": {
                 "type": "string",
-                "description": "Output only. String value of the parameter.",
-                "readOnly": true
+                "description": "Machine readable code or warning type. The warning code value is `200`."
               },
-              "msgValue": {
+              "message": {
+                "type": "string",
+                "description": "The human readable messages for a warning are: - Data is not available warning - Sorry, data for date yyyy-mm-dd for application \"`application name`\" is not available. - Partial data is available warning - Data for date yyyy-mm-dd for application \"`application name`\" is not available right now, please try again after a few hours. "
+              },
+              "data": {
+                "description": "Key-value pairs to give detailed information on the warning.",
+                "type": "array",
                 "items": {
                   "type": "object",
-                  "additionalProperties": {
-                    "type": "any",
-                    "description": "Properties of the object."
+                  "properties": {
+                    "value": {
+                      "type": "string",
+                      "description": "Value associated with a key-value pair to give detailed information on the warning."
+                    },
+                    "key": {
+                      "description": "Key associated with a key-value pair to give detailed information on the warning.",
+                      "type": "string"
+                    }
                   }
-                },
-                "description": "Output only. Nested message value of the parameter.",
-                "type": "array",
-                "readOnly": true
-              },
-              "name": {
-                "description": "The name of the parameter. For the User Usage Report parameter names, see the User Usage parameters reference.",
-                "type": "string"
-              },
-              "intValue": {
-                "readOnly": true,
-                "description": "Output only. Integer value of the parameter.",
-                "type": "string",
-                "format": "int64"
-              },
-              "datetimeValue": {
-                "type": "string",
-                "readOnly": true,
-                "format": "date-time",
-                "description": "The RFC 3339 formatted value of the parameter, for example 2010-10-28T10:26:35.000Z."
+                }
               }
             }
-          },
-          "readOnly": true,
-          "type": "array"
-        }
-      },
-      "type": "object",
-      "description": "JSON template for a usage report."
-    },
-    "NestedParameter": {
-      "properties": {
-        "multiIntValue": {
-          "description": "Multiple integer values of the parameter.",
-          "type": "array",
-          "items": {
-            "format": "int64",
-            "type": "string"
           }
         },
-        "name": {
-          "description": "The name of the parameter.",
+        "nextPageToken": {
+          "description": "Token to specify next page. A report with multiple pages has a `nextPageToken` property in the response. For your follow-on requests getting all of the report's pages, enter the `nextPageToken` value in the `pageToken` query string.",
           "type": "string"
         },
-        "intValue": {
-          "format": "int64",
+        "kind": {
+          "default": "admin#reports#usageReports",
           "type": "string",
-          "description": "Integer value of the parameter."
+          "description": "The type of API resource. For a usage report, the value is `admin#reports#usageReports`."
+        },
+        "usageReports": {
+          "type": "array",
+          "description": "Various application parameter records.",
+          "items": {
+            "$ref": "UsageReport"
+          }
+        },
+        "etag": {
+          "description": "ETag of the resource.",
+          "type": "string"
+        }
+      },
+      "id": "UsageReports",
+      "type": "object"
+    },
+    "NestedParameter": {
+      "type": "object",
+      "description": "JSON template for a parameter used in various reports.",
+      "id": "NestedParameter",
+      "properties": {
+        "multiBoolValue": {
+          "type": "array",
+          "items": {
+            "type": "boolean"
+          },
+          "description": "Multiple boolean values of the parameter."
+        },
+        "value": {
+          "type": "string",
+          "description": "String value of the parameter."
         },
         "boolValue": {
           "description": "Boolean value of the parameter.",
           "type": "boolean"
         },
-        "multiBoolValue": {
+        "name": {
+          "description": "The name of the parameter.",
+          "type": "string"
+        },
+        "multiIntValue": {
           "type": "array",
-          "description": "Multiple boolean values of the parameter.",
+          "description": "Multiple integer values of the parameter.",
           "items": {
-            "type": "boolean"
+            "format": "int64",
+            "type": "string"
           }
         },
+        "intValue": {
+          "type": "string",
+          "description": "Integer value of the parameter.",
+          "format": "int64"
+        },
         "multiValue": {
+          "description": "Multiple string values of the parameter.",
           "items": {
             "type": "string"
           },
-          "description": "Multiple string values of the parameter.",
           "type": "array"
-        },
-        "value": {
-          "description": "String value of the parameter.",
-          "type": "string"
         }
-      },
-      "description": "JSON template for a parameter used in various reports.",
-      "id": "NestedParameter",
-      "type": "object"
+      }
     },
-    "Activities": {
-      "id": "Activities",
+    "UsageReport": {
+      "description": "JSON template for a usage report.",
       "properties": {
+        "date": {
+          "readOnly": true,
+          "description": "Output only. The date of the report request.",
+          "type": "string"
+        },
+        "kind": {
+          "default": "admin#reports#usageReport",
+          "description": "The type of API resource. For a usage report, the value is `admin#reports#usageReport`.",
+          "type": "string"
+        },
         "etag": {
           "type": "string",
           "description": "ETag of the resource."
         },
-        "nextPageToken": {
-          "description": "Token for retrieving the follow-on next page of the report. The `nextPageToken` value is used in the request's `pageToken` query string.",
-          "type": "string"
-        },
-        "kind": {
-          "type": "string",
-          "default": "admin#reports#activities",
-          "description": "The type of API resource. For an activity report, the value is `reports#activities`."
-        },
-        "items": {
-          "items": {
-            "$ref": "Activity"
-          },
-          "type": "array",
-          "description": "Each activity record in the response."
-        }
-      },
-      "description": "JSON template for a collection of activities.",
-      "type": "object"
-    },
-    "Activity": {
-      "id": "Activity",
-      "type": "object",
-      "description": "JSON template for the activity resource.",
-      "properties": {
-        "actor": {
-          "type": "object",
+        "entity": {
+          "readOnly": true,
           "properties": {
-            "email": {
+            "userEmail": {
+              "readOnly": true,
               "type": "string",
-              "description": "The primary email address of the actor. May be absent if there is no email address associated with the actor."
+              "description": "Output only. The user's email address. Only relevant if entity.type = \"USER\""
+            },
+            "customerId": {
+              "type": "string",
+              "description": "Output only. The unique identifier of the customer's account.",
+              "readOnly": true
             },
             "profileId": {
               "type": "string",
-              "description": "The unique Google Workspace profile ID of the actor. May be absent if the actor is not a Google Workspace user."
+              "description": "Output only. The user's immutable Google Workspace profile identifier.",
+              "readOnly": true
             },
-            "callerType": {
-              "description": "The type of actor.",
+            "entityId": {
+              "description": "Output only. Object key. Only relevant if entity.type = \"OBJECT\" Note: external-facing name of report is \"Entities\" rather than \"Objects\".",
+              "readOnly": true,
               "type": "string"
             },
-            "key": {
+            "type": {
+              "description": "Output only. The type of item. The value is `user`.",
               "type": "string",
-              "description": "Only present when `callerType` is `KEY`. Can be the `consumer_key` of the requestor for OAuth 2LO API requests or an identifier for robot accounts."
+              "readOnly": true
             }
           },
-          "description": "User doing the action."
+          "description": "Output only. Information about the type of the item.",
+          "type": "object"
         },
-        "etag": {
-          "description": "ETag of the entry.",
-          "type": "string"
-        },
-        "ipAddress": {
-          "description": "IP address of the user doing the action. This is the Internet Protocol (IP) address of the user when logging into Google Workspace, which may or may not reflect the user's physical location. For example, the IP address can be the user's proxy server's address or a virtual private network (VPN) address. The API supports IPv4 and IPv6.",
-          "type": "string"
-        },
-        "ownerDomain": {
-          "type": "string",
-          "description": "This is the domain that is affected by the report's event. For example domain of Admin console or the Drive application's document owner."
-        },
+        "parameters": {
+          "readOnly": true,
+          "items": {
+            "properties": {
+              "boolValue": {
+                "description": "Output only. Boolean value of the parameter.",
+                "readOnly": true,
+                "type": "boolean"
+              },
+              "stringValue": {
+                "description": "Output only. String value of the parameter.",
+                "readOnly": true,
+                "type": "string"
+              },
+              "intValue": {
+                "format": "int64",
+                "description": "Output only. Integer value of the parameter.",
+                "readOnly": true,
+                "type": "string"
+              },
+              "datetimeValue": {
+                "readOnly": true,
+                "description": "The RFC 3339 formatted value of the parameter, for example 2010-10-28T10:26:35.000Z.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "msgValue": {
+                "items": {
+                  "additionalProperties": {
+                    "type": "any",
+                    "description": "Properties of the object."
+                  },
+                  "type": "object"
+                },
+                "readOnly": true,
+                "type": "array",
+                "description": "Output only. Nested message value of the parameter."
+              },
+              "name": {
+                "type": "string",
+                "description": "The name of the parameter. For the User Usage Report parameter names, see the User Usage parameters reference."
+              }
+            },
+            "type": "object"
+          },
+          "type": "array",
+          "description": "Output only. Parameter value pairs for various applications. For the Entity Usage Report parameters and values, see [the Entity Usage parameters reference](/admin-sdk/reports/v1/reference/usage-ref-appendix-a/entities)."
+        }
+      },
+      "type": "object",
+      "id": "UsageReport"
+    },
+    "Activity": {
+      "type": "object",
+      "properties": {
         "id": {
           "properties": {
-            "time": {
-              "format": "date-time",
-              "description": "Time of occurrence of the activity. This is in UNIX epoch time in seconds.",
+            "applicationName": {
+              "description": "Application name to which the event belongs. For possible values see the list of applications above in `applicationName`.",
               "type": "string"
             },
             "uniqueQualifier": {
-              "description": "Unique qualifier if multiple events have the same time.",
               "format": "int64",
-              "type": "string"
+              "type": "string",
+              "description": "Unique qualifier if multiple events have the same time."
+            },
+            "time": {
+              "type": "string",
+              "description": "Time of occurrence of the activity. This is in UNIX epoch time in seconds.",
+              "format": "date-time"
             },
             "customerId": {
               "description": "The unique identifier for a Google Workspace account.",
               "type": "string"
-            },
-            "applicationName": {
-              "description": "Application name to which the event belongs. For possible values see the list of applications above in `applicationName`.",
-              "type": "string"
             }
           },
-          "type": "object",
-          "description": "Unique identifier for each activity record."
-        },
-        "kind": {
-          "type": "string",
-          "description": "The type of API resource. For an activity report, the value is `audit#activity`.",
-          "default": "admin#reports#activity"
+          "description": "Unique identifier for each activity record.",
+          "type": "object"
         },
         "events": {
-          "type": "array",
           "description": "Activity events in the report.",
+          "type": "array",
           "items": {
+            "type": "object",
             "properties": {
               "type": {
-                "description": "Type of event. The Google Workspace service or feature that an administrator changes is identified in the `type` property which identifies an event using the `eventName` property. For a full list of the API's `type` categories, see the list of event names for various applications above in `applicationName`.",
-                "type": "string"
+                "type": "string",
+                "description": "Type of event. The Google Workspace service or feature that an administrator changes is identified in the `type` property which identifies an event using the `eventName` property. For a full list of the API's `type` categories, see the list of event names for various applications above in `applicationName`."
               },
               "name": {
                 "type": "string",
                 "description": "Name of the event. This is the specific name of the activity reported by the API. And each `eventName` is related to a specific Google Workspace service or feature which the API organizes into types of events. For `eventName` request parameters in general: - If no `eventName` is given, the report returns all possible instances of an `eventName`. - When you request an `eventName`, the API's response returns all activities which contain that `eventName`. It is possible that the returned activities will have other `eventName` properties in addition to the one requested. For more information about `eventName` properties, see the list of event names for various applications above in `applicationName`."
               },
               "parameters": {
+                "type": "array",
+                "description": "Parameter value pairs for various applications. For more information about `eventName` parameters, see the list of event names for various applications above in `applicationName`.",
                 "items": {
                   "type": "object",
                   "properties": {
                     "multiValue": {
+                      "type": "array",
+                      "description": "String values of the parameter.",
                       "items": {
                         "type": "string"
+                      }
+                    },
+                    "intValue": {
+                      "type": "string",
+                      "format": "int64",
+                      "description": "Integer value of the parameter."
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "The name of the parameter."
+                    },
+                    "messageValue": {
+                      "properties": {
+                        "parameter": {
+                          "description": "Parameter values",
+                          "items": {
+                            "$ref": "NestedParameter"
+                          },
+                          "type": "array"
+                        }
                       },
-                      "type": "array",
-                      "description": "String values of the parameter."
+                      "type": "object",
+                      "description": "Nested parameter value pairs associated with this parameter. Complex value type for a parameter are returned as a list of parameter values. For example, the address parameter may have a value as `[{parameter: [{name: city, value: abc}]}]`"
+                    },
+                    "value": {
+                      "type": "string",
+                      "description": "String value of the parameter."
                     },
                     "multiMessageValue": {
+                      "description": "List of `messageValue` objects.",
                       "items": {
                         "properties": {
                           "parameter": {
@@ -910,175 +920,165 @@
                         },
                         "type": "object"
                       },
-                      "type": "array",
-                      "description": "List of `messageValue` objects."
+                      "type": "array"
+                    },
+                    "multiIntValue": {
+                      "description": "Integer values of the parameter.",
+                      "items": {
+                        "format": "int64",
+                        "type": "string"
+                      },
+                      "type": "array"
                     },
                     "boolValue": {
                       "description": "Boolean value of the parameter.",
                       "type": "boolean"
-                    },
-                    "intValue": {
-                      "description": "Integer value of the parameter.",
-                      "format": "int64",
-                      "type": "string"
-                    },
-                    "multiIntValue": {
-                      "description": "Integer values of the parameter.",
-                      "type": "array",
-                      "items": {
-                        "format": "int64",
-                        "type": "string"
-                      }
-                    },
-                    "messageValue": {
-                      "description": "Nested parameter value pairs associated with this parameter. Complex value type for a parameter are returned as a list of parameter values. For example, the address parameter may have a value as `[{parameter: [{name: city, value: abc}]}]`",
-                      "properties": {
-                        "parameter": {
-                          "description": "Parameter values",
-                          "items": {
-                            "$ref": "NestedParameter"
-                          },
-                          "type": "array"
-                        }
-                      },
-                      "type": "object"
-                    },
-                    "value": {
-                      "description": "String value of the parameter.",
-                      "type": "string"
-                    },
-                    "name": {
-                      "description": "The name of the parameter.",
-                      "type": "string"
                     }
                   }
-                },
-                "type": "array",
-                "description": "Parameter value pairs for various applications. For more information about `eventName` parameters, see the list of event names for various applications above in `applicationName`."
-              }
-            },
-            "type": "object"
-          }
-        }
-      }
-    },
-    "UsageReports": {
-      "id": "UsageReports",
-      "type": "object",
-      "properties": {
-        "kind": {
-          "type": "string",
-          "description": "The type of API resource. For a usage report, the value is `admin#reports#usageReports`.",
-          "default": "admin#reports#usageReports"
-        },
-        "etag": {
-          "type": "string",
-          "description": "ETag of the resource."
-        },
-        "nextPageToken": {
-          "type": "string",
-          "description": "Token to specify next page. A report with multiple pages has a `nextPageToken` property in the response. For your follow-on requests getting all of the report's pages, enter the `nextPageToken` value in the `pageToken` query string."
-        },
-        "usageReports": {
-          "description": "Various application parameter records.",
-          "items": {
-            "$ref": "UsageReport"
-          },
-          "type": "array"
-        },
-        "warnings": {
-          "description": "Warnings, if any.",
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "message": {
-                "type": "string",
-                "description": "The human readable messages for a warning are: - Data is not available warning - Sorry, data for date yyyy-mm-dd for application \"`application name`\" is not available. - Partial data is available warning - Data for date yyyy-mm-dd for application \"`application name`\" is not available right now, please try again after a few hours. "
-              },
-              "data": {
-                "description": "Key-value pairs to give detailed information on the warning.",
-                "items": {
-                  "properties": {
-                    "key": {
-                      "description": "Key associated with a key-value pair to give detailed information on the warning.",
-                      "type": "string"
-                    },
-                    "value": {
-                      "type": "string",
-                      "description": "Value associated with a key-value pair to give detailed information on the warning."
-                    }
-                  },
-                  "type": "object"
-                },
-                "type": "array"
-              },
-              "code": {
-                "type": "string",
-                "description": "Machine readable code or warning type. The warning code value is `200`."
+                }
               }
             }
           }
-        }
-      }
-    },
-    "Channel": {
-      "id": "Channel",
-      "properties": {
-        "payload": {
-          "type": "boolean",
-          "description": "A Boolean value to indicate whether payload is wanted. Optional."
         },
-        "address": {
-          "description": "The address where notifications are delivered for this channel.",
-          "type": "string"
+        "etag": {
+          "type": "string",
+          "description": "ETag of the entry."
+        },
+        "ownerDomain": {
+          "type": "string",
+          "description": "This is the domain that is affected by the report's event. For example domain of Admin console or the Drive application's document owner."
+        },
+        "actor": {
+          "description": "User doing the action.",
+          "properties": {
+            "callerType": {
+              "description": "The type of actor.",
+              "type": "string"
+            },
+            "key": {
+              "description": "Only present when `callerType` is `KEY`. Can be the `consumer_key` of the requestor for OAuth 2LO API requests or an identifier for robot accounts.",
+              "type": "string"
+            },
+            "email": {
+              "description": "The primary email address of the actor. May be absent if there is no email address associated with the actor.",
+              "type": "string"
+            },
+            "profileId": {
+              "type": "string",
+              "description": "The unique Google Workspace profile ID of the actor. May be absent if the actor is not a Google Workspace user."
+            }
+          },
+          "type": "object"
         },
         "kind": {
-          "description": "Identifies this as a notification channel used to watch for changes to a resource, which is \"`api#channel`\".",
+          "default": "admin#reports#activity",
           "type": "string",
-          "default": "api#channel"
+          "description": "The type of API resource. For an activity report, the value is `audit#activity`."
         },
-        "id": {
-          "description": "A UUID or similar unique string that identifies this channel.",
-          "type": "string"
-        },
-        "expiration": {
-          "type": "string",
-          "description": "Date and time of notification channel expiration, expressed as a Unix timestamp, in milliseconds. Optional.",
-          "format": "int64"
-        },
-        "resourceId": {
-          "type": "string",
-          "description": "An opaque ID that identifies the resource being watched on this channel. Stable across different API versions."
-        },
-        "params": {
-          "additionalProperties": {
-            "type": "string"
-          },
-          "type": "object",
-          "description": "Additional parameters controlling delivery channel behavior. Optional."
-        },
-        "type": {
-          "type": "string",
-          "description": "The type of delivery mechanism used for this channel. The value should be set to `\"web_hook\"`."
-        },
-        "resourceUri": {
-          "description": "A version-specific identifier for the watched resource.",
-          "type": "string"
-        },
-        "token": {
-          "description": "An arbitrary string delivered to the target address with each notification delivered over this channel. Optional.",
+        "ipAddress": {
+          "description": "IP address of the user doing the action. This is the Internet Protocol (IP) address of the user when logging into Google Workspace, which may or may not reflect the user's physical location. For example, the IP address can be the user's proxy server's address or a virtual private network (VPN) address. The API supports IPv4 and IPv6.",
           "type": "string"
         }
       },
-      "description": "A notification channel used to watch for resource changes.",
-      "type": "object"
+      "id": "Activity",
+      "description": "JSON template for the activity resource."
     }
   },
+  "documentationLink": "http://developers.google.com/admin-sdk/",
+  "fullyEncodeReservedExpansion": true,
+  "discoveryVersion": "v1",
+  "protocol": "rest",
+  "revision": "20210713",
   "icons": {
-    "x32": "http://www.google.com/images/icons/product/search-32.gif",
-    "x16": "http://www.google.com/images/icons/product/search-16.gif"
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
   },
   "kind": "discovery#restDescription",
-  "name": "admin"
+  "batchPath": "batch",
+  "canonicalName": "reports",
+  "name": "admin",
+  "parameters": {
+    "access_token": {
+      "type": "string",
+      "description": "OAuth access token.",
+      "location": "query"
+    },
+    "oauth_token": {
+      "description": "OAuth 2.0 token for the current user.",
+      "type": "string",
+      "location": "query"
+    },
+    "alt": {
+      "description": "Data format for response.",
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "default": "json",
+      "location": "query",
+      "type": "string"
+    },
+    "key": {
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+      "location": "query",
+      "type": "string"
+    },
+    "quotaUser": {
+      "location": "query",
+      "type": "string",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters."
+    },
+    "callback": {
+      "type": "string",
+      "description": "JSONP",
+      "location": "query"
+    },
+    "upload_protocol": {
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
+      "location": "query",
+      "type": "string"
+    },
+    "$.xgafv": {
+      "location": "query",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "type": "string",
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "description": "V1 error format."
+    },
+    "prettyPrint": {
+      "location": "query",
+      "default": "true",
+      "description": "Returns response with indentations and line breaks.",
+      "type": "boolean"
+    },
+    "fields": {
+      "type": "string",
+      "location": "query",
+      "description": "Selector specifying which fields to include in a partial response."
+    },
+    "uploadType": {
+      "location": "query",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
+      "type": "string"
+    }
+  },
+  "version": "reports_v1",
+  "rootUrl": "https://admin.googleapis.com/",
+  "ownerName": "Google",
+  "packagePath": "admin",
+  "basePath": "",
+  "ownerDomain": "google.com",
+  "servicePath": ""
 }
