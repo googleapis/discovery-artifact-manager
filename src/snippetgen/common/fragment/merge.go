@@ -2,31 +2,29 @@ package fragment
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"discovery-artifact-manager/snippetgen/common/metadata"
 )
 
-// currentMergeVersion contains the version identifier of the current
-// merging algorithm. This identifier will be included in merged
-// CodeFragments.GenerationVersion
+// currentMergeVersion contains the version identifier of the current merging algorithm. This
+// identifier will be included in merged CodeFragments.GenerationVersion
 const currentMergeVersion = "1"
 
-// simpleMetadata is the snippet revision suffix used, when the
-// simpleMetadata option is set, to indicate that a given primary code
-// snippet did not have a secondary code snippet with which to merge.
+// simpleMetadata is the snippet revision suffix used, when the simpleMetadata option is set, to
+// indicate that a given primary code snippet did not have a secondary code snippet with which to
+// merge.
 const simpleMetadataPrimarySuffix = ".p"
 
-// MergeWith merges 'info' with 'other', given preference to the
-// former, and returns the result. This means that if a CodeFragment
-// for any given language is present in 'info', it is used; otherwise,
-// the CodeFragment for that language in 'other' is used. The Key()
-// result on 'info', 'other' and the merge result must be identical,
-// or an error will occur. For each language, if 'simpleMetadata' is
-// true, the snippet metadata from the source that winds up being used
-// in the merge result is copied verbatim. If 'simpleMetadata' is
-// false, the snippet metadata reflects that of both snippets that
-// were compared.
+// MergeWith merges 'info' with 'other', giving preference to the former, and returns the
+// result. This means that if a CodeFragment for any given language is present in 'info', it is
+// used; otherwise, the CodeFragment for that language in 'other' is used. As a special case, if
+// `info` contains only whitespace, then the merge operation removes that language entirely from the
+// merge result. The Key() result on 'info', 'other' and the merge result must be identical, or an
+// error will occur. For each language, if 'simpleMetadata' is true, the snippet metadata from the
+// source that winds up being used in the merge result is copied verbatim. If 'simpleMetadata' is
+// false, the snippet metadata reflects that of both snippets that were compared.
 func (info *Info) MergeWith(other *Info, simpleMetadata bool) (*Info, error) {
 	if info == nil && other == nil {
 		return nil, nil
@@ -62,11 +60,17 @@ func (info *Info) MergeWith(other *Info, simpleMetadata bool) (*Info, error) {
 
 	merged := other.Clone()
 	for language, codeFragment := range thisFile.CodeFragment {
-		// Treat an empty fragment as being non-existent. Note
-		// that non-empty whitespace is significant, though,
-		// and still overrides the corresponding Fragment in
-		// otherFile.
+		// Treat an empty fragment as being non-existent--i.e., no overrides. Note that
+		// non-empty whitespace is significant, though, and still overrides the
+		// corresponding Fragment in otherFile. In particular, a fragment that consists of
+		// only whitespace means the sample for that language should be removed and not
+		// replaced with anything.
 		if len(codeFragment.Fragment) == 0 {
+			continue
+		}
+		if len(strings.TrimSpace(codeFragment.Fragment)) == 0 {
+			delete(merged.File.CodeFragment, language)
+			log.Printf("deleting fragment for %q in %s", info.Path.FragmentName, language)
 			continue
 		}
 
