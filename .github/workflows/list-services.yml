@@ -1,0 +1,42 @@
+name: List discovery services
+
+on:
+  workflow_call:
+
+jobs:
+  discovery:
+    runs-on: ubuntu-latest
+    outputs: 
+      services: ${{ steps.discover.outputs.result }}
+    steps:
+      - uses: actions/github-script@v5
+        id: discover
+        with:
+          script: |
+            const {
+              data: tree
+            } = await github.rest.git.getTree({
+              owner: "googleapis",
+              repo: "discovery-artifact-manager",
+              tree_sha: "master",
+            });
+            console.log(tree);
+            const {sha: discoveryTreeSha} = tree.tree.find((node) => {
+              return node.path === "discoveries";
+            });
+            console.log(discoveryTreeSha);
+            const {
+              data: {
+                tree: discoveryFiles
+              }
+            } = await github.rest.git.getTree({
+              owner: "googleapis",
+              repo: "discovery-artifact-manager",
+              tree_sha: discoveryTreeSha,
+            });
+            const services = discoveryFiles.filter((file) => {
+              return file.path.endsWith(".json");
+            }).map(file => file.path.split(".")[0]);
+            const outputs = [...new Set(services)];
+            console.log(outputs);
+            return outputs;
