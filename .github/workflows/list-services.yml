@@ -17,6 +17,7 @@ jobs:
         id: discover
         with:
           script: |
+            // fetch tree head and look for /discoveries folder's tree SHA
             const {
               data: tree
             } = await github.rest.git.getTree({
@@ -24,11 +25,11 @@ jobs:
               repo: "discovery-artifact-manager",
               tree_sha: "master",
             });
-            console.log(tree);
             const {sha: discoveryTreeSha} = tree.tree.find((node) => {
               return node.path === "discoveries";
             });
-            console.log(discoveryTreeSha);
+
+            // fetch tree for /discoveries folder
             const {
               data: {
                 tree: discoveryFiles
@@ -38,9 +39,11 @@ jobs:
               repo: "discovery-artifact-manager",
               tree_sha: discoveryTreeSha,
             });
+
+            // limit files that end in .json and grab the service name
             const services = discoveryFiles.filter((file) => {
               return file.path.endsWith(".json");
             }).map(file => file.path.split(".")[0]);
-            const outputs = [...new Set(services)];
-            console.log(outputs);
-            return outputs;
+
+            // make unique
+            return [...new Set(services)];
