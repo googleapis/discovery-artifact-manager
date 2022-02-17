@@ -1,14 +1,215 @@
 {
-  "documentationLink": "https://cloud.google.com/bigquery/",
-  "canonicalName": "BigQuery Reservation",
+  "id": "bigqueryreservation:v1beta1",
+  "ownerDomain": "google.com",
+  "batchPath": "batch",
+  "icons": {
+    "x32": "http://www.google.com/images/icons/product/search-32.gif",
+    "x16": "http://www.google.com/images/icons/product/search-16.gif"
+  },
+  "description": "A service to modify your BigQuery flat-rate reservations.",
+  "parameters": {
+    "access_token": {
+      "description": "OAuth access token.",
+      "type": "string",
+      "location": "query"
+    },
+    "key": {
+      "location": "query",
+      "type": "string",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token."
+    },
+    "uploadType": {
+      "type": "string",
+      "location": "query",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\")."
+    },
+    "$.xgafv": {
+      "location": "query",
+      "description": "V1 error format.",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "type": "string",
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ]
+    },
+    "upload_protocol": {
+      "type": "string",
+      "location": "query",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\")."
+    },
+    "oauth_token": {
+      "description": "OAuth 2.0 token for the current user.",
+      "location": "query",
+      "type": "string"
+    },
+    "quotaUser": {
+      "type": "string",
+      "location": "query",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters."
+    },
+    "fields": {
+      "type": "string",
+      "location": "query",
+      "description": "Selector specifying which fields to include in a partial response."
+    },
+    "callback": {
+      "description": "JSONP",
+      "location": "query",
+      "type": "string"
+    },
+    "prettyPrint": {
+      "default": "true",
+      "description": "Returns response with indentations and line breaks.",
+      "location": "query",
+      "type": "boolean"
+    },
+    "alt": {
+      "default": "json",
+      "location": "query",
+      "description": "Data format for response.",
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "type": "string",
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ]
+    }
+  },
+  "rootUrl": "https://bigqueryreservation.googleapis.com/",
+  "baseUrl": "https://bigqueryreservation.googleapis.com/",
+  "revision": "20220212",
+  "version_module": true,
+  "title": "BigQuery Reservation API",
+  "servicePath": "",
+  "discoveryVersion": "v1",
+  "mtlsRootUrl": "https://bigqueryreservation.mtls.googleapis.com/",
+  "basePath": "",
+  "ownerName": "Google",
   "schemas": {
-    "ListCapacityCommitmentsResponse": {
+    "ListReservationsResponse": {
+      "description": "The response for ReservationService.ListReservations.",
       "properties": {
-        "capacityCommitments": {
+        "nextPageToken": {
+          "type": "string",
+          "description": "Token to retrieve the next page of results, or empty if there are no more results in the list."
+        },
+        "reservations": {
+          "type": "array",
           "items": {
-            "$ref": "CapacityCommitment"
+            "$ref": "Reservation"
           },
-          "description": "List of capacity commitments visible to the user.",
+          "description": "List of reservations visible to the user."
+        }
+      },
+      "type": "object",
+      "id": "ListReservationsResponse"
+    },
+    "SplitCapacityCommitmentResponse": {
+      "properties": {
+        "first": {
+          "$ref": "CapacityCommitment",
+          "description": "First capacity commitment, result of a split."
+        },
+        "second": {
+          "$ref": "CapacityCommitment",
+          "description": "Second capacity commitment, result of a split."
+        }
+      },
+      "id": "SplitCapacityCommitmentResponse",
+      "description": "The response for ReservationService.SplitCapacityCommitment.",
+      "type": "object"
+    },
+    "MergeCapacityCommitmentsRequest": {
+      "type": "object",
+      "id": "MergeCapacityCommitmentsRequest",
+      "description": "The request for ReservationService.MergeCapacityCommitments.",
+      "properties": {
+        "capacityCommitmentIds": {
+          "description": "Ids of capacity commitments to merge. These capacity commitments must exist under admin project and location specified in the parent. ID is the last portion of capacity commitment name e.g., 'abc' for projects/myproject/locations/US/capacityCommitments/abc",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      }
+    },
+    "Assignment": {
+      "description": "An assignment allows a project to submit jobs of a certain type using slots from the specified reservation.",
+      "id": "Assignment",
+      "properties": {
+        "assignee": {
+          "description": "The resource which will use the reservation. E.g. `projects/myproject`, `folders/123`, or `organizations/456`.",
+          "type": "string"
+        },
+        "jobType": {
+          "type": "string",
+          "enumDescriptions": [
+            "Invalid type. Requests with this value will be rejected with error code `google.rpc.Code.INVALID_ARGUMENT`.",
+            "Pipeline (load/export) jobs from the project will use the reservation.",
+            "Query jobs from the project will use the reservation.",
+            "BigQuery ML jobs that use services external to BigQuery for model training. These jobs will not utilize idle slots from other reservations."
+          ],
+          "description": "Which type of jobs will use the reservation.",
+          "enum": [
+            "JOB_TYPE_UNSPECIFIED",
+            "PIPELINE",
+            "QUERY",
+            "ML_EXTERNAL"
+          ]
+        },
+        "name": {
+          "description": "Output only. Name of the resource. E.g.: `projects/myproject/locations/US/reservations/team1-prod/assignments/123`. For the assignment id, it must only contain lower case alphanumeric characters or dashes and the max length is 64 characters.",
+          "readOnly": true,
+          "type": "string"
+        },
+        "state": {
+          "enumDescriptions": [
+            "Invalid state value.",
+            "Queries from assignee will be executed as on-demand, if related assignment is pending.",
+            "Assignment is ready."
+          ],
+          "enum": [
+            "STATE_UNSPECIFIED",
+            "PENDING",
+            "ACTIVE"
+          ],
+          "type": "string",
+          "description": "Output only. State of the assignment.",
+          "readOnly": true
+        }
+      },
+      "type": "object"
+    },
+    "SplitCapacityCommitmentRequest": {
+      "id": "SplitCapacityCommitmentRequest",
+      "properties": {
+        "slotCount": {
+          "format": "int64",
+          "description": "Number of slots in the capacity commitment after the split.",
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "description": "The request for ReservationService.SplitCapacityCommitment."
+    },
+    "ListAssignmentsResponse": {
+      "description": "The response for ReservationService.ListAssignments.",
+      "type": "object",
+      "properties": {
+        "assignments": {
+          "description": "List of assignments visible to the user.",
+          "items": {
+            "$ref": "Assignment"
+          },
           "type": "array"
         },
         "nextPageToken": {
@@ -16,160 +217,143 @@
           "type": "string"
         }
       },
-      "type": "object",
-      "id": "ListCapacityCommitmentsResponse",
-      "description": "The response for ReservationService.ListCapacityCommitments."
-    },
-    "SplitCapacityCommitmentRequest": {
-      "description": "The request for ReservationService.SplitCapacityCommitment.",
-      "properties": {
-        "slotCount": {
-          "description": "Number of slots in the capacity commitment after the split.",
-          "format": "int64",
-          "type": "string"
-        }
-      },
-      "type": "object",
-      "id": "SplitCapacityCommitmentRequest"
-    },
-    "Empty": {
-      "type": "object",
-      "id": "Empty",
-      "description": "A generic empty message that you can re-use to avoid defining duplicated empty messages in your APIs. A typical example is to use it as the request or the response type of an API method. For instance: service Foo { rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty); } The JSON representation for `Empty` is empty JSON object `{}`.",
-      "properties": {}
+      "id": "ListAssignmentsResponse"
     },
     "Reservation": {
-      "type": "object",
-      "id": "Reservation",
       "properties": {
-        "updateTime": {
+        "creationTime": {
+          "description": "Output only. Creation time of the reservation.",
           "type": "string",
+          "readOnly": true,
+          "format": "google-datetime"
+        },
+        "updateTime": {
+          "description": "Output only. Last update time of the reservation.",
           "format": "google-datetime",
           "readOnly": true,
-          "description": "Output only. Last update time of the reservation."
-        },
-        "name": {
-          "description": "The resource name of the reservation, e.g., `projects/*/locations/*/reservations/team1-prod`.",
           "type": "string"
         },
-        "creationTime": {
+        "ignoreIdleSlots": {
+          "description": "If false, any query or pipeline job using this reservation will use idle slots from other reservations within the same admin project. If true, a query or pipeline job using this reservation will execute with the slot capacity specified in the slot_capacity field at most.",
+          "type": "boolean"
+        },
+        "multiRegionAuxiliary": {
+          "type": "boolean",
+          "description": "Applicable only for reservations located within one of the BigQuery multi-regions (US or EU). If set to true, this reservation is placed in the organization's secondary region which is designated for disaster recovery purposes. If false, this reservation is placed in the organization's default region."
+        },
+        "name": {
           "type": "string",
-          "readOnly": true,
-          "format": "google-datetime",
-          "description": "Output only. Creation time of the reservation."
+          "description": "The resource name of the reservation, e.g., `projects/*/locations/*/reservations/team1-prod`. For the reservation id, it must only contain lower case alphanumeric characters or dashes.It must start with a letter and must not end with a dash. Its maximum length is 64 characters."
         },
         "slotCapacity": {
-          "description": "Minimum slots available to this reservation. A slot is a unit of computational power in BigQuery, and serves as the unit of parallelism. Queries using this reservation might use more slots during runtime if ignore_idle_slots is set to false. If the new reservation's slot capacity exceed the project's slot capacity or if total slot capacity of the new reservation and its siblings exceeds the project's slot capacity, the request will fail with `google.rpc.Code.RESOURCE_EXHAUSTED`. NOTE: for reservations in US or EU multi-regions slot capacity constraints are checked separately for default and auxiliary regions. See multi_region_auxiliary flag for more details.",
           "type": "string",
-          "format": "int64"
-        },
-        "ignoreIdleSlots": {
-          "type": "boolean",
-          "description": "If false, any query or pipeline job using this reservation will use idle slots from other reservations within the same admin project. If true, a query or pipeline job using this reservation will execute with the slot capacity specified in the slot_capacity field at most."
+          "format": "int64",
+          "description": "Minimum slots available to this reservation. A slot is a unit of computational power in BigQuery, and serves as the unit of parallelism. Queries using this reservation might use more slots during runtime if ignore_idle_slots is set to false. If the new reservation's slot capacity exceed the project's slot capacity or if total slot capacity of the new reservation and its siblings exceeds the project's slot capacity, the request will fail with `google.rpc.Code.RESOURCE_EXHAUSTED`. NOTE: for reservations in US or EU multi-regions slot capacity constraints are checked separately for default and auxiliary regions. See multi_region_auxiliary flag for more details."
         }
       },
-      "description": "A reservation is a mechanism used to guarantee slots to users."
+      "description": "A reservation is a mechanism used to guarantee slots to users.",
+      "id": "Reservation",
+      "type": "object"
+    },
+    "BiReservation": {
+      "id": "BiReservation",
+      "type": "object",
+      "properties": {
+        "updateTime": {
+          "format": "google-datetime",
+          "readOnly": true,
+          "description": "Output only. The last update timestamp of a reservation.",
+          "type": "string"
+        },
+        "size": {
+          "description": "Size of a reservation, in bytes.",
+          "format": "int64",
+          "type": "string"
+        },
+        "name": {
+          "description": "The resource name of the singleton BI reservation. Reservation names have the form `projects/{project_id}/locations/{location_id}/biReservation`.",
+          "type": "string"
+        }
+      },
+      "description": "Represents a BI Reservation."
+    },
+    "Empty": {
+      "id": "Empty",
+      "properties": {},
+      "type": "object",
+      "description": "A generic empty message that you can re-use to avoid defining duplicated empty messages in your APIs. A typical example is to use it as the request or the response type of an API method. For instance: service Foo { rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty); } The JSON representation for `Empty` is empty JSON object `{}`."
     },
     "SearchAssignmentsResponse": {
       "description": "The response for ReservationService.SearchAssignments.",
+      "type": "object",
       "properties": {
         "nextPageToken": {
-          "description": "Token to retrieve the next page of results, or empty if there are no more results in the list.",
-          "type": "string"
+          "type": "string",
+          "description": "Token to retrieve the next page of results, or empty if there are no more results in the list."
         },
         "assignments": {
           "description": "List of assignments visible to the user.",
-          "type": "array",
-          "items": {
-            "$ref": "Assignment"
-          }
-        }
-      },
-      "type": "object",
-      "id": "SearchAssignmentsResponse"
-    },
-    "ListAssignmentsResponse": {
-      "description": "The response for ReservationService.ListAssignments.",
-      "properties": {
-        "assignments": {
-          "type": "array",
           "items": {
             "$ref": "Assignment"
           },
-          "description": "List of assignments visible to the user."
-        },
+          "type": "array"
+        }
+      },
+      "id": "SearchAssignmentsResponse"
+    },
+    "ListCapacityCommitmentsResponse": {
+      "properties": {
         "nextPageToken": {
-          "description": "Token to retrieve the next page of results, or empty if there are no more results in the list.",
-          "type": "string"
+          "type": "string",
+          "description": "Token to retrieve the next page of results, or empty if there are no more results in the list."
+        },
+        "capacityCommitments": {
+          "description": "List of capacity commitments visible to the user.",
+          "items": {
+            "$ref": "CapacityCommitment"
+          },
+          "type": "array"
+        }
+      },
+      "description": "The response for ReservationService.ListCapacityCommitments.",
+      "id": "ListCapacityCommitmentsResponse",
+      "type": "object"
+    },
+    "Status": {
+      "description": "The `Status` type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by [gRPC](https://github.com/grpc). Each `Status` message contains three pieces of data: error code, error message, and error details. You can find out more about this error model and how to work with it in the [API Design Guide](https://cloud.google.com/apis/design/errors).",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "The status code, which should be an enum value of google.rpc.Code.",
+          "format": "int32"
+        },
+        "details": {
+          "items": {
+            "additionalProperties": {
+              "type": "any",
+              "description": "Properties of the object. Contains field @type with type URL."
+            },
+            "type": "object"
+          },
+          "description": "A list of messages that carry the error details. There is a common set of message types for APIs to use.",
+          "type": "array"
+        },
+        "message": {
+          "type": "string",
+          "description": "A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the google.rpc.Status.details field, or localized by the client."
         }
       },
       "type": "object",
-      "id": "ListAssignmentsResponse"
+      "id": "Status"
     },
     "CapacityCommitment": {
-      "id": "CapacityCommitment",
+      "description": "Capacity commitment is a way to purchase compute capacity for BigQuery jobs (in the form of slots) with some committed period of usage. Annual commitments renew by default. Commitments can be removed after their commitment end time passes. In order to remove annual commitment, its plan needs to be changed to monthly or flex first. A capacity commitment resource exists as a child resource of the admin project.",
       "type": "object",
+      "id": "CapacityCommitment",
       "properties": {
-        "slotCount": {
-          "description": "Number of slots in this commitment.",
-          "type": "string",
-          "format": "int64"
-        },
-        "state": {
-          "type": "string",
-          "enum": [
-            "STATE_UNSPECIFIED",
-            "PENDING",
-            "ACTIVE",
-            "FAILED"
-          ],
-          "enumDescriptions": [
-            "Invalid state value.",
-            "Capacity commitment is pending provisioning. Pending capacity commitment does not contribute to the project's slot_capacity.",
-            "Once slots are provisioned, capacity commitment becomes active. slot_count is added to the project's slot_capacity.",
-            "Capacity commitment is failed to be activated by the backend."
-          ],
-          "readOnly": true,
-          "description": "Output only. State of the commitment."
-        },
-        "commitmentEndTime": {
-          "type": "string",
-          "readOnly": true,
-          "format": "google-datetime",
-          "description": "Output only. The end of the current commitment period. It is applicable only for ACTIVE capacity commitments."
-        },
-        "name": {
-          "description": "Output only. The resource name of the capacity commitment, e.g., `projects/myproject/locations/US/capacityCommitments/123`",
-          "type": "string",
-          "readOnly": true
-        },
         "renewalPlan": {
-          "enum": [
-            "COMMITMENT_PLAN_UNSPECIFIED",
-            "FLEX",
-            "TRIAL",
-            "MONTHLY",
-            "ANNUAL"
-          ],
+          "type": "string",
           "description": "The plan this capacity commitment is converted to after commitment_end_time passes. Once the plan is changed, committed period is extended according to commitment plan. Only applicable for ANNUAL commitments.",
-          "enumDescriptions": [
-            "Invalid plan value. Requests with this value will be rejected with error code `google.rpc.Code.INVALID_ARGUMENT`.",
-            "Flex commitments have committed period of 1 minute after becoming ACTIVE. After that, they are not in a committed period anymore and can be removed any time.",
-            "Trial commitments have a committed period of 182 days after becoming ACTIVE. After that, they are converted to a new commitment based on the `renewal_plan`. Default `renewal_plan` for Trial commitment is Flex so that it can be deleted right after committed period ends.",
-            "Monthly commitments have a committed period of 30 days after becoming ACTIVE. After that, they are not in a committed period anymore and can be removed any time.",
-            "Annual commitments have a committed period of 365 days after becoming ACTIVE. After that they are converted to a new commitment based on the renewal_plan."
-          ],
-          "type": "string"
-        },
-        "commitmentStartTime": {
-          "format": "google-datetime",
-          "type": "string",
-          "readOnly": true,
-          "description": "Output only. The start of the current commitment period. It is applicable only for ACTIVE capacity commitments."
-        },
-        "plan": {
-          "description": "Capacity commitment commitment plan.",
-          "type": "string",
           "enum": [
             "COMMITMENT_PLAN_UNSPECIFIED",
             "FLEX",
@@ -185,948 +369,88 @@
             "Annual commitments have a committed period of 365 days after becoming ACTIVE. After that they are converted to a new commitment based on the renewal_plan."
           ]
         },
-        "failureStatus": {
-          "description": "Output only. For FAILED commitment plan, provides the reason of failure.",
-          "readOnly": true,
-          "$ref": "Status"
-        }
-      },
-      "description": "Capacity commitment is a way to purchase compute capacity for BigQuery jobs (in the form of slots) with some committed period of usage. Annual commitments renew by default. Commitments can be removed after their commitment end time passes. In order to remove annual commitment, its plan needs to be changed to monthly or flex first. A capacity commitment resource exists as a child resource of the admin project."
-    },
-    "ListReservationsResponse": {
-      "description": "The response for ReservationService.ListReservations.",
-      "properties": {
-        "reservations": {
-          "description": "List of reservations visible to the user.",
-          "type": "array",
-          "items": {
-            "$ref": "Reservation"
-          }
+        "slotCount": {
+          "description": "Number of slots in this commitment.",
+          "format": "int64",
+          "type": "string"
         },
-        "nextPageToken": {
+        "plan": {
           "type": "string",
-          "description": "Token to retrieve the next page of results, or empty if there are no more results in the list."
-        }
-      },
-      "id": "ListReservationsResponse",
-      "type": "object"
-    },
-    "Assignment": {
-      "type": "object",
-      "properties": {
-        "jobType": {
-          "type": "string",
-          "enumDescriptions": [
-            "Invalid type. Requests with this value will be rejected with error code `google.rpc.Code.INVALID_ARGUMENT`.",
-            "Pipeline (load/export) jobs from the project will use the reservation.",
-            "Query jobs from the project will use the reservation.",
-            "BigQuery ML jobs that use services external to BigQuery for model training. These jobs will not utilize idle slots from other reservations."
-          ],
           "enum": [
-            "JOB_TYPE_UNSPECIFIED",
-            "PIPELINE",
-            "QUERY",
-            "ML_EXTERNAL"
+            "COMMITMENT_PLAN_UNSPECIFIED",
+            "FLEX",
+            "TRIAL",
+            "MONTHLY",
+            "ANNUAL"
           ],
-          "description": "Which type of jobs will use the reservation."
+          "enumDescriptions": [
+            "Invalid plan value. Requests with this value will be rejected with error code `google.rpc.Code.INVALID_ARGUMENT`.",
+            "Flex commitments have committed period of 1 minute after becoming ACTIVE. After that, they are not in a committed period anymore and can be removed any time.",
+            "Trial commitments have a committed period of 182 days after becoming ACTIVE. After that, they are converted to a new commitment based on the `renewal_plan`. Default `renewal_plan` for Trial commitment is Flex so that it can be deleted right after committed period ends.",
+            "Monthly commitments have a committed period of 30 days after becoming ACTIVE. After that, they are not in a committed period anymore and can be removed any time.",
+            "Annual commitments have a committed period of 365 days after becoming ACTIVE. After that they are converted to a new commitment based on the renewal_plan."
+          ],
+          "description": "Capacity commitment commitment plan."
+        },
+        "failureStatus": {
+          "readOnly": true,
+          "description": "Output only. For FAILED commitment plan, provides the reason of failure.",
+          "$ref": "Status"
+        },
+        "commitmentStartTime": {
+          "description": "Output only. The start of the current commitment period. It is applicable only for ACTIVE capacity commitments.",
+          "type": "string",
+          "readOnly": true,
+          "format": "google-datetime"
         },
         "name": {
-          "type": "string",
-          "description": "Output only. Name of the resource. E.g.: `projects/myproject/locations/US/reservations/team1-prod/assignments/123`.",
-          "readOnly": true
+          "description": "Output only. The resource name of the capacity commitment, e.g., `projects/myproject/locations/US/capacityCommitments/123` For the commitment id, it must only contain lower case alphanumeric characters or dashes.It must start with a letter and must not end with a dash. Its maximum length is 64 characters.",
+          "readOnly": true,
+          "type": "string"
         },
         "state": {
-          "enumDescriptions": [
-            "Invalid state value.",
-            "Queries from assignee will be executed as on-demand, if related assignment is pending.",
-            "Assignment is ready."
-          ],
           "enum": [
             "STATE_UNSPECIFIED",
             "PENDING",
-            "ACTIVE"
+            "ACTIVE",
+            "FAILED"
           ],
-          "readOnly": true,
-          "description": "Output only. State of the assignment.",
-          "type": "string"
-        },
-        "assignee": {
+          "enumDescriptions": [
+            "Invalid state value.",
+            "Capacity commitment is pending provisioning. Pending capacity commitment does not contribute to the project's slot_capacity.",
+            "Once slots are provisioned, capacity commitment becomes active. slot_count is added to the project's slot_capacity.",
+            "Capacity commitment is failed to be activated by the backend."
+          ],
+          "description": "Output only. State of the commitment.",
           "type": "string",
-          "description": "The resource which will use the reservation. E.g. `projects/myproject`, `folders/123`, or `organizations/456`."
-        }
-      },
-      "description": "An assignment allows a project to submit jobs of a certain type using slots from the specified reservation.",
-      "id": "Assignment"
-    },
-    "MergeCapacityCommitmentsRequest": {
-      "id": "MergeCapacityCommitmentsRequest",
-      "description": "The request for ReservationService.MergeCapacityCommitments.",
-      "properties": {
-        "capacityCommitmentIds": {
-          "type": "array",
-          "description": "Ids of capacity commitments to merge. These capacity commitments must exist under admin project and location specified in the parent. ID is the last portion of capacity commitment name e.g., 'abc' for projects/myproject/locations/US/capacityCommitments/abc",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "type": "object"
-    },
-    "BiReservation": {
-      "id": "BiReservation",
-      "type": "object",
-      "properties": {
-        "updateTime": {
+          "readOnly": true
+        },
+        "commitmentEndTime": {
+          "readOnly": true,
+          "description": "Output only. The end of the current commitment period. It is applicable only for ACTIVE capacity commitments.",
           "format": "google-datetime",
-          "description": "Output only. The last update timestamp of a reservation.",
-          "readOnly": true,
           "type": "string"
         },
-        "name": {
-          "type": "string",
-          "description": "The resource name of the singleton BI reservation. Reservation names have the form `projects/{project_id}/locations/{location_id}/biReservation`."
-        },
-        "size": {
-          "type": "string",
-          "format": "int64",
-          "description": "Size of a reservation, in bytes."
-        }
-      },
-      "description": "Represents a BI Reservation."
-    },
-    "SplitCapacityCommitmentResponse": {
-      "description": "The response for ReservationService.SplitCapacityCommitment.",
-      "id": "SplitCapacityCommitmentResponse",
-      "type": "object",
-      "properties": {
-        "second": {
-          "description": "Second capacity commitment, result of a split.",
-          "$ref": "CapacityCommitment"
-        },
-        "first": {
-          "description": "First capacity commitment, result of a split.",
-          "$ref": "CapacityCommitment"
+        "multiRegionAuxiliary": {
+          "type": "boolean",
+          "description": "Applicable only for commitments located within one of the BigQuery multi-regions (US or EU). If set to true, this commitment is placed in the organization's secondary region which is designated for disaster recovery purposes. If false, this commitment is placed in the organization's default region."
         }
       }
     },
     "MoveAssignmentRequest": {
-      "description": "The request for ReservationService.MoveAssignment. **Note**: \"bigquery.reservationAssignments.create\" permission is required on the destination_id. **Note**: \"bigquery.reservationAssignments.create\" and \"bigquery.reservationAssignments.delete\" permission are required on the related assignee.",
+      "id": "MoveAssignmentRequest",
       "type": "object",
       "properties": {
         "destinationId": {
-          "type": "string",
-          "description": "The new reservation ID, e.g.: `projects/myotherproject/locations/US/reservations/team2-prod`"
-        }
-      },
-      "id": "MoveAssignmentRequest"
-    },
-    "Status": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "integer",
-          "format": "int32",
-          "description": "The status code, which should be an enum value of google.rpc.Code."
-        },
-        "details": {
-          "type": "array",
-          "items": {
-            "additionalProperties": {
-              "type": "any",
-              "description": "Properties of the object. Contains field @type with type URL."
-            },
-            "type": "object"
-          },
-          "description": "A list of messages that carry the error details. There is a common set of message types for APIs to use."
-        },
-        "message": {
-          "description": "A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the google.rpc.Status.details field, or localized by the client.",
+          "description": "The new reservation ID, e.g.: `projects/myotherproject/locations/US/reservations/team2-prod`",
           "type": "string"
         }
       },
-      "id": "Status",
-      "description": "The `Status` type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by [gRPC](https://github.com/grpc). Each `Status` message contains three pieces of data: error code, error message, and error details. You can find out more about this error model and how to work with it in the [API Design Guide](https://cloud.google.com/apis/design/errors)."
+      "description": "The request for ReservationService.MoveAssignment. **Note**: \"bigquery.reservationAssignments.create\" permission is required on the destination_id. **Note**: \"bigquery.reservationAssignments.create\" and \"bigquery.reservationAssignments.delete\" permission are required on the related assignee."
     }
   },
-  "version": "v1beta1",
-  "version_module": true,
-  "baseUrl": "https://bigqueryreservation.googleapis.com/",
-  "basePath": "",
-  "revision": "20211015",
-  "ownerName": "Google",
   "kind": "discovery#restDescription",
-  "servicePath": "",
-  "icons": {
-    "x32": "http://www.google.com/images/icons/product/search-32.gif",
-    "x16": "http://www.google.com/images/icons/product/search-16.gif"
-  },
-  "rootUrl": "https://bigqueryreservation.googleapis.com/",
-  "title": "BigQuery Reservation API",
-  "batchPath": "batch",
-  "ownerDomain": "google.com",
-  "discoveryVersion": "v1",
-  "resources": {
-    "projects": {
-      "resources": {
-        "locations": {
-          "resources": {
-            "reservations": {
-              "resources": {
-                "assignments": {
-                  "methods": {
-                    "create": {
-                      "response": {
-                        "$ref": "Assignment"
-                      },
-                      "parameters": {
-                        "assignmentId": {
-                          "description": "The optional assignment ID. Assignment name will be generated automatically if this field is empty. This field must only contain lower case alphanumeric characters or dash. Max length is 64 characters.",
-                          "type": "string",
-                          "location": "query"
-                        },
-                        "parent": {
-                          "required": true,
-                          "pattern": "^projects/[^/]+/locations/[^/]+/reservations/[^/]+$",
-                          "description": "Required. The parent resource name of the assignment E.g. `projects/myproject/locations/US/reservations/team1-prod`",
-                          "location": "path",
-                          "type": "string"
-                        }
-                      },
-                      "httpMethod": "POST",
-                      "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/reservations/{reservationsId}/assignments",
-                      "description": "Creates an assignment object which allows the given project to submit jobs of a certain type using slots from the specified reservation. Currently a resource (project, folder, organization) can only have one assignment per each (job_type, location) combination, and that reservation will be used for all jobs of the matching type. Different assignments can be created on different levels of the projects, folders or organization hierarchy. During query execution, the assignment is looked up at the project, folder and organization levels in that order. The first assignment found is applied to the query. When creating assignments, it does not matter if other assignments exist at higher levels. Example: * The organization `organizationA` contains two projects, `project1` and `project2`. * Assignments for all three entities (`organizationA`, `project1`, and `project2`) could all be created and mapped to the same or different reservations. \"None\" assignments represent an absence of the assignment. Projects assigned to None use on-demand pricing. To create a \"None\" assignment, use \"none\" as a reservation_id in the parent. Example parent: `projects/myproject/locations/US/reservations/none`. Returns `google.rpc.Code.PERMISSION_DENIED` if user does not have 'bigquery.admin' permissions on the project using the reservation and the project that owns this reservation. Returns `google.rpc.Code.INVALID_ARGUMENT` when location of the assignment does not match location of the reservation.",
-                      "scopes": [
-                        "https://www.googleapis.com/auth/bigquery",
-                        "https://www.googleapis.com/auth/cloud-platform"
-                      ],
-                      "id": "bigqueryreservation.projects.locations.reservations.assignments.create",
-                      "parameterOrder": [
-                        "parent"
-                      ],
-                      "request": {
-                        "$ref": "Assignment"
-                      },
-                      "path": "v1beta1/{+parent}/assignments"
-                    },
-                    "move": {
-                      "description": "Moves an assignment under a new reservation. This differs from removing an existing assignment and recreating a new one by providing a transactional change that ensures an assignee always has an associated reservation.",
-                      "parameters": {
-                        "name": {
-                          "description": "Required. The resource name of the assignment, e.g. `projects/myproject/locations/US/reservations/team1-prod/assignments/123`",
-                          "type": "string",
-                          "location": "path",
-                          "pattern": "^projects/[^/]+/locations/[^/]+/reservations/[^/]+/assignments/[^/]+$",
-                          "required": true
-                        }
-                      },
-                      "scopes": [
-                        "https://www.googleapis.com/auth/bigquery",
-                        "https://www.googleapis.com/auth/cloud-platform"
-                      ],
-                      "path": "v1beta1/{+name}:move",
-                      "request": {
-                        "$ref": "MoveAssignmentRequest"
-                      },
-                      "response": {
-                        "$ref": "Assignment"
-                      },
-                      "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/reservations/{reservationsId}/assignments/{assignmentsId}:move",
-                      "id": "bigqueryreservation.projects.locations.reservations.assignments.move",
-                      "httpMethod": "POST",
-                      "parameterOrder": [
-                        "name"
-                      ]
-                    },
-                    "list": {
-                      "scopes": [
-                        "https://www.googleapis.com/auth/bigquery",
-                        "https://www.googleapis.com/auth/cloud-platform"
-                      ],
-                      "parameterOrder": [
-                        "parent"
-                      ],
-                      "id": "bigqueryreservation.projects.locations.reservations.assignments.list",
-                      "parameters": {
-                        "parent": {
-                          "required": true,
-                          "location": "path",
-                          "description": "Required. The parent resource name e.g.: `projects/myproject/locations/US/reservations/team1-prod` Or: `projects/myproject/locations/US/reservations/-`",
-                          "type": "string",
-                          "pattern": "^projects/[^/]+/locations/[^/]+/reservations/[^/]+$"
-                        },
-                        "pageSize": {
-                          "description": "The maximum number of items to return.",
-                          "format": "int32",
-                          "type": "integer",
-                          "location": "query"
-                        },
-                        "pageToken": {
-                          "type": "string",
-                          "description": "The next_page_token value returned from a previous List request, if any.",
-                          "location": "query"
-                        }
-                      },
-                      "description": "Lists assignments. Only explicitly created assignments will be returned. Example: * Organization `organizationA` contains two projects, `project1` and `project2`. * Reservation `res1` exists and was created previously. * CreateAssignment was used previously to define the following associations between entities and reservations: `` and `` In this example, ListAssignments will just return the above two assignments for reservation `res1`, and no expansion/merge will happen. The wildcard \"-\" can be used for reservations in the request. In that case all assignments belongs to the specified project and location will be listed. **Note** \"-\" cannot be used for projects nor locations.",
-                      "path": "v1beta1/{+parent}/assignments",
-                      "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/reservations/{reservationsId}/assignments",
-                      "httpMethod": "GET",
-                      "response": {
-                        "$ref": "ListAssignmentsResponse"
-                      }
-                    },
-                    "patch": {
-                      "httpMethod": "PATCH",
-                      "parameterOrder": [
-                        "name"
-                      ],
-                      "path": "v1beta1/{+name}",
-                      "parameters": {
-                        "name": {
-                          "type": "string",
-                          "pattern": "^projects/[^/]+/locations/[^/]+/reservations/[^/]+/assignments/[^/]+$",
-                          "description": "Output only. Name of the resource. E.g.: `projects/myproject/locations/US/reservations/team1-prod/assignments/123`.",
-                          "required": true,
-                          "location": "path"
-                        },
-                        "updateMask": {
-                          "format": "google-fieldmask",
-                          "location": "query",
-                          "type": "string",
-                          "description": "Standard field mask for the set of fields to be updated."
-                        }
-                      },
-                      "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/reservations/{reservationsId}/assignments/{assignmentsId}",
-                      "id": "bigqueryreservation.projects.locations.reservations.assignments.patch",
-                      "request": {
-                        "$ref": "Assignment"
-                      },
-                      "response": {
-                        "$ref": "Assignment"
-                      },
-                      "scopes": [
-                        "https://www.googleapis.com/auth/bigquery",
-                        "https://www.googleapis.com/auth/cloud-platform"
-                      ],
-                      "description": "Updates an existing assignment. Only the `priority` field can be updated."
-                    },
-                    "delete": {
-                      "id": "bigqueryreservation.projects.locations.reservations.assignments.delete",
-                      "parameters": {
-                        "name": {
-                          "description": "Required. Name of the resource, e.g. `projects/myproject/locations/US/reservations/team1-prod/assignments/123`",
-                          "required": true,
-                          "location": "path",
-                          "type": "string",
-                          "pattern": "^projects/[^/]+/locations/[^/]+/reservations/[^/]+/assignments/[^/]+$"
-                        }
-                      },
-                      "path": "v1beta1/{+name}",
-                      "scopes": [
-                        "https://www.googleapis.com/auth/bigquery",
-                        "https://www.googleapis.com/auth/cloud-platform"
-                      ],
-                      "parameterOrder": [
-                        "name"
-                      ],
-                      "httpMethod": "DELETE",
-                      "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/reservations/{reservationsId}/assignments/{assignmentsId}",
-                      "response": {
-                        "$ref": "Empty"
-                      },
-                      "description": "Deletes a assignment. No expansion will happen. Example: * Organization `organizationA` contains two projects, `project1` and `project2`. * Reservation `res1` exists and was created previously. * CreateAssignment was used previously to define the following associations between entities and reservations: `` and `` In this example, deletion of the `` assignment won't affect the other assignment ``. After said deletion, queries from `project1` will still use `res1` while queries from `project2` will switch to use on-demand mode."
-                    }
-                  }
-                }
-              },
-              "methods": {
-                "list": {
-                  "httpMethod": "GET",
-                  "scopes": [
-                    "https://www.googleapis.com/auth/bigquery",
-                    "https://www.googleapis.com/auth/cloud-platform"
-                  ],
-                  "description": "Lists all the reservations for the project in the specified location.",
-                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/reservations",
-                  "response": {
-                    "$ref": "ListReservationsResponse"
-                  },
-                  "parameterOrder": [
-                    "parent"
-                  ],
-                  "path": "v1beta1/{+parent}/reservations",
-                  "id": "bigqueryreservation.projects.locations.reservations.list",
-                  "parameters": {
-                    "filter": {
-                      "type": "string",
-                      "description": "Can be used to filter out reservations based on names, capacity, etc, e.g.: filter=\"reservation.slot_capacity \u003e 200\" filter=\"reservation.name = \\\"*dev/*\\\"\" Advanced filtering syntax can be [here](https://cloud.google.com/logging/docs/view/advanced-filters).",
-                      "location": "query"
-                    },
-                    "parent": {
-                      "required": true,
-                      "location": "path",
-                      "type": "string",
-                      "pattern": "^projects/[^/]+/locations/[^/]+$",
-                      "description": "Required. The parent resource name containing project and location, e.g.: `projects/myproject/locations/US`"
-                    },
-                    "pageSize": {
-                      "type": "integer",
-                      "format": "int32",
-                      "location": "query",
-                      "description": "The maximum number of items to return."
-                    },
-                    "pageToken": {
-                      "location": "query",
-                      "description": "The next_page_token value returned from a previous List request, if any.",
-                      "type": "string"
-                    }
-                  }
-                },
-                "delete": {
-                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/reservations/{reservationsId}",
-                  "parameters": {
-                    "name": {
-                      "pattern": "^projects/[^/]+/locations/[^/]+/reservations/[^/]+$",
-                      "type": "string",
-                      "description": "Required. Resource name of the reservation to retrieve. E.g., `projects/myproject/locations/US/reservations/team1-prod`",
-                      "required": true,
-                      "location": "path"
-                    }
-                  },
-                  "description": "Deletes a reservation. Returns `google.rpc.Code.FAILED_PRECONDITION` when reservation has assignments.",
-                  "parameterOrder": [
-                    "name"
-                  ],
-                  "path": "v1beta1/{+name}",
-                  "httpMethod": "DELETE",
-                  "scopes": [
-                    "https://www.googleapis.com/auth/bigquery",
-                    "https://www.googleapis.com/auth/cloud-platform"
-                  ],
-                  "response": {
-                    "$ref": "Empty"
-                  },
-                  "id": "bigqueryreservation.projects.locations.reservations.delete"
-                },
-                "get": {
-                  "scopes": [
-                    "https://www.googleapis.com/auth/bigquery",
-                    "https://www.googleapis.com/auth/cloud-platform"
-                  ],
-                  "response": {
-                    "$ref": "Reservation"
-                  },
-                  "httpMethod": "GET",
-                  "description": "Returns information about the reservation.",
-                  "path": "v1beta1/{+name}",
-                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/reservations/{reservationsId}",
-                  "id": "bigqueryreservation.projects.locations.reservations.get",
-                  "parameters": {
-                    "name": {
-                      "required": true,
-                      "type": "string",
-                      "location": "path",
-                      "pattern": "^projects/[^/]+/locations/[^/]+/reservations/[^/]+$",
-                      "description": "Required. Resource name of the reservation to retrieve. E.g., `projects/myproject/locations/US/reservations/team1-prod`"
-                    }
-                  },
-                  "parameterOrder": [
-                    "name"
-                  ]
-                },
-                "patch": {
-                  "parameters": {
-                    "updateMask": {
-                      "type": "string",
-                      "format": "google-fieldmask",
-                      "description": "Standard field mask for the set of fields to be updated.",
-                      "location": "query"
-                    },
-                    "name": {
-                      "type": "string",
-                      "location": "path",
-                      "description": "The resource name of the reservation, e.g., `projects/*/locations/*/reservations/team1-prod`.",
-                      "required": true,
-                      "pattern": "^projects/[^/]+/locations/[^/]+/reservations/[^/]+$"
-                    }
-                  },
-                  "response": {
-                    "$ref": "Reservation"
-                  },
-                  "id": "bigqueryreservation.projects.locations.reservations.patch",
-                  "path": "v1beta1/{+name}",
-                  "request": {
-                    "$ref": "Reservation"
-                  },
-                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/reservations/{reservationsId}",
-                  "scopes": [
-                    "https://www.googleapis.com/auth/bigquery",
-                    "https://www.googleapis.com/auth/cloud-platform"
-                  ],
-                  "description": "Updates an existing reservation resource.",
-                  "httpMethod": "PATCH",
-                  "parameterOrder": [
-                    "name"
-                  ]
-                },
-                "create": {
-                  "parameters": {
-                    "parent": {
-                      "pattern": "^projects/[^/]+/locations/[^/]+$",
-                      "location": "path",
-                      "required": true,
-                      "type": "string",
-                      "description": "Required. Project, location. E.g., `projects/myproject/locations/US`"
-                    },
-                    "reservationId": {
-                      "type": "string",
-                      "description": "The reservation ID. This field must only contain lower case alphanumeric characters or dash. Max length is 64 characters.",
-                      "location": "query"
-                    }
-                  },
-                  "httpMethod": "POST",
-                  "request": {
-                    "$ref": "Reservation"
-                  },
-                  "scopes": [
-                    "https://www.googleapis.com/auth/bigquery",
-                    "https://www.googleapis.com/auth/cloud-platform"
-                  ],
-                  "id": "bigqueryreservation.projects.locations.reservations.create",
-                  "description": "Creates a new reservation resource.",
-                  "response": {
-                    "$ref": "Reservation"
-                  },
-                  "parameterOrder": [
-                    "parent"
-                  ],
-                  "path": "v1beta1/{+parent}/reservations",
-                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/reservations"
-                }
-              }
-            },
-            "capacityCommitments": {
-              "methods": {
-                "delete": {
-                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/capacityCommitments/{capacityCommitmentsId}",
-                  "path": "v1beta1/{+name}",
-                  "httpMethod": "DELETE",
-                  "id": "bigqueryreservation.projects.locations.capacityCommitments.delete",
-                  "response": {
-                    "$ref": "Empty"
-                  },
-                  "parameterOrder": [
-                    "name"
-                  ],
-                  "description": "Deletes a capacity commitment. Attempting to delete capacity commitment before its commitment_end_time will fail with the error code `google.rpc.Code.FAILED_PRECONDITION`.",
-                  "parameters": {
-                    "force": {
-                      "location": "query",
-                      "type": "boolean",
-                      "description": "Can be used to force delete commitments even if assignments exist. Deleting commitments with assignments may cause queries to fail if they no longer have access to slots."
-                    },
-                    "name": {
-                      "description": "Required. Resource name of the capacity commitment to delete. E.g., `projects/myproject/locations/US/capacityCommitments/123`",
-                      "pattern": "^projects/[^/]+/locations/[^/]+/capacityCommitments/[^/]+$",
-                      "location": "path",
-                      "type": "string",
-                      "required": true
-                    }
-                  },
-                  "scopes": [
-                    "https://www.googleapis.com/auth/bigquery",
-                    "https://www.googleapis.com/auth/cloud-platform"
-                  ]
-                },
-                "merge": {
-                  "request": {
-                    "$ref": "MergeCapacityCommitmentsRequest"
-                  },
-                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/capacityCommitments:merge",
-                  "path": "v1beta1/{+parent}/capacityCommitments:merge",
-                  "parameters": {
-                    "parent": {
-                      "type": "string",
-                      "required": true,
-                      "pattern": "^projects/[^/]+/locations/[^/]+$",
-                      "description": "Parent resource that identifies admin project and location e.g., `projects/myproject/locations/us`",
-                      "location": "path"
-                    }
-                  },
-                  "scopes": [
-                    "https://www.googleapis.com/auth/bigquery",
-                    "https://www.googleapis.com/auth/cloud-platform"
-                  ],
-                  "id": "bigqueryreservation.projects.locations.capacityCommitments.merge",
-                  "response": {
-                    "$ref": "CapacityCommitment"
-                  },
-                  "parameterOrder": [
-                    "parent"
-                  ],
-                  "description": "Merges capacity commitments of the same plan into a single commitment. The resulting capacity commitment has the greater commitment_end_time out of the to-be-merged capacity commitments. Attempting to merge capacity commitments of different plan will fail with the error code `google.rpc.Code.FAILED_PRECONDITION`.",
-                  "httpMethod": "POST"
-                },
-                "get": {
-                  "description": "Returns information about the capacity commitment.",
-                  "parameterOrder": [
-                    "name"
-                  ],
-                  "httpMethod": "GET",
-                  "parameters": {
-                    "name": {
-                      "pattern": "^projects/[^/]+/locations/[^/]+/capacityCommitments/[^/]+$",
-                      "required": true,
-                      "location": "path",
-                      "description": "Required. Resource name of the capacity commitment to retrieve. E.g., `projects/myproject/locations/US/capacityCommitments/123`",
-                      "type": "string"
-                    }
-                  },
-                  "id": "bigqueryreservation.projects.locations.capacityCommitments.get",
-                  "scopes": [
-                    "https://www.googleapis.com/auth/bigquery",
-                    "https://www.googleapis.com/auth/cloud-platform"
-                  ],
-                  "path": "v1beta1/{+name}",
-                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/capacityCommitments/{capacityCommitmentsId}",
-                  "response": {
-                    "$ref": "CapacityCommitment"
-                  }
-                },
-                "list": {
-                  "description": "Lists all the capacity commitments for the admin project.",
-                  "response": {
-                    "$ref": "ListCapacityCommitmentsResponse"
-                  },
-                  "parameterOrder": [
-                    "parent"
-                  ],
-                  "scopes": [
-                    "https://www.googleapis.com/auth/bigquery",
-                    "https://www.googleapis.com/auth/cloud-platform"
-                  ],
-                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/capacityCommitments",
-                  "parameters": {
-                    "pageSize": {
-                      "location": "query",
-                      "description": "The maximum number of items to return.",
-                      "format": "int32",
-                      "type": "integer"
-                    },
-                    "pageToken": {
-                      "description": "The next_page_token value returned from a previous List request, if any.",
-                      "type": "string",
-                      "location": "query"
-                    },
-                    "parent": {
-                      "type": "string",
-                      "location": "path",
-                      "required": true,
-                      "description": "Required. Resource name of the parent reservation. E.g., `projects/myproject/locations/US`",
-                      "pattern": "^projects/[^/]+/locations/[^/]+$"
-                    }
-                  },
-                  "httpMethod": "GET",
-                  "path": "v1beta1/{+parent}/capacityCommitments",
-                  "id": "bigqueryreservation.projects.locations.capacityCommitments.list"
-                },
-                "split": {
-                  "scopes": [
-                    "https://www.googleapis.com/auth/bigquery",
-                    "https://www.googleapis.com/auth/cloud-platform"
-                  ],
-                  "parameters": {
-                    "name": {
-                      "location": "path",
-                      "pattern": "^projects/[^/]+/locations/[^/]+/capacityCommitments/[^/]+$",
-                      "description": "Required. The resource name e.g.,: `projects/myproject/locations/US/capacityCommitments/123`",
-                      "required": true,
-                      "type": "string"
-                    }
-                  },
-                  "httpMethod": "POST",
-                  "response": {
-                    "$ref": "SplitCapacityCommitmentResponse"
-                  },
-                  "id": "bigqueryreservation.projects.locations.capacityCommitments.split",
-                  "parameterOrder": [
-                    "name"
-                  ],
-                  "path": "v1beta1/{+name}:split",
-                  "request": {
-                    "$ref": "SplitCapacityCommitmentRequest"
-                  },
-                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/capacityCommitments/{capacityCommitmentsId}:split",
-                  "description": "Splits capacity commitment to two commitments of the same plan and `commitment_end_time`. A common use case is to enable downgrading commitments. For example, in order to downgrade from 10000 slots to 8000, you might split a 10000 capacity commitment into commitments of 2000 and 8000. Then, you would change the plan of the first one to `FLEX` and then delete it."
-                },
-                "patch": {
-                  "parameterOrder": [
-                    "name"
-                  ],
-                  "description": "Updates an existing capacity commitment. Only `plan` and `renewal_plan` fields can be updated. Plan can only be changed to a plan of a longer commitment period. Attempting to change to a plan with shorter commitment period will fail with the error code `google.rpc.Code.FAILED_PRECONDITION`.",
-                  "httpMethod": "PATCH",
-                  "scopes": [
-                    "https://www.googleapis.com/auth/bigquery",
-                    "https://www.googleapis.com/auth/cloud-platform"
-                  ],
-                  "id": "bigqueryreservation.projects.locations.capacityCommitments.patch",
-                  "request": {
-                    "$ref": "CapacityCommitment"
-                  },
-                  "parameters": {
-                    "updateMask": {
-                      "type": "string",
-                      "format": "google-fieldmask",
-                      "location": "query",
-                      "description": "Standard field mask for the set of fields to be updated."
-                    },
-                    "name": {
-                      "required": true,
-                      "description": "Output only. The resource name of the capacity commitment, e.g., `projects/myproject/locations/US/capacityCommitments/123`",
-                      "type": "string",
-                      "pattern": "^projects/[^/]+/locations/[^/]+/capacityCommitments/[^/]+$",
-                      "location": "path"
-                    }
-                  },
-                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/capacityCommitments/{capacityCommitmentsId}",
-                  "response": {
-                    "$ref": "CapacityCommitment"
-                  },
-                  "path": "v1beta1/{+name}"
-                },
-                "create": {
-                  "parameterOrder": [
-                    "parent"
-                  ],
-                  "id": "bigqueryreservation.projects.locations.capacityCommitments.create",
-                  "request": {
-                    "$ref": "CapacityCommitment"
-                  },
-                  "parameters": {
-                    "capacityCommitmentId": {
-                      "type": "string",
-                      "location": "query",
-                      "description": "The optional capacity commitment ID. Capacity commitment name will be generated automatically if this field is empty. This field must only contain lower case alphanumeric characters or dash. Max length is 64 characters. NOTE: this ID won't be kept if the capacity commitment is split or merged."
-                    },
-                    "parent": {
-                      "pattern": "^projects/[^/]+/locations/[^/]+$",
-                      "required": true,
-                      "type": "string",
-                      "location": "path",
-                      "description": "Required. Resource name of the parent reservation. E.g., `projects/myproject/locations/US`"
-                    },
-                    "enforceSingleAdminProjectPerOrg": {
-                      "description": "If true, fail the request if another project in the organization has a capacity commitment.",
-                      "type": "boolean",
-                      "location": "query"
-                    }
-                  },
-                  "description": "Creates a new capacity commitment resource.",
-                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/capacityCommitments",
-                  "scopes": [
-                    "https://www.googleapis.com/auth/bigquery",
-                    "https://www.googleapis.com/auth/cloud-platform"
-                  ],
-                  "httpMethod": "POST",
-                  "path": "v1beta1/{+parent}/capacityCommitments",
-                  "response": {
-                    "$ref": "CapacityCommitment"
-                  }
-                }
-              }
-            }
-          },
-          "methods": {
-            "updateBiReservation": {
-              "path": "v1beta1/{+name}",
-              "parameters": {
-                "updateMask": {
-                  "description": "A list of fields to be updated in this request.",
-                  "format": "google-fieldmask",
-                  "type": "string",
-                  "location": "query"
-                },
-                "name": {
-                  "pattern": "^projects/[^/]+/locations/[^/]+/biReservation$",
-                  "location": "path",
-                  "description": "The resource name of the singleton BI reservation. Reservation names have the form `projects/{project_id}/locations/{location_id}/biReservation`.",
-                  "type": "string",
-                  "required": true
-                }
-              },
-              "description": "Updates a BI reservation. Only fields specified in the `field_mask` are updated. A singleton BI reservation always exists with default size 0. In order to reserve BI capacity it needs to be updated to an amount greater than 0. In order to release BI capacity reservation size must be set to 0.",
-              "httpMethod": "PATCH",
-              "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/biReservation",
-              "parameterOrder": [
-                "name"
-              ],
-              "request": {
-                "$ref": "BiReservation"
-              },
-              "scopes": [
-                "https://www.googleapis.com/auth/bigquery",
-                "https://www.googleapis.com/auth/cloud-platform"
-              ],
-              "id": "bigqueryreservation.projects.locations.updateBiReservation",
-              "response": {
-                "$ref": "BiReservation"
-              }
-            },
-            "getBiReservation": {
-              "path": "v1beta1/{+name}",
-              "parameters": {
-                "name": {
-                  "pattern": "^projects/[^/]+/locations/[^/]+/biReservation$",
-                  "type": "string",
-                  "description": "Required. Name of the requested reservation, for example: `projects/{project_id}/locations/{location_id}/biReservation`",
-                  "required": true,
-                  "location": "path"
-                }
-              },
-              "id": "bigqueryreservation.projects.locations.getBiReservation",
-              "httpMethod": "GET",
-              "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/biReservation",
-              "response": {
-                "$ref": "BiReservation"
-              },
-              "parameterOrder": [
-                "name"
-              ],
-              "scopes": [
-                "https://www.googleapis.com/auth/bigquery",
-                "https://www.googleapis.com/auth/cloud-platform"
-              ],
-              "description": "Retrieves a BI reservation."
-            },
-            "searchAssignments": {
-              "parameterOrder": [
-                "parent"
-              ],
-              "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}:searchAssignments",
-              "httpMethod": "GET",
-              "id": "bigqueryreservation.projects.locations.searchAssignments",
-              "scopes": [
-                "https://www.googleapis.com/auth/bigquery",
-                "https://www.googleapis.com/auth/cloud-platform"
-              ],
-              "description": "Looks up assignments for a specified resource for a particular region. If the request is about a project: 1. Assignments created on the project will be returned if they exist. 2. Otherwise assignments created on the closest ancestor will be returned. 3. Assignments for different JobTypes will all be returned. The same logic applies if the request is about a folder. If the request is about an organization, then assignments created on the organization will be returned (organization doesn't have ancestors). Comparing to ListAssignments, there are some behavior differences: 1. permission on the assignee will be verified in this API. 2. Hierarchy lookup (project-\u003efolder-\u003eorganization) happens in this API. 3. Parent here is `projects/*/locations/*`, instead of `projects/*/locations/*reservations/*`. **Note** \"-\" cannot be used for projects nor locations.",
-              "parameters": {
-                "parent": {
-                  "location": "path",
-                  "required": true,
-                  "description": "Required. The resource name of the admin project(containing project and location), e.g.: `projects/myproject/locations/US`.",
-                  "pattern": "^projects/[^/]+/locations/[^/]+$",
-                  "type": "string"
-                },
-                "pageSize": {
-                  "type": "integer",
-                  "location": "query",
-                  "format": "int32",
-                  "description": "The maximum number of items to return."
-                },
-                "pageToken": {
-                  "location": "query",
-                  "description": "The next_page_token value returned from a previous List request, if any.",
-                  "type": "string"
-                },
-                "query": {
-                  "description": "Please specify resource name as assignee in the query. Examples: * `assignee=projects/myproject` * `assignee=folders/123` * `assignee=organizations/456`",
-                  "type": "string",
-                  "location": "query"
-                }
-              },
-              "path": "v1beta1/{+parent}:searchAssignments",
-              "response": {
-                "$ref": "SearchAssignmentsResponse"
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  "name": "bigqueryreservation",
-  "id": "bigqueryreservation:v1beta1",
-  "parameters": {
-    "prettyPrint": {
-      "description": "Returns response with indentations and line breaks.",
-      "location": "query",
-      "default": "true",
-      "type": "boolean"
-    },
-    "$.xgafv": {
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ],
-      "location": "query",
-      "description": "V1 error format.",
-      "enum": [
-        "1",
-        "2"
-      ],
-      "type": "string"
-    },
-    "upload_protocol": {
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
-      "location": "query"
-    },
-    "fields": {
-      "type": "string",
-      "location": "query",
-      "description": "Selector specifying which fields to include in a partial response."
-    },
-    "uploadType": {
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
-      "type": "string",
-      "location": "query"
-    },
-    "callback": {
-      "description": "JSONP",
-      "type": "string",
-      "location": "query"
-    },
-    "oauth_token": {
-      "type": "string",
-      "description": "OAuth 2.0 token for the current user.",
-      "location": "query"
-    },
-    "alt": {
-      "default": "json",
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ],
-      "type": "string",
-      "description": "Data format for response.",
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "location": "query"
-    },
-    "quotaUser": {
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
-      "location": "query",
-      "type": "string"
-    },
-    "key": {
-      "type": "string",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
-      "location": "query"
-    },
-    "access_token": {
-      "description": "OAuth access token.",
-      "location": "query",
-      "type": "string"
-    }
-  },
-  "mtlsRootUrl": "https://bigqueryreservation.mtls.googleapis.com/",
   "protocol": "rest",
-  "description": "A service to modify your BigQuery flat-rate reservations.",
-  "fullyEncodeReservedExpansion": true,
   "auth": {
     "oauth2": {
       "scopes": {
@@ -1138,5 +462,689 @@
         }
       }
     }
-  }
+  },
+  "fullyEncodeReservedExpansion": true,
+  "resources": {
+    "projects": {
+      "resources": {
+        "locations": {
+          "resources": {
+            "reservations": {
+              "methods": {
+                "patch": {
+                  "response": {
+                    "$ref": "Reservation"
+                  },
+                  "scopes": [
+                    "https://www.googleapis.com/auth/bigquery",
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "httpMethod": "PATCH",
+                  "path": "v1beta1/{+name}",
+                  "parameters": {
+                    "updateMask": {
+                      "type": "string",
+                      "description": "Standard field mask for the set of fields to be updated.",
+                      "location": "query",
+                      "format": "google-fieldmask"
+                    },
+                    "name": {
+                      "description": "The resource name of the reservation, e.g., `projects/*/locations/*/reservations/team1-prod`. For the reservation id, it must only contain lower case alphanumeric characters or dashes.It must start with a letter and must not end with a dash. Its maximum length is 64 characters.",
+                      "pattern": "^projects/[^/]+/locations/[^/]+/reservations/[^/]+$",
+                      "required": true,
+                      "type": "string",
+                      "location": "path"
+                    }
+                  },
+                  "parameterOrder": [
+                    "name"
+                  ],
+                  "description": "Updates an existing reservation resource.",
+                  "id": "bigqueryreservation.projects.locations.reservations.patch",
+                  "request": {
+                    "$ref": "Reservation"
+                  },
+                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/reservations/{reservationsId}"
+                },
+                "list": {
+                  "path": "v1beta1/{+parent}/reservations",
+                  "parameters": {
+                    "pageSize": {
+                      "description": "The maximum number of items to return.",
+                      "format": "int32",
+                      "type": "integer",
+                      "location": "query"
+                    },
+                    "filter": {
+                      "location": "query",
+                      "description": "Can be used to filter out reservations based on names, capacity, etc, e.g.: filter=\"reservation.slot_capacity \u003e 200\" filter=\"reservation.name = \\\"*dev/*\\\"\" Advanced filtering syntax can be [here](https://cloud.google.com/logging/docs/view/advanced-filters).",
+                      "type": "string"
+                    },
+                    "pageToken": {
+                      "type": "string",
+                      "location": "query",
+                      "description": "The next_page_token value returned from a previous List request, if any."
+                    },
+                    "parent": {
+                      "pattern": "^projects/[^/]+/locations/[^/]+$",
+                      "required": true,
+                      "type": "string",
+                      "location": "path",
+                      "description": "Required. The parent resource name containing project and location, e.g.: `projects/myproject/locations/US`"
+                    }
+                  },
+                  "id": "bigqueryreservation.projects.locations.reservations.list",
+                  "parameterOrder": [
+                    "parent"
+                  ],
+                  "response": {
+                    "$ref": "ListReservationsResponse"
+                  },
+                  "scopes": [
+                    "https://www.googleapis.com/auth/bigquery",
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "description": "Lists all the reservations for the project in the specified location.",
+                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/reservations",
+                  "httpMethod": "GET"
+                },
+                "get": {
+                  "httpMethod": "GET",
+                  "response": {
+                    "$ref": "Reservation"
+                  },
+                  "scopes": [
+                    "https://www.googleapis.com/auth/bigquery",
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "id": "bigqueryreservation.projects.locations.reservations.get",
+                  "parameters": {
+                    "name": {
+                      "location": "path",
+                      "description": "Required. Resource name of the reservation to retrieve. E.g., `projects/myproject/locations/US/reservations/team1-prod`",
+                      "pattern": "^projects/[^/]+/locations/[^/]+/reservations/[^/]+$",
+                      "required": true,
+                      "type": "string"
+                    }
+                  },
+                  "parameterOrder": [
+                    "name"
+                  ],
+                  "description": "Returns information about the reservation.",
+                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/reservations/{reservationsId}",
+                  "path": "v1beta1/{+name}"
+                },
+                "delete": {
+                  "response": {
+                    "$ref": "Empty"
+                  },
+                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/reservations/{reservationsId}",
+                  "scopes": [
+                    "https://www.googleapis.com/auth/bigquery",
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "path": "v1beta1/{+name}",
+                  "parameters": {
+                    "name": {
+                      "location": "path",
+                      "pattern": "^projects/[^/]+/locations/[^/]+/reservations/[^/]+$",
+                      "description": "Required. Resource name of the reservation to retrieve. E.g., `projects/myproject/locations/US/reservations/team1-prod`",
+                      "required": true,
+                      "type": "string"
+                    }
+                  },
+                  "httpMethod": "DELETE",
+                  "parameterOrder": [
+                    "name"
+                  ],
+                  "description": "Deletes a reservation. Returns `google.rpc.Code.FAILED_PRECONDITION` when reservation has assignments.",
+                  "id": "bigqueryreservation.projects.locations.reservations.delete"
+                },
+                "create": {
+                  "httpMethod": "POST",
+                  "path": "v1beta1/{+parent}/reservations",
+                  "parameterOrder": [
+                    "parent"
+                  ],
+                  "scopes": [
+                    "https://www.googleapis.com/auth/bigquery",
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "parameters": {
+                    "reservationId": {
+                      "type": "string",
+                      "description": "The reservation ID. It must only contain lower case alphanumeric characters or dashes.It must start with a letter and must not end with a dash. Its maximum length is 64 characters.",
+                      "location": "query"
+                    },
+                    "parent": {
+                      "location": "path",
+                      "type": "string",
+                      "pattern": "^projects/[^/]+/locations/[^/]+$",
+                      "required": true,
+                      "description": "Required. Project, location. E.g., `projects/myproject/locations/US`"
+                    }
+                  },
+                  "id": "bigqueryreservation.projects.locations.reservations.create",
+                  "response": {
+                    "$ref": "Reservation"
+                  },
+                  "description": "Creates a new reservation resource.",
+                  "request": {
+                    "$ref": "Reservation"
+                  },
+                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/reservations"
+                }
+              },
+              "resources": {
+                "assignments": {
+                  "methods": {
+                    "patch": {
+                      "id": "bigqueryreservation.projects.locations.reservations.assignments.patch",
+                      "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/reservations/{reservationsId}/assignments/{assignmentsId}",
+                      "path": "v1beta1/{+name}",
+                      "response": {
+                        "$ref": "Assignment"
+                      },
+                      "parameters": {
+                        "name": {
+                          "pattern": "^projects/[^/]+/locations/[^/]+/reservations/[^/]+/assignments/[^/]+$",
+                          "location": "path",
+                          "description": "Output only. Name of the resource. E.g.: `projects/myproject/locations/US/reservations/team1-prod/assignments/123`. For the assignment id, it must only contain lower case alphanumeric characters or dashes and the max length is 64 characters.",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "updateMask": {
+                          "type": "string",
+                          "description": "Standard field mask for the set of fields to be updated.",
+                          "format": "google-fieldmask",
+                          "location": "query"
+                        }
+                      },
+                      "httpMethod": "PATCH",
+                      "parameterOrder": [
+                        "name"
+                      ],
+                      "scopes": [
+                        "https://www.googleapis.com/auth/bigquery",
+                        "https://www.googleapis.com/auth/cloud-platform"
+                      ],
+                      "description": "Updates an existing assignment. Only the `priority` field can be updated.",
+                      "request": {
+                        "$ref": "Assignment"
+                      }
+                    },
+                    "list": {
+                      "path": "v1beta1/{+parent}/assignments",
+                      "scopes": [
+                        "https://www.googleapis.com/auth/bigquery",
+                        "https://www.googleapis.com/auth/cloud-platform"
+                      ],
+                      "parameters": {
+                        "pageToken": {
+                          "type": "string",
+                          "location": "query",
+                          "description": "The next_page_token value returned from a previous List request, if any."
+                        },
+                        "pageSize": {
+                          "location": "query",
+                          "type": "integer",
+                          "format": "int32",
+                          "description": "The maximum number of items to return."
+                        },
+                        "parent": {
+                          "location": "path",
+                          "description": "Required. The parent resource name e.g.: `projects/myproject/locations/US/reservations/team1-prod` Or: `projects/myproject/locations/US/reservations/-`",
+                          "required": true,
+                          "type": "string",
+                          "pattern": "^projects/[^/]+/locations/[^/]+/reservations/[^/]+$"
+                        }
+                      },
+                      "description": "Lists assignments. Only explicitly created assignments will be returned. Example: * Organization `organizationA` contains two projects, `project1` and `project2`. * Reservation `res1` exists and was created previously. * CreateAssignment was used previously to define the following associations between entities and reservations: `` and `` In this example, ListAssignments will just return the above two assignments for reservation `res1`, and no expansion/merge will happen. The wildcard \"-\" can be used for reservations in the request. In that case all assignments belongs to the specified project and location will be listed. **Note** \"-\" cannot be used for projects nor locations.",
+                      "httpMethod": "GET",
+                      "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/reservations/{reservationsId}/assignments",
+                      "response": {
+                        "$ref": "ListAssignmentsResponse"
+                      },
+                      "id": "bigqueryreservation.projects.locations.reservations.assignments.list",
+                      "parameterOrder": [
+                        "parent"
+                      ]
+                    },
+                    "move": {
+                      "path": "v1beta1/{+name}:move",
+                      "request": {
+                        "$ref": "MoveAssignmentRequest"
+                      },
+                      "httpMethod": "POST",
+                      "parameters": {
+                        "name": {
+                          "required": true,
+                          "pattern": "^projects/[^/]+/locations/[^/]+/reservations/[^/]+/assignments/[^/]+$",
+                          "description": "Required. The resource name of the assignment, e.g. `projects/myproject/locations/US/reservations/team1-prod/assignments/123`",
+                          "location": "path",
+                          "type": "string"
+                        }
+                      },
+                      "parameterOrder": [
+                        "name"
+                      ],
+                      "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/reservations/{reservationsId}/assignments/{assignmentsId}:move",
+                      "description": "Moves an assignment under a new reservation. This differs from removing an existing assignment and recreating a new one by providing a transactional change that ensures an assignee always has an associated reservation.",
+                      "scopes": [
+                        "https://www.googleapis.com/auth/bigquery",
+                        "https://www.googleapis.com/auth/cloud-platform"
+                      ],
+                      "response": {
+                        "$ref": "Assignment"
+                      },
+                      "id": "bigqueryreservation.projects.locations.reservations.assignments.move"
+                    },
+                    "create": {
+                      "path": "v1beta1/{+parent}/assignments",
+                      "description": "Creates an assignment object which allows the given project to submit jobs of a certain type using slots from the specified reservation. Currently a resource (project, folder, organization) can only have one assignment per each (job_type, location) combination, and that reservation will be used for all jobs of the matching type. Different assignments can be created on different levels of the projects, folders or organization hierarchy. During query execution, the assignment is looked up at the project, folder and organization levels in that order. The first assignment found is applied to the query. When creating assignments, it does not matter if other assignments exist at higher levels. Example: * The organization `organizationA` contains two projects, `project1` and `project2`. * Assignments for all three entities (`organizationA`, `project1`, and `project2`) could all be created and mapped to the same or different reservations. \"None\" assignments represent an absence of the assignment. Projects assigned to None use on-demand pricing. To create a \"None\" assignment, use \"none\" as a reservation_id in the parent. Example parent: `projects/myproject/locations/US/reservations/none`. Returns `google.rpc.Code.PERMISSION_DENIED` if user does not have 'bigquery.admin' permissions on the project using the reservation and the project that owns this reservation. Returns `google.rpc.Code.INVALID_ARGUMENT` when location of the assignment does not match location of the reservation.",
+                      "parameterOrder": [
+                        "parent"
+                      ],
+                      "response": {
+                        "$ref": "Assignment"
+                      },
+                      "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/reservations/{reservationsId}/assignments",
+                      "httpMethod": "POST",
+                      "scopes": [
+                        "https://www.googleapis.com/auth/bigquery",
+                        "https://www.googleapis.com/auth/cloud-platform"
+                      ],
+                      "request": {
+                        "$ref": "Assignment"
+                      },
+                      "parameters": {
+                        "parent": {
+                          "description": "Required. The parent resource name of the assignment E.g. `projects/myproject/locations/US/reservations/team1-prod`",
+                          "type": "string",
+                          "pattern": "^projects/[^/]+/locations/[^/]+/reservations/[^/]+$",
+                          "location": "path",
+                          "required": true
+                        },
+                        "assignmentId": {
+                          "description": "The optional assignment ID. Assignment name will be generated automatically if this field is empty. This field must only contain lower case alphanumeric characters or dashes. Max length is 64 characters.",
+                          "type": "string",
+                          "location": "query"
+                        }
+                      },
+                      "id": "bigqueryreservation.projects.locations.reservations.assignments.create"
+                    },
+                    "delete": {
+                      "parameterOrder": [
+                        "name"
+                      ],
+                      "description": "Deletes a assignment. No expansion will happen. Example: * Organization `organizationA` contains two projects, `project1` and `project2`. * Reservation `res1` exists and was created previously. * CreateAssignment was used previously to define the following associations between entities and reservations: `` and `` In this example, deletion of the `` assignment won't affect the other assignment ``. After said deletion, queries from `project1` will still use `res1` while queries from `project2` will switch to use on-demand mode.",
+                      "id": "bigqueryreservation.projects.locations.reservations.assignments.delete",
+                      "httpMethod": "DELETE",
+                      "response": {
+                        "$ref": "Empty"
+                      },
+                      "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/reservations/{reservationsId}/assignments/{assignmentsId}",
+                      "scopes": [
+                        "https://www.googleapis.com/auth/bigquery",
+                        "https://www.googleapis.com/auth/cloud-platform"
+                      ],
+                      "path": "v1beta1/{+name}",
+                      "parameters": {
+                        "name": {
+                          "location": "path",
+                          "description": "Required. Name of the resource, e.g. `projects/myproject/locations/US/reservations/team1-prod/assignments/123`",
+                          "type": "string",
+                          "pattern": "^projects/[^/]+/locations/[^/]+/reservations/[^/]+/assignments/[^/]+$",
+                          "required": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "capacityCommitments": {
+              "methods": {
+                "create": {
+                  "response": {
+                    "$ref": "CapacityCommitment"
+                  },
+                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/capacityCommitments",
+                  "parameters": {
+                    "capacityCommitmentId": {
+                      "type": "string",
+                      "description": "The optional capacity commitment ID. Capacity commitment name will be generated automatically if this field is empty. This field must only contain lower case alphanumeric characters or dashes. The first and last character cannot be a dash. Max length is 64 characters. NOTE: this ID won't be kept if the capacity commitment is split or merged.",
+                      "location": "query"
+                    },
+                    "parent": {
+                      "required": true,
+                      "description": "Required. Resource name of the parent reservation. E.g., `projects/myproject/locations/US`",
+                      "type": "string",
+                      "location": "path",
+                      "pattern": "^projects/[^/]+/locations/[^/]+$"
+                    },
+                    "enforceSingleAdminProjectPerOrg": {
+                      "location": "query",
+                      "type": "boolean",
+                      "description": "If true, fail the request if another project in the organization has a capacity commitment."
+                    }
+                  },
+                  "httpMethod": "POST",
+                  "path": "v1beta1/{+parent}/capacityCommitments",
+                  "request": {
+                    "$ref": "CapacityCommitment"
+                  },
+                  "parameterOrder": [
+                    "parent"
+                  ],
+                  "id": "bigqueryreservation.projects.locations.capacityCommitments.create",
+                  "scopes": [
+                    "https://www.googleapis.com/auth/bigquery",
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "description": "Creates a new capacity commitment resource."
+                },
+                "delete": {
+                  "httpMethod": "DELETE",
+                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/capacityCommitments/{capacityCommitmentsId}",
+                  "path": "v1beta1/{+name}",
+                  "parameterOrder": [
+                    "name"
+                  ],
+                  "scopes": [
+                    "https://www.googleapis.com/auth/bigquery",
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "response": {
+                    "$ref": "Empty"
+                  },
+                  "description": "Deletes a capacity commitment. Attempting to delete capacity commitment before its commitment_end_time will fail with the error code `google.rpc.Code.FAILED_PRECONDITION`.",
+                  "id": "bigqueryreservation.projects.locations.capacityCommitments.delete",
+                  "parameters": {
+                    "force": {
+                      "location": "query",
+                      "type": "boolean",
+                      "description": "Can be used to force delete commitments even if assignments exist. Deleting commitments with assignments may cause queries to fail if they no longer have access to slots."
+                    },
+                    "name": {
+                      "description": "Required. Resource name of the capacity commitment to delete. E.g., `projects/myproject/locations/US/capacityCommitments/123`",
+                      "pattern": "^projects/[^/]+/locations/[^/]+/capacityCommitments/[^/]+$",
+                      "required": true,
+                      "location": "path",
+                      "type": "string"
+                    }
+                  }
+                },
+                "list": {
+                  "description": "Lists all the capacity commitments for the admin project.",
+                  "path": "v1beta1/{+parent}/capacityCommitments",
+                  "response": {
+                    "$ref": "ListCapacityCommitmentsResponse"
+                  },
+                  "httpMethod": "GET",
+                  "parameterOrder": [
+                    "parent"
+                  ],
+                  "scopes": [
+                    "https://www.googleapis.com/auth/bigquery",
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "id": "bigqueryreservation.projects.locations.capacityCommitments.list",
+                  "parameters": {
+                    "pageToken": {
+                      "type": "string",
+                      "description": "The next_page_token value returned from a previous List request, if any.",
+                      "location": "query"
+                    },
+                    "parent": {
+                      "type": "string",
+                      "pattern": "^projects/[^/]+/locations/[^/]+$",
+                      "required": true,
+                      "location": "path",
+                      "description": "Required. Resource name of the parent reservation. E.g., `projects/myproject/locations/US`"
+                    },
+                    "pageSize": {
+                      "type": "integer",
+                      "location": "query",
+                      "format": "int32",
+                      "description": "The maximum number of items to return."
+                    }
+                  },
+                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/capacityCommitments"
+                },
+                "merge": {
+                  "parameters": {
+                    "parent": {
+                      "type": "string",
+                      "location": "path",
+                      "description": "Parent resource that identifies admin project and location e.g., `projects/myproject/locations/us`",
+                      "pattern": "^projects/[^/]+/locations/[^/]+$",
+                      "required": true
+                    }
+                  },
+                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/capacityCommitments:merge",
+                  "path": "v1beta1/{+parent}/capacityCommitments:merge",
+                  "httpMethod": "POST",
+                  "scopes": [
+                    "https://www.googleapis.com/auth/bigquery",
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "description": "Merges capacity commitments of the same plan into a single commitment. The resulting capacity commitment has the greater commitment_end_time out of the to-be-merged capacity commitments. Attempting to merge capacity commitments of different plan will fail with the error code `google.rpc.Code.FAILED_PRECONDITION`.",
+                  "id": "bigqueryreservation.projects.locations.capacityCommitments.merge",
+                  "parameterOrder": [
+                    "parent"
+                  ],
+                  "request": {
+                    "$ref": "MergeCapacityCommitmentsRequest"
+                  },
+                  "response": {
+                    "$ref": "CapacityCommitment"
+                  }
+                },
+                "get": {
+                  "scopes": [
+                    "https://www.googleapis.com/auth/bigquery",
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "parameters": {
+                    "name": {
+                      "description": "Required. Resource name of the capacity commitment to retrieve. E.g., `projects/myproject/locations/US/capacityCommitments/123`",
+                      "type": "string",
+                      "required": true,
+                      "pattern": "^projects/[^/]+/locations/[^/]+/capacityCommitments/[^/]+$",
+                      "location": "path"
+                    }
+                  },
+                  "response": {
+                    "$ref": "CapacityCommitment"
+                  },
+                  "description": "Returns information about the capacity commitment.",
+                  "path": "v1beta1/{+name}",
+                  "parameterOrder": [
+                    "name"
+                  ],
+                  "httpMethod": "GET",
+                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/capacityCommitments/{capacityCommitmentsId}",
+                  "id": "bigqueryreservation.projects.locations.capacityCommitments.get"
+                },
+                "patch": {
+                  "description": "Updates an existing capacity commitment. Only `plan` and `renewal_plan` fields can be updated. Plan can only be changed to a plan of a longer commitment period. Attempting to change to a plan with shorter commitment period will fail with the error code `google.rpc.Code.FAILED_PRECONDITION`.",
+                  "scopes": [
+                    "https://www.googleapis.com/auth/bigquery",
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "request": {
+                    "$ref": "CapacityCommitment"
+                  },
+                  "parameterOrder": [
+                    "name"
+                  ],
+                  "response": {
+                    "$ref": "CapacityCommitment"
+                  },
+                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/capacityCommitments/{capacityCommitmentsId}",
+                  "httpMethod": "PATCH",
+                  "id": "bigqueryreservation.projects.locations.capacityCommitments.patch",
+                  "parameters": {
+                    "updateMask": {
+                      "format": "google-fieldmask",
+                      "location": "query",
+                      "type": "string",
+                      "description": "Standard field mask for the set of fields to be updated."
+                    },
+                    "name": {
+                      "location": "path",
+                      "type": "string",
+                      "pattern": "^projects/[^/]+/locations/[^/]+/capacityCommitments/[^/]+$",
+                      "description": "Output only. The resource name of the capacity commitment, e.g., `projects/myproject/locations/US/capacityCommitments/123` For the commitment id, it must only contain lower case alphanumeric characters or dashes.It must start with a letter and must not end with a dash. Its maximum length is 64 characters.",
+                      "required": true
+                    }
+                  },
+                  "path": "v1beta1/{+name}"
+                },
+                "split": {
+                  "id": "bigqueryreservation.projects.locations.capacityCommitments.split",
+                  "request": {
+                    "$ref": "SplitCapacityCommitmentRequest"
+                  },
+                  "path": "v1beta1/{+name}:split",
+                  "parameterOrder": [
+                    "name"
+                  ],
+                  "httpMethod": "POST",
+                  "scopes": [
+                    "https://www.googleapis.com/auth/bigquery",
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "response": {
+                    "$ref": "SplitCapacityCommitmentResponse"
+                  },
+                  "parameters": {
+                    "name": {
+                      "location": "path",
+                      "required": true,
+                      "type": "string",
+                      "description": "Required. The resource name e.g.,: `projects/myproject/locations/US/capacityCommitments/123`",
+                      "pattern": "^projects/[^/]+/locations/[^/]+/capacityCommitments/[^/]+$"
+                    }
+                  },
+                  "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/capacityCommitments/{capacityCommitmentsId}:split",
+                  "description": "Splits capacity commitment to two commitments of the same plan and `commitment_end_time`. A common use case is to enable downgrading commitments. For example, in order to downgrade from 10000 slots to 8000, you might split a 10000 capacity commitment into commitments of 2000 and 8000. Then, you would change the plan of the first one to `FLEX` and then delete it."
+                }
+              }
+            }
+          },
+          "methods": {
+            "searchAssignments": {
+              "httpMethod": "GET",
+              "parameters": {
+                "query": {
+                  "description": "Please specify resource name as assignee in the query. Examples: * `assignee=projects/myproject` * `assignee=folders/123` * `assignee=organizations/456`",
+                  "type": "string",
+                  "location": "query"
+                },
+                "pageToken": {
+                  "type": "string",
+                  "location": "query",
+                  "description": "The next_page_token value returned from a previous List request, if any."
+                },
+                "pageSize": {
+                  "description": "The maximum number of items to return.",
+                  "format": "int32",
+                  "location": "query",
+                  "type": "integer"
+                },
+                "parent": {
+                  "pattern": "^projects/[^/]+/locations/[^/]+$",
+                  "required": true,
+                  "type": "string",
+                  "location": "path",
+                  "description": "Required. The resource name of the admin project(containing project and location), e.g.: `projects/myproject/locations/US`."
+                }
+              },
+              "path": "v1beta1/{+parent}:searchAssignments",
+              "parameterOrder": [
+                "parent"
+              ],
+              "id": "bigqueryreservation.projects.locations.searchAssignments",
+              "scopes": [
+                "https://www.googleapis.com/auth/bigquery",
+                "https://www.googleapis.com/auth/cloud-platform"
+              ],
+              "response": {
+                "$ref": "SearchAssignmentsResponse"
+              },
+              "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}:searchAssignments",
+              "description": "Looks up assignments for a specified resource for a particular region. If the request is about a project: 1. Assignments created on the project will be returned if they exist. 2. Otherwise assignments created on the closest ancestor will be returned. 3. Assignments for different JobTypes will all be returned. The same logic applies if the request is about a folder. If the request is about an organization, then assignments created on the organization will be returned (organization doesn't have ancestors). Comparing to ListAssignments, there are some behavior differences: 1. permission on the assignee will be verified in this API. 2. Hierarchy lookup (project-\u003efolder-\u003eorganization) happens in this API. 3. Parent here is `projects/*/locations/*`, instead of `projects/*/locations/*reservations/*`. **Note** \"-\" cannot be used for projects nor locations."
+            },
+            "updateBiReservation": {
+              "httpMethod": "PATCH",
+              "description": "Updates a BI reservation. Only fields specified in the `field_mask` are updated. A singleton BI reservation always exists with default size 0. In order to reserve BI capacity it needs to be updated to an amount greater than 0. In order to release BI capacity reservation size must be set to 0.",
+              "response": {
+                "$ref": "BiReservation"
+              },
+              "id": "bigqueryreservation.projects.locations.updateBiReservation",
+              "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/biReservation",
+              "path": "v1beta1/{+name}",
+              "parameterOrder": [
+                "name"
+              ],
+              "parameters": {
+                "updateMask": {
+                  "type": "string",
+                  "format": "google-fieldmask",
+                  "description": "A list of fields to be updated in this request.",
+                  "location": "query"
+                },
+                "name": {
+                  "pattern": "^projects/[^/]+/locations/[^/]+/biReservation$",
+                  "description": "The resource name of the singleton BI reservation. Reservation names have the form `projects/{project_id}/locations/{location_id}/biReservation`.",
+                  "required": true,
+                  "location": "path",
+                  "type": "string"
+                }
+              },
+              "request": {
+                "$ref": "BiReservation"
+              },
+              "scopes": [
+                "https://www.googleapis.com/auth/bigquery",
+                "https://www.googleapis.com/auth/cloud-platform"
+              ]
+            },
+            "getBiReservation": {
+              "id": "bigqueryreservation.projects.locations.getBiReservation",
+              "path": "v1beta1/{+name}",
+              "flatPath": "v1beta1/projects/{projectsId}/locations/{locationsId}/biReservation",
+              "parameters": {
+                "name": {
+                  "pattern": "^projects/[^/]+/locations/[^/]+/biReservation$",
+                  "type": "string",
+                  "description": "Required. Name of the requested reservation, for example: `projects/{project_id}/locations/{location_id}/biReservation`",
+                  "location": "path",
+                  "required": true
+                }
+              },
+              "response": {
+                "$ref": "BiReservation"
+              },
+              "scopes": [
+                "https://www.googleapis.com/auth/bigquery",
+                "https://www.googleapis.com/auth/cloud-platform"
+              ],
+              "parameterOrder": [
+                "name"
+              ],
+              "httpMethod": "GET",
+              "description": "Retrieves a BI reservation."
+            }
+          }
+        }
+      }
+    }
+  },
+  "name": "bigqueryreservation",
+  "version": "v1beta1",
+  "documentationLink": "https://cloud.google.com/bigquery/",
+  "canonicalName": "BigQuery Reservation"
 }
