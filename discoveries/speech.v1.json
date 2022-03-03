@@ -1,287 +1,424 @@
 {
-  "kind": "discovery#restDescription",
-  "revision": "20220128",
-  "discoveryVersion": "v1",
-  "basePath": "",
-  "servicePath": "",
-  "ownerName": "Google",
-  "id": "speech:v1",
+  "mtlsRootUrl": "https://speech.mtls.googleapis.com/",
   "canonicalName": "Speech",
-  "rootUrl": "https://speech.googleapis.com/",
-  "fullyEncodeReservedExpansion": true,
+  "servicePath": "",
+  "documentationLink": "https://cloud.google.com/speech-to-text/docs/quickstart-protocol",
+  "ownerDomain": "google.com",
+  "basePath": "",
   "schemas": {
-    "WordInfo": {
-      "description": "Word-specific information for recognized words.",
+    "RecognitionAudio": {
+      "id": "RecognitionAudio",
+      "type": "object",
       "properties": {
-        "speakerTag": {
-          "format": "int32",
-          "readOnly": true,
+        "uri": {
+          "type": "string",
+          "description": "URI that points to a file that contains audio data bytes as specified in `RecognitionConfig`. The file must not be compressed (for example, gzip). Currently, only Google Cloud Storage URIs are supported, which must be specified in the following format: `gs://bucket_name/object_name` (other URI formats return google.rpc.Code.INVALID_ARGUMENT). For more information, see [Request URIs](https://cloud.google.com/storage/docs/reference-uris)."
+        },
+        "content": {
+          "format": "byte",
+          "description": "The audio data bytes encoded as specified in `RecognitionConfig`. Note: as with all bytes fields, proto buffers use a pure binary representation, whereas JSON representations use base64.",
+          "type": "string"
+        }
+      },
+      "description": "Contains audio data in the encoding specified in the `RecognitionConfig`. Either `content` or `uri` must be supplied. Supplying both or neither returns google.rpc.Code.INVALID_ARGUMENT. See [content limits](https://cloud.google.com/speech-to-text/quotas#content)."
+    },
+    "SpeakerDiarizationConfig": {
+      "type": "object",
+      "description": "Config to enable speaker diarization.",
+      "properties": {
+        "maxSpeakerCount": {
+          "description": "Maximum number of speakers in the conversation. This range gives you more flexibility by allowing the system to automatically determine the correct number of speakers. If not set, the default value is 6.",
           "type": "integer",
-          "description": "Output only. A distinct integer value is assigned for every speaker within the audio. This field specifies which one of those speakers was detected to have spoken this word. Value ranges from '1' to diarization_speaker_count. speaker_tag is set if enable_speaker_diarization = 'true' and only in the top alternative."
+          "format": "int32"
         },
-        "confidence": {
-          "description": "The confidence estimate between 0.0 and 1.0. A higher number indicates an estimated greater likelihood that the recognized words are correct. This field is set only for the top alternative of a non-streaming result or, of a streaming result where `is_final=true`. This field is not guaranteed to be accurate and users should not rely on it to be always provided. The default of 0.0 is a sentinel value indicating `confidence` was not set.",
-          "type": "number",
-          "format": "float"
+        "enableSpeakerDiarization": {
+          "type": "boolean",
+          "description": "If 'true', enables speaker detection for each recognized word in the top alternative of the recognition result using a speaker_tag provided in the WordInfo."
         },
-        "startTime": {
-          "type": "string",
-          "description": "Time offset relative to the beginning of the audio, and corresponding to the start of the spoken word. This field is only set if `enable_word_time_offsets=true` and only in the top hypothesis. This is an experimental feature and the accuracy of the time offset can vary.",
-          "format": "google-duration"
+        "minSpeakerCount": {
+          "description": "Minimum number of speakers in the conversation. This range gives you more flexibility by allowing the system to automatically determine the correct number of speakers. If not set, the default value is 2.",
+          "type": "integer",
+          "format": "int32"
         },
-        "endTime": {
-          "type": "string",
-          "format": "google-duration",
-          "description": "Time offset relative to the beginning of the audio, and corresponding to the end of the spoken word. This field is only set if `enable_word_time_offsets=true` and only in the top hypothesis. This is an experimental feature and the accuracy of the time offset can vary."
-        },
-        "word": {
-          "type": "string",
-          "description": "The word corresponding to this set of information."
+        "speakerTag": {
+          "readOnly": true,
+          "format": "int32",
+          "type": "integer",
+          "description": "Output only. Unused."
         }
       },
-      "id": "WordInfo",
-      "type": "object"
-    },
-    "ListCustomClassesResponse": {
-      "id": "ListCustomClassesResponse",
-      "type": "object",
-      "description": "Message returned to the client by the `ListCustomClasses` method.",
-      "properties": {
-        "customClasses": {
-          "description": "The custom classes.",
-          "items": {
-            "$ref": "CustomClass"
-          },
-          "type": "array"
-        },
-        "nextPageToken": {
-          "type": "string",
-          "description": "A token, which can be sent as `page_token` to retrieve the next page. If this field is omitted, there are no subsequent pages."
-        }
-      }
-    },
-    "CreatePhraseSetRequest": {
-      "properties": {
-        "phraseSetId": {
-          "description": "Required. The ID to use for the phrase set, which will become the final component of the phrase set's resource name. This value should be 4-63 characters, and valid characters are /a-z-/.",
-          "type": "string"
-        },
-        "phraseSet": {
-          "description": "Required. The phrase set to create.",
-          "$ref": "PhraseSet"
-        }
-      },
-      "description": "Message sent by the client for the `CreatePhraseSet` method.",
-      "type": "object",
-      "id": "CreatePhraseSetRequest"
-    },
-    "ClassItem": {
-      "id": "ClassItem",
-      "description": "An item of the class.",
-      "properties": {
-        "value": {
-          "type": "string",
-          "description": "The class item's value."
-        }
-      },
-      "type": "object"
-    },
-    "ListOperationsResponse": {
-      "properties": {
-        "operations": {
-          "type": "array",
-          "items": {
-            "$ref": "Operation"
-          },
-          "description": "A list of operations that matches the specified filter in the request."
-        },
-        "nextPageToken": {
-          "description": "The standard List next-page token.",
-          "type": "string"
-        }
-      },
-      "id": "ListOperationsResponse",
-      "type": "object",
-      "description": "The response message for Operations.ListOperations."
-    },
-    "Empty": {
-      "description": "A generic empty message that you can re-use to avoid defining duplicated empty messages in your APIs. A typical example is to use it as the request or the response type of an API method. For instance: service Foo { rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty); } The JSON representation for `Empty` is empty JSON object `{}`.",
-      "id": "Empty",
-      "type": "object",
-      "properties": {}
-    },
-    "CreateCustomClassRequest": {
-      "properties": {
-        "customClassId": {
-          "description": "Required. The ID to use for the custom class, which will become the final component of the custom class' resource name. This value should be 4-63 characters, and valid characters are /a-z-/.",
-          "type": "string"
-        },
-        "customClass": {
-          "description": "Required. The custom class to create.",
-          "$ref": "CustomClass"
-        }
-      },
-      "description": "Message sent by the client for the `CreateCustomClass` method.",
-      "id": "CreateCustomClassRequest",
-      "type": "object"
-    },
-    "LongRunningRecognizeResponse": {
-      "type": "object",
-      "properties": {
-        "totalBilledTime": {
-          "type": "string",
-          "format": "google-duration",
-          "description": "When available, billed audio seconds for the corresponding request."
-        },
-        "results": {
-          "type": "array",
-          "items": {
-            "$ref": "SpeechRecognitionResult"
-          },
-          "description": "Sequential list of transcription results corresponding to sequential portions of audio."
-        },
-        "outputConfig": {
-          "$ref": "TranscriptOutputConfig",
-          "description": "Original output config if present in the request."
-        },
-        "outputError": {
-          "$ref": "Status",
-          "description": "If the transcript output fails this field contains the relevant error."
-        }
-      },
-      "description": "The only message returned to the client by the `LongRunningRecognize` method. It contains the result as zero or more sequential `SpeechRecognitionResult` messages. It is included in the `result.response` field of the `Operation` returned by the `GetOperation` call of the `google::longrunning::Operations` service.",
-      "id": "LongRunningRecognizeResponse"
-    },
-    "LongRunningRecognizeRequest": {
-      "description": "The top-level message sent by the client for the `LongRunningRecognize` method.",
-      "type": "object",
-      "id": "LongRunningRecognizeRequest",
-      "properties": {
-        "config": {
-          "description": "Required. Provides information to the recognizer that specifies how to process the request.",
-          "$ref": "RecognitionConfig"
-        },
-        "audio": {
-          "$ref": "RecognitionAudio",
-          "description": "Required. The audio data to be recognized."
-        },
-        "outputConfig": {
-          "$ref": "TranscriptOutputConfig",
-          "description": "Optional. Specifies an optional destination for the recognition results."
-        }
-      }
-    },
-    "TranscriptOutputConfig": {
-      "description": "Specifies an optional destination for the recognition results.",
-      "type": "object",
-      "id": "TranscriptOutputConfig",
-      "properties": {
-        "gcsUri": {
-          "description": "Specifies a Cloud Storage URI for the recognition results. Must be specified in the format: `gs://bucket_name/object_name`, and the bucket must already exist.",
-          "type": "string"
-        }
-      }
-    },
-    "PhraseSet": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "The resource name of the phrase set."
-        },
-        "boost": {
-          "type": "number",
-          "description": "Hint Boost. Positive value will increase the probability that a specific phrase will be recognized over other similar sounding phrases. The higher the boost, the higher the chance of false positive recognition as well. Negative boost values would correspond to anti-biasing. Anti-biasing is not enabled, so negative boost will simply be ignored. Though `boost` can accept a wide range of positive values, most use cases are best served with values between 0 (exclusive) and 20. We recommend using a binary search approach to finding the optimal value for your use case. Speech recognition will skip PhraseSets with a boost value of 0.",
-          "format": "float"
-        },
-        "phrases": {
-          "description": "A list of word and phrases.",
-          "type": "array",
-          "items": {
-            "$ref": "Phrase"
-          }
-        }
-      },
-      "id": "PhraseSet",
-      "description": "Provides \"hints\" to the speech recognizer to favor specific words and phrases in the results."
+      "id": "SpeakerDiarizationConfig"
     },
     "RecognizeResponse": {
-      "description": "The only message returned to the client by the `Recognize` method. It contains the result as zero or more sequential `SpeechRecognitionResult` messages.",
+      "type": "object",
+      "id": "RecognizeResponse",
       "properties": {
-        "totalBilledTime": {
-          "type": "string",
-          "format": "google-duration",
-          "description": "When available, billed audio seconds for the corresponding request."
-        },
         "results": {
           "items": {
             "$ref": "SpeechRecognitionResult"
           },
           "description": "Sequential list of transcription results corresponding to sequential portions of audio.",
           "type": "array"
+        },
+        "totalBilledTime": {
+          "format": "google-duration",
+          "type": "string",
+          "description": "When available, billed audio seconds for the corresponding request."
         }
       },
-      "id": "RecognizeResponse",
+      "description": "The only message returned to the client by the `Recognize` method. It contains the result as zero or more sequential `SpeechRecognitionResult` messages."
+    },
+    "ListPhraseSetResponse": {
+      "type": "object",
+      "properties": {
+        "nextPageToken": {
+          "description": "A token, which can be sent as `page_token` to retrieve the next page. If this field is omitted, there are no subsequent pages.",
+          "type": "string"
+        },
+        "phraseSets": {
+          "description": "The phrase set.",
+          "type": "array",
+          "items": {
+            "$ref": "PhraseSet"
+          }
+        }
+      },
+      "description": "Message returned to the client by the `ListPhraseSet` method.",
+      "id": "ListPhraseSetResponse"
+    },
+    "RecognitionMetadata": {
+      "id": "RecognitionMetadata",
+      "description": "Description of audio data to be recognized.",
+      "type": "object",
+      "properties": {
+        "originalMimeType": {
+          "description": "Mime type of the original audio file. For example `audio/m4a`, `audio/x-alaw-basic`, `audio/mp3`, `audio/3gpp`. A list of possible audio mime types is maintained at http://www.iana.org/assignments/media-types/media-types.xhtml#audio",
+          "type": "string"
+        },
+        "audioTopic": {
+          "type": "string",
+          "description": "Description of the content. Eg. \"Recordings of federal supreme court hearings from 2012\"."
+        },
+        "microphoneDistance": {
+          "enumDescriptions": [
+            "Audio type is not known.",
+            "The audio was captured from a closely placed microphone. Eg. phone, dictaphone, or handheld microphone. Generally if there speaker is within 1 meter of the microphone.",
+            "The speaker if within 3 meters of the microphone.",
+            "The speaker is more than 3 meters away from the microphone."
+          ],
+          "enum": [
+            "MICROPHONE_DISTANCE_UNSPECIFIED",
+            "NEARFIELD",
+            "MIDFIELD",
+            "FARFIELD"
+          ],
+          "description": "The audio type that most closely describes the audio being recognized.",
+          "type": "string"
+        },
+        "recordingDeviceName": {
+          "type": "string",
+          "description": "The device used to make the recording. Examples 'Nexus 5X' or 'Polycom SoundStation IP 6000' or 'POTS' or 'VoIP' or 'Cardioid Microphone'."
+        },
+        "recordingDeviceType": {
+          "description": "The type of device the speech was recorded with.",
+          "type": "string",
+          "enumDescriptions": [
+            "The recording device is unknown.",
+            "Speech was recorded on a smartphone.",
+            "Speech was recorded using a personal computer or tablet.",
+            "Speech was recorded over a phone line.",
+            "Speech was recorded in a vehicle.",
+            "Speech was recorded outdoors.",
+            "Speech was recorded indoors."
+          ],
+          "enum": [
+            "RECORDING_DEVICE_TYPE_UNSPECIFIED",
+            "SMARTPHONE",
+            "PC",
+            "PHONE_LINE",
+            "VEHICLE",
+            "OTHER_OUTDOOR_DEVICE",
+            "OTHER_INDOOR_DEVICE"
+          ]
+        },
+        "originalMediaType": {
+          "description": "The original media the speech was recorded on.",
+          "type": "string",
+          "enumDescriptions": [
+            "Unknown original media type.",
+            "The speech data is an audio recording.",
+            "The speech data originally recorded on a video."
+          ],
+          "enum": [
+            "ORIGINAL_MEDIA_TYPE_UNSPECIFIED",
+            "AUDIO",
+            "VIDEO"
+          ]
+        },
+        "industryNaicsCodeOfAudio": {
+          "description": "The industry vertical to which this speech recognition request most closely applies. This is most indicative of the topics contained in the audio. Use the 6-digit NAICS code to identify the industry vertical - see https://www.naics.com/search/.",
+          "format": "uint32",
+          "type": "integer"
+        },
+        "interactionType": {
+          "enum": [
+            "INTERACTION_TYPE_UNSPECIFIED",
+            "DISCUSSION",
+            "PRESENTATION",
+            "PHONE_CALL",
+            "VOICEMAIL",
+            "PROFESSIONALLY_PRODUCED",
+            "VOICE_SEARCH",
+            "VOICE_COMMAND",
+            "DICTATION"
+          ],
+          "type": "string",
+          "enumDescriptions": [
+            "Use case is either unknown or is something other than one of the other values below.",
+            "Multiple people in a conversation or discussion. For example in a meeting with two or more people actively participating. Typically all the primary people speaking would be in the same room (if not, see PHONE_CALL)",
+            "One or more persons lecturing or presenting to others, mostly uninterrupted.",
+            "A phone-call or video-conference in which two or more people, who are not in the same room, are actively participating.",
+            "A recorded message intended for another person to listen to.",
+            "Professionally produced audio (eg. TV Show, Podcast).",
+            "Transcribe spoken questions and queries into text.",
+            "Transcribe voice commands, such as for controlling a device.",
+            "Transcribe speech to text to create a written document, such as a text-message, email or report."
+          ],
+          "description": "The use case most closely describing the audio content to be recognized."
+        }
+      }
+    },
+    "SpeechRecognitionAlternative": {
+      "type": "object",
+      "id": "SpeechRecognitionAlternative",
+      "properties": {
+        "transcript": {
+          "type": "string",
+          "description": "Transcript text representing the words that the user spoke. In languages that use spaces to separate words, the transcript might have a leading space if it isn't the first result. You can concatenate each result to obtain the full transcript without using a separator."
+        },
+        "confidence": {
+          "format": "float",
+          "description": "The confidence estimate between 0.0 and 1.0. A higher number indicates an estimated greater likelihood that the recognized words are correct. This field is set only for the top alternative of a non-streaming result or, of a streaming result where `is_final=true`. This field is not guaranteed to be accurate and users should not rely on it to be always provided. The default of 0.0 is a sentinel value indicating `confidence` was not set.",
+          "type": "number"
+        },
+        "words": {
+          "description": "A list of word-specific information for each recognized word. Note: When `enable_speaker_diarization` is true, you will see all the words from the beginning of the audio.",
+          "type": "array",
+          "items": {
+            "$ref": "WordInfo"
+          }
+        }
+      },
+      "description": "Alternative hypotheses (a.k.a. n-best list)."
+    },
+    "ListCustomClassesResponse": {
+      "id": "ListCustomClassesResponse",
+      "description": "Message returned to the client by the `ListCustomClasses` method.",
+      "properties": {
+        "customClasses": {
+          "type": "array",
+          "description": "The custom classes.",
+          "items": {
+            "$ref": "CustomClass"
+          }
+        },
+        "nextPageToken": {
+          "description": "A token, which can be sent as `page_token` to retrieve the next page. If this field is omitted, there are no subsequent pages.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Phrase": {
+      "id": "Phrase",
+      "description": "A phrases containing words and phrase \"hints\" so that the speech recognition is more likely to recognize them. This can be used to improve the accuracy for specific words and phrases, for example, if specific commands are typically spoken by the user. This can also be used to add additional words to the vocabulary of the recognizer. See [usage limits](https://cloud.google.com/speech-to-text/quotas#content). List items can also include pre-built or custom classes containing groups of words that represent common concepts that occur in natural language. For example, rather than providing a phrase hint for every month of the year (e.g. \"i was born in january\", \"i was born in febuary\", ...), use the pre-built `$MONTH` class improves the likelihood of correctly transcribing audio that includes months (e.g. \"i was born in $month\"). To refer to pre-built classes, use the class' symbol prepended with `$` e.g. `$MONTH`. To refer to custom classes that were defined inline in the request, set the class's `custom_class_id` to a string unique to all class resources and inline classes. Then use the class' id wrapped in $`{...}` e.g. \"${my-months}\". To refer to custom classes resources, use the class' id wrapped in `${}` (e.g. `${my-months}`). Speech-to-Text supports three locations: `global`, `us` (US North America), and `eu` (Europe). If you are calling the `speech.googleapis.com` endpoint, use the `global` location. To specify a region, use a [regional endpoint](/speech-to-text/docs/endpoints) with matching `us` or `eu` location value.",
+      "type": "object",
+      "properties": {
+        "boost": {
+          "description": "Hint Boost. Overrides the boost set at the phrase set level. Positive value will increase the probability that a specific phrase will be recognized over other similar sounding phrases. The higher the boost, the higher the chance of false positive recognition as well. Negative boost will simply be ignored. Though `boost` can accept a wide range of positive values, most use cases are best served with values between 0 and 20. We recommend using a binary search approach to finding the optimal value for your use case. Speech recognition will skip PhraseSets with a boost value of 0.",
+          "type": "number",
+          "format": "float"
+        },
+        "value": {
+          "description": "The phrase itself.",
+          "type": "string"
+        }
+      }
+    },
+    "CustomClass": {
+      "description": "A set of words or phrases that represents a common concept likely to appear in your audio, for example a list of passenger ship names. CustomClass items can be substituted into placeholders that you set in PhraseSet phrases.",
+      "type": "object",
+      "properties": {
+        "customClassId": {
+          "type": "string",
+          "description": "If this custom class is a resource, the custom_class_id is the resource id of the CustomClass. Case sensitive."
+        },
+        "items": {
+          "description": "A collection of class items.",
+          "type": "array",
+          "items": {
+            "$ref": "ClassItem"
+          }
+        },
+        "name": {
+          "description": "The resource name of the custom class.",
+          "type": "string"
+        }
+      },
+      "id": "CustomClass"
+    },
+    "ClassItem": {
+      "description": "An item of the class.",
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "The class item's value."
+        }
+      },
+      "id": "ClassItem"
+    },
+    "CreatePhraseSetRequest": {
+      "type": "object",
+      "description": "Message sent by the client for the `CreatePhraseSet` method.",
+      "properties": {
+        "phraseSet": {
+          "$ref": "PhraseSet",
+          "description": "Required. The phrase set to create."
+        },
+        "phraseSetId": {
+          "description": "Required. The ID to use for the phrase set, which will become the final component of the phrase set's resource name. This value should be 4-63 characters, and valid characters are /a-z-/.",
+          "type": "string"
+        }
+      },
+      "id": "CreatePhraseSetRequest"
+    },
+    "SpeechRecognitionResult": {
+      "description": "A speech recognition result corresponding to a portion of the audio.",
+      "properties": {
+        "channelTag": {
+          "description": "For multi-channel audio, this is the channel number corresponding to the recognized result for the audio from that channel. For audio_channel_count = N, its output values can range from '1' to 'N'.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "alternatives": {
+          "description": "May contain one or more recognition hypotheses (up to the maximum specified in `max_alternatives`). These alternatives are ordered in terms of accuracy, with the top (first) alternative being the most probable, as ranked by the recognizer.",
+          "items": {
+            "$ref": "SpeechRecognitionAlternative"
+          },
+          "type": "array"
+        },
+        "resultEndTime": {
+          "description": "Time offset of the end of this result relative to the beginning of the audio.",
+          "type": "string",
+          "format": "google-duration"
+        },
+        "languageCode": {
+          "type": "string",
+          "readOnly": true,
+          "description": "Output only. The [BCP-47](https://www.rfc-editor.org/rfc/bcp/bcp47.txt) language tag of the language in this result. This language code was detected to have the most likelihood of being spoken in the audio."
+        }
+      },
+      "type": "object",
+      "id": "SpeechRecognitionResult"
+    },
+    "Status": {
+      "id": "Status",
+      "description": "The `Status` type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by [gRPC](https://github.com/grpc). Each `Status` message contains three pieces of data: error code, error message, and error details. You can find out more about this error model and how to work with it in the [API Design Guide](https://cloud.google.com/apis/design/errors).",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "The status code, which should be an enum value of google.rpc.Code.",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string",
+          "description": "A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the google.rpc.Status.details field, or localized by the client."
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "any",
+              "description": "Properties of the object. Contains field @type with type URL."
+            }
+          },
+          "description": "A list of messages that carry the error details. There is a common set of message types for APIs to use."
+        }
+      },
+      "type": "object"
+    },
+    "Operation": {
+      "id": "Operation",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "The server-assigned name, which is only unique within the same service that originally returns it. If you use the default HTTP mapping, the `name` should be a resource name ending with `operations/{unique_id}`.",
+          "type": "string"
+        },
+        "done": {
+          "description": "If the value is `false`, it means the operation is still in progress. If `true`, the operation is completed, and either `error` or `response` is available.",
+          "type": "boolean"
+        },
+        "response": {
+          "type": "object",
+          "description": "The normal response of the operation in case of success. If the original method returns no data on success, such as `Delete`, the response is `google.protobuf.Empty`. If the original method is standard `Get`/`Create`/`Update`, the response should be the resource. For other methods, the response should have the type `XxxResponse`, where `Xxx` is the original method name. For example, if the original method name is `TakeSnapshot()`, the inferred response type is `TakeSnapshotResponse`.",
+          "additionalProperties": {
+            "description": "Properties of the object. Contains field @type with type URL.",
+            "type": "any"
+          }
+        },
+        "error": {
+          "description": "The error result of the operation in case of failure or cancellation.",
+          "$ref": "Status"
+        },
+        "metadata": {
+          "description": "Service-specific metadata associated with the operation. It typically contains progress information and common metadata such as create time. Some services might not provide such metadata. Any method that returns a long-running operation should document the metadata type, if any.",
+          "additionalProperties": {
+            "type": "any",
+            "description": "Properties of the object. Contains field @type with type URL."
+          },
+          "type": "object"
+        }
+      },
+      "description": "This resource represents a long-running operation that is the result of a network API call."
+    },
+    "RecognizeRequest": {
+      "properties": {
+        "audio": {
+          "$ref": "RecognitionAudio",
+          "description": "Required. The audio data to be recognized."
+        },
+        "config": {
+          "$ref": "RecognitionConfig",
+          "description": "Required. Provides information to the recognizer that specifies how to process the request."
+        }
+      },
+      "id": "RecognizeRequest",
+      "description": "The top-level message sent by the client for the `Recognize` method.",
       "type": "object"
     },
     "RecognitionConfig": {
-      "type": "object",
-      "id": "RecognitionConfig",
-      "description": "Provides information to the recognizer that specifies how to process the request.",
       "properties": {
-        "maxAlternatives": {
-          "description": "Maximum number of recognition hypotheses to be returned. Specifically, the maximum number of `SpeechRecognitionAlternative` messages within each `SpeechRecognitionResult`. The server may return fewer than `max_alternatives`. Valid values are `0`-`30`. A value of `0` or `1` will return a maximum of one. If omitted, will return a maximum of one.",
-          "type": "integer",
-          "format": "int32"
+        "diarizationConfig": {
+          "$ref": "SpeakerDiarizationConfig",
+          "description": "Config to enable speaker diarization and set additional parameters to make diarization better suited for your application. Note: When this is enabled, we send all the words from the beginning of the audio for the top alternative in every consecutive STREAMING responses. This is done in order to improve our speaker tags as our models learn to identify the speakers in the conversation over time. For non-streaming requests, the diarization results will be provided only in the top alternative of the FINAL SpeechRecognitionResult."
         },
         "metadata": {
           "$ref": "RecognitionMetadata",
           "description": "Metadata regarding this request."
         },
-        "alternativeLanguageCodes": {
-          "description": "A list of up to 3 additional [BCP-47](https://www.rfc-editor.org/rfc/bcp/bcp47.txt) language tags, listing possible alternative languages of the supplied audio. See [Language Support](https://cloud.google.com/speech-to-text/docs/languages) for a list of the currently supported language codes. If alternative languages are listed, recognition result will contain recognition in the most likely language detected including the main language_code. The recognition result will include the language tag of the language detected in the audio. Note: This feature is only supported for Voice Command and Voice Search use cases and performance may vary for other use cases (e.g., phone call transcription).",
-          "type": "array",
+        "useEnhanced": {
+          "type": "boolean",
+          "description": "Set to true to use an enhanced model for speech recognition. If `use_enhanced` is set to true and the `model` field is not set, then an appropriate enhanced model is chosen if an enhanced model exists for the audio. If `use_enhanced` is true and an enhanced version of the specified model does not exist, then the speech is recognized using the standard version of the specified model."
+        },
+        "speechContexts": {
           "items": {
-            "type": "string"
-          }
-        },
-        "enableWordConfidence": {
-          "description": "If `true`, the top result includes a list of words and the confidence for those words. If `false`, no word-level confidence information is returned. The default is `false`.",
-          "type": "boolean"
-        },
-        "enableSeparateRecognitionPerChannel": {
-          "description": "This needs to be set to `true` explicitly and `audio_channel_count` \u003e 1 to get each channel recognized separately. The recognition result will contain a `channel_tag` field to state which channel that result belongs to. If this is not true, we will only recognize the first channel. The request is billed cumulatively for all channels recognized: `audio_channel_count` multiplied by the length of the audio.",
-          "type": "boolean"
-        },
-        "diarizationConfig": {
-          "$ref": "SpeakerDiarizationConfig",
-          "description": "Config to enable speaker diarization and set additional parameters to make diarization better suited for your application. Note: When this is enabled, we send all the words from the beginning of the audio for the top alternative in every consecutive STREAMING responses. This is done in order to improve our speaker tags as our models learn to identify the speakers in the conversation over time. For non-streaming requests, the diarization results will be provided only in the top alternative of the FINAL SpeechRecognitionResult."
-        },
-        "enableSpokenPunctuation": {
-          "description": "The spoken punctuation behavior for the call If not set, uses default behavior based on model of choice e.g. command_and_search will enable spoken punctuation by default If 'true', replaces spoken punctuation with the corresponding symbols in the request. For example, \"how are you question mark\" becomes \"how are you?\". See https://cloud.google.com/speech-to-text/docs/spoken-punctuation for support. If 'false', spoken punctuation is not replaced.",
-          "type": "boolean"
-        },
-        "model": {
-          "type": "string",
-          "description": "Which model to select for the given request. Select the model best suited to your domain to get best results. If a model is not explicitly specified, then we auto-select a model based on the parameters in the RecognitionConfig. *Model* *Description* command_and_search Best for short queries such as voice commands or voice search. phone_call Best for audio that originated from a phone call (typically recorded at an 8khz sampling rate). video Best for audio that originated from video or includes multiple speakers. Ideally the audio is recorded at a 16khz or greater sampling rate. This is a premium model that costs more than the standard rate. default Best for audio that is not one of the specific audio models. For example, long-form audio. Ideally the audio is high-fidelity, recorded at a 16khz or greater sampling rate. medical_conversation Best for audio that originated from a conversation between a medical provider and patient. medical_dictation Best for audio that originated from dictation notes by a medical provider. "
-        },
-        "enableWordTimeOffsets": {
-          "description": "If `true`, the top result includes a list of words and the start and end time offsets (timestamps) for those words. If `false`, no word-level time offset information is returned. The default is `false`.",
-          "type": "boolean"
-        },
-        "languageCode": {
-          "type": "string",
-          "description": "Required. The language of the supplied audio as a [BCP-47](https://www.rfc-editor.org/rfc/bcp/bcp47.txt) language tag. Example: \"en-US\". See [Language Support](https://cloud.google.com/speech-to-text/docs/languages) for a list of the currently supported language codes."
-        },
-        "sampleRateHertz": {
-          "description": "Sample rate in Hertz of the audio data sent in all `RecognitionAudio` messages. Valid values are: 8000-48000. 16000 is optimal. For best results, set the sampling rate of the audio source to 16000 Hz. If that's not possible, use the native sample rate of the audio source (instead of re-sampling). This field is optional for FLAC and WAV audio files, but is required for all other audio formats. For details, see AudioEncoding.",
-          "type": "integer",
-          "format": "int32"
-        },
-        "audioChannelCount": {
-          "format": "int32",
-          "type": "integer",
-          "description": "The number of channels in the input audio data. ONLY set this for MULTI-CHANNEL recognition. Valid values for LINEAR16 and FLAC are `1`-`8`. Valid values for OGG_OPUS are '1'-'254'. Valid value for MULAW, AMR, AMR_WB and SPEEX_WITH_HEADER_BYTE is only `1`. If `0` or omitted, defaults to one channel (mono). Note: We only recognize the first channel by default. To perform independent recognition on each channel set `enable_separate_recognition_per_channel` to 'true'."
+            "$ref": "SpeechContext"
+          },
+          "description": "Array of SpeechContext. A means to provide context to assist the speech recognition. For more information, see [speech adaptation](https://cloud.google.com/speech-to-text/docs/adaptation).",
+          "type": "array"
         },
         "encoding": {
           "description": "Encoding of audio data sent in all `RecognitionAudio` messages. This field is optional for `FLAC` and `WAV` audio files and required for all other audio formats. For details, see AudioEncoding.",
@@ -309,202 +446,192 @@
             "WEBM_OPUS"
           ]
         },
-        "enableAutomaticPunctuation": {
-          "description": "If 'true', adds punctuation to recognition result hypotheses. This feature is only available in select languages. Setting this for requests in other languages has no effect at all. The default 'false' value does not add punctuation to result hypotheses.",
-          "type": "boolean"
+        "enableSpokenPunctuation": {
+          "type": "boolean",
+          "description": "The spoken punctuation behavior for the call If not set, uses default behavior based on model of choice e.g. command_and_search will enable spoken punctuation by default If 'true', replaces spoken punctuation with the corresponding symbols in the request. For example, \"how are you question mark\" becomes \"how are you?\". See https://cloud.google.com/speech-to-text/docs/spoken-punctuation for support. If 'false', spoken punctuation is not replaced."
         },
-        "speechContexts": {
+        "maxAlternatives": {
+          "description": "Maximum number of recognition hypotheses to be returned. Specifically, the maximum number of `SpeechRecognitionAlternative` messages within each `SpeechRecognitionResult`. The server may return fewer than `max_alternatives`. Valid values are `0`-`30`. A value of `0` or `1` will return a maximum of one. If omitted, will return a maximum of one.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "alternativeLanguageCodes": {
           "items": {
-            "$ref": "SpeechContext"
+            "type": "string"
           },
-          "description": "Array of SpeechContext. A means to provide context to assist the speech recognition. For more information, see [speech adaptation](https://cloud.google.com/speech-to-text/docs/adaptation).",
+          "description": "A list of up to 3 additional [BCP-47](https://www.rfc-editor.org/rfc/bcp/bcp47.txt) language tags, listing possible alternative languages of the supplied audio. See [Language Support](https://cloud.google.com/speech-to-text/docs/languages) for a list of the currently supported language codes. If alternative languages are listed, recognition result will contain recognition in the most likely language detected including the main language_code. The recognition result will include the language tag of the language detected in the audio. Note: This feature is only supported for Voice Command and Voice Search use cases and performance may vary for other use cases (e.g., phone call transcription).",
           "type": "array"
         },
+        "audioChannelCount": {
+          "description": "The number of channels in the input audio data. ONLY set this for MULTI-CHANNEL recognition. Valid values for LINEAR16 and FLAC are `1`-`8`. Valid values for OGG_OPUS are '1'-'254'. Valid value for MULAW, AMR, AMR_WB and SPEEX_WITH_HEADER_BYTE is only `1`. If `0` or omitted, defaults to one channel (mono). Note: We only recognize the first channel by default. To perform independent recognition on each channel set `enable_separate_recognition_per_channel` to 'true'.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "enableWordTimeOffsets": {
+          "type": "boolean",
+          "description": "If `true`, the top result includes a list of words and the start and end time offsets (timestamps) for those words. If `false`, no word-level time offset information is returned. The default is `false`."
+        },
+        "profanityFilter": {
+          "description": "If set to `true`, the server will attempt to filter out profanities, replacing all but the initial character in each filtered word with asterisks, e.g. \"f***\". If set to `false` or omitted, profanities won't be filtered out.",
+          "type": "boolean"
+        },
+        "enableSeparateRecognitionPerChannel": {
+          "type": "boolean",
+          "description": "This needs to be set to `true` explicitly and `audio_channel_count` \u003e 1 to get each channel recognized separately. The recognition result will contain a `channel_tag` field to state which channel that result belongs to. If this is not true, we will only recognize the first channel. The request is billed cumulatively for all channels recognized: `audio_channel_count` multiplied by the length of the audio."
+        },
+        "enableWordConfidence": {
+          "description": "If `true`, the top result includes a list of words and the confidence for those words. If `false`, no word-level confidence information is returned. The default is `false`.",
+          "type": "boolean"
+        },
+        "model": {
+          "description": "Which model to select for the given request. Select the model best suited to your domain to get best results. If a model is not explicitly specified, then we auto-select a model based on the parameters in the RecognitionConfig. *Model* *Description* command_and_search Best for short queries such as voice commands or voice search. phone_call Best for audio that originated from a phone call (typically recorded at an 8khz sampling rate). video Best for audio that originated from video or includes multiple speakers. Ideally the audio is recorded at a 16khz or greater sampling rate. This is a premium model that costs more than the standard rate. default Best for audio that is not one of the specific audio models. For example, long-form audio. Ideally the audio is high-fidelity, recorded at a 16khz or greater sampling rate. medical_conversation Best for audio that originated from a conversation between a medical provider and patient. medical_dictation Best for audio that originated from dictation notes by a medical provider. ",
+          "type": "string"
+        },
+        "languageCode": {
+          "type": "string",
+          "description": "Required. The language of the supplied audio as a [BCP-47](https://www.rfc-editor.org/rfc/bcp/bcp47.txt) language tag. Example: \"en-US\". See [Language Support](https://cloud.google.com/speech-to-text/docs/languages) for a list of the currently supported language codes."
+        },
         "adaptation": {
-          "$ref": "SpeechAdaptation",
-          "description": "Speech adaptation configuration improves the accuracy of speech recognition. For more information, see the [speech adaptation](https://cloud.google.com/speech-to-text/docs/adaptation) documentation. When speech adaptation is set it supersedes the `speech_contexts` field."
+          "description": "Speech adaptation configuration improves the accuracy of speech recognition. For more information, see the [speech adaptation](https://cloud.google.com/speech-to-text/docs/adaptation) documentation. When speech adaptation is set it supersedes the `speech_contexts` field.",
+          "$ref": "SpeechAdaptation"
         },
         "enableSpokenEmojis": {
           "type": "boolean",
           "description": "The spoken emoji behavior for the call If not set, uses default behavior based on model of choice If 'true', adds spoken emoji formatting for the request. This will replace spoken emojis with the corresponding Unicode symbols in the final transcript. If 'false', spoken emojis are not replaced."
         },
-        "useEnhanced": {
-          "description": "Set to true to use an enhanced model for speech recognition. If `use_enhanced` is set to true and the `model` field is not set, then an appropriate enhanced model is chosen if an enhanced model exists for the audio. If `use_enhanced` is true and an enhanced version of the specified model does not exist, then the speech is recognized using the standard version of the specified model.",
-          "type": "boolean"
+        "sampleRateHertz": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Sample rate in Hertz of the audio data sent in all `RecognitionAudio` messages. Valid values are: 8000-48000. 16000 is optimal. For best results, set the sampling rate of the audio source to 16000 Hz. If that's not possible, use the native sample rate of the audio source (instead of re-sampling). This field is optional for FLAC and WAV audio files, but is required for all other audio formats. For details, see AudioEncoding."
         },
-        "profanityFilter": {
-          "description": "If set to `true`, the server will attempt to filter out profanities, replacing all but the initial character in each filtered word with asterisks, e.g. \"f***\". If set to `false` or omitted, profanities won't be filtered out.",
+        "enableAutomaticPunctuation": {
+          "description": "If 'true', adds punctuation to recognition result hypotheses. This feature is only available in select languages. Setting this for requests in other languages has no effect at all. The default 'false' value does not add punctuation to result hypotheses.",
           "type": "boolean"
         }
-      }
-    },
-    "RecognizeRequest": {
-      "description": "The top-level message sent by the client for the `Recognize` method.",
+      },
       "type": "object",
-      "id": "RecognizeRequest",
+      "description": "Provides information to the recognizer that specifies how to process the request.",
+      "id": "RecognitionConfig"
+    },
+    "LongRunningRecognizeResponse": {
+      "type": "object",
       "properties": {
+        "outputConfig": {
+          "description": "Original output config if present in the request.",
+          "$ref": "TranscriptOutputConfig"
+        },
+        "outputError": {
+          "description": "If the transcript output fails this field contains the relevant error.",
+          "$ref": "Status"
+        },
+        "results": {
+          "description": "Sequential list of transcription results corresponding to sequential portions of audio.",
+          "type": "array",
+          "items": {
+            "$ref": "SpeechRecognitionResult"
+          }
+        },
+        "totalBilledTime": {
+          "format": "google-duration",
+          "type": "string",
+          "description": "When available, billed audio seconds for the corresponding request."
+        }
+      },
+      "id": "LongRunningRecognizeResponse",
+      "description": "The only message returned to the client by the `LongRunningRecognize` method. It contains the result as zero or more sequential `SpeechRecognitionResult` messages. It is included in the `result.response` field of the `Operation` returned by the `GetOperation` call of the `google::longrunning::Operations` service."
+    },
+    "PhraseSet": {
+      "description": "Provides \"hints\" to the speech recognizer to favor specific words and phrases in the results.",
+      "properties": {
+        "phrases": {
+          "items": {
+            "$ref": "Phrase"
+          },
+          "type": "array",
+          "description": "A list of word and phrases."
+        },
+        "name": {
+          "description": "The resource name of the phrase set.",
+          "type": "string"
+        },
+        "boost": {
+          "type": "number",
+          "description": "Hint Boost. Positive value will increase the probability that a specific phrase will be recognized over other similar sounding phrases. The higher the boost, the higher the chance of false positive recognition as well. Negative boost values would correspond to anti-biasing. Anti-biasing is not enabled, so negative boost will simply be ignored. Though `boost` can accept a wide range of positive values, most use cases are best served with values between 0 (exclusive) and 20. We recommend using a binary search approach to finding the optimal value for your use case. Speech recognition will skip PhraseSets with a boost value of 0.",
+          "format": "float"
+        }
+      },
+      "id": "PhraseSet",
+      "type": "object"
+    },
+    "LongRunningRecognizeRequest": {
+      "description": "The top-level message sent by the client for the `LongRunningRecognize` method.",
+      "properties": {
+        "outputConfig": {
+          "$ref": "TranscriptOutputConfig",
+          "description": "Optional. Specifies an optional destination for the recognition results."
+        },
         "audio": {
-          "description": "Required. The audio data to be recognized.",
-          "$ref": "RecognitionAudio"
+          "$ref": "RecognitionAudio",
+          "description": "Required. The audio data to be recognized."
         },
         "config": {
           "$ref": "RecognitionConfig",
           "description": "Required. Provides information to the recognizer that specifies how to process the request."
         }
-      }
-    },
-    "CustomClass": {
-      "id": "CustomClass",
-      "description": "A set of words or phrases that represents a common concept likely to appear in your audio, for example a list of passenger ship names. CustomClass items can be substituted into placeholders that you set in PhraseSet phrases.",
+      },
       "type": "object",
+      "id": "LongRunningRecognizeRequest"
+    },
+    "WordInfo": {
       "properties": {
-        "name": {
-          "description": "The resource name of the custom class.",
+        "word": {
+          "description": "The word corresponding to this set of information.",
           "type": "string"
         },
-        "items": {
-          "items": {
-            "$ref": "ClassItem"
-          },
-          "type": "array",
-          "description": "A collection of class items."
+        "startTime": {
+          "description": "Time offset relative to the beginning of the audio, and corresponding to the start of the spoken word. This field is only set if `enable_word_time_offsets=true` and only in the top hypothesis. This is an experimental feature and the accuracy of the time offset can vary.",
+          "format": "google-duration",
+          "type": "string"
         },
-        "customClassId": {
+        "endTime": {
+          "format": "google-duration",
           "type": "string",
-          "description": "If this custom class is a resource, the custom_class_id is the resource id of the CustomClass. Case sensitive."
-        }
-      }
-    },
-    "SpeechContext": {
-      "description": "Provides \"hints\" to the speech recognizer to favor specific words and phrases in the results.",
-      "type": "object",
-      "properties": {
-        "boost": {
-          "format": "float",
-          "description": "Hint Boost. Positive value will increase the probability that a specific phrase will be recognized over other similar sounding phrases. The higher the boost, the higher the chance of false positive recognition as well. Negative boost values would correspond to anti-biasing. Anti-biasing is not enabled, so negative boost will simply be ignored. Though `boost` can accept a wide range of positive values, most use cases are best served with values between 0 and 20. We recommend using a binary search approach to finding the optimal value for your use case.",
-          "type": "number"
-        },
-        "phrases": {
-          "items": {
-            "type": "string"
-          },
-          "description": "A list of strings containing words and phrases \"hints\" so that the speech recognition is more likely to recognize them. This can be used to improve the accuracy for specific words and phrases, for example, if specific commands are typically spoken by the user. This can also be used to add additional words to the vocabulary of the recognizer. See [usage limits](https://cloud.google.com/speech-to-text/quotas#content). List items can also be set to classes for groups of words that represent common concepts that occur in natural language. For example, rather than providing phrase hints for every month of the year, using the $MONTH class improves the likelihood of correctly transcribing audio that includes months.",
-          "type": "array"
-        }
-      },
-      "id": "SpeechContext"
-    },
-    "Operation": {
-      "type": "object",
-      "description": "This resource represents a long-running operation that is the result of a network API call.",
-      "id": "Operation",
-      "properties": {
-        "name": {
-          "description": "The server-assigned name, which is only unique within the same service that originally returns it. If you use the default HTTP mapping, the `name` should be a resource name ending with `operations/{unique_id}`.",
-          "type": "string"
-        },
-        "response": {
-          "type": "object",
-          "description": "The normal response of the operation in case of success. If the original method returns no data on success, such as `Delete`, the response is `google.protobuf.Empty`. If the original method is standard `Get`/`Create`/`Update`, the response should be the resource. For other methods, the response should have the type `XxxResponse`, where `Xxx` is the original method name. For example, if the original method name is `TakeSnapshot()`, the inferred response type is `TakeSnapshotResponse`.",
-          "additionalProperties": {
-            "type": "any",
-            "description": "Properties of the object. Contains field @type with type URL."
-          }
-        },
-        "error": {
-          "$ref": "Status",
-          "description": "The error result of the operation in case of failure or cancellation."
-        },
-        "metadata": {
-          "additionalProperties": {
-            "type": "any",
-            "description": "Properties of the object. Contains field @type with type URL."
-          },
-          "type": "object",
-          "description": "Service-specific metadata associated with the operation. It typically contains progress information and common metadata such as create time. Some services might not provide such metadata. Any method that returns a long-running operation should document the metadata type, if any."
-        },
-        "done": {
-          "type": "boolean",
-          "description": "If the value is `false`, it means the operation is still in progress. If `true`, the operation is completed, and either `error` or `response` is available."
-        }
-      }
-    },
-    "ListPhraseSetResponse": {
-      "type": "object",
-      "description": "Message returned to the client by the `ListPhraseSet` method.",
-      "properties": {
-        "phraseSets": {
-          "description": "The phrase set.",
-          "type": "array",
-          "items": {
-            "$ref": "PhraseSet"
-          }
-        },
-        "nextPageToken": {
-          "type": "string",
-          "description": "A token, which can be sent as `page_token` to retrieve the next page. If this field is omitted, there are no subsequent pages."
-        }
-      },
-      "id": "ListPhraseSetResponse"
-    },
-    "Phrase": {
-      "id": "Phrase",
-      "type": "object",
-      "properties": {
-        "boost": {
-          "format": "float",
-          "description": "Hint Boost. Overrides the boost set at the phrase set level. Positive value will increase the probability that a specific phrase will be recognized over other similar sounding phrases. The higher the boost, the higher the chance of false positive recognition as well. Negative boost will simply be ignored. Though `boost` can accept a wide range of positive values, most use cases are best served with values between 0 and 20. We recommend using a binary search approach to finding the optimal value for your use case. Speech recognition will skip PhraseSets with a boost value of 0.",
-          "type": "number"
-        },
-        "value": {
-          "description": "The phrase itself.",
-          "type": "string"
-        }
-      },
-      "description": "A phrases containing words and phrase \"hints\" so that the speech recognition is more likely to recognize them. This can be used to improve the accuracy for specific words and phrases, for example, if specific commands are typically spoken by the user. This can also be used to add additional words to the vocabulary of the recognizer. See [usage limits](https://cloud.google.com/speech-to-text/quotas#content). List items can also include pre-built or custom classes containing groups of words that represent common concepts that occur in natural language. For example, rather than providing a phrase hint for every month of the year (e.g. \"i was born in january\", \"i was born in febuary\", ...), use the pre-built `$MONTH` class improves the likelihood of correctly transcribing audio that includes months (e.g. \"i was born in $month\"). To refer to pre-built classes, use the class' symbol prepended with `$` e.g. `$MONTH`. To refer to custom classes that were defined inline in the request, set the class's `custom_class_id` to a string unique to all class resources and inline classes. Then use the class' id wrapped in $`{...}` e.g. \"${my-months}\". To refer to custom classes resources, use the class' id wrapped in `${}` (e.g. `${my-months}`). Speech-to-Text supports three locations: `global`, `us` (US North America), and `eu` (Europe). If you are calling the `speech.googleapis.com` endpoint, use the `global` location. To specify a region, use a [regional endpoint](/speech-to-text/docs/endpoints) with matching `us` or `eu` location value."
-    },
-    "SpeakerDiarizationConfig": {
-      "type": "object",
-      "description": "Config to enable speaker diarization.",
-      "id": "SpeakerDiarizationConfig",
-      "properties": {
-        "maxSpeakerCount": {
-          "format": "int32",
-          "type": "integer",
-          "description": "Maximum number of speakers in the conversation. This range gives you more flexibility by allowing the system to automatically determine the correct number of speakers. If not set, the default value is 6."
-        },
-        "enableSpeakerDiarization": {
-          "description": "If 'true', enables speaker detection for each recognized word in the top alternative of the recognition result using a speaker_tag provided in the WordInfo.",
-          "type": "boolean"
+          "description": "Time offset relative to the beginning of the audio, and corresponding to the end of the spoken word. This field is only set if `enable_word_time_offsets=true` and only in the top hypothesis. This is an experimental feature and the accuracy of the time offset can vary."
         },
         "speakerTag": {
-          "format": "int32",
+          "type": "integer",
+          "description": "Output only. A distinct integer value is assigned for every speaker within the audio. This field specifies which one of those speakers was detected to have spoken this word. Value ranges from '1' to diarization_speaker_count. speaker_tag is set if enable_speaker_diarization = 'true' and only in the top alternative.",
           "readOnly": true,
-          "description": "Output only. Unused.",
-          "type": "integer"
+          "format": "int32"
         },
-        "minSpeakerCount": {
-          "description": "Minimum number of speakers in the conversation. This range gives you more flexibility by allowing the system to automatically determine the correct number of speakers. If not set, the default value is 2.",
-          "format": "int32",
-          "type": "integer"
+        "confidence": {
+          "format": "float",
+          "type": "number",
+          "description": "The confidence estimate between 0.0 and 1.0. A higher number indicates an estimated greater likelihood that the recognized words are correct. This field is set only for the top alternative of a non-streaming result or, of a streaming result where `is_final=true`. This field is not guaranteed to be accurate and users should not rely on it to be always provided. The default of 0.0 is a sentinel value indicating `confidence` was not set."
         }
-      }
+      },
+      "id": "WordInfo",
+      "type": "object",
+      "description": "Word-specific information for recognized words."
     },
     "SpeechAdaptation": {
+      "type": "object",
+      "id": "SpeechAdaptation",
+      "description": "Speech adaptation configuration.",
       "properties": {
         "customClasses": {
+          "description": "A collection of custom classes. To specify the classes inline, leave the class' `name` blank and fill in the rest of its fields, giving it a unique `custom_class_id`. Refer to the inline defined class in phrase hints by its `custom_class_id`.",
+          "type": "array",
           "items": {
             "$ref": "CustomClass"
-          },
-          "type": "array",
-          "description": "A collection of custom classes. To specify the classes inline, leave the class' `name` blank and fill in the rest of its fields, giving it a unique `custom_class_id`. Refer to the inline defined class in phrase hints by its `custom_class_id`."
+          }
         },
         "phraseSets": {
-          "type": "array",
-          "description": "A collection of phrase sets. To specify the hints inline, leave the phrase set's `name` blank and fill in the rest of its fields. Any phrase set can use any custom class.",
           "items": {
             "$ref": "PhraseSet"
-          }
+          },
+          "description": "A collection of phrase sets. To specify the hints inline, leave the phrase set's `name` blank and fill in the rest of its fields. Any phrase set can use any custom class.",
+          "type": "array"
         },
         "phraseSetReferences": {
           "description": "A collection of phrase set resource names to use.",
@@ -513,60 +640,46 @@
             "type": "string"
           }
         }
-      },
-      "id": "SpeechAdaptation",
-      "type": "object",
-      "description": "Speech adaptation configuration."
+      }
     },
-    "RecognitionAudio": {
+    "ListOperationsResponse": {
       "type": "object",
-      "description": "Contains audio data in the encoding specified in the `RecognitionConfig`. Either `content` or `uri` must be supplied. Supplying both or neither returns google.rpc.Code.INVALID_ARGUMENT. See [content limits](https://cloud.google.com/speech-to-text/quotas#content).",
       "properties": {
-        "content": {
-          "description": "The audio data bytes encoded as specified in `RecognitionConfig`. Note: as with all bytes fields, proto buffers use a pure binary representation, whereas JSON representations use base64.",
-          "format": "byte",
-          "type": "string"
+        "nextPageToken": {
+          "type": "string",
+          "description": "The standard List next-page token."
         },
-        "uri": {
-          "description": "URI that points to a file that contains audio data bytes as specified in `RecognitionConfig`. The file must not be compressed (for example, gzip). Currently, only Google Cloud Storage URIs are supported, which must be specified in the following format: `gs://bucket_name/object_name` (other URI formats return google.rpc.Code.INVALID_ARGUMENT). For more information, see [Request URIs](https://cloud.google.com/storage/docs/reference-uris).",
-          "type": "string"
-        }
-      },
-      "id": "RecognitionAudio"
-    },
-    "SpeechRecognitionAlternative": {
-      "properties": {
-        "transcript": {
-          "description": "Transcript text representing the words that the user spoke.",
-          "type": "string"
-        },
-        "confidence": {
-          "description": "The confidence estimate between 0.0 and 1.0. A higher number indicates an estimated greater likelihood that the recognized words are correct. This field is set only for the top alternative of a non-streaming result or, of a streaming result where `is_final=true`. This field is not guaranteed to be accurate and users should not rely on it to be always provided. The default of 0.0 is a sentinel value indicating `confidence` was not set.",
-          "format": "float",
-          "type": "number"
-        },
-        "words": {
-          "type": "array",
+        "operations": {
+          "description": "A list of operations that matches the specified filter in the request.",
           "items": {
-            "$ref": "WordInfo"
+            "$ref": "Operation"
           },
-          "description": "A list of word-specific information for each recognized word. Note: When `enable_speaker_diarization` is true, you will see all the words from the beginning of the audio."
+          "type": "array"
         }
       },
-      "id": "SpeechRecognitionAlternative",
-      "description": "Alternative hypotheses (a.k.a. n-best list).",
-      "type": "object"
+      "description": "The response message for Operations.ListOperations.",
+      "id": "ListOperationsResponse"
+    },
+    "CreateCustomClassRequest": {
+      "properties": {
+        "customClass": {
+          "description": "Required. The custom class to create.",
+          "$ref": "CustomClass"
+        },
+        "customClassId": {
+          "description": "Required. The ID to use for the custom class, which will become the final component of the custom class' resource name. This value should be 4-63 characters, and valid characters are /a-z-/.",
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "id": "CreateCustomClassRequest",
+      "description": "Message sent by the client for the `CreateCustomClass` method."
     },
     "LongRunningRecognizeMetadata": {
-      "type": "object",
       "id": "LongRunningRecognizeMetadata",
       "description": "Describes the progress of a long-running `LongRunningRecognize` call. It is included in the `metadata` field of the `Operation` returned by the `GetOperation` call of the `google::longrunning::Operations` service.",
+      "type": "object",
       "properties": {
-        "progressPercent": {
-          "format": "int32",
-          "description": "Approximate percentage of audio processed thus far. Guaranteed to be 100 when the audio is fully processed and the results are available.",
-          "type": "integer"
-        },
         "uri": {
           "description": "Output only. The URI of the audio file being transcribed. Empty if the audio was sent as byte content.",
           "readOnly": true,
@@ -578,173 +691,55 @@
           "type": "string"
         },
         "lastUpdateTime": {
-          "format": "google-datetime",
+          "type": "string",
           "description": "Time of the most recent processing update.",
-          "type": "string"
+          "format": "google-datetime"
+        },
+        "progressPercent": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Approximate percentage of audio processed thus far. Guaranteed to be 100 when the audio is fully processed and the results are available."
         }
       }
     },
-    "SpeechRecognitionResult": {
-      "description": "A speech recognition result corresponding to a portion of the audio.",
+    "Empty": {
       "type": "object",
-      "id": "SpeechRecognitionResult",
-      "properties": {
-        "alternatives": {
-          "items": {
-            "$ref": "SpeechRecognitionAlternative"
-          },
-          "type": "array",
-          "description": "May contain one or more recognition hypotheses (up to the maximum specified in `max_alternatives`). These alternatives are ordered in terms of accuracy, with the top (first) alternative being the most probable, as ranked by the recognizer."
-        },
-        "languageCode": {
-          "readOnly": true,
-          "description": "Output only. The [BCP-47](https://www.rfc-editor.org/rfc/bcp/bcp47.txt) language tag of the language in this result. This language code was detected to have the most likelihood of being spoken in the audio.",
-          "type": "string"
-        },
-        "resultEndTime": {
-          "description": "Time offset of the end of this result relative to the beginning of the audio.",
-          "format": "google-duration",
-          "type": "string"
-        },
-        "channelTag": {
-          "type": "integer",
-          "description": "For multi-channel audio, this is the channel number corresponding to the recognized result for the audio from that channel. For audio_channel_count = N, its output values can range from '1' to 'N'.",
-          "format": "int32"
-        }
-      }
+      "description": "A generic empty message that you can re-use to avoid defining duplicated empty messages in your APIs. A typical example is to use it as the request or the response type of an API method. For instance: service Foo { rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty); } The JSON representation for `Empty` is empty JSON object `{}`.",
+      "properties": {},
+      "id": "Empty"
     },
-    "Status": {
-      "type": "object",
+    "TranscriptOutputConfig": {
       "properties": {
-        "details": {
-          "items": {
-            "type": "object",
-            "additionalProperties": {
-              "description": "Properties of the object. Contains field @type with type URL.",
-              "type": "any"
-            }
-          },
-          "type": "array",
-          "description": "A list of messages that carry the error details. There is a common set of message types for APIs to use."
-        },
-        "code": {
-          "type": "integer",
-          "description": "The status code, which should be an enum value of google.rpc.Code.",
-          "format": "int32"
-        },
-        "message": {
-          "description": "A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the google.rpc.Status.details field, or localized by the client.",
+        "gcsUri": {
+          "description": "Specifies a Cloud Storage URI for the recognition results. Must be specified in the format: `gs://bucket_name/object_name`, and the bucket must already exist.",
           "type": "string"
         }
       },
-      "description": "The `Status` type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by [gRPC](https://github.com/grpc). Each `Status` message contains three pieces of data: error code, error message, and error details. You can find out more about this error model and how to work with it in the [API Design Guide](https://cloud.google.com/apis/design/errors).",
-      "id": "Status"
+      "description": "Specifies an optional destination for the recognition results.",
+      "id": "TranscriptOutputConfig",
+      "type": "object"
     },
-    "RecognitionMetadata": {
-      "id": "RecognitionMetadata",
+    "SpeechContext": {
       "properties": {
-        "recordingDeviceType": {
-          "enumDescriptions": [
-            "The recording device is unknown.",
-            "Speech was recorded on a smartphone.",
-            "Speech was recorded using a personal computer or tablet.",
-            "Speech was recorded over a phone line.",
-            "Speech was recorded in a vehicle.",
-            "Speech was recorded outdoors.",
-            "Speech was recorded indoors."
-          ],
-          "description": "The type of device the speech was recorded with.",
-          "type": "string",
-          "enum": [
-            "RECORDING_DEVICE_TYPE_UNSPECIFIED",
-            "SMARTPHONE",
-            "PC",
-            "PHONE_LINE",
-            "VEHICLE",
-            "OTHER_OUTDOOR_DEVICE",
-            "OTHER_INDOOR_DEVICE"
-          ]
+        "phrases": {
+          "description": "A list of strings containing words and phrases \"hints\" so that the speech recognition is more likely to recognize them. This can be used to improve the accuracy for specific words and phrases, for example, if specific commands are typically spoken by the user. This can also be used to add additional words to the vocabulary of the recognizer. See [usage limits](https://cloud.google.com/speech-to-text/quotas#content). List items can also be set to classes for groups of words that represent common concepts that occur in natural language. For example, rather than providing phrase hints for every month of the year, using the $MONTH class improves the likelihood of correctly transcribing audio that includes months.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
-        "originalMimeType": {
-          "type": "string",
-          "description": "Mime type of the original audio file. For example `audio/m4a`, `audio/x-alaw-basic`, `audio/mp3`, `audio/3gpp`. A list of possible audio mime types is maintained at http://www.iana.org/assignments/media-types/media-types.xhtml#audio"
-        },
-        "audioTopic": {
-          "type": "string",
-          "description": "Description of the content. Eg. \"Recordings of federal supreme court hearings from 2012\"."
-        },
-        "industryNaicsCodeOfAudio": {
-          "description": "The industry vertical to which this speech recognition request most closely applies. This is most indicative of the topics contained in the audio. Use the 6-digit NAICS code to identify the industry vertical - see https://www.naics.com/search/.",
-          "type": "integer",
-          "format": "uint32"
-        },
-        "recordingDeviceName": {
-          "type": "string",
-          "description": "The device used to make the recording. Examples 'Nexus 5X' or 'Polycom SoundStation IP 6000' or 'POTS' or 'VoIP' or 'Cardioid Microphone'."
-        },
-        "originalMediaType": {
-          "enumDescriptions": [
-            "Unknown original media type.",
-            "The speech data is an audio recording.",
-            "The speech data originally recorded on a video."
-          ],
-          "enum": [
-            "ORIGINAL_MEDIA_TYPE_UNSPECIFIED",
-            "AUDIO",
-            "VIDEO"
-          ],
-          "description": "The original media the speech was recorded on.",
-          "type": "string"
-        },
-        "microphoneDistance": {
-          "description": "The audio type that most closely describes the audio being recognized.",
-          "enum": [
-            "MICROPHONE_DISTANCE_UNSPECIFIED",
-            "NEARFIELD",
-            "MIDFIELD",
-            "FARFIELD"
-          ],
-          "enumDescriptions": [
-            "Audio type is not known.",
-            "The audio was captured from a closely placed microphone. Eg. phone, dictaphone, or handheld microphone. Generally if there speaker is within 1 meter of the microphone.",
-            "The speaker if within 3 meters of the microphone.",
-            "The speaker is more than 3 meters away from the microphone."
-          ],
-          "type": "string"
-        },
-        "interactionType": {
-          "description": "The use case most closely describing the audio content to be recognized.",
-          "type": "string",
-          "enumDescriptions": [
-            "Use case is either unknown or is something other than one of the other values below.",
-            "Multiple people in a conversation or discussion. For example in a meeting with two or more people actively participating. Typically all the primary people speaking would be in the same room (if not, see PHONE_CALL)",
-            "One or more persons lecturing or presenting to others, mostly uninterrupted.",
-            "A phone-call or video-conference in which two or more people, who are not in the same room, are actively participating.",
-            "A recorded message intended for another person to listen to.",
-            "Professionally produced audio (eg. TV Show, Podcast).",
-            "Transcribe spoken questions and queries into text.",
-            "Transcribe voice commands, such as for controlling a device.",
-            "Transcribe speech to text to create a written document, such as a text-message, email or report."
-          ],
-          "enum": [
-            "INTERACTION_TYPE_UNSPECIFIED",
-            "DISCUSSION",
-            "PRESENTATION",
-            "PHONE_CALL",
-            "VOICEMAIL",
-            "PROFESSIONALLY_PRODUCED",
-            "VOICE_SEARCH",
-            "VOICE_COMMAND",
-            "DICTATION"
-          ]
+        "boost": {
+          "description": "Hint Boost. Positive value will increase the probability that a specific phrase will be recognized over other similar sounding phrases. The higher the boost, the higher the chance of false positive recognition as well. Negative boost values would correspond to anti-biasing. Anti-biasing is not enabled, so negative boost will simply be ignored. Though `boost` can accept a wide range of positive values, most use cases are best served with values between 0 and 20. We recommend using a binary search approach to finding the optimal value for your use case.",
+          "type": "number",
+          "format": "float"
         }
       },
       "type": "object",
-      "description": "Description of audio data to be recognized."
+      "id": "SpeechContext",
+      "description": "Provides \"hints\" to the speech recognizer to favor specific words and phrases in the results."
     }
   },
-  "protocol": "rest",
-  "baseUrl": "https://speech.googleapis.com/",
+  "batchPath": "batch",
   "auth": {
     "oauth2": {
       "scopes": {
@@ -754,11 +749,493 @@
       }
     }
   },
-  "documentationLink": "https://cloud.google.com/speech-to-text/docs/quickstart-protocol",
+  "resources": {
+    "speech": {
+      "methods": {
+        "recognize": {
+          "httpMethod": "POST",
+          "id": "speech.speech.recognize",
+          "description": "Performs synchronous speech recognition: receive results after all audio has been sent and processed.",
+          "response": {
+            "$ref": "RecognizeResponse"
+          },
+          "request": {
+            "$ref": "RecognizeRequest"
+          },
+          "parameterOrder": [],
+          "flatPath": "v1/speech:recognize",
+          "parameters": {},
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform"
+          ],
+          "path": "v1/speech:recognize"
+        },
+        "longrunningrecognize": {
+          "id": "speech.speech.longrunningrecognize",
+          "flatPath": "v1/speech:longrunningrecognize",
+          "path": "v1/speech:longrunningrecognize",
+          "parameters": {},
+          "parameterOrder": [],
+          "description": "Performs asynchronous speech recognition: receive results via the google.longrunning.Operations interface. Returns either an `Operation.error` or an `Operation.response` which contains a `LongRunningRecognizeResponse` message. For more information on asynchronous speech recognition, see the [how-to](https://cloud.google.com/speech-to-text/docs/async-recognize).",
+          "httpMethod": "POST",
+          "response": {
+            "$ref": "Operation"
+          },
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform"
+          ],
+          "request": {
+            "$ref": "LongRunningRecognizeRequest"
+          }
+        }
+      }
+    },
+    "projects": {
+      "resources": {
+        "locations": {
+          "resources": {
+            "customClasses": {
+              "methods": {
+                "get": {
+                  "scopes": [
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "path": "v1/{+name}",
+                  "response": {
+                    "$ref": "CustomClass"
+                  },
+                  "id": "speech.projects.locations.customClasses.get",
+                  "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/customClasses/{customClassesId}",
+                  "httpMethod": "GET",
+                  "description": "Get a custom class.",
+                  "parameterOrder": [
+                    "name"
+                  ],
+                  "parameters": {
+                    "name": {
+                      "type": "string",
+                      "description": "Required. The name of the custom class to retrieve. Format: `projects/{project}/locations/{location}/customClasses/{custom_class}`",
+                      "required": true,
+                      "location": "path",
+                      "pattern": "^projects/[^/]+/locations/[^/]+/customClasses/[^/]+$"
+                    }
+                  }
+                },
+                "list": {
+                  "id": "speech.projects.locations.customClasses.list",
+                  "parameterOrder": [
+                    "parent"
+                  ],
+                  "response": {
+                    "$ref": "ListCustomClassesResponse"
+                  },
+                  "httpMethod": "GET",
+                  "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/customClasses",
+                  "scopes": [
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "parameters": {
+                    "pageToken": {
+                      "description": "A page token, received from a previous `ListCustomClass` call. Provide this to retrieve the subsequent page. When paginating, all other parameters provided to `ListCustomClass` must match the call that provided the page token.",
+                      "location": "query",
+                      "type": "string"
+                    },
+                    "parent": {
+                      "pattern": "^projects/[^/]+/locations/[^/]+$",
+                      "type": "string",
+                      "location": "path",
+                      "description": "Required. The parent, which owns this collection of custom classes. Format: `projects/{project}/locations/{location}/customClasses` Speech-to-Text supports three locations: `global`, `us` (US North America), and `eu` (Europe). If you are calling the `speech.googleapis.com` endpoint, use the `global` location. To specify a region, use a [regional endpoint](/speech-to-text/docs/endpoints) with matching `us` or `eu` location value.",
+                      "required": true
+                    },
+                    "pageSize": {
+                      "location": "query",
+                      "type": "integer",
+                      "format": "int32",
+                      "description": "The maximum number of custom classes to return. The service may return fewer than this value. If unspecified, at most 50 custom classes will be returned. The maximum value is 1000; values above 1000 will be coerced to 1000."
+                    }
+                  },
+                  "path": "v1/{+parent}/customClasses",
+                  "description": "List custom classes."
+                },
+                "patch": {
+                  "scopes": [
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "response": {
+                    "$ref": "CustomClass"
+                  },
+                  "request": {
+                    "$ref": "CustomClass"
+                  },
+                  "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/customClasses/{customClassesId}",
+                  "description": "Update a custom class.",
+                  "httpMethod": "PATCH",
+                  "parameterOrder": [
+                    "name"
+                  ],
+                  "id": "speech.projects.locations.customClasses.patch",
+                  "path": "v1/{+name}",
+                  "parameters": {
+                    "name": {
+                      "required": true,
+                      "location": "path",
+                      "pattern": "^projects/[^/]+/locations/[^/]+/customClasses/[^/]+$",
+                      "type": "string",
+                      "description": "The resource name of the custom class."
+                    },
+                    "updateMask": {
+                      "description": "The list of fields to be updated.",
+                      "format": "google-fieldmask",
+                      "type": "string",
+                      "location": "query"
+                    }
+                  }
+                },
+                "delete": {
+                  "description": "Delete a custom class.",
+                  "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/customClasses/{customClassesId}",
+                  "scopes": [
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "path": "v1/{+name}",
+                  "response": {
+                    "$ref": "Empty"
+                  },
+                  "id": "speech.projects.locations.customClasses.delete",
+                  "httpMethod": "DELETE",
+                  "parameterOrder": [
+                    "name"
+                  ],
+                  "parameters": {
+                    "name": {
+                      "required": true,
+                      "description": "Required. The name of the custom class to delete. Format: `projects/{project}/locations/{location}/customClasses/{custom_class}` Speech-to-Text supports three locations: `global`, `us` (US North America), and `eu` (Europe). If you are calling the `speech.googleapis.com` endpoint, use the `global` location. To specify a region, use a [regional endpoint](/speech-to-text/docs/endpoints) with matching `us` or `eu` location value.",
+                      "type": "string",
+                      "pattern": "^projects/[^/]+/locations/[^/]+/customClasses/[^/]+$",
+                      "location": "path"
+                    }
+                  }
+                },
+                "create": {
+                  "id": "speech.projects.locations.customClasses.create",
+                  "path": "v1/{+parent}/customClasses",
+                  "parameters": {
+                    "parent": {
+                      "location": "path",
+                      "type": "string",
+                      "description": "Required. The parent resource where this custom class will be created. Format: `projects/{project}/locations/{location}/customClasses` Speech-to-Text supports three locations: `global`, `us` (US North America), and `eu` (Europe). If you are calling the `speech.googleapis.com` endpoint, use the `global` location. To specify a region, use a [regional endpoint](/speech-to-text/docs/endpoints) with matching `us` or `eu` location value.",
+                      "pattern": "^projects/[^/]+/locations/[^/]+$",
+                      "required": true
+                    }
+                  },
+                  "response": {
+                    "$ref": "CustomClass"
+                  },
+                  "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/customClasses",
+                  "description": "Create a custom class.",
+                  "scopes": [
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "parameterOrder": [
+                    "parent"
+                  ],
+                  "request": {
+                    "$ref": "CreateCustomClassRequest"
+                  },
+                  "httpMethod": "POST"
+                }
+              }
+            },
+            "phraseSets": {
+              "methods": {
+                "delete": {
+                  "description": "Delete a phrase set.",
+                  "response": {
+                    "$ref": "Empty"
+                  },
+                  "parameterOrder": [
+                    "name"
+                  ],
+                  "parameters": {
+                    "name": {
+                      "type": "string",
+                      "pattern": "^projects/[^/]+/locations/[^/]+/phraseSets/[^/]+$",
+                      "description": "Required. The name of the phrase set to delete. Format: `projects/{project}/locations/{location}/phraseSets/{phrase_set}`",
+                      "location": "path",
+                      "required": true
+                    }
+                  },
+                  "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/phraseSets/{phraseSetsId}",
+                  "id": "speech.projects.locations.phraseSets.delete",
+                  "scopes": [
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "path": "v1/{+name}",
+                  "httpMethod": "DELETE"
+                },
+                "get": {
+                  "parameters": {
+                    "name": {
+                      "type": "string",
+                      "description": "Required. The name of the phrase set to retrieve. Format: `projects/{project}/locations/{location}/phraseSets/{phrase_set}` Speech-to-Text supports three locations: `global`, `us` (US North America), and `eu` (Europe). If you are calling the `speech.googleapis.com` endpoint, use the `global` location. To specify a region, use a [regional endpoint](/speech-to-text/docs/endpoints) with matching `us` or `eu` location value.",
+                      "required": true,
+                      "pattern": "^projects/[^/]+/locations/[^/]+/phraseSets/[^/]+$",
+                      "location": "path"
+                    }
+                  },
+                  "parameterOrder": [
+                    "name"
+                  ],
+                  "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/phraseSets/{phraseSetsId}",
+                  "response": {
+                    "$ref": "PhraseSet"
+                  },
+                  "id": "speech.projects.locations.phraseSets.get",
+                  "httpMethod": "GET",
+                  "scopes": [
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "path": "v1/{+name}",
+                  "description": "Get a phrase set."
+                },
+                "create": {
+                  "path": "v1/{+parent}/phraseSets",
+                  "parameterOrder": [
+                    "parent"
+                  ],
+                  "response": {
+                    "$ref": "PhraseSet"
+                  },
+                  "request": {
+                    "$ref": "CreatePhraseSetRequest"
+                  },
+                  "scopes": [
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "parameters": {
+                    "parent": {
+                      "location": "path",
+                      "type": "string",
+                      "pattern": "^projects/[^/]+/locations/[^/]+$",
+                      "description": "Required. The parent resource where this phrase set will be created. Format: `projects/{project}/locations/{location}/phraseSets` Speech-to-Text supports three locations: `global`, `us` (US North America), and `eu` (Europe). If you are calling the `speech.googleapis.com` endpoint, use the `global` location. To specify a region, use a [regional endpoint](/speech-to-text/docs/endpoints) with matching `us` or `eu` location value.",
+                      "required": true
+                    }
+                  },
+                  "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/phraseSets",
+                  "id": "speech.projects.locations.phraseSets.create",
+                  "httpMethod": "POST",
+                  "description": "Create a set of phrase hints. Each item in the set can be a single word or a multi-word phrase. The items in the PhraseSet are favored by the recognition model when you send a call that includes the PhraseSet."
+                },
+                "list": {
+                  "parameters": {
+                    "parent": {
+                      "description": "Required. The parent, which owns this collection of phrase set. Format: `projects/{project}/locations/{location}` Speech-to-Text supports three locations: `global`, `us` (US North America), and `eu` (Europe). If you are calling the `speech.googleapis.com` endpoint, use the `global` location. To specify a region, use a [regional endpoint](/speech-to-text/docs/endpoints) with matching `us` or `eu` location value.",
+                      "type": "string",
+                      "required": true,
+                      "location": "path",
+                      "pattern": "^projects/[^/]+/locations/[^/]+$"
+                    },
+                    "pageSize": {
+                      "format": "int32",
+                      "type": "integer",
+                      "description": "The maximum number of phrase sets to return. The service may return fewer than this value. If unspecified, at most 50 phrase sets will be returned. The maximum value is 1000; values above 1000 will be coerced to 1000.",
+                      "location": "query"
+                    },
+                    "pageToken": {
+                      "description": "A page token, received from a previous `ListPhraseSet` call. Provide this to retrieve the subsequent page. When paginating, all other parameters provided to `ListPhraseSet` must match the call that provided the page token.",
+                      "type": "string",
+                      "location": "query"
+                    }
+                  },
+                  "description": "List phrase sets.",
+                  "scopes": [
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "response": {
+                    "$ref": "ListPhraseSetResponse"
+                  },
+                  "path": "v1/{+parent}/phraseSets",
+                  "id": "speech.projects.locations.phraseSets.list",
+                  "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/phraseSets",
+                  "httpMethod": "GET",
+                  "parameterOrder": [
+                    "parent"
+                  ]
+                },
+                "patch": {
+                  "path": "v1/{+name}",
+                  "request": {
+                    "$ref": "PhraseSet"
+                  },
+                  "id": "speech.projects.locations.phraseSets.patch",
+                  "scopes": [
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "response": {
+                    "$ref": "PhraseSet"
+                  },
+                  "httpMethod": "PATCH",
+                  "parameterOrder": [
+                    "name"
+                  ],
+                  "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/phraseSets/{phraseSetsId}",
+                  "parameters": {
+                    "name": {
+                      "description": "The resource name of the phrase set.",
+                      "type": "string",
+                      "location": "path",
+                      "required": true,
+                      "pattern": "^projects/[^/]+/locations/[^/]+/phraseSets/[^/]+$"
+                    },
+                    "updateMask": {
+                      "description": "The list of fields to be updated.",
+                      "format": "google-fieldmask",
+                      "location": "query",
+                      "type": "string"
+                    }
+                  },
+                  "description": "Update a phrase set."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "operations": {
+      "methods": {
+        "list": {
+          "parameters": {
+            "pageToken": {
+              "type": "string",
+              "description": "The standard list page token.",
+              "location": "query"
+            },
+            "pageSize": {
+              "description": "The standard list page size.",
+              "type": "integer",
+              "location": "query",
+              "format": "int32"
+            },
+            "name": {
+              "type": "string",
+              "location": "query",
+              "description": "The name of the operation's parent resource."
+            },
+            "filter": {
+              "type": "string",
+              "description": "The standard list filter.",
+              "location": "query"
+            }
+          },
+          "id": "speech.operations.list",
+          "response": {
+            "$ref": "ListOperationsResponse"
+          },
+          "flatPath": "v1/operations",
+          "httpMethod": "GET",
+          "parameterOrder": [],
+          "path": "v1/operations",
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform"
+          ],
+          "description": "Lists operations that match the specified filter in the request. If the server doesn't support this method, it returns `UNIMPLEMENTED`. NOTE: the `name` binding allows API services to override the binding to use different resource name schemes, such as `users/*/operations`. To override the binding, API services can add a binding such as `\"/v1/{name=users/*}/operations\"` to their service configuration. For backwards compatibility, the default name includes the operations collection id, however overriding users must ensure the name binding is the parent resource, without the operations collection id."
+        },
+        "get": {
+          "parameters": {
+            "name": {
+              "pattern": "^.*$",
+              "type": "string",
+              "location": "path",
+              "required": true,
+              "description": "The name of the operation resource."
+            }
+          },
+          "response": {
+            "$ref": "Operation"
+          },
+          "parameterOrder": [
+            "name"
+          ],
+          "path": "v1/operations/{+name}",
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform"
+          ],
+          "httpMethod": "GET",
+          "flatPath": "v1/operations/{operationsId}",
+          "id": "speech.operations.get",
+          "description": "Gets the latest state of a long-running operation. Clients can use this method to poll the operation result at intervals as recommended by the API service."
+        }
+      }
+    }
+  },
+  "description": "Converts audio to text by applying powerful neural network models.",
+  "baseUrl": "https://speech.googleapis.com/",
+  "title": "Cloud Speech-to-Text API",
+  "kind": "discovery#restDescription",
+  "protocol": "rest",
+  "name": "speech",
+  "id": "speech:v1",
+  "rootUrl": "https://speech.googleapis.com/",
+  "version": "v1",
+  "fullyEncodeReservedExpansion": true,
+  "discoveryVersion": "v1",
+  "ownerName": "Google",
+  "revision": "20220221",
   "version_module": true,
   "parameters": {
+    "oauth_token": {
+      "type": "string",
+      "location": "query",
+      "description": "OAuth 2.0 token for the current user."
+    },
+    "access_token": {
+      "location": "query",
+      "description": "OAuth access token.",
+      "type": "string"
+    },
     "quotaUser": {
+      "location": "query",
       "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
+      "type": "string"
+    },
+    "prettyPrint": {
+      "default": "true",
+      "location": "query",
+      "description": "Returns response with indentations and line breaks.",
+      "type": "boolean"
+    },
+    "upload_protocol": {
+      "type": "string",
+      "location": "query",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\")."
+    },
+    "$.xgafv": {
+      "enum": [
+        "1",
+        "2"
+      ],
+      "location": "query",
+      "description": "V1 error format.",
+      "type": "string",
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ]
+    },
+    "alt": {
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "description": "Data format for response.",
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "default": "json",
       "type": "string",
       "location": "query"
     },
@@ -767,501 +1244,24 @@
       "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
       "type": "string"
     },
-    "prettyPrint": {
-      "type": "boolean",
-      "location": "query",
-      "default": "true",
-      "description": "Returns response with indentations and line breaks."
-    },
-    "alt": {
-      "default": "json",
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "description": "Data format for response.",
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ],
-      "location": "query",
-      "type": "string"
-    },
     "callback": {
-      "type": "string",
       "location": "query",
+      "type": "string",
       "description": "JSONP"
     },
-    "access_token": {
+    "fields": {
+      "description": "Selector specifying which fields to include in a partial response.",
       "type": "string",
-      "location": "query",
-      "description": "OAuth access token."
-    },
-    "oauth_token": {
-      "description": "OAuth 2.0 token for the current user.",
-      "location": "query",
-      "type": "string"
+      "location": "query"
     },
     "key": {
       "type": "string",
-      "location": "query",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token."
-    },
-    "upload_protocol": {
-      "type": "string",
-      "location": "query",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\")."
-    },
-    "fields": {
-      "type": "string",
-      "description": "Selector specifying which fields to include in a partial response.",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
       "location": "query"
-    },
-    "$.xgafv": {
-      "location": "query",
-      "description": "V1 error format.",
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ],
-      "enum": [
-        "1",
-        "2"
-      ],
-      "type": "string"
     }
   },
   "icons": {
     "x16": "http://www.google.com/images/icons/product/search-16.gif",
     "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "batchPath": "batch",
-  "title": "Cloud Speech-to-Text API",
-  "version": "v1",
-  "resources": {
-    "operations": {
-      "methods": {
-        "list": {
-          "response": {
-            "$ref": "ListOperationsResponse"
-          },
-          "httpMethod": "GET",
-          "path": "v1/operations",
-          "parameterOrder": [],
-          "id": "speech.operations.list",
-          "parameters": {
-            "pageSize": {
-              "description": "The standard list page size.",
-              "location": "query",
-              "format": "int32",
-              "type": "integer"
-            },
-            "filter": {
-              "type": "string",
-              "location": "query",
-              "description": "The standard list filter."
-            },
-            "name": {
-              "description": "The name of the operation's parent resource.",
-              "location": "query",
-              "type": "string"
-            },
-            "pageToken": {
-              "description": "The standard list page token.",
-              "location": "query",
-              "type": "string"
-            }
-          },
-          "description": "Lists operations that match the specified filter in the request. If the server doesn't support this method, it returns `UNIMPLEMENTED`. NOTE: the `name` binding allows API services to override the binding to use different resource name schemes, such as `users/*/operations`. To override the binding, API services can add a binding such as `\"/v1/{name=users/*}/operations\"` to their service configuration. For backwards compatibility, the default name includes the operations collection id, however overriding users must ensure the name binding is the parent resource, without the operations collection id.",
-          "scopes": [
-            "https://www.googleapis.com/auth/cloud-platform"
-          ],
-          "flatPath": "v1/operations"
-        },
-        "get": {
-          "id": "speech.operations.get",
-          "path": "v1/operations/{+name}",
-          "response": {
-            "$ref": "Operation"
-          },
-          "flatPath": "v1/operations/{operationsId}",
-          "httpMethod": "GET",
-          "scopes": [
-            "https://www.googleapis.com/auth/cloud-platform"
-          ],
-          "description": "Gets the latest state of a long-running operation. Clients can use this method to poll the operation result at intervals as recommended by the API service.",
-          "parameters": {
-            "name": {
-              "location": "path",
-              "type": "string",
-              "pattern": "^.*$",
-              "required": true,
-              "description": "The name of the operation resource."
-            }
-          },
-          "parameterOrder": [
-            "name"
-          ]
-        }
-      }
-    },
-    "projects": {
-      "resources": {
-        "locations": {
-          "resources": {
-            "phraseSets": {
-              "methods": {
-                "patch": {
-                  "request": {
-                    "$ref": "PhraseSet"
-                  },
-                  "response": {
-                    "$ref": "PhraseSet"
-                  },
-                  "parameters": {
-                    "updateMask": {
-                      "type": "string",
-                      "format": "google-fieldmask",
-                      "location": "query",
-                      "description": "The list of fields to be updated."
-                    },
-                    "name": {
-                      "description": "The resource name of the phrase set.",
-                      "location": "path",
-                      "pattern": "^projects/[^/]+/locations/[^/]+/phraseSets/[^/]+$",
-                      "required": true,
-                      "type": "string"
-                    }
-                  },
-                  "scopes": [
-                    "https://www.googleapis.com/auth/cloud-platform"
-                  ],
-                  "httpMethod": "PATCH",
-                  "id": "speech.projects.locations.phraseSets.patch",
-                  "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/phraseSets/{phraseSetsId}",
-                  "path": "v1/{+name}",
-                  "parameterOrder": [
-                    "name"
-                  ],
-                  "description": "Update a phrase set."
-                },
-                "create": {
-                  "response": {
-                    "$ref": "PhraseSet"
-                  },
-                  "httpMethod": "POST",
-                  "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/phraseSets",
-                  "path": "v1/{+parent}/phraseSets",
-                  "parameterOrder": [
-                    "parent"
-                  ],
-                  "description": "Create a set of phrase hints. Each item in the set can be a single word or a multi-word phrase. The items in the PhraseSet are favored by the recognition model when you send a call that includes the PhraseSet.",
-                  "scopes": [
-                    "https://www.googleapis.com/auth/cloud-platform"
-                  ],
-                  "id": "speech.projects.locations.phraseSets.create",
-                  "request": {
-                    "$ref": "CreatePhraseSetRequest"
-                  },
-                  "parameters": {
-                    "parent": {
-                      "required": true,
-                      "description": "Required. The parent resource where this phrase set will be created. Format: `projects/{project}/locations/{location}/phraseSets` Speech-to-Text supports three locations: `global`, `us` (US North America), and `eu` (Europe). If you are calling the `speech.googleapis.com` endpoint, use the `global` location. To specify a region, use a [regional endpoint](/speech-to-text/docs/endpoints) with matching `us` or `eu` location value.",
-                      "type": "string",
-                      "location": "path",
-                      "pattern": "^projects/[^/]+/locations/[^/]+$"
-                    }
-                  }
-                },
-                "delete": {
-                  "id": "speech.projects.locations.phraseSets.delete",
-                  "response": {
-                    "$ref": "Empty"
-                  },
-                  "description": "Delete a phrase set.",
-                  "parameters": {
-                    "name": {
-                      "description": "Required. The name of the phrase set to delete. Format: `projects/{project}/locations/{location}/phraseSets/{phrase_set}`",
-                      "location": "path",
-                      "type": "string",
-                      "pattern": "^projects/[^/]+/locations/[^/]+/phraseSets/[^/]+$",
-                      "required": true
-                    }
-                  },
-                  "httpMethod": "DELETE",
-                  "scopes": [
-                    "https://www.googleapis.com/auth/cloud-platform"
-                  ],
-                  "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/phraseSets/{phraseSetsId}",
-                  "path": "v1/{+name}",
-                  "parameterOrder": [
-                    "name"
-                  ]
-                },
-                "get": {
-                  "description": "Get a phrase set.",
-                  "response": {
-                    "$ref": "PhraseSet"
-                  },
-                  "httpMethod": "GET",
-                  "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/phraseSets/{phraseSetsId}",
-                  "parameters": {
-                    "name": {
-                      "type": "string",
-                      "pattern": "^projects/[^/]+/locations/[^/]+/phraseSets/[^/]+$",
-                      "location": "path",
-                      "description": "Required. The name of the phrase set to retrieve. Format: `projects/{project}/locations/{location}/phraseSets/{phrase_set}` Speech-to-Text supports three locations: `global`, `us` (US North America), and `eu` (Europe). If you are calling the `speech.googleapis.com` endpoint, use the `global` location. To specify a region, use a [regional endpoint](/speech-to-text/docs/endpoints) with matching `us` or `eu` location value.",
-                      "required": true
-                    }
-                  },
-                  "id": "speech.projects.locations.phraseSets.get",
-                  "scopes": [
-                    "https://www.googleapis.com/auth/cloud-platform"
-                  ],
-                  "path": "v1/{+name}",
-                  "parameterOrder": [
-                    "name"
-                  ]
-                },
-                "list": {
-                  "parameters": {
-                    "parent": {
-                      "pattern": "^projects/[^/]+/locations/[^/]+$",
-                      "location": "path",
-                      "description": "Required. The parent, which owns this collection of phrase set. Format: `projects/{project}/locations/{location}` Speech-to-Text supports three locations: `global`, `us` (US North America), and `eu` (Europe). If you are calling the `speech.googleapis.com` endpoint, use the `global` location. To specify a region, use a [regional endpoint](/speech-to-text/docs/endpoints) with matching `us` or `eu` location value.",
-                      "required": true,
-                      "type": "string"
-                    },
-                    "pageToken": {
-                      "description": "A page token, received from a previous `ListPhraseSet` call. Provide this to retrieve the subsequent page. When paginating, all other parameters provided to `ListPhraseSet` must match the call that provided the page token.",
-                      "location": "query",
-                      "type": "string"
-                    },
-                    "pageSize": {
-                      "format": "int32",
-                      "location": "query",
-                      "type": "integer",
-                      "description": "The maximum number of phrase sets to return. The service may return fewer than this value. If unspecified, at most 50 phrase sets will be returned. The maximum value is 1000; values above 1000 will be coerced to 1000."
-                    }
-                  },
-                  "parameterOrder": [
-                    "parent"
-                  ],
-                  "response": {
-                    "$ref": "ListPhraseSetResponse"
-                  },
-                  "id": "speech.projects.locations.phraseSets.list",
-                  "httpMethod": "GET",
-                  "path": "v1/{+parent}/phraseSets",
-                  "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/phraseSets",
-                  "description": "List phrase sets.",
-                  "scopes": [
-                    "https://www.googleapis.com/auth/cloud-platform"
-                  ]
-                }
-              }
-            },
-            "customClasses": {
-              "methods": {
-                "patch": {
-                  "request": {
-                    "$ref": "CustomClass"
-                  },
-                  "httpMethod": "PATCH",
-                  "parameters": {
-                    "name": {
-                      "required": true,
-                      "description": "The resource name of the custom class.",
-                      "type": "string",
-                      "pattern": "^projects/[^/]+/locations/[^/]+/customClasses/[^/]+$",
-                      "location": "path"
-                    },
-                    "updateMask": {
-                      "format": "google-fieldmask",
-                      "description": "The list of fields to be updated.",
-                      "type": "string",
-                      "location": "query"
-                    }
-                  },
-                  "id": "speech.projects.locations.customClasses.patch",
-                  "path": "v1/{+name}",
-                  "parameterOrder": [
-                    "name"
-                  ],
-                  "response": {
-                    "$ref": "CustomClass"
-                  },
-                  "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/customClasses/{customClassesId}",
-                  "scopes": [
-                    "https://www.googleapis.com/auth/cloud-platform"
-                  ],
-                  "description": "Update a custom class."
-                },
-                "get": {
-                  "parameterOrder": [
-                    "name"
-                  ],
-                  "httpMethod": "GET",
-                  "path": "v1/{+name}",
-                  "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/customClasses/{customClassesId}",
-                  "id": "speech.projects.locations.customClasses.get",
-                  "parameters": {
-                    "name": {
-                      "pattern": "^projects/[^/]+/locations/[^/]+/customClasses/[^/]+$",
-                      "description": "Required. The name of the custom class to retrieve. Format: `projects/{project}/locations/{location}/customClasses/{custom_class}`",
-                      "location": "path",
-                      "type": "string",
-                      "required": true
-                    }
-                  },
-                  "scopes": [
-                    "https://www.googleapis.com/auth/cloud-platform"
-                  ],
-                  "response": {
-                    "$ref": "CustomClass"
-                  },
-                  "description": "Get a custom class."
-                },
-                "delete": {
-                  "response": {
-                    "$ref": "Empty"
-                  },
-                  "id": "speech.projects.locations.customClasses.delete",
-                  "httpMethod": "DELETE",
-                  "parameters": {
-                    "name": {
-                      "location": "path",
-                      "type": "string",
-                      "description": "Required. The name of the custom class to delete. Format: `projects/{project}/locations/{location}/customClasses/{custom_class}` Speech-to-Text supports three locations: `global`, `us` (US North America), and `eu` (Europe). If you are calling the `speech.googleapis.com` endpoint, use the `global` location. To specify a region, use a [regional endpoint](/speech-to-text/docs/endpoints) with matching `us` or `eu` location value.",
-                      "required": true,
-                      "pattern": "^projects/[^/]+/locations/[^/]+/customClasses/[^/]+$"
-                    }
-                  },
-                  "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/customClasses/{customClassesId}",
-                  "scopes": [
-                    "https://www.googleapis.com/auth/cloud-platform"
-                  ],
-                  "description": "Delete a custom class.",
-                  "parameterOrder": [
-                    "name"
-                  ],
-                  "path": "v1/{+name}"
-                },
-                "list": {
-                  "path": "v1/{+parent}/customClasses",
-                  "description": "List custom classes.",
-                  "parameterOrder": [
-                    "parent"
-                  ],
-                  "scopes": [
-                    "https://www.googleapis.com/auth/cloud-platform"
-                  ],
-                  "response": {
-                    "$ref": "ListCustomClassesResponse"
-                  },
-                  "httpMethod": "GET",
-                  "parameters": {
-                    "pageSize": {
-                      "format": "int32",
-                      "location": "query",
-                      "description": "The maximum number of custom classes to return. The service may return fewer than this value. If unspecified, at most 50 custom classes will be returned. The maximum value is 1000; values above 1000 will be coerced to 1000.",
-                      "type": "integer"
-                    },
-                    "pageToken": {
-                      "location": "query",
-                      "description": "A page token, received from a previous `ListCustomClass` call. Provide this to retrieve the subsequent page. When paginating, all other parameters provided to `ListCustomClass` must match the call that provided the page token.",
-                      "type": "string"
-                    },
-                    "parent": {
-                      "location": "path",
-                      "type": "string",
-                      "pattern": "^projects/[^/]+/locations/[^/]+$",
-                      "required": true,
-                      "description": "Required. The parent, which owns this collection of custom classes. Format: `projects/{project}/locations/{location}/customClasses` Speech-to-Text supports three locations: `global`, `us` (US North America), and `eu` (Europe). If you are calling the `speech.googleapis.com` endpoint, use the `global` location. To specify a region, use a [regional endpoint](/speech-to-text/docs/endpoints) with matching `us` or `eu` location value."
-                    }
-                  },
-                  "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/customClasses",
-                  "id": "speech.projects.locations.customClasses.list"
-                },
-                "create": {
-                  "httpMethod": "POST",
-                  "parameterOrder": [
-                    "parent"
-                  ],
-                  "response": {
-                    "$ref": "CustomClass"
-                  },
-                  "description": "Create a custom class.",
-                  "path": "v1/{+parent}/customClasses",
-                  "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/customClasses",
-                  "request": {
-                    "$ref": "CreateCustomClassRequest"
-                  },
-                  "parameters": {
-                    "parent": {
-                      "required": true,
-                      "pattern": "^projects/[^/]+/locations/[^/]+$",
-                      "description": "Required. The parent resource where this custom class will be created. Format: `projects/{project}/locations/{location}/customClasses` Speech-to-Text supports three locations: `global`, `us` (US North America), and `eu` (Europe). If you are calling the `speech.googleapis.com` endpoint, use the `global` location. To specify a region, use a [regional endpoint](/speech-to-text/docs/endpoints) with matching `us` or `eu` location value.",
-                      "location": "path",
-                      "type": "string"
-                    }
-                  },
-                  "scopes": [
-                    "https://www.googleapis.com/auth/cloud-platform"
-                  ],
-                  "id": "speech.projects.locations.customClasses.create"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "speech": {
-      "methods": {
-        "longrunningrecognize": {
-          "id": "speech.speech.longrunningrecognize",
-          "request": {
-            "$ref": "LongRunningRecognizeRequest"
-          },
-          "scopes": [
-            "https://www.googleapis.com/auth/cloud-platform"
-          ],
-          "description": "Performs asynchronous speech recognition: receive results via the google.longrunning.Operations interface. Returns either an `Operation.error` or an `Operation.response` which contains a `LongRunningRecognizeResponse` message. For more information on asynchronous speech recognition, see the [how-to](https://cloud.google.com/speech-to-text/docs/async-recognize).",
-          "parameters": {},
-          "flatPath": "v1/speech:longrunningrecognize",
-          "parameterOrder": [],
-          "httpMethod": "POST",
-          "response": {
-            "$ref": "Operation"
-          },
-          "path": "v1/speech:longrunningrecognize"
-        },
-        "recognize": {
-          "scopes": [
-            "https://www.googleapis.com/auth/cloud-platform"
-          ],
-          "flatPath": "v1/speech:recognize",
-          "parameters": {},
-          "response": {
-            "$ref": "RecognizeResponse"
-          },
-          "request": {
-            "$ref": "RecognizeRequest"
-          },
-          "httpMethod": "POST",
-          "description": "Performs synchronous speech recognition: receive results after all audio has been sent and processed.",
-          "parameterOrder": [],
-          "path": "v1/speech:recognize",
-          "id": "speech.speech.recognize"
-        }
-      }
-    }
-  },
-  "ownerDomain": "google.com",
-  "description": "Converts audio to text by applying powerful neural network models.",
-  "name": "speech",
-  "mtlsRootUrl": "https://speech.mtls.googleapis.com/"
+  }
 }
