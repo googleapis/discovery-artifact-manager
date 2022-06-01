@@ -1,0 +1,588 @@
+{
+  "title": "Bare Metal Solution API",
+  "description": "Provides ways to manage Bare Metal Solution hardware installed in a regional extension located near a Google Cloud data center.",
+  "ownerDomain": "google.com",
+  "batchPath": "batch",
+  "discoveryVersion": "v1",
+  "name": "baremetalsolution",
+  "id": "baremetalsolution:v1alpha1",
+  "rootUrl": "https://baremetalsolution.googleapis.com/",
+  "servicePath": "",
+  "kind": "discovery#restDescription",
+  "schemas": {
+    "VolumeConfig": {
+      "description": "Configuration parameters for a new volume.",
+      "type": "object",
+      "id": "VolumeConfig",
+      "properties": {
+        "location": {
+          "description": "Location where to deploy the volume.",
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "TYPE_UNSPECIFIED",
+            "FLASH",
+            "DISK"
+          ],
+          "enumDescriptions": [
+            "The unspecified type.",
+            "This Volume is on flash.",
+            "This Volume is on disk."
+          ],
+          "description": "The type of this Volume."
+        },
+        "lunRanges": {
+          "items": {
+            "$ref": "LunRange"
+          },
+          "type": "array",
+          "description": "LUN ranges to be configured. Set only when protocol is PROTOCOL_FC."
+        },
+        "sizeGb": {
+          "type": "integer",
+          "description": "The requested size of this volume, in GB. This will be updated in a later iteration with a generic size field.",
+          "format": "int32"
+        },
+        "machineIds": {
+          "type": "array",
+          "description": "Machine ids connected to this volume. Set only when protocol is PROTOCOL_FC.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "nfsExports": {
+          "items": {
+            "$ref": "NfsExport"
+          },
+          "description": "NFS exports. Set only when protocol is PROTOCOL_NFS.",
+          "type": "array"
+        },
+        "protocol": {
+          "enum": [
+            "PROTOCOL_UNSPECIFIED",
+            "PROTOCOL_FC",
+            "PROTOCOL_NFS"
+          ],
+          "description": "Volume protocol.",
+          "type": "string",
+          "enumDescriptions": [
+            "Unspecified value.",
+            "Fibre channel.",
+            "Network file system."
+          ]
+        },
+        "snapshotsEnabled": {
+          "description": "Whether snapshots should be enabled.",
+          "type": "boolean"
+        },
+        "userNote": {
+          "description": "User note field, it can be used by customers to add additional information for the BMS Ops team (b/194021617).",
+          "type": "string"
+        },
+        "id": {
+          "description": "A transient unique identifier to identify a volume within an ProvisioningConfig request.",
+          "type": "string"
+        }
+      }
+    },
+    "SubmitProvisioningConfigRequest": {
+      "id": "SubmitProvisioningConfigRequest",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Optional. Email provided to send a confirmation with provisioning config to."
+        },
+        "provisioningConfig": {
+          "description": "Required. The ProvisioningConfig to submit.",
+          "$ref": "ProvisioningConfig"
+        }
+      },
+      "type": "object",
+      "description": "Request for SubmitProvisioningConfig."
+    },
+    "VlanAttachment": {
+      "type": "object",
+      "id": "VlanAttachment",
+      "properties": {
+        "pairingKey": {
+          "description": "Attachment pairing key.",
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "description": "Identifier of the VLAN attachment."
+        }
+      },
+      "description": "A GCP vlan attachment."
+    },
+    "InstanceConfig": {
+      "type": "object",
+      "id": "InstanceConfig",
+      "description": "Configuration parameters for a new instance.",
+      "properties": {
+        "privateNetwork": {
+          "$ref": "NetworkAddress",
+          "description": "Private network address, if any."
+        },
+        "id": {
+          "description": "A transient unique identifier to idenfity an instance within an ProvisioningConfig request.",
+          "type": "string"
+        },
+        "userNote": {
+          "description": "User note field, it can be used by customers to add additional information for the BMS Ops team (b/194021617).",
+          "type": "string"
+        },
+        "osImage": {
+          "type": "string",
+          "description": "OS image to initialize the instance."
+        },
+        "location": {
+          "description": "Location where to deploy the instance.",
+          "type": "string"
+        },
+        "instanceType": {
+          "type": "string",
+          "description": "Instance type."
+        },
+        "hyperthreading": {
+          "type": "boolean",
+          "description": "Whether the instance should be provisioned with Hyperthreading enabled."
+        },
+        "clientNetwork": {
+          "description": "Client network address.",
+          "$ref": "NetworkAddress"
+        }
+      }
+    },
+    "LunRange": {
+      "properties": {
+        "quantity": {
+          "format": "int32",
+          "description": "Number of LUNs to create.",
+          "type": "integer"
+        },
+        "sizeGb": {
+          "description": "The requested size of each LUN, in GB.",
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "type": "object",
+      "description": "A LUN range.",
+      "id": "LunRange"
+    },
+    "ProvisioningQuota": {
+      "id": "ProvisioningQuota",
+      "properties": {
+        "instanceQuota": {
+          "description": "Instance quota.",
+          "$ref": "InstanceQuota"
+        }
+      },
+      "description": "A provisioning quota for a given project.",
+      "type": "object"
+    },
+    "NfsExport": {
+      "description": "A NFS export entry.",
+      "properties": {
+        "allowSuid": {
+          "type": "boolean",
+          "description": "Allow the setuid flag."
+        },
+        "cidr": {
+          "type": "string",
+          "description": "A CIDR range."
+        },
+        "networkId": {
+          "type": "string",
+          "description": "Network to use to publish the export."
+        },
+        "allowDev": {
+          "type": "boolean",
+          "description": "Allow dev."
+        },
+        "permissions": {
+          "enum": [
+            "PERMISSIONS_UNSPECIFIED",
+            "READ_ONLY",
+            "READ_WRITE"
+          ],
+          "type": "string",
+          "enumDescriptions": [
+            "Unspecified value.",
+            "Read-only permission.",
+            "Read-write permission."
+          ],
+          "description": "Export permissions."
+        },
+        "machineId": {
+          "type": "string",
+          "description": "Either a single machine, identified by an ID, or a comma-separated list of machine IDs."
+        },
+        "noRootSquash": {
+          "type": "boolean",
+          "description": "Disable root squashing."
+        }
+      },
+      "id": "NfsExport",
+      "type": "object"
+    },
+    "ListProvisioningQuotasResponse": {
+      "properties": {
+        "nextPageToken": {
+          "type": "string",
+          "description": "Token to retrieve the next page of results, or empty if there are no more results in the list."
+        },
+        "provisioningQuotas": {
+          "items": {
+            "$ref": "ProvisioningQuota"
+          },
+          "description": "The provisioning quotas registered in this project.",
+          "type": "array"
+        }
+      },
+      "id": "ListProvisioningQuotasResponse",
+      "type": "object",
+      "description": "Response for ListProvisioningQuotas."
+    },
+    "NetworkConfig": {
+      "id": "NetworkConfig",
+      "properties": {
+        "serviceCidr": {
+          "enum": [
+            "SERVICE_CIDR_UNSPECIFIED",
+            "DISABLED",
+            "HIGH_26",
+            "HIGH_27",
+            "HIGH_28"
+          ],
+          "type": "string",
+          "description": "Service CIDR, if any.",
+          "enumDescriptions": [
+            "Unspecified value.",
+            "Services are disabled for the given network.",
+            "Use the highest /26 block of the network to host services.",
+            "Use the highest /27 block of the network to host services.",
+            "Use the highest /28 block of the network to host services."
+          ]
+        },
+        "location": {
+          "type": "string",
+          "description": "Location where to deploy the network."
+        },
+        "type": {
+          "description": "The type of this network.",
+          "enumDescriptions": [
+            "Unspecified value.",
+            "Client network, that is a network peered to a GCP VPC.",
+            "Private network, that is a network local to the BMS POD."
+          ],
+          "enum": [
+            "TYPE_UNSPECIFIED",
+            "CLIENT",
+            "PRIVATE"
+          ],
+          "type": "string"
+        },
+        "bandwidth": {
+          "enum": [
+            "BANDWIDTH_UNSPECIFIED",
+            "BW_1_GBPS",
+            "BW_2_GBPS",
+            "BW_5_GBPS",
+            "BW_10_GBPS"
+          ],
+          "enumDescriptions": [
+            "Unspecified value.",
+            "1 Gbps.",
+            "2 Gbps.",
+            "5 Gbps.",
+            "10 Gbps."
+          ],
+          "type": "string",
+          "description": "Interconnect bandwidth. Set only when type is CLIENT."
+        },
+        "userNote": {
+          "type": "string",
+          "description": "User note field, it can be used by customers to add additional information for the BMS Ops team (b/194021617)."
+        },
+        "vlanAttachments": {
+          "description": "List of VLAN attachments. As of now there are always 2 attachments, but it is going to change in the future (multi vlan).",
+          "type": "array",
+          "items": {
+            "$ref": "VlanAttachment"
+          }
+        },
+        "cidr": {
+          "description": "CIDR range of the network.",
+          "type": "string"
+        },
+        "id": {
+          "description": "A transient unique identifier to identify a volume within an ProvisioningConfig request.",
+          "type": "string"
+        }
+      },
+      "description": "Configuration parameters for a new network.",
+      "type": "object"
+    },
+    "ProvisioningConfig": {
+      "type": "object",
+      "id": "ProvisioningConfig",
+      "description": "An provisioning configuration.",
+      "properties": {
+        "networks": {
+          "description": "Networks to be created.",
+          "items": {
+            "$ref": "NetworkConfig"
+          },
+          "type": "array"
+        },
+        "volumes": {
+          "description": "Volumes to be created.",
+          "items": {
+            "$ref": "VolumeConfig"
+          },
+          "type": "array"
+        },
+        "instances": {
+          "type": "array",
+          "items": {
+            "$ref": "InstanceConfig"
+          },
+          "description": "Instances to be created."
+        },
+        "ticketId": {
+          "type": "string",
+          "description": "A reference to track the request."
+        }
+      }
+    },
+    "InstanceQuota": {
+      "properties": {
+        "instanceType": {
+          "type": "string",
+          "description": "Instance type."
+        },
+        "availableMachineCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of machines than can be created for the given location and instance_type."
+        },
+        "location": {
+          "type": "string",
+          "description": "Location where the quota applies."
+        }
+      },
+      "type": "object",
+      "id": "InstanceQuota",
+      "description": "A resource budget."
+    },
+    "NetworkAddress": {
+      "id": "NetworkAddress",
+      "properties": {
+        "existingNetworkId": {
+          "type": "string",
+          "description": "Name of the existing network to use. Will be of the format at--vlan for pre-intake UI networks like for eg, at-123456-vlan001 or any user-defined name like for eg, my-network-name for networks provisioned using intake UI. The field is exclusively filled only in case of an already existing network. Mutually exclusive with network_id."
+        },
+        "address": {
+          "type": "string",
+          "description": "IP address to be assigned to the server."
+        },
+        "networkId": {
+          "description": "Name of the network to use, within the same ProvisioningConfig request. This represents a new network being provisioned in the same request. Can have any user-defined name like for eg, my-network-name. Mutually exclusive with existing_network_id.",
+          "type": "string"
+        }
+      },
+      "description": "A network.",
+      "type": "object"
+    }
+  },
+  "protocol": "rest",
+  "revision": "20220524",
+  "basePath": "",
+  "mtlsRootUrl": "https://baremetalsolution.mtls.googleapis.com/",
+  "parameters": {
+    "$.xgafv": {
+      "enum": [
+        "1",
+        "2"
+      ],
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "location": "query",
+      "description": "V1 error format.",
+      "type": "string"
+    },
+    "fields": {
+      "location": "query",
+      "description": "Selector specifying which fields to include in a partial response.",
+      "type": "string"
+    },
+    "access_token": {
+      "location": "query",
+      "description": "OAuth access token.",
+      "type": "string"
+    },
+    "uploadType": {
+      "type": "string",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
+      "location": "query"
+    },
+    "key": {
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+      "type": "string",
+      "location": "query"
+    },
+    "quotaUser": {
+      "location": "query",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
+      "type": "string"
+    },
+    "alt": {
+      "location": "query",
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "description": "Data format for response.",
+      "default": "json",
+      "type": "string"
+    },
+    "prettyPrint": {
+      "type": "boolean",
+      "description": "Returns response with indentations and line breaks.",
+      "default": "true",
+      "location": "query"
+    },
+    "callback": {
+      "type": "string",
+      "description": "JSONP",
+      "location": "query"
+    },
+    "upload_protocol": {
+      "location": "query",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
+      "type": "string"
+    },
+    "oauth_token": {
+      "location": "query",
+      "type": "string",
+      "description": "OAuth 2.0 token for the current user."
+    }
+  },
+  "fullyEncodeReservedExpansion": true,
+  "documentationLink": "https://cloud.google.com/bare-metal",
+  "version_module": true,
+  "baseUrl": "https://baremetalsolution.googleapis.com/",
+  "resources": {
+    "projects": {
+      "resources": {
+        "provisioningQuotas": {
+          "methods": {
+            "list": {
+              "httpMethod": "GET",
+              "parameters": {
+                "parent": {
+                  "pattern": "^projects/[^/]+$",
+                  "description": "Required. The parent project containing the provisioning quotas.",
+                  "required": true,
+                  "type": "string",
+                  "location": "path"
+                },
+                "pageToken": {
+                  "location": "query",
+                  "type": "string",
+                  "description": "The next_page_token value returned from a previous List request, if any."
+                },
+                "pageSize": {
+                  "format": "int32",
+                  "location": "query",
+                  "description": "The maximum number of items to return.",
+                  "type": "integer"
+                }
+              },
+              "response": {
+                "$ref": "ListProvisioningQuotasResponse"
+              },
+              "description": "List the budget details to provision resources on a given project.",
+              "parameterOrder": [
+                "parent"
+              ],
+              "id": "baremetalsolution.projects.provisioningQuotas.list",
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
+              ],
+              "flatPath": "v1alpha1/projects/{projectsId}/provisioningQuotas",
+              "path": "v1alpha1/{+parent}/provisioningQuotas"
+            }
+          }
+        },
+        "locations": {
+          "methods": {
+            "submitProvisioningConfig": {
+              "parameters": {
+                "project": {
+                  "description": "Required. The target project of the provisioning request.",
+                  "required": true,
+                  "pattern": "^projects/[^/]+$",
+                  "location": "path",
+                  "type": "string"
+                },
+                "location": {
+                  "pattern": "^locations/[^/]+$",
+                  "type": "string",
+                  "description": "Required. The target location of the provisioning request.",
+                  "location": "path",
+                  "required": true
+                }
+              },
+              "response": {
+                "$ref": "ProvisioningConfig"
+              },
+              "description": "Submit a provisiong configuration for a given project.",
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
+              ],
+              "request": {
+                "$ref": "SubmitProvisioningConfigRequest"
+              },
+              "parameterOrder": [
+                "project",
+                "location"
+              ],
+              "id": "baremetalsolution.projects.locations.submitProvisioningConfig",
+              "httpMethod": "POST",
+              "path": "v1alpha1/{+project}/{+location}:submitProvisioningConfig",
+              "flatPath": "v1alpha1/projects/{projectsId}/locations/{locationsId}:submitProvisioningConfig"
+            }
+          }
+        }
+      }
+    }
+  },
+  "ownerName": "Google",
+  "version": "v1alpha1",
+  "icons": {
+    "x32": "http://www.google.com/images/icons/product/search-32.gif",
+    "x16": "http://www.google.com/images/icons/product/search-16.gif"
+  },
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        }
+      }
+    }
+  }
+}
