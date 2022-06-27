@@ -1,1151 +1,730 @@
 {
+  "protocol": "rest",
+  "version": "v1",
+  "fullyEncodeReservedExpansion": true,
+  "revision": "20220625",
+  "title": "My Business Business Information API",
+  "name": "mybusinessbusinessinformation",
+  "id": "mybusinessbusinessinformation:v1",
   "batchPath": "batch",
+  "rootUrl": "https://mybusinessbusinessinformation.googleapis.com/",
   "ownerName": "Google",
-  "basePath": "",
-  "schemas": {
-    "PostalAddress": {
-      "description": "Represents a postal address, e.g. for postal delivery or payments addresses. Given a postal address, a postal service can deliver items to a premise, P.O. Box or similar. It is not intended to model geographical locations (roads, towns, mountains). In typical usage an address would be created via user input or from importing existing data, depending on the type of process. Advice on address input / editing: - Use an i18n-ready address widget such as https://github.com/google/libaddressinput) - Users should not be presented with UI elements for input or editing of fields outside countries where that field is used. For more guidance on how to use this schema, please see: https://support.google.com/business/answer/6397478",
-      "id": "PostalAddress",
-      "properties": {
-        "organization": {
-          "description": "Optional. The name of the organization at the address.",
-          "type": "string"
-        },
-        "languageCode": {
-          "description": "Optional. BCP-47 language code of the contents of this address (if known). This is often the UI language of the input form or is expected to match one of the languages used in the address' country/region, or their transliterated equivalents. This can affect formatting in certain countries, but is not critical to the correctness of the data and will never affect any validation or other non-formatting related operations. If this value is not known, it should be omitted (rather than specifying a possibly incorrect default). Examples: \"zh-Hant\", \"ja\", \"ja-Latn\", \"en\".",
-          "type": "string"
-        },
-        "sublocality": {
-          "type": "string",
-          "description": "Optional. Sublocality of the address. For example, this can be neighborhoods, boroughs, districts."
-        },
-        "revision": {
-          "type": "integer",
-          "format": "int32",
-          "description": "The schema revision of the `PostalAddress`. This must be set to 0, which is the latest revision. All new revisions **must** be backward compatible with old revisions."
-        },
-        "postalCode": {
-          "description": "Optional. Postal code of the address. Not all countries use or require postal codes to be present, but where they are used, they may trigger additional validation with other parts of the address (e.g. state/zip validation in the U.S.A.).",
-          "type": "string"
-        },
-        "addressLines": {
-          "items": {
-            "type": "string"
+  "resources": {
+    "categories": {
+      "methods": {
+        "list": {
+          "parameterOrder": [],
+          "path": "v1/categories",
+          "parameters": {
+            "pageToken": {
+              "description": "Optional. If specified, the next page of categories will be fetched.",
+              "type": "string",
+              "location": "query"
+            },
+            "pageSize": {
+              "format": "int32",
+              "location": "query",
+              "description": "Optional. How many categories to fetch per page. Default is 100, minimum is 1, and maximum page size is 100.",
+              "type": "integer"
+            },
+            "filter": {
+              "location": "query",
+              "type": "string",
+              "description": "Optional. Filter string from user. The only field that supported is `displayName`. Eg: `filter=displayName=foo`."
+            },
+            "languageCode": {
+              "type": "string",
+              "location": "query",
+              "description": "Required. The BCP 47 code of language."
+            },
+            "view": {
+              "enumDescriptions": [
+                "Not specified, equivalent to CATEGORY_METADATA_ONLY.",
+                "The server response will only include Category fields display_name, category_id and language_code. It omits any service type metadata related fields.",
+                "Returns all the fields in the response."
+              ],
+              "type": "string",
+              "description": "Required. Specifies which parts to the Category resource should be returned in the response.",
+              "enum": [
+                "CATEGORY_VIEW_UNSPECIFIED",
+                "BASIC",
+                "FULL"
+              ],
+              "location": "query"
+            },
+            "regionCode": {
+              "location": "query",
+              "type": "string",
+              "description": "Required. The ISO 3166-1 alpha-2 country code."
+            }
           },
-          "description": "Unstructured address lines describing the lower levels of an address. Because values in address_lines do not have type information and may sometimes contain multiple values in a single field (e.g. \"Austin, TX\"), it is important that the line order is clear. The order of address lines should be \"envelope order\" for the country/region of the address. In places where this can vary (e.g. Japan), address_language is used to make it explicit (e.g. \"ja\" for large-to-small ordering and \"ja-Latn\" or \"en\" for small-to-large). This way, the most specific line of an address can be selected based on the language. The minimum permitted structural representation of an address consists of a region_code with all remaining information placed in the address_lines. It would be possible to format such an address very approximately without geocoding, but no semantic reasoning could be made about any of the address components until it was at least partially resolved. Creating an address only containing a region_code and address_lines, and then geocoding is the recommended way to handle completely unstructured addresses (as opposed to guessing which parts of the address should be localities or administrative areas).",
-          "type": "array"
-        },
-        "regionCode": {
-          "description": "Required. CLDR region code of the country/region of the address. This is never inferred and it is up to the user to ensure the value is correct. See https://cldr.unicode.org/ and https://www.unicode.org/cldr/charts/30/supplemental/territory_information.html for details. Example: \"CH\" for Switzerland.",
-          "type": "string"
-        },
-        "administrativeArea": {
-          "description": "Optional. Highest administrative subdivision which is used for postal addresses of a country or region. For example, this can be a state, a province, an oblast, or a prefecture. Specifically, for Spain this is the province and not the autonomous community (e.g. \"Barcelona\" and not \"Catalonia\"). Many countries don't use an administrative area in postal addresses. E.g. in Switzerland this should be left unpopulated.",
-          "type": "string"
-        },
-        "recipients": {
-          "description": "Optional. The recipient at the address. This field may, under certain circumstances, contain multiline information. For example, it might contain \"care of\" information.",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "locality": {
-          "description": "Optional. Generally refers to the city/town portion of the address. Examples: US city, IT comune, UK post town. In regions of the world where localities are not well defined or do not fit into this structure well, leave locality empty and use address_lines.",
-          "type": "string"
-        },
-        "sortingCode": {
-          "description": "Optional. Additional, country-specific, sorting code. This is not used in most regions. Where it is used, the value is either a string like \"CEDEX\", optionally followed by a number (e.g. \"CEDEX 7\"), or just a number alone, representing the \"sector code\" (Jamaica), \"delivery area indicator\" (Malawi) or \"post office indicator\" (e.g. Côte d'Ivoire).",
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
-    "Categories": {
-      "type": "object",
-      "properties": {
-        "primaryCategory": {
-          "description": "Required. Category that best describes the core business this location engages in.",
-          "$ref": "Category"
-        },
-        "additionalCategories": {
-          "description": "Optional. Additional categories to describe your business. Categories help your customers find accurate, specific results for services they're interested in. To keep your business information accurate and live, make sure that you use as few categories as possible to describe your overall core business. Choose categories that are as specific as possible, but representative of your main business.",
-          "items": {
-            "$ref": "Category"
-          },
-          "type": "array"
-        }
-      },
-      "id": "Categories",
-      "description": "A collection of categories that describes the business. During updates, both fields must be set. Clients are prohibited from individually updating the primary or additional categories using the update mask."
-    },
-    "LatLng": {
-      "description": "An object that represents a latitude/longitude pair. This is expressed as a pair of doubles to represent degrees latitude and degrees longitude. Unless specified otherwise, this object must conform to the WGS84 standard. Values must be within normalized ranges.",
-      "id": "LatLng",
-      "properties": {
-        "longitude": {
-          "description": "The longitude in degrees. It must be in the range [-180.0, +180.0].",
-          "format": "double",
-          "type": "number"
-        },
-        "latitude": {
-          "format": "double",
-          "type": "number",
-          "description": "The latitude in degrees. It must be in the range [-90.0, +90.0]."
-        }
-      },
-      "type": "object"
-    },
-    "GoogleLocation": {
-      "id": "GoogleLocation",
-      "properties": {
-        "name": {
-          "description": "Resource name of this GoogleLocation, in the format `googleLocations/{googleLocationId}`.",
-          "type": "string"
-        },
-        "location": {
-          "description": "The sparsely populated Location information. This field can be re-used in CreateLocation if it is not currently claimed by a user.",
-          "$ref": "Location"
-        },
-        "requestAdminRightsUri": {
-          "type": "string",
-          "description": "A URL that will redirect the user to the request admin rights UI. This field is only present if the location has already been claimed by any user, including the current user."
-        }
-      },
-      "type": "object",
-      "description": "Represents a Location that is present on Google. This can be a location that has been claimed by the user, someone else, or could be unclaimed."
-    },
-    "OpenInfo": {
-      "description": "Information related to the opening state of the business.",
-      "id": "OpenInfo",
-      "properties": {
-        "openingDate": {
-          "description": "Optional. The date on which the location first opened. If the exact day is not known, month and year only can be provided. The date must be in the past or be no more than one year in the future.",
-          "$ref": "Date"
-        },
-        "canReopen": {
-          "description": "Output only. Indicates whether this business is eligible for re-open.",
-          "type": "boolean",
-          "readOnly": true
-        },
-        "status": {
-          "enumDescriptions": [
-            "Not specified.",
-            "Indicates that the location is open.",
-            "Indicates that the location has been permanently closed.",
-            "Indicates that the location has been temporarily closed."
-          ],
-          "type": "string",
-          "enum": [
-            "OPEN_FOR_BUSINESS_UNSPECIFIED",
-            "OPEN",
-            "CLOSED_PERMANENTLY",
-            "CLOSED_TEMPORARILY"
-          ],
-          "description": "Required. Indicates whether or not the Location is currently open for business. All locations are open by default, unless updated to be closed."
-        }
-      },
-      "type": "object"
-    },
-    "FreeFormServiceItem": {
-      "properties": {
-        "label": {
-          "$ref": "Label",
-          "description": "Required. Language-tagged labels for the item. We recommend that item names be 140 characters or less, and descriptions 250 characters or less. This field should only be set if the input is a custom service item. Standardized service types should be updated via service_type_id."
-        },
-        "category": {
-          "type": "string",
-          "description": "Required. This field represents the category name (i.e. the category's stable ID). The `category` and `service_type_id` should match the possible combinations provided in the `Category` message."
-        }
-      },
-      "id": "FreeFormServiceItem",
-      "type": "object",
-      "description": "Represents a free-form service offered by the merchant. These are services that are not exposed as part of our structure service data. The merchant manually enters the names for of such services via a geomerchant surface."
-    },
-    "MoreHours": {
-      "type": "object",
-      "description": "The time periods during which a location is open for certain types of business.",
-      "id": "MoreHours",
-      "properties": {
-        "periods": {
-          "type": "array",
-          "description": "Required. A collection of times that this location is open. Each period represents a range of hours when the location is open during the week.",
-          "items": {
-            "$ref": "TimePeriod"
+          "httpMethod": "GET",
+          "id": "mybusinessbusinessinformation.categories.list",
+          "flatPath": "v1/categories",
+          "description": "Returns a list of business categories. Search will match the category name but not the category ID. Search only matches the front of a category name (that is, 'food' may return 'Food Court' but not 'Fast Food Restaurant').",
+          "response": {
+            "$ref": "ListCategoriesResponse"
           }
         },
-        "hoursTypeId": {
-          "description": "Required. Type of hours. Clients should call {#link businessCategories:BatchGet} to get supported hours types for categories of their locations.",
-          "type": "string"
+        "batchGet": {
+          "httpMethod": "GET",
+          "parameterOrder": [],
+          "id": "mybusinessbusinessinformation.categories.batchGet",
+          "parameters": {
+            "names": {
+              "repeated": true,
+              "description": "Required. At least one name must be set. The GConcept ids the localized category names should be returned for. To return details for more than one category, repeat this parameter in the request.",
+              "location": "query",
+              "type": "string"
+            },
+            "languageCode": {
+              "description": "Required. The BCP 47 code of language that the category names should be returned in.",
+              "location": "query",
+              "type": "string"
+            },
+            "regionCode": {
+              "location": "query",
+              "type": "string",
+              "description": "Optional. The ISO 3166-1 alpha-2 country code used to infer non-standard language."
+            },
+            "view": {
+              "description": "Required. Specifies which parts to the Category resource should be returned in the response.",
+              "enumDescriptions": [
+                "Not specified, equivalent to CATEGORY_METADATA_ONLY.",
+                "The server response will only include Category fields display_name, category_id and language_code. It omits any service type metadata related fields.",
+                "Returns all the fields in the response."
+              ],
+              "type": "string",
+              "location": "query",
+              "enum": [
+                "CATEGORY_VIEW_UNSPECIFIED",
+                "BASIC",
+                "FULL"
+              ]
+            }
+          },
+          "path": "v1/categories:batchGet",
+          "response": {
+            "$ref": "BatchGetCategoriesResponse"
+          },
+          "flatPath": "v1/categories:batchGet",
+          "description": "Returns a list of business categories for the provided language and GConcept ids."
         }
       }
     },
-    "Money": {
-      "id": "Money",
-      "description": "Represents an amount of money with its currency type.",
-      "properties": {
-        "currencyCode": {
-          "type": "string",
-          "description": "The three-letter currency code defined in ISO 4217."
-        },
-        "units": {
-          "type": "string",
-          "description": "The whole units of the amount. For example if `currencyCode` is `\"USD\"`, then 1 unit is one US dollar.",
-          "format": "int64"
-        },
-        "nanos": {
-          "type": "integer",
-          "format": "int32",
-          "description": "Number of nano (10^-9) units of the amount. The value must be between -999,999,999 and +999,999,999 inclusive. If `units` is positive, `nanos` must be positive or zero. If `units` is zero, `nanos` can be positive, zero, or negative. If `units` is negative, `nanos` must be negative or zero. For example $-1.75 is represented as `units`=-1 and `nanos`=-750,000,000."
-        }
-      },
-      "type": "object"
-    },
-    "SpecialHours": {
-      "properties": {
-        "specialHourPeriods": {
-          "type": "array",
-          "items": {
-            "$ref": "SpecialHourPeriod"
+    "attributes": {
+      "methods": {
+        "list": {
+          "httpMethod": "GET",
+          "response": {
+            "$ref": "ListAttributeMetadataResponse"
           },
-          "description": "Required. A list of exceptions to the business's regular hours."
-        }
-      },
-      "type": "object",
-      "description": "Represents a set of time periods when a location's operational hours differ from its normal business hours.",
-      "id": "SpecialHours"
-    },
-    "MoreHoursType": {
-      "type": "object",
-      "description": "More hours types that a business can offers, in addition to its regular hours.",
-      "properties": {
-        "localizedDisplayName": {
-          "readOnly": true,
-          "description": "Output only. The human-readable localized display name for the hours type.",
-          "type": "string"
-        },
-        "displayName": {
-          "readOnly": true,
-          "description": "Output only. The human-readable English display name for the hours type.",
-          "type": "string"
-        },
-        "hoursTypeId": {
-          "type": "string",
-          "readOnly": true,
-          "description": "Output only. A stable ID provided by Google for this hours type."
-        }
-      },
-      "id": "MoreHoursType"
-    },
-    "Profile": {
-      "id": "Profile",
-      "properties": {
-        "description": {
-          "description": "Required. Description of the location in your own voice, not editable by anyone else.",
-          "type": "string"
-        }
-      },
-      "type": "object",
-      "description": "All information pertaining to the location's profile."
-    },
-    "Attribute": {
-      "type": "object",
-      "description": "A location attribute. Attributes provide additional information about a location. The attributes that can be set on a location may vary based on the properties of that location (for example, category). Available attributes are determined by Google and may be added and removed without API changes.",
-      "id": "Attribute",
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Required. The resource name for this attribute."
-        },
-        "uriValues": {
-          "type": "array",
-          "items": {
-            "$ref": "UriAttributeValue"
+          "id": "mybusinessbusinessinformation.attributes.list",
+          "path": "v1/attributes",
+          "description": "Returns the list of attributes that would be available for a location with the given primary category and country.",
+          "parameters": {
+            "languageCode": {
+              "description": "The BCP 47 code of language to get attribute display names in. If this language is not available, they will be provided in English.",
+              "location": "query",
+              "type": "string"
+            },
+            "parent": {
+              "type": "string",
+              "description": "Resource name of the location to look up available attributes. If this field is set, category_name, region_code, language_code and show_all are not required and must not be set.",
+              "location": "query"
+            },
+            "showAll": {
+              "description": "Metadata for all available attributes are returned when this field is set to true, disregarding parent and category_name fields. language_code and region_code are required when show_all is set to true.",
+              "type": "boolean",
+              "location": "query"
+            },
+            "categoryName": {
+              "description": "The primary category stable ID to find available attributes. Must be of the format categories/{category_id}.",
+              "location": "query",
+              "type": "string"
+            },
+            "pageToken": {
+              "description": "If specified, the next page of attribute metadata is retrieved.",
+              "location": "query",
+              "type": "string"
+            },
+            "regionCode": {
+              "description": "The ISO 3166-1 alpha-2 country code to find available attributes.",
+              "type": "string",
+              "location": "query"
+            },
+            "pageSize": {
+              "description": "How many attributes to include per page. Default is 200, minimum is 1.",
+              "format": "int32",
+              "type": "integer",
+              "location": "query"
+            }
           },
-          "description": "When the attribute value type is URL, this field contains the value(s) for this attribute, and the other values fields must be empty."
+          "flatPath": "v1/attributes",
+          "parameterOrder": []
+        }
+      }
+    },
+    "locations": {
+      "methods": {
+        "updateAttributes": {
+          "httpMethod": "PATCH",
+          "path": "v1/{+name}",
+          "request": {
+            "$ref": "Attributes"
+          },
+          "description": "Update attributes for a given location.",
+          "response": {
+            "$ref": "Attributes"
+          },
+          "parameterOrder": [
+            "name"
+          ],
+          "id": "mybusinessbusinessinformation.locations.updateAttributes",
+          "parameters": {
+            "attributeMask": {
+              "description": "Required. Attribute name of attributes that you'd like to update. Represented by `attributes/{attribute}`. Updates: All attributes provided in the attributes field that you would like to update must be set in the `attribute_mask`. Attributes set in the above list but not in the `attribute_mask` will be ignored. Deletes: If you'd like to delete certain attributes, they must be specified in the `attribute_mask` with no matching entry in the attributes list. If you'd like to delete all attributes set on a location, you should look up all the applicable attributes for the location and then add them to the `attribute_mask` with an empty attributes field.",
+              "location": "query",
+              "type": "string",
+              "format": "google-fieldmask"
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^locations/[^/]+/attributes$",
+              "required": true,
+              "description": "Required. Google identifier for this location in the form of `locations/{location_id}/attributes`.",
+              "location": "path"
+            }
+          },
+          "flatPath": "v1/locations/{locationsId}/attributes"
         },
-        "repeatedEnumValue": {
-          "$ref": "RepeatedEnumAttributeValue",
-          "description": "When the attribute value type is REPEATED_ENUM, this contains the attribute value, and the other values fields must be empty."
-        },
-        "values": {
-          "description": "The values for this attribute. The type of the values supplied must match that expected for that attribute. This is a repeated field where multiple attribute values may be provided. Attribute types only support one value.",
-          "type": "array",
-          "items": {
-            "type": "any"
+        "associate": {
+          "id": "mybusinessbusinessinformation.locations.associate",
+          "request": {
+            "$ref": "AssociateLocationRequest"
+          },
+          "path": "v1/{+name}:associate",
+          "description": "Associates a location to a place ID. Any previous association is overwritten. This operation is only valid if the location is unverified. The association must be valid, that is, it appears in the list of `SearchGoogleLocations`.",
+          "parameterOrder": [
+            "name"
+          ],
+          "flatPath": "v1/locations/{locationsId}:associate",
+          "parameters": {
+            "name": {
+              "pattern": "^locations/[^/]+$",
+              "location": "path",
+              "required": true,
+              "description": "Required. The resource name of the location to associate.",
+              "type": "string"
+            }
+          },
+          "httpMethod": "POST",
+          "response": {
+            "$ref": "Empty"
           }
         },
-        "valueType": {
-          "enumDescriptions": [
-            "Not specified.",
-            "The values for this attribute are boolean values.",
-            "The attribute has a predetermined list of available values that can be used. Metadata for this attribute will list these values.",
-            "The values for this attribute are URLs.",
-            "The attribute value is an enum with multiple possible values that can be explicitly set or unset."
+        "getGoogleUpdated": {
+          "id": "mybusinessbusinessinformation.locations.getGoogleUpdated",
+          "description": "Gets the Google-updated version of the specified location.",
+          "path": "v1/{+name}:getGoogleUpdated",
+          "parameterOrder": [
+            "name"
           ],
-          "description": "Output only. The type of value that this attribute contains. This should be used to determine how to interpret the value.",
-          "type": "string",
-          "readOnly": true,
-          "enum": [
-            "ATTRIBUTE_VALUE_TYPE_UNSPECIFIED",
-            "BOOL",
-            "ENUM",
-            "URL",
-            "REPEATED_ENUM"
-          ]
-        }
-      }
-    },
-    "ServiceType": {
-      "description": "A message describing a service type that the business offers.",
-      "id": "ServiceType",
-      "properties": {
-        "displayName": {
-          "type": "string",
-          "readOnly": true,
-          "description": "Output only. The human-readable display name for the service type."
-        },
-        "serviceTypeId": {
-          "description": "Output only. A stable ID (provided by Google) for this service type.",
-          "type": "string",
-          "readOnly": true
-        }
-      },
-      "type": "object"
-    },
-    "ServiceItem": {
-      "type": "object",
-      "description": "A message that describes a single service item. It is used to describe the type of service that the merchant provides. For example, haircut can be a service.",
-      "id": "ServiceItem",
-      "properties": {
-        "freeFormServiceItem": {
-          "$ref": "FreeFormServiceItem",
-          "description": "Optional. This field will be set case of free-form services data."
-        },
-        "price": {
-          "$ref": "Money",
-          "description": "Optional. Represents the monetary price of the service item. We recommend that currency_code and units should be set when including a price. This will be treated as a fixed price for the service item."
-        },
-        "structuredServiceItem": {
-          "description": "Optional. This field will be set case of structured services data.",
-          "$ref": "StructuredServiceItem"
-        }
-      }
-    },
-    "ClearLocationAssociationRequest": {
-      "id": "ClearLocationAssociationRequest",
-      "type": "object",
-      "properties": {},
-      "description": "Request message for Locations.ClearLocationAssociationRequest."
-    },
-    "SearchGoogleLocationsResponse": {
-      "properties": {
-        "googleLocations": {
-          "items": {
-            "$ref": "GoogleLocation"
+          "flatPath": "v1/locations/{locationsId}:getGoogleUpdated",
+          "parameters": {
+            "readMask": {
+              "location": "query",
+              "format": "google-fieldmask",
+              "type": "string",
+              "description": "Required. Read mask to specify what fields will be returned in the response."
+            },
+            "name": {
+              "pattern": "^locations/[^/]+$",
+              "location": "path",
+              "required": true,
+              "description": "Required. The name of the location to fetch.",
+              "type": "string"
+            }
           },
-          "description": "A collection of GoogleLocations that are potential matches to the specified request, listed in order from most to least accuracy.",
-          "type": "array"
-        }
-      },
-      "description": "Response message for GoogleLocations.SearchGoogleLocations.",
-      "id": "SearchGoogleLocationsResponse",
-      "type": "object"
-    },
-    "ChainName": {
-      "type": "object",
-      "id": "ChainName",
-      "description": "Name to be used when displaying the chain.",
-      "properties": {
-        "displayName": {
-          "type": "string",
-          "description": "The display name for this chain."
-        },
-        "languageCode": {
-          "type": "string",
-          "description": "The BCP 47 code of language of the name."
-        }
-      }
-    },
-    "ServiceAreaBusiness": {
-      "type": "object",
-      "id": "ServiceAreaBusiness",
-      "description": "Service area businesses provide their service at the customer's location (for example, a locksmith or plumber).",
-      "properties": {
-        "places": {
-          "$ref": "Places",
-          "description": "The area that this business serves defined through a set of places."
-        },
-        "businessType": {
-          "description": "Required. Indicates the type of the service area business.",
-          "enum": [
-            "BUSINESS_TYPE_UNSPECIFIED",
-            "CUSTOMER_LOCATION_ONLY",
-            "CUSTOMER_AND_BUSINESS_LOCATION"
-          ],
-          "type": "string",
-          "enumDescriptions": [
-            "Output only. Not specified.",
-            "Offers service only in the surrounding area (not at the business address). If a business is being updated from a CUSTOMER_AND_BUSINESS_LOCATION to a CUSTOMER_LOCATION_ONLY, the location update must include field mask `storefront_address` and set the field to empty.",
-            "Offers service at the business address and the surrounding area."
-          ]
-        },
-        "regionCode": {
-          "type": "string",
-          "description": "Immutable. CLDR region code of the country/region that this service area business is based in. See http://cldr.unicode.org/ and http://www.unicode.org/cldr/charts/30/supplemental/territory_information.html for details. Example: \"CH\" for Switzerland. This field is required for CUSTOMER_LOCATION_ONLY businesses, and is ignored otherwise. The region specified here can be different from regions for the areas that this business serves (e.g. service area businesses that provide services in regions other than the one that they are based in). If this location requires verification after creation, the address provided for verification purposes *must* be located within this region, and the business owner or their authorized representative *must* be able to receive postal mail at the provided verification address."
-        }
-      }
-    },
-    "Category": {
-      "id": "Category",
-      "type": "object",
-      "properties": {
-        "serviceTypes": {
-          "type": "array",
-          "description": "Output only. A list of all the service types that are available for this business category.",
-          "items": {
-            "$ref": "ServiceType"
-          },
-          "readOnly": true
-        },
-        "moreHoursTypes": {
-          "readOnly": true,
-          "description": "Output only. More hours types that are available for this business category.",
-          "type": "array",
-          "items": {
-            "$ref": "MoreHoursType"
+          "httpMethod": "GET",
+          "response": {
+            "$ref": "GoogleUpdatedLocation"
           }
         },
-        "name": {
-          "description": "Required. A stable ID (provided by Google) for this category. The value must be specified when modifying the category (when creating or updating a location).",
-          "type": "string"
-        },
-        "displayName": {
-          "description": "Output only. The human-readable name of the category. This is set when reading the location. When modifying the location, `category_id` must be set.",
-          "type": "string",
-          "readOnly": true
-        }
-      },
-      "description": "A category describing what this business is (not what it does). For a list of valid category IDs, and the mappings to their human-readable names, see `categories.list`."
-    },
-    "ListLocationsResponse": {
-      "id": "ListLocationsResponse",
-      "properties": {
-        "nextPageToken": {
-          "type": "string",
-          "description": "If the number of locations exceeded the requested page size, this field is populated with a token to fetch the next page of locations on a subsequent call to `ListLocations`. If there are no more locations, this field is not present in the response."
-        },
-        "totalSize": {
-          "type": "integer",
-          "description": "The approximate number of Locations in the list irrespective of pagination.",
-          "format": "int32"
-        },
-        "locations": {
-          "items": {
+        "patch": {
+          "parameterOrder": [
+            "name"
+          ],
+          "response": {
             "$ref": "Location"
           },
-          "type": "array",
-          "description": "The locations."
+          "description": "Updates the specified location.",
+          "id": "mybusinessbusinessinformation.locations.patch",
+          "path": "v1/{+name}",
+          "request": {
+            "$ref": "Location"
+          },
+          "parameters": {
+            "name": {
+              "type": "string",
+              "required": true,
+              "location": "path",
+              "pattern": "^locations/[^/]+$",
+              "description": "Google identifier for this location in the form: `locations/{location_id}`."
+            },
+            "updateMask": {
+              "format": "google-fieldmask",
+              "type": "string",
+              "description": "Required. The specific fields to update.",
+              "location": "query"
+            },
+            "validateOnly": {
+              "location": "query",
+              "type": "boolean",
+              "description": "Optional. If true, the request is validated without actually updating the location. When this field is set, we will only return validation errors if there were any. The response will be empty if no errors were found."
+            }
+          },
+          "httpMethod": "PATCH",
+          "flatPath": "v1/locations/{locationsId}"
+        },
+        "clearLocationAssociation": {
+          "httpMethod": "POST",
+          "response": {
+            "$ref": "Empty"
+          },
+          "id": "mybusinessbusinessinformation.locations.clearLocationAssociation",
+          "parameterOrder": [
+            "name"
+          ],
+          "request": {
+            "$ref": "ClearLocationAssociationRequest"
+          },
+          "flatPath": "v1/locations/{locationsId}:clearLocationAssociation",
+          "path": "v1/{+name}:clearLocationAssociation",
+          "description": "Clears an association between a location and its place ID. This operation is only valid if the location is unverified.",
+          "parameters": {
+            "name": {
+              "location": "path",
+              "required": true,
+              "pattern": "^locations/[^/]+$",
+              "type": "string",
+              "description": "Required. The resource name of the location to disassociate."
+            }
+          }
+        },
+        "delete": {
+          "parameters": {
+            "name": {
+              "location": "path",
+              "required": true,
+              "pattern": "^locations/[^/]+$",
+              "description": "Required. The name of the location to delete.",
+              "type": "string"
+            }
+          },
+          "response": {
+            "$ref": "Empty"
+          },
+          "path": "v1/{+name}",
+          "id": "mybusinessbusinessinformation.locations.delete",
+          "flatPath": "v1/locations/{locationsId}",
+          "httpMethod": "DELETE",
+          "parameterOrder": [
+            "name"
+          ],
+          "description": "Deletes a location. If this location cannot be deleted using the API and it is marked so in the `google.mybusiness.businessinformation.v1.LocationState`, use the [Google Business Profile](https://business.google.com/manage/) website."
+        },
+        "getAttributes": {
+          "path": "v1/{+name}",
+          "parameters": {
+            "name": {
+              "location": "path",
+              "required": true,
+              "description": "Required. Google identifier for this location in the form of `locations/{location_id}/attributes`.",
+              "pattern": "^locations/[^/]+/attributes$",
+              "type": "string"
+            }
+          },
+          "parameterOrder": [
+            "name"
+          ],
+          "response": {
+            "$ref": "Attributes"
+          },
+          "id": "mybusinessbusinessinformation.locations.getAttributes",
+          "httpMethod": "GET",
+          "flatPath": "v1/locations/{locationsId}/attributes",
+          "description": "Looks up all the attributes set for a given location."
+        },
+        "get": {
+          "response": {
+            "$ref": "Location"
+          },
+          "path": "v1/{+name}",
+          "httpMethod": "GET",
+          "parameters": {
+            "name": {
+              "required": true,
+              "type": "string",
+              "location": "path",
+              "description": "Required. The name of the location to fetch.",
+              "pattern": "^locations/[^/]+$"
+            },
+            "readMask": {
+              "location": "query",
+              "format": "google-fieldmask",
+              "type": "string",
+              "description": "Required. Read mask to specify what fields will be returned in the response."
+            }
+          },
+          "description": "Returns the specified location.",
+          "flatPath": "v1/locations/{locationsId}",
+          "id": "mybusinessbusinessinformation.locations.get",
+          "parameterOrder": [
+            "name"
+          ]
         }
       },
-      "type": "object",
-      "description": "Response message for Locations.ListLocations."
+      "resources": {
+        "attributes": {
+          "methods": {
+            "getGoogleUpdated": {
+              "response": {
+                "$ref": "Attributes"
+              },
+              "path": "v1/{+name}:getGoogleUpdated",
+              "parameterOrder": [
+                "name"
+              ],
+              "description": "Gets the Google-updated version of the specified location.",
+              "httpMethod": "GET",
+              "id": "mybusinessbusinessinformation.locations.attributes.getGoogleUpdated",
+              "parameters": {
+                "name": {
+                  "location": "path",
+                  "description": "Required. Google identifier for this location in the form of `locations/{location_id}/attributes`.",
+                  "required": true,
+                  "type": "string",
+                  "pattern": "^locations/[^/]+/attributes$"
+                }
+              },
+              "flatPath": "v1/locations/{locationsId}/attributes:getGoogleUpdated"
+            }
+          }
+        }
+      }
     },
-    "TimeOfDay": {
+    "accounts": {
+      "resources": {
+        "locations": {
+          "methods": {
+            "list": {
+              "id": "mybusinessbusinessinformation.accounts.locations.list",
+              "flatPath": "v1/accounts/{accountsId}/locations",
+              "parameters": {
+                "readMask": {
+                  "location": "query",
+                  "description": "Required. Read mask to specify what fields will be returned in the response.",
+                  "type": "string",
+                  "format": "google-fieldmask"
+                },
+                "parent": {
+                  "pattern": "^accounts/[^/]+$",
+                  "required": true,
+                  "description": "Required. The name of the account to fetch locations from. If the parent Account is of AccountType PERSONAL, only Locations that are directly owned by the Account are returned, otherwise it will return all accessible locations from the Account, either directly or indirectly.",
+                  "type": "string",
+                  "location": "path"
+                },
+                "filter": {
+                  "description": "Optional. A filter constraining the locations to return. The response includes only entries that match the filter. If `filter` is empty, then constraints are applied and all locations (paginated) are retrieved for the requested account. For more information about valid fields and example usage, see [Work with Location Data Guide](https://developers.google.com/my-business/content/location-data#filter_results_when_you_list_locations).",
+                  "type": "string",
+                  "location": "query"
+                },
+                "pageToken": {
+                  "type": "string",
+                  "description": "Optional. If specified, it fetches the next `page` of locations. The page token is returned by previous calls to `ListLocations` when there were more locations than could fit in the requested page size.",
+                  "location": "query"
+                },
+                "orderBy": {
+                  "description": "Optional. Sorting order for the request. Multiple fields should be comma-separated, following SQL syntax. The default sorting order is ascending. To specify descending order, a suffix \" desc\" should be added. Valid fields to order_by are title and store_code. For example: \"title, store_code desc\" or \"title\" or \"store_code desc\"",
+                  "type": "string",
+                  "location": "query"
+                },
+                "pageSize": {
+                  "location": "query",
+                  "format": "int32",
+                  "type": "integer",
+                  "description": "Optional. How many locations to fetch per page. Default value is 10 if not set. Minimum is 1, and maximum page size is 100."
+                }
+              },
+              "httpMethod": "GET",
+              "path": "v1/{+parent}/locations",
+              "response": {
+                "$ref": "ListLocationsResponse"
+              },
+              "parameterOrder": [
+                "parent"
+              ],
+              "description": "Lists the locations for the specified account."
+            },
+            "create": {
+              "id": "mybusinessbusinessinformation.accounts.locations.create",
+              "parameterOrder": [
+                "parent"
+              ],
+              "path": "v1/{+parent}/locations",
+              "httpMethod": "POST",
+              "flatPath": "v1/accounts/{accountsId}/locations",
+              "parameters": {
+                "parent": {
+                  "pattern": "^accounts/[^/]+$",
+                  "type": "string",
+                  "description": "Required. The name of the account in which to create this location.",
+                  "required": true,
+                  "location": "path"
+                },
+                "validateOnly": {
+                  "type": "boolean",
+                  "description": "Optional. If true, the request is validated without actually creating the location.",
+                  "location": "query"
+                },
+                "requestId": {
+                  "type": "string",
+                  "location": "query",
+                  "description": "Optional. A unique request ID for the server to detect duplicated requests. We recommend using UUIDs. Max length is 50 characters."
+                }
+              },
+              "response": {
+                "$ref": "Location"
+              },
+              "description": "Creates a new Location that will be owned by the logged in user.",
+              "request": {
+                "$ref": "Location"
+              }
+            }
+          }
+        }
+      }
+    },
+    "chains": {
+      "methods": {
+        "get": {
+          "id": "mybusinessbusinessinformation.chains.get",
+          "path": "v1/{+name}",
+          "httpMethod": "GET",
+          "parameters": {
+            "name": {
+              "location": "path",
+              "type": "string",
+              "required": true,
+              "pattern": "^chains/[^/]+$",
+              "description": "Required. The chain's resource name, in the format `chains/{chain_place_id}`."
+            }
+          },
+          "flatPath": "v1/chains/{chainsId}",
+          "description": "Gets the specified chain. Returns `NOT_FOUND` if the chain does not exist.",
+          "parameterOrder": [
+            "name"
+          ],
+          "response": {
+            "$ref": "Chain"
+          }
+        },
+        "search": {
+          "flatPath": "v1/chains:search",
+          "httpMethod": "GET",
+          "response": {
+            "$ref": "SearchChainsResponse"
+          },
+          "parameterOrder": [],
+          "description": "Searches the chain based on chain name.",
+          "parameters": {
+            "pageSize": {
+              "type": "integer",
+              "format": "int32",
+              "location": "query",
+              "description": "The maximum number of matched chains to return from this query. The default is 10. The maximum possible value is 500."
+            },
+            "chainName": {
+              "location": "query",
+              "description": "Required. Search for a chain by its name. Exact/partial/fuzzy/related queries are supported. Examples: \"walmart\", \"wal-mart\", \"walmmmart\", \"沃尔玛\"",
+              "type": "string"
+            }
+          },
+          "id": "mybusinessbusinessinformation.chains.search",
+          "path": "v1/chains:search"
+        }
+      }
+    },
+    "googleLocations": {
+      "methods": {
+        "search": {
+          "parameterOrder": [],
+          "response": {
+            "$ref": "SearchGoogleLocationsResponse"
+          },
+          "parameters": {},
+          "request": {
+            "$ref": "SearchGoogleLocationsRequest"
+          },
+          "id": "mybusinessbusinessinformation.googleLocations.search",
+          "flatPath": "v1/googleLocations:search",
+          "description": "Search all of the possible locations that are a match to the specified request.",
+          "httpMethod": "POST",
+          "path": "v1/googleLocations:search"
+        }
+      }
+    }
+  },
+  "description": "The My Business Business Information API provides an interface for managing business information on Google.",
+  "schemas": {
+    "Date": {
       "type": "object",
+      "description": "Represents a whole or partial calendar date, such as a birthday. The time of day and time zone are either specified elsewhere or are insignificant. The date is relative to the Gregorian Calendar. This can represent one of the following: * A full date, with non-zero year, month, and day values. * A month and day, with a zero year (for example, an anniversary). * A year on its own, with a zero month and a zero day. * A year and month, with a zero day (for example, a credit card expiration date). Related types: * google.type.TimeOfDay * google.type.DateTime * google.protobuf.Timestamp",
       "properties": {
-        "hours": {
-          "description": "Hours of day in 24 hour format. Should be from 0 to 23. An API may choose to allow the value \"24:00:00\" for scenarios like business closing time.",
+        "year": {
           "format": "int32",
+          "description": "Year of the date. Must be from 1 to 9999, or 0 to specify a date without a year.",
           "type": "integer"
         },
-        "nanos": {
-          "description": "Fractions of seconds in nanoseconds. Must be from 0 to 999,999,999.",
+        "day": {
+          "type": "integer",
           "format": "int32",
-          "type": "integer"
+          "description": "Day of a month. Must be from 1 to 31 and valid for the year and month, or 0 to specify a year by itself or a year and month where the day isn't significant."
         },
-        "minutes": {
-          "description": "Minutes of hour of day. Must be from 0 to 59.",
+        "month": {
           "type": "integer",
-          "format": "int32"
-        },
-        "seconds": {
-          "description": "Seconds of minutes of the time. Must normally be from 0 to 59. An API may allow the value 60 if it allows leap-seconds.",
-          "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "description": "Month of a year. Must be from 1 to 12, or 0 to specify a year without a month and day."
         }
       },
-      "description": "Represents a time of day. The date and time zone are either not significant or are specified elsewhere. An API may choose to allow leap seconds. Related types are google.type.Date and `google.protobuf.Timestamp`.",
-      "id": "TimeOfDay"
-    },
-    "AdWordsLocationExtensions": {
-      "type": "object",
-      "description": "Additional information that is surfaced in AdWords.",
-      "properties": {
-        "adPhone": {
-          "description": "Required. An alternate phone number to display on AdWords location extensions instead of the location's primary phone number.",
-          "type": "string"
-        }
-      },
-      "id": "AdWordsLocationExtensions"
-    },
-    "StructuredServiceItem": {
-      "id": "StructuredServiceItem",
-      "description": "Represents a structured service offered by the merchant. For eg: toilet_installation.",
-      "properties": {
-        "description": {
-          "type": "string",
-          "description": "Optional. Description of structured service item. The character limit is 300."
-        },
-        "serviceTypeId": {
-          "type": "string",
-          "description": "Required. The `service_type_id` field is a Google provided unique ID that can be found in `ServiceType`. This information is provided by `BatchGetCategories` rpc service."
-        }
-      },
-      "type": "object"
+      "id": "Date"
     },
     "BusinessHours": {
       "properties": {
         "periods": {
-          "type": "array",
           "description": "Required. A collection of times that this location is open for business. Each period represents a range of hours when the location is open during the week.",
+          "type": "array",
           "items": {
             "$ref": "TimePeriod"
           }
         }
       },
       "description": "Represents the time periods that this location is open for business. Holds a collection of TimePeriod instances.",
-      "type": "object",
-      "id": "BusinessHours"
-    },
-    "AttributeValueMetadata": {
-      "properties": {
-        "value": {
-          "type": "any",
-          "description": "The attribute value."
-        },
-        "displayName": {
-          "description": "The display name for this value, localized where available; otherwise, in English. The value display name is intended to be used in context with the attribute display name. For example, for a \"WiFi\" enum attribute, this could contain \"Paid\" to represent paid Wi-Fi.",
-          "type": "string"
-        }
-      },
-      "description": "Metadata for supported attribute values.",
-      "type": "object",
-      "id": "AttributeValueMetadata"
-    },
-    "RelationshipData": {
-      "description": "Information of all parent and children locations related to this one.",
-      "properties": {
-        "childrenLocations": {
-          "type": "array",
-          "description": "The list of children locations that this location has relations with.",
-          "items": {
-            "$ref": "RelevantLocation"
-          }
-        },
-        "parentChain": {
-          "description": "The resource name of the Chain that this location is member of. How to find Chain ID",
-          "type": "string"
-        },
-        "parentLocation": {
-          "description": "The parent location that this location has relations with.",
-          "$ref": "RelevantLocation"
-        }
-      },
-      "id": "RelationshipData",
+      "id": "BusinessHours",
       "type": "object"
     },
-    "GoogleUpdatedLocation": {
-      "description": "Represents a location that was modified by Google.",
-      "id": "GoogleUpdatedLocation",
-      "properties": {
-        "pendingMask": {
-          "description": "The fields that have pending edits that haven't yet been pushed to Maps and Search.",
-          "format": "google-fieldmask",
-          "type": "string"
-        },
-        "location": {
-          "description": "The Google-updated version of this location.",
-          "$ref": "Location"
-        },
-        "diffMask": {
-          "format": "google-fieldmask",
-          "description": "The fields that Google updated.",
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
-    "ChainUri": {
-      "id": "ChainUri",
-      "properties": {
-        "uri": {
-          "description": "The uri for this chain.",
-          "type": "string"
-        }
-      },
-      "description": "Url to be used when displaying the chain.",
-      "type": "object"
-    },
-    "RelevantLocation": {
+    "AssociateLocationRequest": {
       "type": "object",
+      "description": "Request message for Locations.AssociateLocationRequest.",
       "properties": {
         "placeId": {
           "type": "string",
-          "description": "Required. Specify the location that is on the other side of the relation by its placeID."
-        },
-        "relationType": {
-          "type": "string",
-          "description": "Required. The type of the relationship.",
-          "enumDescriptions": [
-            "Type unspecified.",
-            "This represents a relation between 2 locations which share one physical area, same brand/upper management/organization, but with different key attributes like store hours or phone numbers. For example, Costco Pharmacy is a department in Costco Wholesale.",
-            "This represents the cases where 2 locations are co-located in the same physical location, but from different companies (e.g. Starbucks in a Safeway, shops in a mall)."
-          ],
-          "enum": [
-            "RELATION_TYPE_UNSPECIFIED",
-            "DEPARTMENT_OF",
-            "INDEPENDENT_ESTABLISHMENT_IN"
-          ]
+          "description": "The association to establish. If not set, it indicates no match."
         }
       },
-      "id": "RelevantLocation",
-      "description": "Information about another location that is related to current one. The relation can be any one of DEPARTMENT_OF or INDEPENDENT_ESTABLISHMENT_OF, and the location specified here can be on either side (parent/child) of the location."
+      "id": "AssociateLocationRequest"
     },
-    "RepeatedEnumAttributeValue": {
-      "id": "RepeatedEnumAttributeValue",
+    "PostalAddress": {
+      "description": "Represents a postal address, e.g. for postal delivery or payments addresses. Given a postal address, a postal service can deliver items to a premise, P.O. Box or similar. It is not intended to model geographical locations (roads, towns, mountains). In typical usage an address would be created via user input or from importing existing data, depending on the type of process. Advice on address input / editing: - Use an internationalization-ready address widget such as https://github.com/google/libaddressinput) - Users should not be presented with UI elements for input or editing of fields outside countries where that field is used. For more guidance on how to use this schema, please see: https://support.google.com/business/answer/6397478",
       "type": "object",
-      "description": "Values for an attribute with a `value_type` of REPEATED_ENUM. This consists of two lists of value IDs: those that are set (true) and those that are unset (false). Values absent are considered unknown. At least one value must be specified.",
+      "id": "PostalAddress",
       "properties": {
-        "unsetValues": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array",
-          "description": "Enum values that are unset."
-        },
-        "setValues": {
-          "items": {
-            "type": "string"
-          },
-          "description": "Enum values that are set.",
-          "type": "array"
-        }
-      }
-    },
-    "Attributes": {
-      "properties": {
-        "attributes": {
-          "items": {
-            "$ref": "Attribute"
-          },
-          "type": "array",
-          "description": "A collection of attributes that need to be updated."
-        },
-        "name": {
+        "sublocality": {
           "type": "string",
-          "description": "Required. Google identifier for this location in the form of `locations/{location_id}/attributes`."
-        }
-      },
-      "description": "A container for all the attributes for a given location.",
-      "type": "object",
-      "id": "Attributes"
-    },
-    "ListCategoriesResponse": {
-      "description": "Response message for BusinessCategories.ListCategories.",
-      "properties": {
-        "nextPageToken": {
+          "description": "Optional. Sublocality of the address. For example, this can be neighborhoods, boroughs, districts."
+        },
+        "sortingCode": {
           "type": "string",
-          "description": "If the number of categories exceeded the requested page size, this field will be populated with a token to fetch the next page of categories on a subsequent call to `ListCategories`."
+          "description": "Optional. Additional, country-specific, sorting code. This is not used in most regions. Where it is used, the value is either a string like \"CEDEX\", optionally followed by a number (e.g. \"CEDEX 7\"), or just a number alone, representing the \"sector code\" (Jamaica), \"delivery area indicator\" (Malawi) or \"post office indicator\" (e.g. Côte d'Ivoire)."
         },
-        "categories": {
-          "description": "The matching categories based on the requested parameters.",
-          "items": {
-            "$ref": "Category"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object",
-      "id": "ListCategoriesResponse"
-    },
-    "PhoneNumbers": {
-      "properties": {
-        "additionalPhones": {
-          "type": "array",
-          "description": "Optional. Up to two phone numbers (mobile or landline, no fax) at which your business can be called, in addition to your primary phone number.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "primaryPhone": {
+        "administrativeArea": {
           "type": "string",
-          "description": "Required. A phone number that connects to your individual business location as directly as possible. Use a local phone number instead of a central, call center helpline number whenever possible."
-        }
-      },
-      "id": "PhoneNumbers",
-      "description": "A collection of phone numbers for the business. During updates, both fields must be set. Clients may not update just the primary or additional phone numbers using the update mask. International phone format is preferred, such as \"+1 415 555 0132\", see more in (https://developers.google.com/style/phone-numbers#international-phone-numbers).",
-      "type": "object"
-    },
-    "SearchGoogleLocationsRequest": {
-      "type": "object",
-      "id": "SearchGoogleLocationsRequest",
-      "description": "Request message for GoogleLocations.SearchGoogleLocations.",
-      "properties": {
-        "query": {
-          "description": "Text query to search for. The search results from a query string will be less accurate than if providing an exact location, but can provide more inexact matches.",
-          "type": "string"
+          "description": "Optional. Highest administrative subdivision which is used for postal addresses of a country or region. For example, this can be a state, a province, an oblast, or a prefecture. Specifically, for Spain this is the province and not the autonomous community (e.g. \"Barcelona\" and not \"Catalonia\"). Many countries don't use an administrative area in postal addresses. E.g. in Switzerland this should be left unpopulated."
         },
-        "location": {
-          "$ref": "Location",
-          "description": "Location to search for. If provided, will find locations which match the provided location details."
-        },
-        "pageSize": {
+        "revision": {
           "format": "int32",
-          "description": "The number of matches to return. The default value is 3, with a maximum of 10. Note that latency may increase if more are requested. There is no pagination.",
-          "type": "integer"
-        }
-      }
-    },
-    "SpecialHourPeriod": {
-      "description": "Represents a single time period when a location's operational hours differ from its normal business hours. A special hour period must represent a range of less than 24 hours. The `open_time` and `start_date` must predate the `close_time` and `end_date`. The `close_time` and `end_date` can extend to 11:59 a.m. on the day after the specified `start_date`. For example, the following inputs are valid: start_date=2015-11-23, open_time=08:00, close_time=18:00 start_date=2015-11-23, end_date=2015-11-23, open_time=08:00, close_time=18:00 start_date=2015-11-23, end_date=2015-11-24, open_time=13:00, close_time=11:59 The following inputs are not valid: start_date=2015-11-23, open_time=13:00, close_time=11:59 start_date=2015-11-23, end_date=2015-11-24, open_time=13:00, close_time=12:00 start_date=2015-11-23, end_date=2015-11-25, open_time=08:00, close_time=18:00",
-      "properties": {
-        "openTime": {
-          "description": "Optional. Valid values are 00:00-24:00 where 24:00 represents midnight at the end of the specified day field. Must be specified if `closed` is false.",
-          "$ref": "TimeOfDay"
+          "type": "integer",
+          "description": "The schema revision of the `PostalAddress`. This must be set to 0, which is the latest revision. All new revisions **must** be backward compatible with old revisions."
         },
-        "startDate": {
-          "description": "Required. The calendar date this special hour period starts on.",
-          "$ref": "Date"
+        "locality": {
+          "description": "Optional. Generally refers to the city/town portion of the address. Examples: US city, IT comune, UK post town. In regions of the world where localities are not well defined or do not fit into this structure well, leave locality empty and use address_lines.",
+          "type": "string"
         },
-        "endDate": {
-          "$ref": "Date",
-          "description": "Optional. The calendar date this special hour period ends on. If `end_date` field is not set, default to the date specified in `start_date`. If set, this field must be equal to or at most 1 day after `start_date`."
+        "languageCode": {
+          "description": "Optional. BCP-47 language code of the contents of this address (if known). This is often the UI language of the input form or is expected to match one of the languages used in the address' country/region, or their transliterated equivalents. This can affect formatting in certain countries, but is not critical to the correctness of the data and will never affect any validation or other non-formatting related operations. If this value is not known, it should be omitted (rather than specifying a possibly incorrect default). Examples: \"zh-Hant\", \"ja\", \"ja-Latn\", \"en\".",
+          "type": "string"
         },
-        "closeTime": {
-          "description": "Optional. Valid values are 00:00-24:00, where 24:00 represents midnight at the end of the specified day field. Must be specified if `closed` is false.",
-          "$ref": "TimeOfDay"
-        },
-        "closed": {
-          "description": "Optional. If true, `end_date`, `open_time`, and `close_time` are ignored, and the date specified in `start_date` is treated as the location being closed for the entire day.",
-          "type": "boolean"
-        }
-      },
-      "id": "SpecialHourPeriod",
-      "type": "object"
-    },
-    "PlaceInfo": {
-      "type": "object",
-      "description": "Defines an area that's represented by a place ID.",
-      "properties": {
-        "placeId": {
+        "regionCode": {
           "type": "string",
-          "description": "Required. The ID of the place. Must correspond to a region. (https://developers.google.com/places/web-service/supported_types#table3)"
+          "description": "Required. CLDR region code of the country/region of the address. This is never inferred and it is up to the user to ensure the value is correct. See https://cldr.unicode.org/ and https://www.unicode.org/cldr/charts/30/supplemental/territory_information.html for details. Example: \"CH\" for Switzerland."
         },
-        "placeName": {
+        "postalCode": {
           "type": "string",
-          "description": "Required. The localized name of the place. For example, `Scottsdale, AZ`."
-        }
-      },
-      "id": "PlaceInfo"
-    },
-    "AttributeMetadata": {
-      "properties": {
-        "valueMetadata": {
+          "description": "Optional. Postal code of the address. Not all countries use or require postal codes to be present, but where they are used, they may trigger additional validation with other parts of the address (e.g. state/zip validation in the U.S.A.)."
+        },
+        "recipients": {
+          "type": "array",
           "items": {
-            "$ref": "AttributeValueMetadata"
+            "type": "string"
           },
-          "description": "For some types of attributes (for example, enums), a list of supported values and corresponding display names for those values is provided.",
-          "type": "array"
+          "description": "Optional. The recipient at the address. This field may, under certain circumstances, contain multiline information. For example, it might contain \"care of\" information."
         },
-        "repeatable": {
-          "description": "If true, the attribute supports multiple values. If false, only a single value should be provided.",
-          "type": "boolean"
+        "addressLines": {
+          "type": "array",
+          "description": "Unstructured address lines describing the lower levels of an address. Because values in address_lines do not have type information and may sometimes contain multiple values in a single field (e.g. \"Austin, TX\"), it is important that the line order is clear. The order of address lines should be \"envelope order\" for the country/region of the address. In places where this can vary (e.g. Japan), address_language is used to make it explicit (e.g. \"ja\" for large-to-small ordering and \"ja-Latn\" or \"en\" for small-to-large). This way, the most specific line of an address can be selected based on the language. The minimum permitted structural representation of an address consists of a region_code with all remaining information placed in the address_lines. It would be possible to format such an address very approximately without geocoding, but no semantic reasoning could be made about any of the address components until it was at least partially resolved. Creating an address only containing a region_code and address_lines, and then geocoding is the recommended way to handle completely unstructured addresses (as opposed to guessing which parts of the address should be localities or administrative areas).",
+          "items": {
+            "type": "string"
+          }
         },
-        "displayName": {
-          "type": "string",
-          "description": "The localized display name for the attribute, if available; otherwise, the English display name."
-        },
-        "valueType": {
-          "description": "The value type for the attribute. Values set and retrieved should be expected to be of this type.",
-          "enumDescriptions": [
-            "Not specified.",
-            "The values for this attribute are boolean values.",
-            "The attribute has a predetermined list of available values that can be used. Metadata for this attribute will list these values.",
-            "The values for this attribute are URLs.",
-            "The attribute value is an enum with multiple possible values that can be explicitly set or unset."
-          ],
-          "type": "string",
-          "enum": [
-            "ATTRIBUTE_VALUE_TYPE_UNSPECIFIED",
-            "BOOL",
-            "ENUM",
-            "URL",
-            "REPEATED_ENUM"
-          ]
-        },
-        "deprecated": {
-          "description": "If true, the attribute is deprecated and should no longer be used. If deprecated, updating this attribute will not result in an error, but updates will not be saved. At some point after being deprecated, the attribute will be removed entirely and it will become an error.",
-          "type": "boolean"
-        },
-        "parent": {
-          "type": "string",
-          "description": "The unique identifier for the attribute."
-        },
-        "groupDisplayName": {
-          "description": "The localized display name of the group that contains this attribute, if available; otherwise, the English group name. Related attributes are collected into a group and should be displayed together under the heading given here.",
+        "organization": {
+          "description": "Optional. The name of the organization at the address.",
           "type": "string"
         }
-      },
-      "id": "AttributeMetadata",
-      "description": "Metadata for an attribute. Contains display information for the attribute, including a localized name and a heading for grouping related attributes together.",
-      "type": "object"
+      }
     },
     "Label": {
       "type": "object",
+      "id": "Label",
+      "description": "Label to be used when displaying the price list, section, or item.",
       "properties": {
         "languageCode": {
-          "type": "string",
-          "description": "Optional. The BCP-47 language code that these strings apply for. Only one set of labels may be set per language."
-        },
-        "displayName": {
-          "description": "Required. Display name for the price list, section, or item.",
+          "description": "Optional. The BCP-47 language code that these strings apply for. Only one set of labels may be set per language.",
           "type": "string"
         },
         "description": {
           "type": "string",
           "description": "Optional. Description of the price list, section, or item."
-        }
-      },
-      "id": "Label",
-      "description": "Label to be used when displaying the price list, section, or item."
-    },
-    "Date": {
-      "description": "Represents a whole or partial calendar date, such as a birthday. The time of day and time zone are either specified elsewhere or are insignificant. The date is relative to the Gregorian Calendar. This can represent one of the following: * A full date, with non-zero year, month, and day values. * A month and day, with a zero year (for example, an anniversary). * A year on its own, with a zero month and a zero day. * A year and month, with a zero day (for example, a credit card expiration date). Related types: * google.type.TimeOfDay * google.type.DateTime * google.protobuf.Timestamp",
-      "properties": {
-        "day": {
-          "format": "int32",
-          "description": "Day of a month. Must be from 1 to 31 and valid for the year and month, or 0 to specify a year by itself or a year and month where the day isn't significant.",
-          "type": "integer"
         },
-        "year": {
-          "description": "Year of the date. Must be from 1 to 9999, or 0 to specify a date without a year.",
-          "type": "integer",
-          "format": "int32"
-        },
-        "month": {
-          "format": "int32",
-          "description": "Month of a year. Must be from 1 to 12, or 0 to specify a year without a month and day.",
-          "type": "integer"
-        }
-      },
-      "type": "object",
-      "id": "Date"
-    },
-    "AssociateLocationRequest": {
-      "properties": {
-        "placeId": {
-          "description": "The association to establish. If not set, it indicates no match.",
-          "type": "string"
-        }
-      },
-      "id": "AssociateLocationRequest",
-      "type": "object",
-      "description": "Request message for Locations.AssociateLocationRequest."
-    },
-    "Places": {
-      "description": "Defines the union of areas represented by a set of places.",
-      "properties": {
-        "placeInfos": {
-          "items": {
-            "$ref": "PlaceInfo"
-          },
-          "type": "array",
-          "description": "The areas represented by place IDs. Limited to a maximum of 20 places."
-        }
-      },
-      "type": "object",
-      "id": "Places"
-    },
-    "Metadata": {
-      "type": "object",
-      "properties": {
-        "canOperateLodgingData": {
-          "type": "boolean",
-          "readOnly": true,
-          "description": "Output only. Indicates whether the location can operate on Lodging data."
-        },
-        "canOperateLocalPost": {
-          "readOnly": true,
-          "type": "boolean",
-          "description": "Output only. Indicates if the listing can manage local posts."
-        },
-        "canHaveBusinessCalls": {
-          "readOnly": true,
-          "description": "Output only. Indicates if the listing is eligible for business calls.",
-          "type": "boolean"
-        },
-        "hasGoogleUpdated": {
-          "description": "Output only. Indicates whether the place ID associated with this location has updates that need to be updated or rejected by the client. If this boolean is set, you should call the `getGoogleUpdated` method to lookup information that's needs to be verified.",
-          "type": "boolean",
-          "readOnly": true
-        },
-        "canDelete": {
-          "description": "Output only. Indicates whether the location can be deleted using the API.",
-          "type": "boolean",
-          "readOnly": true
-        },
-        "canHaveFoodMenus": {
-          "readOnly": true,
-          "type": "boolean",
-          "description": "Output only. Indicates if the listing is eligible for food menu."
-        },
-        "canOperateHealthData": {
-          "readOnly": true,
-          "description": "Output only. Indicates whether the location can operate on Health data.",
-          "type": "boolean"
-        },
-        "placeId": {
+        "displayName": {
           "type": "string",
-          "readOnly": true,
-          "description": "Output only. If this locationappears on Google Maps, this field is populated with the place ID for the location. This ID can be used in various Places APIs. This field can be set during Create calls, but not for Update."
-        },
-        "newReviewUri": {
-          "readOnly": true,
-          "description": "Output only. A link to the page on Google Search where a customer can leave a review for the location.",
-          "type": "string"
-        },
-        "hasPendingEdits": {
-          "description": "Output only. Indicates whether any of this Location's properties are in the edit pending state.",
-          "readOnly": true,
-          "type": "boolean"
-        },
-        "hasVoiceOfMerchant": {
-          "readOnly": true,
-          "type": "boolean",
-          "description": "Output only. Indicates if the listing has Voice of Merchant. If this boolean is false, you should call the locations.getVoiceOfMerchantState API to get details as to why they do not have Voice of Merchant."
-        },
-        "mapsUri": {
-          "type": "string",
-          "description": "Output only. A link to the location on Maps.",
-          "readOnly": true
-        },
-        "canModifyServiceList": {
-          "type": "boolean",
-          "description": "Output only. Indicates if the listing can modify the service list.",
-          "readOnly": true
-        },
-        "duplicateLocation": {
-          "description": "Output only. The location resource that this location duplicates.",
-          "type": "string",
-          "readOnly": true
+          "description": "Required. Display name for the price list, section, or item."
         }
-      },
-      "id": "Metadata",
-      "description": "Additional non-user-editable information about the location."
-    },
-    "BatchGetCategoriesResponse": {
-      "properties": {
-        "categories": {
-          "items": {
-            "$ref": "Category"
-          },
-          "type": "array",
-          "description": "Categories that match the GConcept ids provided in the request. They will not come in the same order as category ids in the request."
-        }
-      },
-      "description": "Response message for BusinessCategories.BatchGetBusinessCategories.",
-      "type": "object",
-      "id": "BatchGetCategoriesResponse"
+      }
     },
     "ListAttributeMetadataResponse": {
-      "id": "ListAttributeMetadataResponse",
       "description": "Response for AttributesService.ListAttributeMetadata.",
       "properties": {
-        "attributeMetadata": {
-          "items": {
-            "$ref": "AttributeMetadata"
-          },
-          "type": "array",
-          "description": "A collection of attribute metadata for the available attributes."
-        },
         "nextPageToken": {
           "description": "If the number of attributes exceeded the requested page size, this field will be populated with a token to fetch the next page of attributes on a subsequent call to `attributes.list`. If there are no more attributes, this field will not be present in the response.",
           "type": "string"
-        }
-      },
-      "type": "object"
-    },
-    "Chain": {
-      "id": "Chain",
-      "description": "A chain is a brand that your business's locations can be affiliated with.",
-      "type": "object",
-      "properties": {
-        "locationCount": {
-          "format": "int32",
-          "description": "Number of locations that are part of this chain.",
-          "type": "integer"
         },
-        "name": {
-          "type": "string",
-          "description": "Required. The chain's resource name, in the format `chains/{chain_id}`."
-        },
-        "chainNames": {
-          "description": "Names of the chain.",
-          "items": {
-            "$ref": "ChainName"
-          },
-          "type": "array"
-        },
-        "websites": {
-          "description": "Websites of the chain.",
+        "attributeMetadata": {
           "type": "array",
+          "description": "A collection of attribute metadata for the available attributes.",
           "items": {
-            "$ref": "ChainUri"
+            "$ref": "AttributeMetadata"
           }
         }
-      }
-    },
-    "SearchChainsResponse": {
-      "description": "Response message for Locations.SearchChains.",
-      "id": "SearchChainsResponse",
-      "type": "object",
-      "properties": {
-        "chains": {
-          "items": {
-            "$ref": "Chain"
-          },
-          "description": "Chains that match the queried chain_display_name in SearchChainsRequest. If there are no matches, this field will be empty. Results are listed in order of relevance.",
-          "type": "array"
-        }
-      }
-    },
-    "UriAttributeValue": {
-      "type": "object",
-      "description": "Values for an attribute with a `value_type` of URL.",
-      "properties": {
-        "uri": {
-          "description": "Required. The proposed URI value for this attribute.",
-          "type": "string"
-        }
       },
-      "id": "UriAttributeValue"
-    },
-    "Location": {
-      "properties": {
-        "moreHours": {
-          "type": "array",
-          "description": "Optional. More hours for a business's different departments or specific customers.",
-          "items": {
-            "$ref": "MoreHours"
-          }
-        },
-        "phoneNumbers": {
-          "description": "Optional. The different phone numbers that customers can use to get in touch with the business.",
-          "$ref": "PhoneNumbers"
-        },
-        "storeCode": {
-          "type": "string",
-          "description": "Optional. External identifier for this location, which must be unique within a given account. This is a means of associating the location with your own records."
-        },
-        "relationshipData": {
-          "description": "Optional. All locations and chain related to this one.",
-          "$ref": "RelationshipData"
-        },
-        "name": {
-          "description": "Google identifier for this location in the form: `locations/{location_id}`.",
-          "type": "string"
-        },
-        "adWordsLocationExtensions": {
-          "$ref": "AdWordsLocationExtensions",
-          "description": "Optional. Additional information that is surfaced in AdWords."
-        },
-        "labels": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array",
-          "description": "Optional. A collection of free-form strings to allow you to tag your business. These labels are NOT user facing; only you can see them. Must be between 1-255 characters per label."
-        },
-        "latlng": {
-          "description": "Optional. User-provided latitude and longitude. When creating a location, this field is ignored if the provided address geocodes successfully. This field is only returned on get requests if the user-provided `latlng` value was accepted during create, or the `latlng` value was updated through the Google Business Profile website. This field can only be updated by approved clients.",
-          "$ref": "LatLng"
-        },
-        "specialHours": {
-          "description": "Optional. Special hours for the business. This typically includes holiday hours, and other times outside of regular operating hours. These override regular business hours. This field cannot be set without regular hours.",
-          "$ref": "SpecialHours"
-        },
-        "serviceItems": {
-          "description": "Optional. List of services supported by merchants. A service can be haircut, install water heater, etc. Duplicated service items will be removed automatically.",
-          "items": {
-            "$ref": "ServiceItem"
-          },
-          "type": "array"
-        },
-        "categories": {
-          "description": "Optional. The different categories that describe the business.",
-          "$ref": "Categories"
-        },
-        "metadata": {
-          "$ref": "Metadata",
-          "description": "Output only. Additional non-user-editable information.",
-          "readOnly": true
-        },
-        "storefrontAddress": {
-          "$ref": "PostalAddress",
-          "description": "Optional. A precise, accurate address to describe your business location. PO boxes or mailboxes located at remote locations are not acceptable. At this time, you can specify a maximum of five `address_lines` values in the address. This field should only be set for businesses that have a storefront. This field should not be set for locations of type `CUSTOMER_LOCATION_ONLY`."
-        },
-        "regularHours": {
-          "description": "Optional. Operating hours for the business.",
-          "$ref": "BusinessHours"
-        },
-        "languageCode": {
-          "type": "string",
-          "description": "Immutable. The language of the location. Set during creation and not updateable."
-        },
-        "openInfo": {
-          "$ref": "OpenInfo",
-          "description": "Optional. A flag that indicates whether the location is currently open for business."
-        },
-        "serviceArea": {
-          "description": "Optional. Service area businesses provide their service at the customer's location. If this business is a service area business, this field describes the area(s) serviced by the business.",
-          "$ref": "ServiceAreaBusiness"
-        },
-        "profile": {
-          "description": "Optional. Describes your business in your own voice and shares with users the unique story of your business and offerings. This field is required for all categories except lodging categories (e.g. hotels, motels, inns).",
-          "$ref": "Profile"
-        },
-        "websiteUri": {
-          "type": "string",
-          "description": "Optional. A URL for this business. If possible, use a URL that represents this individual business location instead of a generic website/URL that represents all locations, or the brand."
-        },
-        "title": {
-          "description": "Required. Location name should reflect your business's real-world name, as used consistently on your storefront, website, and stationery, and as known to customers. Any additional information, when relevant, can be included in other fields of the resource (for example, `Address`, `Categories`). Don't add unnecessary information to your name (for example, prefer \"Google\" over \"Google Inc. - Mountain View Corporate Headquarters\"). Don't include marketing taglines, store codes, special characters, hours or closed/open status, phone numbers, website URLs, service/product information, location/address or directions, or containment information (for example, \"Chase ATM in Duane Reade\").",
-          "type": "string"
-        }
-      },
-      "id": "Location",
-      "description": "A location. See the [help center article] (https://support.google.com/business/answer/3038177) for a detailed description of these fields, or the [category endpoint](/my-business/reference/rest/v4/categories) for a list of valid business categories.",
-      "type": "object"
+      "type": "object",
+      "id": "ListAttributeMetadataResponse"
     },
     "TimePeriod": {
+      "type": "object",
+      "description": "Represents a span of time that the business is open, starting on the specified open day/time and closing on the specified close day/time. The closing time must occur after the opening time, for example later in the same day, or on a subsequent day.",
       "properties": {
-        "openTime": {
-          "description": "Required. Valid values are 00:00-24:00, where 24:00 represents midnight at the end of the specified day field.",
-          "$ref": "TimeOfDay"
-        },
         "closeDay": {
-          "type": "string",
-          "enumDescriptions": [
-            "The day of the week is unspecified.",
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
-            "Sunday"
-          ],
           "description": "Required. Indicates the day of the week this period ends on.",
           "enum": [
             "DAY_OF_WEEK_UNSPECIFIED",
@@ -1156,11 +735,18 @@
             "FRIDAY",
             "SATURDAY",
             "SUNDAY"
+          ],
+          "type": "string",
+          "enumDescriptions": [
+            "The day of the week is unspecified.",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
           ]
-        },
-        "closeTime": {
-          "description": "Required. Valid values are 00:00-24:00, where 24:00 represents midnight at the end of the specified day field.",
-          "$ref": "TimeOfDay"
         },
         "openDay": {
           "description": "Required. Indicates the day of the week this period starts on.",
@@ -1185,683 +771,1097 @@
             "SATURDAY",
             "SUNDAY"
           ]
+        },
+        "openTime": {
+          "$ref": "TimeOfDay",
+          "description": "Required. Valid values are 00:00-24:00, where 24:00 represents midnight at the end of the specified day field."
+        },
+        "closeTime": {
+          "$ref": "TimeOfDay",
+          "description": "Required. Valid values are 00:00-24:00, where 24:00 represents midnight at the end of the specified day field."
+        }
+      },
+      "id": "TimePeriod"
+    },
+    "ListCategoriesResponse": {
+      "description": "Response message for BusinessCategories.ListCategories.",
+      "properties": {
+        "nextPageToken": {
+          "type": "string",
+          "description": "If the number of categories exceeded the requested page size, this field will be populated with a token to fetch the next page of categories on a subsequent call to `ListCategories`."
+        },
+        "categories": {
+          "items": {
+            "$ref": "Category"
+          },
+          "description": "The matching categories based on the requested parameters.",
+          "type": "array"
         }
       },
       "type": "object",
-      "description": "Represents a span of time that the business is open, starting on the specified open day/time and closing on the specified close day/time. The closing time must occur after the opening time, for example later in the same day, or on a subsequent day.",
-      "id": "TimePeriod"
+      "id": "ListCategoriesResponse"
+    },
+    "SearchGoogleLocationsRequest": {
+      "properties": {
+        "query": {
+          "description": "Text query to search for. The search results from a query string will be less accurate than if providing an exact location, but can provide more inexact matches.",
+          "type": "string"
+        },
+        "location": {
+          "description": "Location to search for. If provided, will find locations which match the provided location details.",
+          "$ref": "Location"
+        },
+        "pageSize": {
+          "description": "The number of matches to return. The default value is 3, with a maximum of 10. Note that latency may increase if more are requested. There is no pagination.",
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "id": "SearchGoogleLocationsRequest",
+      "type": "object",
+      "description": "Request message for GoogleLocations.SearchGoogleLocations."
+    },
+    "Profile": {
+      "id": "Profile",
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Required. Description of the location in your own voice, not editable by anyone else."
+        }
+      },
+      "description": "All information pertaining to the location's profile."
+    },
+    "SpecialHours": {
+      "description": "Represents a set of time periods when a location's operational hours differ from its normal business hours.",
+      "properties": {
+        "specialHourPeriods": {
+          "description": "Required. A list of exceptions to the business's regular hours.",
+          "items": {
+            "$ref": "SpecialHourPeriod"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object",
+      "id": "SpecialHours"
+    },
+    "SearchChainsResponse": {
+      "id": "SearchChainsResponse",
+      "type": "object",
+      "properties": {
+        "chains": {
+          "items": {
+            "$ref": "Chain"
+          },
+          "description": "Chains that match the queried chain_display_name in SearchChainsRequest. If there are no matches, this field will be empty. Results are listed in order of relevance.",
+          "type": "array"
+        }
+      },
+      "description": "Response message for Locations.SearchChains."
+    },
+    "ServiceType": {
+      "description": "A message describing a service type that the business offers.",
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "readOnly": true,
+          "description": "Output only. The human-readable display name for the service type.",
+          "type": "string"
+        },
+        "serviceTypeId": {
+          "type": "string",
+          "description": "Output only. A stable ID (provided by Google) for this service type.",
+          "readOnly": true
+        }
+      },
+      "id": "ServiceType"
+    },
+    "GoogleUpdatedLocation": {
+      "id": "GoogleUpdatedLocation",
+      "properties": {
+        "pendingMask": {
+          "format": "google-fieldmask",
+          "type": "string",
+          "description": "The fields that have pending edits that haven't yet been pushed to Maps and Search."
+        },
+        "location": {
+          "$ref": "Location",
+          "description": "The Google-updated version of this location."
+        },
+        "diffMask": {
+          "description": "The fields that Google updated.",
+          "format": "google-fieldmask",
+          "type": "string"
+        }
+      },
+      "description": "Represents a location that was modified by Google.",
+      "type": "object"
     },
     "Empty": {
       "type": "object",
-      "id": "Empty",
+      "properties": {},
       "description": "A generic empty message that you can re-use to avoid defining duplicated empty messages in your APIs. A typical example is to use it as the request or the response type of an API method. For instance: service Foo { rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty); }",
-      "properties": {}
-    }
-  },
-  "canonicalName": "My Business Business Information",
-  "discoveryVersion": "v1",
-  "servicePath": "",
-  "ownerDomain": "google.com",
-  "documentationLink": "https://developers.google.com/my-business/",
-  "revision": "20220319",
-  "baseUrl": "https://mybusinessbusinessinformation.googleapis.com/",
-  "protocol": "rest",
-  "version": "v1",
-  "name": "mybusinessbusinessinformation",
-  "resources": {
-    "chains": {
-      "methods": {
-        "get": {
-          "response": {
-            "$ref": "Chain"
-          },
-          "flatPath": "v1/chains/{chainsId}",
-          "httpMethod": "GET",
-          "description": "Gets the specified chain. Returns `NOT_FOUND` if the chain does not exist.",
-          "path": "v1/{+name}",
-          "parameterOrder": [
-            "name"
-          ],
-          "parameters": {
-            "name": {
-              "location": "path",
-              "description": "Required. The chain's resource name, in the format `chains/{chain_place_id}`.",
-              "type": "string",
-              "pattern": "^chains/[^/]+$",
-              "required": true
-            }
-          },
-          "id": "mybusinessbusinessinformation.chains.get"
-        },
-        "search": {
-          "response": {
-            "$ref": "SearchChainsResponse"
-          },
-          "parameterOrder": [],
-          "parameters": {
-            "chainName": {
-              "description": "Required. Search for a chain by its name. Exact/partial/fuzzy/related queries are supported. Examples: \"walmart\", \"wal-mart\", \"walmmmart\", \"沃尔玛\"",
-              "type": "string",
-              "location": "query"
-            },
-            "pageSize": {
-              "type": "integer",
-              "location": "query",
-              "description": "The maximum number of matched chains to return from this query. The default is 10. The maximum possible value is 500.",
-              "format": "int32"
-            }
-          },
-          "flatPath": "v1/chains:search",
-          "id": "mybusinessbusinessinformation.chains.search",
-          "description": "Searches the chain based on chain name.",
-          "httpMethod": "GET",
-          "path": "v1/chains:search"
-        }
-      }
+      "id": "Empty"
     },
-    "categories": {
-      "methods": {
-        "batchGet": {
-          "parameters": {
-            "regionCode": {
-              "description": "Optional. The ISO 3166-1 alpha-2 country code used to infer non-standard language.",
-              "location": "query",
-              "type": "string"
-            },
-            "names": {
-              "description": "Required. At least one name must be set. The GConcept ids the localized category names should be returned for. To return details for more than one category, repeat this parameter in the request.",
-              "location": "query",
-              "repeated": true,
-              "type": "string"
-            },
-            "languageCode": {
-              "type": "string",
-              "description": "Required. The BCP 47 code of language that the category names should be returned in.",
-              "location": "query"
-            },
-            "view": {
-              "description": "Required. Specifies which parts to the Category resource should be returned in the response.",
-              "location": "query",
-              "enum": [
-                "CATEGORY_VIEW_UNSPECIFIED",
-                "BASIC",
-                "FULL"
-              ],
-              "enumDescriptions": [
-                "Not specified, equivalent to CATEGORY_METADATA_ONLY.",
-                "The server response will only include Category fields display_name, category_id and language_code. It omits any service type metadata related fields.",
-                "Returns all the fields in the response."
-              ],
-              "type": "string"
-            }
+    "BatchGetCategoriesResponse": {
+      "type": "object",
+      "id": "BatchGetCategoriesResponse",
+      "properties": {
+        "categories": {
+          "type": "array",
+          "items": {
+            "$ref": "Category"
           },
-          "response": {
-            "$ref": "BatchGetCategoriesResponse"
-          },
-          "description": "Returns a list of business categories for the provided language and GConcept ids.",
-          "id": "mybusinessbusinessinformation.categories.batchGet",
-          "flatPath": "v1/categories:batchGet",
-          "path": "v1/categories:batchGet",
-          "httpMethod": "GET",
-          "parameterOrder": []
-        },
-        "list": {
-          "flatPath": "v1/categories",
-          "description": "Returns a list of business categories. Search will match the category name but not the category ID. Search only matches the front of a category name (that is, 'food' may return 'Food Court' but not 'Fast Food Restaurant').",
-          "httpMethod": "GET",
-          "path": "v1/categories",
-          "id": "mybusinessbusinessinformation.categories.list",
-          "response": {
-            "$ref": "ListCategoriesResponse"
-          },
-          "parameters": {
-            "filter": {
-              "type": "string",
-              "location": "query",
-              "description": "Optional. Filter string from user. The only field that supported is `displayName`. Eg: `filter=displayName=foo`."
-            },
-            "pageToken": {
-              "description": "Optional. If specified, the next page of categories will be fetched.",
-              "type": "string",
-              "location": "query"
-            },
-            "languageCode": {
-              "type": "string",
-              "location": "query",
-              "description": "Required. The BCP 47 code of language."
-            },
-            "pageSize": {
-              "location": "query",
-              "description": "Optional. How many categories to fetch per page. Default is 100, minimum is 1, and maximum page size is 100.",
-              "type": "integer",
-              "format": "int32"
-            },
-            "view": {
-              "enumDescriptions": [
-                "Not specified, equivalent to CATEGORY_METADATA_ONLY.",
-                "The server response will only include Category fields display_name, category_id and language_code. It omits any service type metadata related fields.",
-                "Returns all the fields in the response."
-              ],
-              "location": "query",
-              "description": "Required. Specifies which parts to the Category resource should be returned in the response.",
-              "type": "string",
-              "enum": [
-                "CATEGORY_VIEW_UNSPECIFIED",
-                "BASIC",
-                "FULL"
-              ]
-            },
-            "regionCode": {
-              "type": "string",
-              "description": "Required. The ISO 3166-1 alpha-2 country code.",
-              "location": "query"
-            }
-          },
-          "parameterOrder": []
-        }
-      }
-    },
-    "locations": {
-      "methods": {
-        "associate": {
-          "response": {
-            "$ref": "Empty"
-          },
-          "flatPath": "v1/locations/{locationsId}:associate",
-          "path": "v1/{+name}:associate",
-          "httpMethod": "POST",
-          "parameterOrder": [
-            "name"
-          ],
-          "parameters": {
-            "name": {
-              "type": "string",
-              "pattern": "^locations/[^/]+$",
-              "location": "path",
-              "required": true,
-              "description": "Required. The resource name of the location to associate."
-            }
-          },
-          "request": {
-            "$ref": "AssociateLocationRequest"
-          },
-          "id": "mybusinessbusinessinformation.locations.associate",
-          "description": "Associates a location to a place ID. Any previous association is overwritten. This operation is only valid if the location is unverified. The association must be valid, that is, it appears in the list of `SearchGoogleLocations`."
-        },
-        "updateAttributes": {
-          "request": {
-            "$ref": "Attributes"
-          },
-          "response": {
-            "$ref": "Attributes"
-          },
-          "id": "mybusinessbusinessinformation.locations.updateAttributes",
-          "httpMethod": "PATCH",
-          "parameterOrder": [
-            "name"
-          ],
-          "path": "v1/{+name}",
-          "flatPath": "v1/locations/{locationsId}/attributes",
-          "description": "Update attributes for a given location.",
-          "parameters": {
-            "name": {
-              "description": "Required. Google identifier for this location in the form of `locations/{location_id}/attributes`.",
-              "pattern": "^locations/[^/]+/attributes$",
-              "location": "path",
-              "type": "string",
-              "required": true
-            },
-            "attributeMask": {
-              "description": "Required. Attribute name of attributes that you'd like to update. Represented by `attributes/{attribute}`. Updates: All attributes provided in the attributes field that you would like to update must be set in the `attribute_mask`. Attributes set in the above list but not in the `attribute_mask` will be ignored. Deletes: If you'd like to delete certain attributes, they must be specified in the `attribute_mask` with no matching entry in the attributes list. If you'd like to delete all attributes set on a location, you should look up all the applicable attributes for the location and then add them to the `attribute_mask` with an empty attributes field.",
-              "location": "query",
-              "format": "google-fieldmask",
-              "type": "string"
-            }
-          }
-        },
-        "patch": {
-          "request": {
-            "$ref": "Location"
-          },
-          "description": "Updates the specified location.",
-          "flatPath": "v1/locations/{locationsId}",
-          "id": "mybusinessbusinessinformation.locations.patch",
-          "httpMethod": "PATCH",
-          "response": {
-            "$ref": "Location"
-          },
-          "parameterOrder": [
-            "name"
-          ],
-          "path": "v1/{+name}",
-          "parameters": {
-            "updateMask": {
-              "type": "string",
-              "description": "Required. The specific fields to update.",
-              "location": "query",
-              "format": "google-fieldmask"
-            },
-            "validateOnly": {
-              "description": "Optional. If true, the request is validated without actually updating the location. When this field is set, we will only return validation errors if there were any. The response will be empty if no errors were found.",
-              "type": "boolean",
-              "location": "query"
-            },
-            "name": {
-              "type": "string",
-              "location": "path",
-              "description": "Google identifier for this location in the form: `locations/{location_id}`.",
-              "pattern": "^locations/[^/]+$",
-              "required": true
-            }
-          }
-        },
-        "delete": {
-          "id": "mybusinessbusinessinformation.locations.delete",
-          "flatPath": "v1/locations/{locationsId}",
-          "httpMethod": "DELETE",
-          "response": {
-            "$ref": "Empty"
-          },
-          "description": "Deletes a location. If this location cannot be deleted using the API and it is marked so in the `google.mybusiness.businessinformation.v1.LocationState`, use the [Google Business Profile](https://business.google.com/manage/) website.",
-          "parameters": {
-            "name": {
-              "description": "Required. The name of the location to delete.",
-              "pattern": "^locations/[^/]+$",
-              "required": true,
-              "location": "path",
-              "type": "string"
-            }
-          },
-          "parameterOrder": [
-            "name"
-          ],
-          "path": "v1/{+name}"
-        },
-        "get": {
-          "parameters": {
-            "readMask": {
-              "type": "string",
-              "description": "Required. Read mask to specify what fields will be returned in the response.",
-              "format": "google-fieldmask",
-              "location": "query"
-            },
-            "name": {
-              "location": "path",
-              "type": "string",
-              "pattern": "^locations/[^/]+$",
-              "description": "Required. The name of the location to fetch.",
-              "required": true
-            }
-          },
-          "response": {
-            "$ref": "Location"
-          },
-          "id": "mybusinessbusinessinformation.locations.get",
-          "flatPath": "v1/locations/{locationsId}",
-          "parameterOrder": [
-            "name"
-          ],
-          "path": "v1/{+name}",
-          "description": "Returns the specified location.",
-          "httpMethod": "GET"
-        },
-        "clearLocationAssociation": {
-          "path": "v1/{+name}:clearLocationAssociation",
-          "description": "Clears an association between a location and its place ID. This operation is only valid if the location is unverified.",
-          "parameterOrder": [
-            "name"
-          ],
-          "response": {
-            "$ref": "Empty"
-          },
-          "flatPath": "v1/locations/{locationsId}:clearLocationAssociation",
-          "httpMethod": "POST",
-          "id": "mybusinessbusinessinformation.locations.clearLocationAssociation",
-          "parameters": {
-            "name": {
-              "required": true,
-              "description": "Required. The resource name of the location to disassociate.",
-              "type": "string",
-              "location": "path",
-              "pattern": "^locations/[^/]+$"
-            }
-          },
-          "request": {
-            "$ref": "ClearLocationAssociationRequest"
-          }
-        },
-        "getAttributes": {
-          "response": {
-            "$ref": "Attributes"
-          },
-          "httpMethod": "GET",
-          "description": "Looks up all the attributes set for a given location.",
-          "path": "v1/{+name}",
-          "parameterOrder": [
-            "name"
-          ],
-          "id": "mybusinessbusinessinformation.locations.getAttributes",
-          "flatPath": "v1/locations/{locationsId}/attributes",
-          "parameters": {
-            "name": {
-              "type": "string",
-              "location": "path",
-              "required": true,
-              "pattern": "^locations/[^/]+/attributes$",
-              "description": "Required. Google identifier for this location in the form of `locations/{location_id}/attributes`."
-            }
-          }
-        },
-        "getGoogleUpdated": {
-          "parameters": {
-            "readMask": {
-              "description": "Required. Read mask to specify what fields will be returned in the response.",
-              "location": "query",
-              "type": "string",
-              "format": "google-fieldmask"
-            },
-            "name": {
-              "location": "path",
-              "type": "string",
-              "description": "Required. The name of the location to fetch.",
-              "pattern": "^locations/[^/]+$",
-              "required": true
-            }
-          },
-          "description": "Gets the Google-updated version of the specified location.",
-          "parameterOrder": [
-            "name"
-          ],
-          "response": {
-            "$ref": "GoogleUpdatedLocation"
-          },
-          "id": "mybusinessbusinessinformation.locations.getGoogleUpdated",
-          "flatPath": "v1/locations/{locationsId}:getGoogleUpdated",
-          "httpMethod": "GET",
-          "path": "v1/{+name}:getGoogleUpdated"
+          "description": "Categories that match the GConcept ids provided in the request. They will not come in the same order as category ids in the request."
         }
       },
-      "resources": {
-        "attributes": {
-          "methods": {
-            "getGoogleUpdated": {
-              "httpMethod": "GET",
-              "response": {
-                "$ref": "Attributes"
-              },
-              "id": "mybusinessbusinessinformation.locations.attributes.getGoogleUpdated",
-              "flatPath": "v1/locations/{locationsId}/attributes:getGoogleUpdated",
-              "path": "v1/{+name}:getGoogleUpdated",
-              "parameters": {
-                "name": {
-                  "location": "path",
-                  "required": true,
-                  "type": "string",
-                  "description": "Required. Google identifier for this location in the form of `locations/{location_id}/attributes`.",
-                  "pattern": "^locations/[^/]+/attributes$"
-                }
-              },
-              "parameterOrder": [
-                "name"
-              ],
-              "description": "Gets the Google-updated version of the specified location."
-            }
-          }
+      "description": "Response message for BusinessCategories.BatchGetBusinessCategories."
+    },
+    "Chain": {
+      "id": "Chain",
+      "type": "object",
+      "properties": {
+        "locationCount": {
+          "type": "integer",
+          "description": "Number of locations that are part of this chain.",
+          "format": "int32"
+        },
+        "websites": {
+          "description": "Websites of the chain.",
+          "items": {
+            "$ref": "ChainUri"
+          },
+          "type": "array"
+        },
+        "chainNames": {
+          "items": {
+            "$ref": "ChainName"
+          },
+          "description": "Names of the chain.",
+          "type": "array"
+        },
+        "name": {
+          "type": "string",
+          "description": "Required. The chain's resource name, in the format `chains/{chain_id}`."
+        }
+      },
+      "description": "A chain is a brand that your business's locations can be affiliated with."
+    },
+    "Category": {
+      "description": "A category describing what this business is (not what it does). For a list of valid category IDs, and the mappings to their human-readable names, see `categories.list`.",
+      "type": "object",
+      "id": "Category",
+      "properties": {
+        "name": {
+          "description": "Required. A stable ID (provided by Google) for this category. The value must be specified when modifying the category (when creating or updating a location).",
+          "type": "string"
+        },
+        "serviceTypes": {
+          "type": "array",
+          "items": {
+            "$ref": "ServiceType"
+          },
+          "readOnly": true,
+          "description": "Output only. A list of all the service types that are available for this business category."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Output only. The human-readable name of the category. This is set when reading the location. When modifying the location, `category_id` must be set.",
+          "readOnly": true
+        },
+        "moreHoursTypes": {
+          "type": "array",
+          "readOnly": true,
+          "items": {
+            "$ref": "MoreHoursType"
+          },
+          "description": "Output only. More hours types that are available for this business category."
         }
       }
     },
-    "accounts": {
-      "resources": {
+    "OpenInfo": {
+      "properties": {
+        "canReopen": {
+          "type": "boolean",
+          "description": "Output only. Indicates whether this business is eligible for re-open.",
+          "readOnly": true
+        },
+        "openingDate": {
+          "$ref": "Date",
+          "description": "Optional. The date on which the location first opened. If the exact day is not known, month and year only can be provided. The date must be in the past or be no more than one year in the future."
+        },
+        "status": {
+          "enumDescriptions": [
+            "Not specified.",
+            "Indicates that the location is open.",
+            "Indicates that the location has been permanently closed.",
+            "Indicates that the location has been temporarily closed."
+          ],
+          "enum": [
+            "OPEN_FOR_BUSINESS_UNSPECIFIED",
+            "OPEN",
+            "CLOSED_PERMANENTLY",
+            "CLOSED_TEMPORARILY"
+          ],
+          "description": "Required. Indicates whether or not the Location is currently open for business. All locations are open by default, unless updated to be closed.",
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "id": "OpenInfo",
+      "description": "Information related to the opening state of the business."
+    },
+    "Money": {
+      "description": "Represents an amount of money with its currency type.",
+      "id": "Money",
+      "type": "object",
+      "properties": {
+        "currencyCode": {
+          "description": "The three-letter currency code defined in ISO 4217.",
+          "type": "string"
+        },
+        "units": {
+          "format": "int64",
+          "type": "string",
+          "description": "The whole units of the amount. For example if `currencyCode` is `\"USD\"`, then 1 unit is one US dollar."
+        },
+        "nanos": {
+          "format": "int32",
+          "type": "integer",
+          "description": "Number of nano (10^-9) units of the amount. The value must be between -999,999,999 and +999,999,999 inclusive. If `units` is positive, `nanos` must be positive or zero. If `units` is zero, `nanos` can be positive, zero, or negative. If `units` is negative, `nanos` must be negative or zero. For example $-1.75 is represented as `units`=-1 and `nanos`=-750,000,000."
+        }
+      }
+    },
+    "ChainUri": {
+      "type": "object",
+      "description": "Url to be used when displaying the chain.",
+      "id": "ChainUri",
+      "properties": {
+        "uri": {
+          "type": "string",
+          "description": "The uri for this chain."
+        }
+      }
+    },
+    "ChainName": {
+      "type": "object",
+      "id": "ChainName",
+      "properties": {
+        "displayName": {
+          "description": "The display name for this chain.",
+          "type": "string"
+        },
+        "languageCode": {
+          "description": "The BCP 47 code of language of the name.",
+          "type": "string"
+        }
+      },
+      "description": "Name to be used when displaying the chain."
+    },
+    "Places": {
+      "properties": {
+        "placeInfos": {
+          "items": {
+            "$ref": "PlaceInfo"
+          },
+          "description": "The areas represented by place IDs. Limited to a maximum of 20 places.",
+          "type": "array"
+        }
+      },
+      "description": "Defines the union of areas represented by a set of places.",
+      "id": "Places",
+      "type": "object"
+    },
+    "Metadata": {
+      "type": "object",
+      "id": "Metadata",
+      "properties": {
+        "canOperateLodgingData": {
+          "type": "boolean",
+          "readOnly": true,
+          "description": "Output only. Indicates whether the location can operate on Lodging data."
+        },
+        "canOperateHealthData": {
+          "type": "boolean",
+          "description": "Output only. Indicates whether the location can operate on Health data.",
+          "readOnly": true
+        },
+        "hasPendingEdits": {
+          "readOnly": true,
+          "description": "Output only. Indicates whether any of this Location's properties are in the edit pending state.",
+          "type": "boolean"
+        },
+        "canDelete": {
+          "description": "Output only. Indicates whether the location can be deleted using the API.",
+          "readOnly": true,
+          "type": "boolean"
+        },
+        "canHaveFoodMenus": {
+          "description": "Output only. Indicates if the listing is eligible for food menu.",
+          "type": "boolean",
+          "readOnly": true
+        },
+        "duplicateLocation": {
+          "description": "Output only. The location resource that this location duplicates.",
+          "type": "string",
+          "readOnly": true
+        },
+        "placeId": {
+          "type": "string",
+          "readOnly": true,
+          "description": "Output only. If this locationappears on Google Maps, this field is populated with the place ID for the location. This ID can be used in various Places APIs. This field can be set during Create calls, but not for Update."
+        },
+        "newReviewUri": {
+          "type": "string",
+          "description": "Output only. A link to the page on Google Search where a customer can leave a review for the location.",
+          "readOnly": true
+        },
+        "hasGoogleUpdated": {
+          "description": "Output only. Indicates whether the place ID associated with this location has updates that need to be updated or rejected by the client. If this boolean is set, you should call the `getGoogleUpdated` method to lookup information that's needs to be verified.",
+          "type": "boolean",
+          "readOnly": true
+        },
+        "canModifyServiceList": {
+          "readOnly": true,
+          "type": "boolean",
+          "description": "Output only. Indicates if the listing can modify the service list."
+        },
+        "canOperateLocalPost": {
+          "type": "boolean",
+          "readOnly": true,
+          "description": "Output only. Indicates if the listing can manage local posts."
+        },
+        "mapsUri": {
+          "description": "Output only. A link to the location on Maps.",
+          "readOnly": true,
+          "type": "string"
+        },
+        "canHaveBusinessCalls": {
+          "description": "Output only. Indicates if the listing is eligible for business calls.",
+          "readOnly": true,
+          "type": "boolean"
+        },
+        "hasVoiceOfMerchant": {
+          "type": "boolean",
+          "description": "Output only. Indicates if the listing has Voice of Merchant. If this boolean is false, you should call the locations.getVoiceOfMerchantState API to get details as to why they do not have Voice of Merchant.",
+          "readOnly": true
+        }
+      },
+      "description": "Additional non-user-editable information about the location."
+    },
+    "AttributeMetadata": {
+      "properties": {
+        "parent": {
+          "description": "The unique identifier for the attribute.",
+          "type": "string"
+        },
+        "valueMetadata": {
+          "description": "For some types of attributes (for example, enums), a list of supported values and corresponding display names for those values is provided.",
+          "items": {
+            "$ref": "AttributeValueMetadata"
+          },
+          "type": "array"
+        },
+        "valueType": {
+          "enum": [
+            "ATTRIBUTE_VALUE_TYPE_UNSPECIFIED",
+            "BOOL",
+            "ENUM",
+            "URL",
+            "REPEATED_ENUM"
+          ],
+          "type": "string",
+          "description": "The value type for the attribute. Values set and retrieved should be expected to be of this type.",
+          "enumDescriptions": [
+            "Not specified.",
+            "The values for this attribute are boolean values.",
+            "The attribute has a predetermined list of available values that can be used. Metadata for this attribute will list these values.",
+            "The values for this attribute are URLs.",
+            "The attribute value is an enum with multiple possible values that can be explicitly set or unset."
+          ]
+        },
+        "displayName": {
+          "description": "The localized display name for the attribute, if available; otherwise, the English display name.",
+          "type": "string"
+        },
+        "repeatable": {
+          "type": "boolean",
+          "description": "If true, the attribute supports multiple values. If false, only a single value should be provided."
+        },
+        "groupDisplayName": {
+          "type": "string",
+          "description": "The localized display name of the group that contains this attribute, if available; otherwise, the English group name. Related attributes are collected into a group and should be displayed together under the heading given here."
+        },
+        "deprecated": {
+          "type": "boolean",
+          "description": "If true, the attribute is deprecated and should no longer be used. If deprecated, updating this attribute will not result in an error, but updates will not be saved. At some point after being deprecated, the attribute will be removed entirely and it will become an error."
+        }
+      },
+      "type": "object",
+      "description": "Metadata for an attribute. Contains display information for the attribute, including a localized name and a heading for grouping related attributes together.",
+      "id": "AttributeMetadata"
+    },
+    "AttributeValueMetadata": {
+      "properties": {
+        "displayName": {
+          "description": "The display name for this value, localized where available; otherwise, in English. The value display name is intended to be used in context with the attribute display name. For example, for a \"WiFi\" enum attribute, this could contain \"Paid\" to represent paid Wi-Fi.",
+          "type": "string"
+        },
+        "value": {
+          "description": "The attribute value.",
+          "type": "any"
+        }
+      },
+      "type": "object",
+      "description": "Metadata for supported attribute values.",
+      "id": "AttributeValueMetadata"
+    },
+    "FreeFormServiceItem": {
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": "Required. This field represents the category name (i.e. the category's stable ID). The `category` and `service_type_id` should match the possible combinations provided in the `Category` message."
+        },
+        "label": {
+          "$ref": "Label",
+          "description": "Required. Language-tagged labels for the item. We recommend that item names be 140 characters or less, and descriptions 250 characters or less. This field should only be set if the input is a custom service item. Standardized service types should be updated via service_type_id."
+        }
+      },
+      "description": "Represents a free-form service offered by the merchant. These are services that are not exposed as part of our structure service data. The merchant manually enters the names for of such services via a geomerchant surface.",
+      "id": "FreeFormServiceItem",
+      "type": "object"
+    },
+    "StructuredServiceItem": {
+      "description": "Represents a structured service offered by the merchant. For eg: toilet_installation.",
+      "id": "StructuredServiceItem",
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Optional. Description of structured service item. The character limit is 300."
+        },
+        "serviceTypeId": {
+          "type": "string",
+          "description": "Required. The `service_type_id` field is a Google provided unique ID that can be found in `ServiceType`. This information is provided by `BatchGetCategories` rpc service."
+        }
+      }
+    },
+    "GoogleLocation": {
+      "description": "Represents a Location that is present on Google. This can be a location that has been claimed by the user, someone else, or could be unclaimed.",
+      "type": "object",
+      "id": "GoogleLocation",
+      "properties": {
+        "name": {
+          "description": "Resource name of this GoogleLocation, in the format `googleLocations/{googleLocationId}`.",
+          "type": "string"
+        },
+        "requestAdminRightsUri": {
+          "type": "string",
+          "description": "A URL that will redirect the user to the request admin rights UI. This field is only present if the location has already been claimed by any user, including the current user."
+        },
+        "location": {
+          "description": "The sparsely populated Location information. This field can be re-used in CreateLocation if it is not currently claimed by a user.",
+          "$ref": "Location"
+        }
+      }
+    },
+    "LatLng": {
+      "type": "object",
+      "id": "LatLng",
+      "description": "An object that represents a latitude/longitude pair. This is expressed as a pair of doubles to represent degrees latitude and degrees longitude. Unless specified otherwise, this object must conform to the WGS84 standard. Values must be within normalized ranges.",
+      "properties": {
+        "longitude": {
+          "description": "The longitude in degrees. It must be in the range [-180.0, +180.0].",
+          "type": "number",
+          "format": "double"
+        },
+        "latitude": {
+          "description": "The latitude in degrees. It must be in the range [-90.0, +90.0].",
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "ServiceAreaBusiness": {
+      "id": "ServiceAreaBusiness",
+      "description": "Service area businesses provide their service at the customer's location (for example, a locksmith or plumber).",
+      "properties": {
+        "regionCode": {
+          "description": "Immutable. CLDR region code of the country/region that this service area business is based in. See http://cldr.unicode.org/ and http://www.unicode.org/cldr/charts/30/supplemental/territory_information.html for details. Example: \"CH\" for Switzerland. This field is required for CUSTOMER_LOCATION_ONLY businesses, and is ignored otherwise. The region specified here can be different from regions for the areas that this business serves (e.g. service area businesses that provide services in regions other than the one that they are based in). If this location requires verification after creation, the address provided for verification purposes *must* be located within this region, and the business owner or their authorized representative *must* be able to receive postal mail at the provided verification address.",
+          "type": "string"
+        },
+        "businessType": {
+          "type": "string",
+          "enumDescriptions": [
+            "Output only. Not specified.",
+            "Offers service only in the surrounding area (not at the business address). If a business is being updated from a CUSTOMER_AND_BUSINESS_LOCATION to a CUSTOMER_LOCATION_ONLY, the location update must include field mask `storefront_address` and set the field to empty.",
+            "Offers service at the business address and the surrounding area."
+          ],
+          "description": "Required. Indicates the type of the service area business.",
+          "enum": [
+            "BUSINESS_TYPE_UNSPECIFIED",
+            "CUSTOMER_LOCATION_ONLY",
+            "CUSTOMER_AND_BUSINESS_LOCATION"
+          ]
+        },
+        "places": {
+          "description": "The area that this business serves defined through a set of places.",
+          "$ref": "Places"
+        }
+      },
+      "type": "object"
+    },
+    "Location": {
+      "id": "Location",
+      "description": "A location. See the [help center article] (https://support.google.com/business/answer/3038177) for a detailed description of these fields, or the [category endpoint](/my-business/reference/rest/v4/categories) for a list of valid business categories.",
+      "properties": {
+        "languageCode": {
+          "type": "string",
+          "description": "Immutable. The language of the location. Set during creation and not updateable."
+        },
+        "regularHours": {
+          "$ref": "BusinessHours",
+          "description": "Optional. Operating hours for the business."
+        },
+        "title": {
+          "type": "string",
+          "description": "Required. Location name should reflect your business's real-world name, as used consistently on your storefront, website, and stationery, and as known to customers. Any additional information, when relevant, can be included in other fields of the resource (for example, `Address`, `Categories`). Don't add unnecessary information to your name (for example, prefer \"Google\" over \"Google Inc. - Mountain View Corporate Headquarters\"). Don't include marketing taglines, store codes, special characters, hours or closed/open status, phone numbers, website URLs, service/product information, location/address or directions, or containment information (for example, \"Chase ATM in Duane Reade\")."
+        },
+        "profile": {
+          "description": "Optional. Describes your business in your own voice and shares with users the unique story of your business and offerings. This field is required for all categories except lodging categories (e.g. hotels, motels, inns).",
+          "$ref": "Profile"
+        },
+        "metadata": {
+          "description": "Output only. Additional non-user-editable information.",
+          "$ref": "Metadata",
+          "readOnly": true
+        },
+        "serviceArea": {
+          "$ref": "ServiceAreaBusiness",
+          "description": "Optional. Service area businesses provide their service at the customer's location. If this business is a service area business, this field describes the area(s) serviced by the business."
+        },
+        "moreHours": {
+          "description": "Optional. More hours for a business's different departments or specific customers.",
+          "items": {
+            "$ref": "MoreHours"
+          },
+          "type": "array"
+        },
+        "storeCode": {
+          "description": "Optional. External identifier for this location, which must be unique within a given account. This is a means of associating the location with your own records.",
+          "type": "string"
+        },
+        "latlng": {
+          "description": "Optional. User-provided latitude and longitude. When creating a location, this field is ignored if the provided address geocodes successfully. This field is only returned on get requests if the user-provided `latlng` value was accepted during create, or the `latlng` value was updated through the Google Business Profile website. This field can only be updated by approved clients.",
+          "$ref": "LatLng"
+        },
+        "storefrontAddress": {
+          "description": "Optional. A precise, accurate address to describe your business location. PO boxes or mailboxes located at remote locations are not acceptable. At this time, you can specify a maximum of five `address_lines` values in the address. This field should only be set for businesses that have a storefront. This field should not be set for locations of type `CUSTOMER_LOCATION_ONLY`.",
+          "$ref": "PostalAddress"
+        },
+        "categories": {
+          "$ref": "Categories",
+          "description": "Optional. The different categories that describe the business."
+        },
+        "openInfo": {
+          "$ref": "OpenInfo",
+          "description": "Optional. A flag that indicates whether the location is currently open for business."
+        },
+        "specialHours": {
+          "description": "Optional. Special hours for the business. This typically includes holiday hours, and other times outside of regular operating hours. These override regular business hours. This field cannot be set without regular hours.",
+          "$ref": "SpecialHours"
+        },
+        "adWordsLocationExtensions": {
+          "$ref": "AdWordsLocationExtensions",
+          "description": "Optional. Additional information that is surfaced in AdWords."
+        },
+        "name": {
+          "description": "Google identifier for this location in the form: `locations/{location_id}`.",
+          "type": "string"
+        },
+        "phoneNumbers": {
+          "$ref": "PhoneNumbers",
+          "description": "Optional. The different phone numbers that customers can use to get in touch with the business."
+        },
+        "relationshipData": {
+          "$ref": "RelationshipData",
+          "description": "Optional. All locations and chain related to this one."
+        },
+        "websiteUri": {
+          "type": "string",
+          "description": "Optional. A URL for this business. If possible, use a URL that represents this individual business location instead of a generic website/URL that represents all locations, or the brand."
+        },
+        "labels": {
+          "description": "Optional. A collection of free-form strings to allow you to tag your business. These labels are NOT user facing; only you can see them. Must be between 1-255 characters per label.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "serviceItems": {
+          "items": {
+            "$ref": "ServiceItem"
+          },
+          "description": "Optional. List of services supported by merchants. A service can be haircut, install water heater, etc. Duplicated service items will be removed automatically.",
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "SpecialHourPeriod": {
+      "description": "Represents a single time period when a location's operational hours differ from its normal business hours. A special hour period must represent a range of less than 24 hours. The `open_time` and `start_date` must predate the `close_time` and `end_date`. The `close_time` and `end_date` can extend to 11:59 a.m. on the day after the specified `start_date`. For example, the following inputs are valid: start_date=2015-11-23, open_time=08:00, close_time=18:00 start_date=2015-11-23, end_date=2015-11-23, open_time=08:00, close_time=18:00 start_date=2015-11-23, end_date=2015-11-24, open_time=13:00, close_time=11:59 The following inputs are not valid: start_date=2015-11-23, open_time=13:00, close_time=11:59 start_date=2015-11-23, end_date=2015-11-24, open_time=13:00, close_time=12:00 start_date=2015-11-23, end_date=2015-11-25, open_time=08:00, close_time=18:00",
+      "properties": {
+        "closed": {
+          "type": "boolean",
+          "description": "Optional. If true, `end_date`, `open_time`, and `close_time` are ignored, and the date specified in `start_date` is treated as the location being closed for the entire day."
+        },
+        "closeTime": {
+          "description": "Optional. Valid values are 00:00-24:00, where 24:00 represents midnight at the end of the specified day field. Must be specified if `closed` is false.",
+          "$ref": "TimeOfDay"
+        },
+        "endDate": {
+          "$ref": "Date",
+          "description": "Optional. The calendar date this special hour period ends on. If `end_date` field is not set, default to the date specified in `start_date`. If set, this field must be equal to or at most 1 day after `start_date`."
+        },
+        "openTime": {
+          "$ref": "TimeOfDay",
+          "description": "Optional. Valid values are 00:00-24:00 where 24:00 represents midnight at the end of the specified day field. Must be specified if `closed` is false."
+        },
+        "startDate": {
+          "$ref": "Date",
+          "description": "Required. The calendar date this special hour period starts on."
+        }
+      },
+      "id": "SpecialHourPeriod",
+      "type": "object"
+    },
+    "UriAttributeValue": {
+      "type": "object",
+      "properties": {
+        "uri": {
+          "description": "Required. The proposed URI value for this attribute.",
+          "type": "string"
+        }
+      },
+      "description": "Values for an attribute with a `value_type` of URL.",
+      "id": "UriAttributeValue"
+    },
+    "RepeatedEnumAttributeValue": {
+      "id": "RepeatedEnumAttributeValue",
+      "properties": {
+        "setValues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Enum values that are set."
+        },
+        "unsetValues": {
+          "type": "array",
+          "description": "Enum values that are unset.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "type": "object",
+      "description": "Values for an attribute with a `value_type` of REPEATED_ENUM. This consists of two lists of value IDs: those that are set (true) and those that are unset (false). Values absent are considered unknown. At least one value must be specified."
+    },
+    "MoreHours": {
+      "id": "MoreHours",
+      "type": "object",
+      "description": "The time periods during which a location is open for certain types of business.",
+      "properties": {
+        "hoursTypeId": {
+          "type": "string",
+          "description": "Required. Type of hours. Clients should call {#link businessCategories:BatchGet} to get supported hours types for categories of their locations."
+        },
+        "periods": {
+          "type": "array",
+          "items": {
+            "$ref": "TimePeriod"
+          },
+          "description": "Required. A collection of times that this location is open. Each period represents a range of hours when the location is open during the week."
+        }
+      }
+    },
+    "ServiceItem": {
+      "type": "object",
+      "description": "A message that describes a single service item. It is used to describe the type of service that the merchant provides. For example, haircut can be a service.",
+      "properties": {
+        "structuredServiceItem": {
+          "description": "Optional. This field will be set case of structured services data.",
+          "$ref": "StructuredServiceItem"
+        },
+        "freeFormServiceItem": {
+          "$ref": "FreeFormServiceItem",
+          "description": "Optional. This field will be set case of free-form services data."
+        },
+        "price": {
+          "$ref": "Money",
+          "description": "Optional. Represents the monetary price of the service item. We recommend that currency_code and units should be set when including a price. This will be treated as a fixed price for the service item."
+        }
+      },
+      "id": "ServiceItem"
+    },
+    "ListLocationsResponse": {
+      "type": "object",
+      "id": "ListLocationsResponse",
+      "description": "Response message for Locations.ListLocations.",
+      "properties": {
         "locations": {
-          "methods": {
-            "create": {
-              "path": "v1/{+parent}/locations",
-              "httpMethod": "POST",
-              "parameterOrder": [
-                "parent"
-              ],
-              "description": "Creates a new Location that will be owned by the logged in user.",
-              "parameters": {
-                "requestId": {
-                  "location": "query",
-                  "type": "string",
-                  "description": "Optional. A unique request ID for the server to detect duplicated requests. We recommend using UUIDs. Max length is 50 characters."
-                },
-                "parent": {
-                  "description": "Required. The name of the account in which to create this location.",
-                  "type": "string",
-                  "pattern": "^accounts/[^/]+$",
-                  "required": true,
-                  "location": "path"
-                },
-                "validateOnly": {
-                  "location": "query",
-                  "description": "Optional. If true, the request is validated without actually creating the location.",
-                  "type": "boolean"
-                }
-              },
-              "response": {
-                "$ref": "Location"
-              },
-              "flatPath": "v1/accounts/{accountsId}/locations",
-              "id": "mybusinessbusinessinformation.accounts.locations.create",
-              "request": {
-                "$ref": "Location"
-              }
-            },
-            "list": {
-              "path": "v1/{+parent}/locations",
-              "id": "mybusinessbusinessinformation.accounts.locations.list",
-              "response": {
-                "$ref": "ListLocationsResponse"
-              },
-              "parameters": {
-                "readMask": {
-                  "description": "Required. Read mask to specify what fields will be returned in the response.",
-                  "location": "query",
-                  "type": "string",
-                  "format": "google-fieldmask"
-                },
-                "filter": {
-                  "location": "query",
-                  "description": "Optional. A filter constraining the locations to return. The response includes only entries that match the filter. If `filter` is empty, then constraints are applied and all locations (paginated) are retrieved for the requested account. For more information about valid fields and example usage, see [Work with Location Data Guide](https://developers.google.com/my-business/content/location-data#filter_results_when_you_list_locations).",
-                  "type": "string"
-                },
-                "pageSize": {
-                  "location": "query",
-                  "description": "Optional. How many locations to fetch per page. Default value is 10 if not set. Minimum is 1, and maximum page size is 100.",
-                  "type": "integer",
-                  "format": "int32"
-                },
-                "pageToken": {
-                  "location": "query",
-                  "type": "string",
-                  "description": "Optional. If specified, it fetches the next `page` of locations. The page token is returned by previous calls to `ListLocations` when there were more locations than could fit in the requested page size."
-                },
-                "parent": {
-                  "type": "string",
-                  "pattern": "^accounts/[^/]+$",
-                  "location": "path",
-                  "required": true,
-                  "description": "Required. The name of the account to fetch locations from. If the parent Account is of AccountType PERSONAL, only Locations that are directly owned by the Account are returned, otherwise it will return all accessible locations from the Account, either directly or indirectly."
-                },
-                "orderBy": {
-                  "description": "Optional. Sorting order for the request. Multiple fields should be comma-separated, following SQL syntax. The default sorting order is ascending. To specify descending order, a suffix \" desc\" should be added. Valid fields to order_by are title and store_code. For example: \"title, store_code desc\" or \"title\" or \"store_code desc\"",
-                  "location": "query",
-                  "type": "string"
-                }
-              },
-              "httpMethod": "GET",
-              "flatPath": "v1/accounts/{accountsId}/locations",
-              "parameterOrder": [
-                "parent"
-              ],
-              "description": "Lists the locations for the specified account."
-            }
+          "type": "array",
+          "description": "The locations.",
+          "items": {
+            "$ref": "Location"
+          }
+        },
+        "totalSize": {
+          "format": "int32",
+          "type": "integer",
+          "description": "The approximate number of Locations in the list irrespective of pagination."
+        },
+        "nextPageToken": {
+          "description": "If the number of locations exceeded the requested page size, this field is populated with a token to fetch the next page of locations on a subsequent call to `ListLocations`. If there are no more locations, this field is not present in the response.",
+          "type": "string"
+        }
+      }
+    },
+    "PlaceInfo": {
+      "properties": {
+        "placeId": {
+          "type": "string",
+          "description": "Required. The ID of the place. Must correspond to a region. (https://developers.google.com/places/web-service/supported_types#table3)"
+        },
+        "placeName": {
+          "type": "string",
+          "description": "Required. The localized name of the place. For example, `Scottsdale, AZ`."
+        }
+      },
+      "description": "Defines an area that's represented by a place ID.",
+      "id": "PlaceInfo",
+      "type": "object"
+    },
+    "ClearLocationAssociationRequest": {
+      "id": "ClearLocationAssociationRequest",
+      "type": "object",
+      "properties": {},
+      "description": "Request message for Locations.ClearLocationAssociationRequest."
+    },
+    "PhoneNumbers": {
+      "type": "object",
+      "properties": {
+        "additionalPhones": {
+          "description": "Optional. Up to two phone numbers (mobile or landline, no fax) at which your business can be called, in addition to your primary phone number.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "primaryPhone": {
+          "description": "Required. A phone number that connects to your individual business location as directly as possible. Use a local phone number instead of a central, call center helpline number whenever possible.",
+          "type": "string"
+        }
+      },
+      "description": "A collection of phone numbers for the business. During updates, both fields must be set. Clients may not update just the primary or additional phone numbers using the update mask. International phone format is preferred, such as \"+1 415 555 0132\", see more in (https://developers.google.com/style/phone-numbers#international-phone-numbers).",
+      "id": "PhoneNumbers"
+    },
+    "Categories": {
+      "description": "A collection of categories that describes the business. During updates, both fields must be set. Clients are prohibited from individually updating the primary or additional categories using the update mask.",
+      "type": "object",
+      "id": "Categories",
+      "properties": {
+        "primaryCategory": {
+          "description": "Required. Category that best describes the core business this location engages in.",
+          "$ref": "Category"
+        },
+        "additionalCategories": {
+          "description": "Optional. Additional categories to describe your business. Categories help your customers find accurate, specific results for services they're interested in. To keep your business information accurate and live, make sure that you use as few categories as possible to describe your overall core business. Choose categories that are as specific as possible, but representative of your main business.",
+          "type": "array",
+          "items": {
+            "$ref": "Category"
           }
         }
       }
     },
-    "googleLocations": {
-      "methods": {
-        "search": {
-          "response": {
-            "$ref": "SearchGoogleLocationsResponse"
+    "MoreHoursType": {
+      "properties": {
+        "hoursTypeId": {
+          "type": "string",
+          "description": "Output only. A stable ID provided by Google for this hours type.",
+          "readOnly": true
+        },
+        "localizedDisplayName": {
+          "type": "string",
+          "description": "Output only. The human-readable localized display name for the hours type.",
+          "readOnly": true
+        },
+        "displayName": {
+          "type": "string",
+          "readOnly": true,
+          "description": "Output only. The human-readable English display name for the hours type."
+        }
+      },
+      "id": "MoreHoursType",
+      "description": "More hours types that a business can offers, in addition to its regular hours.",
+      "type": "object"
+    },
+    "SearchGoogleLocationsResponse": {
+      "description": "Response message for GoogleLocations.SearchGoogleLocations.",
+      "properties": {
+        "googleLocations": {
+          "items": {
+            "$ref": "GoogleLocation"
           },
-          "request": {
-            "$ref": "SearchGoogleLocationsRequest"
+          "description": "A collection of GoogleLocations that are potential matches to the specified request, listed in order from most to least accuracy.",
+          "type": "array"
+        }
+      },
+      "id": "SearchGoogleLocationsResponse",
+      "type": "object"
+    },
+    "Attribute": {
+      "id": "Attribute",
+      "properties": {
+        "values": {
+          "items": {
+            "type": "any"
           },
-          "parameterOrder": [],
-          "description": "Search all of the possible locations that are a match to the specified request.",
-          "path": "v1/googleLocations:search",
-          "parameters": {},
-          "id": "mybusinessbusinessinformation.googleLocations.search",
-          "httpMethod": "POST",
-          "flatPath": "v1/googleLocations:search"
+          "description": "The values for this attribute. The type of the values supplied must match that expected for that attribute. This is a repeated field where multiple attribute values may be provided. Attribute types only support one value.",
+          "type": "array"
+        },
+        "name": {
+          "description": "Required. The resource name for this attribute.",
+          "type": "string"
+        },
+        "valueType": {
+          "description": "Output only. The type of value that this attribute contains. This should be used to determine how to interpret the value.",
+          "readOnly": true,
+          "type": "string",
+          "enumDescriptions": [
+            "Not specified.",
+            "The values for this attribute are boolean values.",
+            "The attribute has a predetermined list of available values that can be used. Metadata for this attribute will list these values.",
+            "The values for this attribute are URLs.",
+            "The attribute value is an enum with multiple possible values that can be explicitly set or unset."
+          ],
+          "enum": [
+            "ATTRIBUTE_VALUE_TYPE_UNSPECIFIED",
+            "BOOL",
+            "ENUM",
+            "URL",
+            "REPEATED_ENUM"
+          ]
+        },
+        "repeatedEnumValue": {
+          "description": "When the attribute value type is REPEATED_ENUM, this contains the attribute value, and the other values fields must be empty.",
+          "$ref": "RepeatedEnumAttributeValue"
+        },
+        "uriValues": {
+          "description": "When the attribute value type is URL, this field contains the value(s) for this attribute, and the other values fields must be empty.",
+          "items": {
+            "$ref": "UriAttributeValue"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object",
+      "description": "A location attribute. Attributes provide additional information about a location. The attributes that can be set on a location may vary based on the properties of that location (for example, category). Available attributes are determined by Google and may be added and removed without API changes."
+    },
+    "Attributes": {
+      "id": "Attributes",
+      "properties": {
+        "attributes": {
+          "type": "array",
+          "description": "A collection of attributes that need to be updated.",
+          "items": {
+            "$ref": "Attribute"
+          }
+        },
+        "name": {
+          "description": "Required. Google identifier for this location in the form of `locations/{location_id}/attributes`.",
+          "type": "string"
+        }
+      },
+      "description": "A container for all the attributes for a given location.",
+      "type": "object"
+    },
+    "AdWordsLocationExtensions": {
+      "properties": {
+        "adPhone": {
+          "type": "string",
+          "description": "Required. An alternate phone number to display on AdWords location extensions instead of the location's primary phone number."
+        }
+      },
+      "id": "AdWordsLocationExtensions",
+      "type": "object",
+      "description": "Additional information that is surfaced in AdWords."
+    },
+    "TimeOfDay": {
+      "description": "Represents a time of day. The date and time zone are either not significant or are specified elsewhere. An API may choose to allow leap seconds. Related types are google.type.Date and `google.protobuf.Timestamp`.",
+      "id": "TimeOfDay",
+      "type": "object",
+      "properties": {
+        "minutes": {
+          "description": "Minutes of hour of day. Must be from 0 to 59.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "nanos": {
+          "type": "integer",
+          "description": "Fractions of seconds in nanoseconds. Must be from 0 to 999,999,999.",
+          "format": "int32"
+        },
+        "seconds": {
+          "description": "Seconds of minutes of the time. Must normally be from 0 to 59. An API may allow the value 60 if it allows leap-seconds.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "hours": {
+          "format": "int32",
+          "type": "integer",
+          "description": "Hours of day in 24 hour format. Should be from 0 to 23. An API may choose to allow the value \"24:00:00\" for scenarios like business closing time."
         }
       }
     },
-    "attributes": {
-      "methods": {
-        "list": {
-          "description": "Returns the list of attributes that would be available for a location with the given primary category and country.",
-          "httpMethod": "GET",
-          "parameterOrder": [],
-          "id": "mybusinessbusinessinformation.attributes.list",
-          "response": {
-            "$ref": "ListAttributeMetadataResponse"
+    "RelationshipData": {
+      "properties": {
+        "childrenLocations": {
+          "items": {
+            "$ref": "RelevantLocation"
           },
-          "path": "v1/attributes",
-          "flatPath": "v1/attributes",
-          "parameters": {
-            "showAll": {
-              "type": "boolean",
-              "location": "query",
-              "description": "Metadata for all available attributes are returned when this field is set to true, disregarding parent and category_name fields. language_code and region_code are required when show_all is set to true."
-            },
-            "languageCode": {
-              "description": "The BCP 47 code of language to get attribute display names in. If this language is not available, they will be provided in English.",
-              "location": "query",
-              "type": "string"
-            },
-            "regionCode": {
-              "type": "string",
-              "description": "The ISO 3166-1 alpha-2 country code to find available attributes.",
-              "location": "query"
-            },
-            "categoryName": {
-              "location": "query",
-              "description": "The primary category stable ID to find available attributes. Must be of the format categories/{category_id}.",
-              "type": "string"
-            },
-            "pageSize": {
-              "location": "query",
-              "description": "How many attributes to include per page. Default is 200, minimum is 1.",
-              "format": "int32",
-              "type": "integer"
-            },
-            "pageToken": {
-              "description": "If specified, the next page of attribute metadata is retrieved.",
-              "location": "query",
-              "type": "string"
-            },
-            "parent": {
-              "type": "string",
-              "description": "Resource name of the location to look up available attributes. If this field is set, category_name, region_code, language_code and show_all are not required and must not be set.",
-              "location": "query"
-            }
-          }
+          "description": "The list of children locations that this location has relations with.",
+          "type": "array"
+        },
+        "parentLocation": {
+          "description": "The parent location that this location has relations with.",
+          "$ref": "RelevantLocation"
+        },
+        "parentChain": {
+          "description": "The resource name of the Chain that this location is member of. How to find Chain ID",
+          "type": "string"
         }
-      }
+      },
+      "type": "object",
+      "description": "Information of all parent and children locations related to this one.",
+      "id": "RelationshipData"
+    },
+    "RelevantLocation": {
+      "description": "Information about another location that is related to current one. The relation can be any one of DEPARTMENT_OF or INDEPENDENT_ESTABLISHMENT_OF, and the location specified here can be on either side (parent/child) of the location.",
+      "properties": {
+        "relationType": {
+          "enum": [
+            "RELATION_TYPE_UNSPECIFIED",
+            "DEPARTMENT_OF",
+            "INDEPENDENT_ESTABLISHMENT_IN"
+          ],
+          "type": "string",
+          "enumDescriptions": [
+            "Type unspecified.",
+            "This represents a relation between 2 locations which share one physical area, same brand/upper management/organization, but with different key attributes like store hours or phone numbers. For example, Costco Pharmacy is a department in Costco Wholesale.",
+            "This represents the cases where 2 locations are co-located in the same physical location, but from different companies (e.g. Starbucks in a Safeway, shops in a mall)."
+          ],
+          "description": "Required. The type of the relationship."
+        },
+        "placeId": {
+          "description": "Required. Specify the location that is on the other side of the relation by its placeID.",
+          "type": "string"
+        }
+      },
+      "id": "RelevantLocation",
+      "type": "object"
     }
   },
-  "fullyEncodeReservedExpansion": true,
-  "id": "mybusinessbusinessinformation:v1",
+  "servicePath": "",
   "kind": "discovery#restDescription",
-  "title": "My Business Business Information API",
+  "discoveryVersion": "v1",
+  "canonicalName": "My Business Business Information",
+  "version_module": true,
+  "mtlsRootUrl": "https://mybusinessbusinessinformation.mtls.googleapis.com/",
+  "documentationLink": "https://developers.google.com/my-business/",
+  "ownerDomain": "google.com",
+  "baseUrl": "https://mybusinessbusinessinformation.googleapis.com/",
+  "basePath": "",
   "icons": {
     "x32": "http://www.google.com/images/icons/product/search-32.gif",
     "x16": "http://www.google.com/images/icons/product/search-16.gif"
   },
-  "version_module": true,
   "parameters": {
-    "prettyPrint": {
+    "oauth_token": {
       "location": "query",
-      "default": "true",
-      "description": "Returns response with indentations and line breaks.",
-      "type": "boolean"
-    },
-    "upload_protocol": {
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
-      "location": "query",
-      "type": "string"
+      "type": "string",
+      "description": "OAuth 2.0 token for the current user."
     },
     "alt": {
-      "description": "Data format for response.",
-      "type": "string",
       "enum": [
         "json",
         "media",
         "proto"
       ],
+      "location": "query",
       "enumDescriptions": [
         "Responses with Content-Type of application/json",
         "Media download with context-dependent Content-Type",
         "Responses with Content-Type of application/x-protobuf"
       ],
-      "location": "query",
+      "description": "Data format for response.",
+      "type": "string",
       "default": "json"
     },
-    "uploadType": {
-      "type": "string",
+    "prettyPrint": {
+      "description": "Returns response with indentations and line breaks.",
       "location": "query",
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\")."
+      "type": "boolean",
+      "default": "true"
     },
-    "quotaUser": {
+    "fields": {
+      "description": "Selector specifying which fields to include in a partial response.",
       "location": "query",
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
       "type": "string"
+    },
+    "upload_protocol": {
+      "location": "query",
+      "type": "string",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\")."
     },
     "access_token": {
       "type": "string",
       "location": "query",
       "description": "OAuth access token."
     },
-    "oauth_token": {
+    "uploadType": {
       "location": "query",
-      "type": "string",
-      "description": "OAuth 2.0 token for the current user."
-    },
-    "fields": {
-      "location": "query",
-      "description": "Selector specifying which fields to include in a partial response.",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
       "type": "string"
     },
-    "callback": {
+    "quotaUser": {
       "type": "string",
-      "description": "JSONP",
-      "location": "query"
-    },
-    "key": {
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
-      "type": "string",
-      "location": "query"
+      "location": "query",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters."
     },
     "$.xgafv": {
-      "location": "query",
+      "type": "string",
       "enum": [
         "1",
         "2"
       ],
-      "type": "string",
+      "location": "query",
+      "description": "V1 error format.",
       "enumDescriptions": [
         "v1 error format",
         "v2 error format"
-      ],
-      "description": "V1 error format."
+      ]
+    },
+    "key": {
+      "location": "query",
+      "type": "string",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token."
+    },
+    "callback": {
+      "location": "query",
+      "type": "string",
+      "description": "JSONP"
     }
-  },
-  "mtlsRootUrl": "https://mybusinessbusinessinformation.mtls.googleapis.com/",
-  "rootUrl": "https://mybusinessbusinessinformation.googleapis.com/",
-  "description": "The My Business Business Information API provides an interface for managing business information on Google."
+  }
 }
