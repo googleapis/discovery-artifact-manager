@@ -1,109 +1,156 @@
 {
-  "ownerName": "Google",
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "title": "Cloud Monitoring API",
-  "version": "v1",
-  "id": "monitoring:v1",
-  "description": "Manages your Cloud Monitoring data and configurations.",
-  "kind": "discovery#restDescription",
-  "rootUrl": "https://monitoring.googleapis.com/",
-  "documentationLink": "https://cloud.google.com/monitoring/api/",
-  "discoveryVersion": "v1",
-  "name": "monitoring",
-  "mtlsRootUrl": "https://monitoring.mtls.googleapis.com/",
+  "protocol": "rest",
   "fullyEncodeReservedExpansion": true,
+  "title": "Cloud Monitoring API",
+  "ownerName": "Google",
+  "documentationLink": "https://cloud.google.com/monitoring/api/",
+  "kind": "discovery#restDescription",
   "schemas": {
-    "XyChart": {
-      "properties": {
-        "xAxis": {
-          "description": "The properties applied to the X axis.",
-          "$ref": "Axis"
-        },
-        "timeshiftDuration": {
-          "description": "The duration used to display a comparison chart. A comparison chart simultaneously shows values from two similar-length time periods (e.g., week-over-week metrics). The duration must be positive, and it can only be applied to charts with data sets of LINE plot type.",
-          "format": "google-duration",
-          "type": "string"
-        },
-        "dataSets": {
-          "type": "array",
-          "description": "Required. The data displayed in this chart.",
-          "items": {
-            "$ref": "DataSet"
-          }
-        },
-        "thresholds": {
-          "description": "Threshold lines drawn horizontally across the chart.",
-          "items": {
-            "$ref": "Threshold"
-          },
-          "type": "array"
-        },
-        "yAxis": {
-          "$ref": "Axis",
-          "description": "The properties applied to the Y axis."
-        },
-        "y2Axis": {
-          "description": "The properties applied to the Y2 axis.",
-          "$ref": "Axis"
-        },
-        "chartOptions": {
-          "description": "Display options for the chart.",
-          "$ref": "ChartOptions"
-        }
-      },
-      "description": "A chart that displays data on a 2D (X and Y axes) plane.",
-      "id": "XyChart",
-      "type": "object"
-    },
-    "SparkChartView": {
-      "id": "SparkChartView",
-      "description": "A sparkChart is a small chart suitable for inclusion in a table-cell or inline in text. This message contains the configuration for a sparkChart to show up on a Scorecard, showing recent trends of the scorecard's timeseries.",
+    "MetricsScope": {
+      "id": "MetricsScope",
       "type": "object",
       "properties": {
-        "sparkChartType": {
-          "enumDescriptions": [
-            "Not allowed in well-formed requests.",
-            "The sparkline will be rendered as a small line chart.",
-            "The sparkbar will be rendered as a small bar chart."
-          ],
-          "type": "string",
-          "enum": [
-            "SPARK_CHART_TYPE_UNSPECIFIED",
-            "SPARK_LINE",
-            "SPARK_BAR"
-          ],
-          "description": "Required. The type of sparkchart to show in this chartView."
+        "createTime": {
+          "description": "Output only. The time when this Metrics Scope was created.",
+          "format": "google-datetime",
+          "readOnly": true,
+          "type": "string"
         },
-        "minAlignmentPeriod": {
-          "format": "google-duration",
-          "description": "The lower bound on data point frequency in the chart implemented by specifying the minimum alignment period to use in a time series query. For example, if the data is published once every 10 minutes it would not make sense to fetch and align data at one minute intervals. This field is optional and exists only as a hint.",
+        "name": {
+          "description": "Immutable. The resource name of the Monitoring Metrics Scope. On input, the resource name can be specified with the scoping project ID or number. On output, the resource name is specified with the scoping project number. Example: locations/global/metricsScopes/{SCOPING_PROJECT_ID_OR_NUMBER}",
+          "type": "string"
+        },
+        "monitoredProjects": {
+          "items": {
+            "$ref": "MonitoredProject"
+          },
+          "readOnly": true,
+          "type": "array",
+          "description": "Output only. The list of projects monitored by this Metrics Scope."
+        },
+        "updateTime": {
+          "description": "Output only. The time when this Metrics Scope record was last updated.",
+          "readOnly": true,
+          "type": "string",
+          "format": "google-datetime"
+        }
+      },
+      "description": "Represents a Metrics Scope (https://cloud.google.com/monitoring/settings#concept-scope) in Cloud Monitoring, which specifies one or more Google projects and zero or more AWS accounts to monitor together."
+    },
+    "ListLabelsRequest": {
+      "description": "ListLabelsRequest holds all parameters of the Prometheus upstream API for returning a list of label names.",
+      "id": "ListLabelsRequest",
+      "type": "object",
+      "properties": {
+        "match": {
+          "type": "string",
+          "description": "A list of matchers encoded in the Prometheus label matcher format to constrain the values to series that satisfy them."
+        },
+        "end": {
+          "description": "The end time to evaluate the query for. Either floating point UNIX seconds or RFC3339 formatted timestamp.",
+          "type": "string"
+        },
+        "start": {
+          "description": "The start time to evaluate the query for. Either floating point UNIX seconds or RFC3339 formatted timestamp.",
           "type": "string"
         }
       }
     },
-    "Dashboard": {
-      "type": "object",
-      "description": "A Google Stackdriver dashboard. Dashboards define the content and layout of pages in the Stackdriver web application.",
-      "id": "Dashboard",
+    "Row": {
       "properties": {
-        "displayName": {
-          "description": "Required. The mutable, human-readable name.",
+        "widgets": {
+          "type": "array",
+          "description": "The display widgets arranged horizontally in this row.",
+          "items": {
+            "$ref": "Widget"
+          }
+        },
+        "weight": {
+          "type": "string",
+          "description": "The relative weight of this row. The row weight is used to adjust the height of rows on the screen (relative to peers). Greater the weight, greater the height of the row on the screen. If omitted, a value of 1 is used while rendering.",
+          "format": "int64"
+        }
+      },
+      "type": "object",
+      "id": "Row",
+      "description": "Defines the layout properties and content for a row."
+    },
+    "CollapsibleGroup": {
+      "type": "object",
+      "id": "CollapsibleGroup",
+      "properties": {
+        "collapsed": {
+          "type": "boolean",
+          "description": "The collapsed state of the widget on first page load."
+        }
+      },
+      "description": "A widget that groups the other widgets. All widgets that are within the area spanned by the grouping widget are considered member widgets."
+    },
+    "Axis": {
+      "properties": {
+        "scale": {
+          "enum": [
+            "SCALE_UNSPECIFIED",
+            "LINEAR",
+            "LOG10"
+          ],
+          "enumDescriptions": [
+            "Scale is unspecified. The view will default to LINEAR.",
+            "Linear scale.",
+            "Logarithmic scale (base 10)."
+          ],
+          "type": "string",
+          "description": "The axis scale. By default, a linear scale is used."
+        },
+        "label": {
+          "description": "The label of the axis.",
           "type": "string"
-        },
-        "etag": {
-          "description": "etag is used for optimistic concurrency control as a way to help prevent simultaneous updates of a policy from overwriting each other. An etag is returned in the response to GetDashboard, and users are expected to put that etag in the request to UpdateDashboard to ensure that their change will be applied to the same version of the Dashboard configuration. The field should not be passed during dashboard creation.",
+        }
+      },
+      "description": "A chart axis.",
+      "type": "object",
+      "id": "Axis"
+    },
+    "SourceContext": {
+      "type": "object",
+      "description": "SourceContext represents information about the source of a protobuf element, like the file in which it is defined.",
+      "id": "SourceContext",
+      "properties": {
+        "fileName": {
+          "description": "The path-qualified name of the .proto file that contained the associated protobuf element. For example: \"google/protobuf/source_context.proto\".",
           "type": "string"
+        }
+      }
+    },
+    "ListDashboardsResponse": {
+      "id": "ListDashboardsResponse",
+      "description": "The ListDashboards request.",
+      "type": "object",
+      "properties": {
+        "nextPageToken": {
+          "type": "string",
+          "description": "If there are more results than have been returned, then this field is set to a non-empty value. To see the additional results, use that value as page_token in the next call to this method."
         },
-        "columnLayout": {
-          "$ref": "ColumnLayout",
-          "description": "The content is divided into equally spaced columns and the widgets are arranged vertically."
-        },
+        "dashboards": {
+          "description": "The list of requested dashboards.",
+          "type": "array",
+          "items": {
+            "$ref": "Dashboard"
+          }
+        }
+      }
+    },
+    "Dashboard": {
+      "description": "A Google Stackdriver dashboard. Dashboards define the content and layout of pages in the Stackdriver web application.",
+      "type": "object",
+      "properties": {
         "mosaicLayout": {
-          "$ref": "MosaicLayout",
-          "description": "The content is arranged as a grid of tiles, with each content widget occupying one or more grid blocks."
+          "description": "The content is arranged as a grid of tiles, with each content widget occupying one or more grid blocks.",
+          "$ref": "MosaicLayout"
+        },
+        "gridLayout": {
+          "description": "Content is arranged with a basic layout that re-flows a simple list of informational elements like widgets or tiles.",
+          "$ref": "GridLayout"
         },
         "labels": {
           "description": "Labels applied to the dashboard",
@@ -112,148 +159,219 @@
             "type": "string"
           }
         },
-        "gridLayout": {
-          "description": "Content is arranged with a basic layout that re-flows a simple list of informational elements like widgets or tiles.",
-          "$ref": "GridLayout"
-        },
         "name": {
           "type": "string",
           "description": "Immutable. The resource name of the dashboard."
         },
+        "etag": {
+          "description": "etag is used for optimistic concurrency control as a way to help prevent simultaneous updates of a policy from overwriting each other. An etag is returned in the response to GetDashboard, and users are expected to put that etag in the request to UpdateDashboard to ensure that their change will be applied to the same version of the Dashboard configuration. The field should not be passed during dashboard creation.",
+          "type": "string"
+        },
         "dashboardFilters": {
-          "type": "array",
           "items": {
             "$ref": "DashboardFilter"
           },
+          "type": "array",
           "description": "Filters to reduce the amount of data charted based on the filter criteria."
+        },
+        "columnLayout": {
+          "description": "The content is divided into equally spaced columns and the widgets are arranged vertically.",
+          "$ref": "ColumnLayout"
+        },
+        "displayName": {
+          "description": "Required. The mutable, human-readable name.",
+          "type": "string"
         },
         "rowLayout": {
           "$ref": "RowLayout",
           "description": "The content is divided into equally spaced rows and the widgets are arranged horizontally."
         }
-      }
+      },
+      "id": "Dashboard"
     },
-    "PickTimeSeriesFilter": {
-      "id": "PickTimeSeriesFilter",
-      "description": "Describes a ranking-based time series filter. Each input time series is ranked with an aligner. The filter will allow up to num_time_series time series to pass through it, selecting them based on the relative ranking.For example, if ranking_method is METHOD_MEAN,direction is BOTTOM, and num_time_series is 3, then the 3 times series with the lowest mean values will pass through the filter.",
+    "Tile": {
+      "description": "A single tile in the mosaic. The placement and size of the tile are configurable.",
+      "id": "Tile",
+      "type": "object",
       "properties": {
-        "numTimeSeries": {
+        "widget": {
+          "description": "The informational widget contained in the tile. For example an XyChart.",
+          "$ref": "Widget"
+        },
+        "height": {
+          "description": "The height of the tile, measured in grid blocks. Tiles must have a minimum height of 1.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "xPos": {
+          "type": "integer",
+          "description": "The zero-indexed position of the tile in grid blocks relative to the left edge of the grid. Tiles must be contained within the specified number of columns. x_pos cannot be negative.",
+          "format": "int32"
+        },
+        "yPos": {
+          "format": "int32",
+          "description": "The zero-indexed position of the tile in grid blocks relative to the top edge of the grid. y_pos cannot be negative.",
+          "type": "integer"
+        },
+        "width": {
           "type": "integer",
           "format": "int32",
-          "description": "How many time series to allow to pass through the filter."
-        },
-        "direction": {
-          "enum": [
-            "DIRECTION_UNSPECIFIED",
-            "TOP",
-            "BOTTOM"
-          ],
-          "description": "How to use the ranking to select time series that pass through the filter.",
-          "type": "string",
-          "enumDescriptions": [
-            "Not allowed. You must specify a different Direction if you specify a PickTimeSeriesFilter.",
-            "Pass the highest num_time_series ranking inputs.",
-            "Pass the lowest num_time_series ranking inputs."
-          ]
-        },
-        "rankingMethod": {
-          "type": "string",
-          "description": "ranking_method is applied to each time series independently to produce the value which will be used to compare the time series to other time series.",
-          "enumDescriptions": [
-            "Not allowed. You must specify a different Method if you specify a PickTimeSeriesFilter.",
-            "Select the mean of all values.",
-            "Select the maximum value.",
-            "Select the minimum value.",
-            "Compute the sum of all values.",
-            "Select the most recent value."
-          ],
-          "enum": [
-            "METHOD_UNSPECIFIED",
-            "METHOD_MEAN",
-            "METHOD_MAX",
-            "METHOD_MIN",
-            "METHOD_SUM",
-            "METHOD_LATEST"
-          ]
-        }
-      },
-      "type": "object"
-    },
-    "SourceContext": {
-      "properties": {
-        "fileName": {
-          "description": "The path-qualified name of the .proto file that contained the associated protobuf element. For example: \"google/protobuf/source_context.proto\".",
-          "type": "string"
-        }
-      },
-      "id": "SourceContext",
-      "type": "object",
-      "description": "SourceContext represents information about the source of a protobuf element, like the file in which it is defined."
-    },
-    "Axis": {
-      "type": "object",
-      "id": "Axis",
-      "description": "A chart axis.",
-      "properties": {
-        "label": {
-          "description": "The label of the axis.",
-          "type": "string"
-        },
-        "scale": {
-          "description": "The axis scale. By default, a linear scale is used.",
-          "type": "string",
-          "enumDescriptions": [
-            "Scale is unspecified. The view will default to LINEAR.",
-            "Linear scale.",
-            "Logarithmic scale (base 10)."
-          ],
-          "enum": [
-            "SCALE_UNSPECIFIED",
-            "LINEAR",
-            "LOG10"
-          ]
+          "description": "The width of the tile, measured in grid blocks. Tiles must have a minimum width of 1."
         }
       }
     },
-    "QueryRangeRequest": {
-      "description": "QueryRangeRequest holds all parameters of the Prometheus upstream range query API plus GCM specific parameters.",
-      "type": "object",
+    "DashboardFilter": {
       "properties": {
-        "start": {
-          "type": "string",
-          "description": "The start time to evaluate the query for. Either floating point UNIX seconds or RFC3339 formatted timestamp."
-        },
-        "step": {
-          "type": "string",
-          "description": "The resolution of query result. Either a Prometheus duration string (https://prometheus.io/docs/prometheus/latest/querying/basics/#time-durations) or floating point seconds. This non-standard encoding must be used for compatibility with the open source API. Clients may still implement timeouts at the connection level while ignoring this field."
-        },
-        "timeout": {
-          "description": "An upper bound timeout for the query. Either a Prometheus duration string (https://prometheus.io/docs/prometheus/latest/querying/basics/#time-durations) or floating point seconds. This non-standard encoding must be used for compatibility with the open source API. Clients may still implement timeouts at the connection level while ignoring this field.",
+        "labelKey": {
+          "description": "Required. The key for the label",
           "type": "string"
         },
-        "query": {
-          "type": "string",
-          "description": "A PromQL query string. Query lanauge documentation: https://prometheus.io/docs/prometheus/latest/querying/basics/."
+        "templateVariable": {
+          "description": "The placeholder text that can be referenced in a filter string or MQL query. If omitted, the dashboard filter will be applied to all relevant widgets in the dashboard.",
+          "type": "string"
         },
-        "end": {
+        "filterType": {
           "type": "string",
-          "description": "The end time to evaluate the query for. Either floating point UNIX seconds or RFC3339 formatted timestamp."
+          "enum": [
+            "FILTER_TYPE_UNSPECIFIED",
+            "RESOURCE_LABEL",
+            "METRIC_LABEL",
+            "USER_METADATA_LABEL",
+            "SYSTEM_METADATA_LABEL",
+            "GROUP"
+          ],
+          "description": "The specified filter type",
+          "enumDescriptions": [
+            "Filter type is unspecified. This is not valid in a well-formed request.",
+            "Filter on a resource label value",
+            "Filter on a metrics label value",
+            "Filter on a user metadata label value",
+            "Filter on a system metadata label value",
+            "Filter on a group id"
+          ]
+        },
+        "stringValue": {
+          "description": "A variable-length string value.",
+          "type": "string"
         }
       },
-      "id": "QueryRangeRequest"
+      "id": "DashboardFilter",
+      "description": "A filter to reduce the amount of data charted in relevant widgets.",
+      "type": "object"
     },
-    "Field": {
+    "TimeSeriesFilter": {
+      "type": "object",
       "properties": {
-        "options": {
-          "description": "The protocol buffer options.",
+        "statisticalTimeSeriesFilter": {
+          "description": "Statistics based time series filter. Note: This field is deprecated and completely ignored by the API.",
+          "$ref": "StatisticalTimeSeriesFilter"
+        },
+        "secondaryAggregation": {
+          "description": "Apply a second aggregation after aggregation is applied.",
+          "$ref": "Aggregation"
+        },
+        "pickTimeSeriesFilter": {
+          "$ref": "PickTimeSeriesFilter",
+          "description": "Ranking based time series filter."
+        },
+        "aggregation": {
+          "description": "By default, the raw time series data is returned. Use this field to combine multiple time series for different views of the data.",
+          "$ref": "Aggregation"
+        },
+        "filter": {
+          "description": "Required. The monitoring filter (https://cloud.google.com/monitoring/api/v3/filters) that identifies the metric types, resources, and projects to query.",
+          "type": "string"
+        }
+      },
+      "description": "A filter that defines a subset of time series data that is displayed in a widget. Time series data is fetched using the ListTimeSeries (https://cloud.google.com/monitoring/api/ref_v3/rest/v3/projects.timeSeries/list) method.",
+      "id": "TimeSeriesFilter"
+    },
+    "RowLayout": {
+      "properties": {
+        "rows": {
+          "items": {
+            "$ref": "Row"
+          },
+          "type": "array",
+          "description": "The rows of content to display."
+        }
+      },
+      "description": "A simplified layout that divides the available space into rows and arranges a set of widgets horizontally in each row.",
+      "type": "object",
+      "id": "RowLayout"
+    },
+    "Scorecard": {
+      "type": "object",
+      "id": "Scorecard",
+      "properties": {
+        "timeSeriesQuery": {
+          "$ref": "TimeSeriesQuery",
+          "description": "Required. Fields for querying time series data from the Stackdriver metrics API."
+        },
+        "thresholds": {
+          "description": "The thresholds used to determine the state of the scorecard given the time series' current value. For an actual value x, the scorecard is in a danger state if x is less than or equal to a danger threshold that triggers below, or greater than or equal to a danger threshold that triggers above. Similarly, if x is above/below a warning threshold that triggers above/below, then the scorecard is in a warning state - unless x also puts it in a danger state. (Danger trumps warning.)As an example, consider a scorecard with the following four thresholds: { value: 90, category: 'DANGER', trigger: 'ABOVE', }, { value: 70, category: 'WARNING', trigger: 'ABOVE', }, { value: 10, category: 'DANGER', trigger: 'BELOW', }, { value: 20, category: 'WARNING', trigger: 'BELOW', }Then: values less than or equal to 10 would put the scorecard in a DANGER state, values greater than 10 but less than or equal to 20 a WARNING state, values strictly between 20 and 70 an OK state, values greater than or equal to 70 but less than 90 a WARNING state, and values greater than or equal to 90 a DANGER state.",
           "type": "array",
           "items": {
-            "$ref": "Option"
+            "$ref": "Threshold"
           }
+        },
+        "gaugeView": {
+          "$ref": "GaugeView",
+          "description": "Will cause the scorecard to show a gauge chart."
+        },
+        "sparkChartView": {
+          "$ref": "SparkChartView",
+          "description": "Will cause the scorecard to show a spark chart."
+        }
+      },
+      "description": "A widget showing the latest value of a metric, and how this value relates to one or more thresholds."
+    },
+    "Column": {
+      "type": "object",
+      "properties": {
+        "weight": {
+          "format": "int64",
+          "type": "string",
+          "description": "The relative weight of this column. The column weight is used to adjust the width of columns on the screen (relative to peers). Greater the weight, greater the width of the column on the screen. If omitted, a value of 1 is used while rendering."
+        },
+        "widgets": {
+          "items": {
+            "$ref": "Widget"
+          },
+          "description": "The display widgets arranged vertically in this column.",
+          "type": "array"
+        }
+      },
+      "id": "Column",
+      "description": "Defines the layout properties and content for a column."
+    },
+    "Field": {
+      "type": "object",
+      "description": "A single field of a message type.",
+      "properties": {
+        "number": {
+          "type": "integer",
+          "description": "The field number.",
+          "format": "int32"
+        },
+        "defaultValue": {
+          "description": "The string value of the default value of this field. Proto2 syntax only.",
+          "type": "string"
+        },
+        "packed": {
+          "type": "boolean",
+          "description": "Whether to use alternative packed wire representation."
+        },
+        "jsonName": {
+          "type": "string",
+          "description": "The field JSON name."
+        },
+        "name": {
+          "type": "string",
+          "description": "The field name."
         },
         "cardinality": {
           "type": "string",
-          "description": "The field cardinality.",
           "enumDescriptions": [
             "For fields with unknown cardinality.",
             "For optional fields.",
@@ -265,17 +383,24 @@
             "CARDINALITY_OPTIONAL",
             "CARDINALITY_REQUIRED",
             "CARDINALITY_REPEATED"
-          ]
+          ],
+          "description": "The field cardinality."
         },
-        "jsonName": {
-          "type": "string",
-          "description": "The field JSON name."
+        "oneofIndex": {
+          "format": "int32",
+          "type": "integer",
+          "description": "The index of the field type in Type.oneofs, for message or enumeration types. The first type has index 1; zero means the type is not in the list."
         },
-        "defaultValue": {
-          "description": "The string value of the default value of this field. Proto2 syntax only.",
-          "type": "string"
+        "options": {
+          "type": "array",
+          "description": "The protocol buffer options.",
+          "items": {
+            "$ref": "Option"
+          }
         },
         "kind": {
+          "description": "The field type.",
+          "type": "string",
           "enum": [
             "TYPE_UNKNOWN",
             "TYPE_DOUBLE",
@@ -297,7 +422,6 @@
             "TYPE_SINT32",
             "TYPE_SINT64"
           ],
-          "description": "The field type.",
           "enumDescriptions": [
             "Field type unknown.",
             "Field type double.",
@@ -318,156 +442,67 @@
             "Field type sfixed64.",
             "Field type sint32.",
             "Field type sint64."
-          ],
-          "type": "string"
+          ]
         },
         "typeUrl": {
-          "description": "The field type URL, without the scheme, for message or enumeration types. Example: \"type.googleapis.com/google.protobuf.Timestamp\".",
-          "type": "string"
-        },
-        "packed": {
-          "description": "Whether to use alternative packed wire representation.",
-          "type": "boolean"
-        },
-        "name": {
           "type": "string",
-          "description": "The field name."
-        },
-        "oneofIndex": {
-          "format": "int32",
-          "description": "The index of the field type in Type.oneofs, for message or enumeration types. The first type has index 1; zero means the type is not in the list.",
-          "type": "integer"
-        },
-        "number": {
-          "type": "integer",
-          "description": "The field number.",
-          "format": "int32"
+          "description": "The field type URL, without the scheme, for message or enumeration types. Example: \"type.googleapis.com/google.protobuf.Timestamp\"."
         }
       },
-      "id": "Field",
-      "type": "object",
-      "description": "A single field of a message type."
+      "id": "Field"
     },
-    "Scorecard": {
-      "type": "object",
-      "id": "Scorecard",
-      "description": "A widget showing the latest value of a metric, and how this value relates to one or more thresholds.",
+    "ListMetricsScopesByMonitoredProjectResponse": {
+      "id": "ListMetricsScopesByMonitoredProjectResponse",
       "properties": {
-        "thresholds": {
-          "type": "array",
+        "metricsScopes": {
           "items": {
-            "$ref": "Threshold"
+            "$ref": "MetricsScope"
           },
-          "description": "The thresholds used to determine the state of the scorecard given the time series' current value. For an actual value x, the scorecard is in a danger state if x is less than or equal to a danger threshold that triggers below, or greater than or equal to a danger threshold that triggers above. Similarly, if x is above/below a warning threshold that triggers above/below, then the scorecard is in a warning state - unless x also puts it in a danger state. (Danger trumps warning.)As an example, consider a scorecard with the following four thresholds: { value: 90, category: 'DANGER', trigger: 'ABOVE', }, { value: 70, category: 'WARNING', trigger: 'ABOVE', }, { value: 10, category: 'DANGER', trigger: 'BELOW', }, { value: 20, category: 'WARNING', trigger: 'BELOW', }Then: values less than or equal to 10 would put the scorecard in a DANGER state, values greater than 10 but less than or equal to 20 a WARNING state, values strictly between 20 and 70 an OK state, values greater than or equal to 70 but less than 90 a WARNING state, and values greater than or equal to 90 a DANGER state."
-        },
-        "sparkChartView": {
-          "description": "Will cause the scorecard to show a spark chart.",
-          "$ref": "SparkChartView"
-        },
-        "gaugeView": {
-          "description": "Will cause the scorecard to show a gauge chart.",
-          "$ref": "GaugeView"
-        },
-        "timeSeriesQuery": {
-          "description": "Required. Fields for querying time series data from the Stackdriver metrics API.",
-          "$ref": "TimeSeriesQuery"
+          "description": "A set of all metrics scopes that the specified monitored project has been added to.",
+          "type": "array"
         }
-      }
+      },
+      "description": "Response for the ListMetricsScopesByMonitoredProject method.",
+      "type": "object"
     },
     "OperationMetadata": {
+      "description": "Contains metadata for longrunning operation for the edit Metrics Scope endpoints.",
       "properties": {
         "state": {
           "description": "Current state of the batch operation.",
           "type": "string",
-          "enum": [
-            "STATE_UNSPECIFIED",
-            "CREATED",
-            "RUNNING",
-            "DONE",
-            "CANCELLED"
-          ],
           "enumDescriptions": [
             "Invalid.",
             "Request has been received.",
             "Request is actively being processed.",
             "The batch processing is done.",
             "The batch processing was cancelled."
-          ]
-        },
-        "createTime": {
-          "description": "The time when the batch request was received.",
-          "type": "string",
-          "format": "google-datetime"
-        },
-        "updateTime": {
-          "description": "The time when the operation result was last updated.",
-          "type": "string",
-          "format": "google-datetime"
-        }
-      },
-      "type": "object",
-      "description": "Contains metadata for longrunning operation for the edit Metrics Scope endpoints.",
-      "id": "OperationMetadata"
-    },
-    "GaugeView": {
-      "description": "A gauge chart shows where the current value sits within a pre-defined range. The upper and lower bounds should define the possible range of values for the scorecard's query (inclusive).",
-      "properties": {
-        "upperBound": {
-          "description": "The upper bound for this gauge chart. The value of the chart should always be less than or equal to this.",
-          "format": "double",
-          "type": "number"
-        },
-        "lowerBound": {
-          "description": "The lower bound for this gauge chart. The value of the chart should always be greater than or equal to this.",
-          "type": "number",
-          "format": "double"
-        }
-      },
-      "id": "GaugeView",
-      "type": "object"
-    },
-    "DashboardFilter": {
-      "properties": {
-        "templateVariable": {
-          "description": "The placeholder text that can be referenced in a filter string or MQL query. If omitted, the dashboard filter will be applied to all relevant widgets in the dashboard.",
-          "type": "string"
-        },
-        "stringValue": {
-          "description": "A variable-length string value.",
-          "type": "string"
-        },
-        "filterType": {
-          "enumDescriptions": [
-            "Filter type is unspecified. This is not valid in a well-formed request.",
-            "Filter on a resource label value",
-            "Filter on a metrics label value",
-            "Filter on a user metadata label value",
-            "Filter on a system metadata label value",
-            "Filter on a group id"
           ],
           "enum": [
-            "FILTER_TYPE_UNSPECIFIED",
-            "RESOURCE_LABEL",
-            "METRIC_LABEL",
-            "USER_METADATA_LABEL",
-            "SYSTEM_METADATA_LABEL",
-            "GROUP"
-          ],
-          "type": "string",
-          "description": "The specified filter type"
+            "STATE_UNSPECIFIED",
+            "CREATED",
+            "RUNNING",
+            "DONE",
+            "CANCELLED"
+          ]
         },
-        "labelKey": {
+        "updateTime": {
           "type": "string",
-          "description": "Required. The key for the label"
+          "description": "The time when the operation result was last updated.",
+          "format": "google-datetime"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "The time when the batch request was received.",
+          "format": "google-datetime"
         }
       },
       "type": "object",
-      "id": "DashboardFilter",
-      "description": "A filter to reduce the amount of data charted in relevant widgets."
+      "id": "OperationMetadata"
     },
     "QueryInstantRequest": {
-      "type": "object",
       "description": "QueryInstantRequest holds all parameters of the Prometheus upstream instant query API plus GCM specific parameters.",
+      "type": "object",
       "id": "QueryInstantRequest",
       "properties": {
         "timeout": {
@@ -475,644 +510,213 @@
           "description": "An upper bound timeout for the query. Either a Prometheus duration string (https://prometheus.io/docs/prometheus/latest/querying/basics/#time-durations) or floating point seconds. This non-standard encoding must be used for compatibility with the open source API. Clients may still implement timeouts at the connection level while ignoring this field."
         },
         "time": {
-          "description": "The single point in time to evaluate the query for. Either floating point UNIX seconds or RFC3339 formatted timestamp.",
-          "type": "string"
+          "type": "string",
+          "description": "The single point in time to evaluate the query for. Either floating point UNIX seconds or RFC3339 formatted timestamp."
         },
         "query": {
-          "type": "string",
-          "description": "A PromQL query string. Query lanauge documentation: https://prometheus.io/docs/prometheus/latest/querying/basics/."
+          "description": "A PromQL query string. Query lanauge documentation: https://prometheus.io/docs/prometheus/latest/querying/basics/.",
+          "type": "string"
         }
       }
     },
-    "DroppedLabels": {
-      "type": "object",
-      "description": "A set of (label, value) pairs that were removed from a Distribution time series during aggregation and then added as an attachment to a Distribution.Exemplar.The full label set for the exemplars is constructed by using the dropped pairs in combination with the label values that remain on the aggregated Distribution time series. The constructed full label set can be used to identify the specific entity, such as the instance or job, which might be contributing to a long-tail. However, with dropped labels, the storage requirements are reduced because only the aggregated distribution values for a large group of time series are stored.Note that there are no guarantees on ordering of the labels from exemplar-to-exemplar and from distribution-to-distribution in the same stream, and there may be duplicates. It is up to clients to resolve any ambiguities.",
-      "id": "DroppedLabels",
+    "SparkChartView": {
       "properties": {
-        "label": {
-          "description": "Map from label to its value, for all labels dropped in any aggregation.",
-          "additionalProperties": {
-            "type": "string"
-          },
-          "type": "object"
-        }
-      }
-    },
-    "TimeSeriesFilterRatio": {
-      "properties": {
-        "secondaryAggregation": {
-          "$ref": "Aggregation",
-          "description": "Apply a second aggregation after the ratio is computed."
-        },
-        "statisticalTimeSeriesFilter": {
-          "description": "Statistics based time series filter. Note: This field is deprecated and completely ignored by the API.",
-          "$ref": "StatisticalTimeSeriesFilter"
-        },
-        "pickTimeSeriesFilter": {
-          "description": "Ranking based time series filter.",
-          "$ref": "PickTimeSeriesFilter"
-        },
-        "denominator": {
-          "description": "The denominator of the ratio.",
-          "$ref": "RatioPart"
-        },
-        "numerator": {
-          "$ref": "RatioPart",
-          "description": "The numerator of the ratio."
-        }
-      },
-      "id": "TimeSeriesFilterRatio",
-      "type": "object",
-      "description": "A pair of time series filters that define a ratio computation. The output time series is the pair-wise division of each aligned element from the numerator and denominator time series."
-    },
-    "Status": {
-      "description": "The Status type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by gRPC (https://github.com/grpc). Each Status message contains three pieces of data: error code, error message, and error details.You can find out more about this error model and how to work with it in the API Design Guide (https://cloud.google.com/apis/design/errors).",
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "integer",
-          "format": "int32",
-          "description": "The status code, which should be an enum value of google.rpc.Code."
-        },
-        "details": {
-          "items": {
-            "type": "object",
-            "additionalProperties": {
-              "description": "Properties of the object. Contains field @type with type URL.",
-              "type": "any"
-            }
-          },
-          "description": "A list of messages that carry the error details. There is a common set of message types for APIs to use.",
-          "type": "array"
-        },
-        "message": {
+        "minAlignmentPeriod": {
+          "description": "The lower bound on data point frequency in the chart implemented by specifying the minimum alignment period to use in a time series query. For example, if the data is published once every 10 minutes it would not make sense to fetch and align data at one minute intervals. This field is optional and exists only as a hint.",
           "type": "string",
-          "description": "A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the google.rpc.Status.details field, or localized by the client."
-        }
-      },
-      "id": "Status"
-    },
-    "RowLayout": {
-      "description": "A simplified layout that divides the available space into rows and arranges a set of widgets horizontally in each row.",
-      "properties": {
-        "rows": {
-          "type": "array",
-          "items": {
-            "$ref": "Row"
-          },
-          "description": "The rows of content to display."
-        }
-      },
-      "type": "object",
-      "id": "RowLayout"
-    },
-    "Option": {
-      "type": "object",
-      "description": "A protocol buffer option, which can be attached to a message, field, enumeration, etc.",
-      "properties": {
-        "value": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "any",
-            "description": "Properties of the object. Contains field @type with type URL."
-          },
-          "description": "The option's value packed in an Any message. If the value is a primitive, the corresponding wrapper type defined in google/protobuf/wrappers.proto should be used. If the value is an enum, it should be stored as an int32 value using the google.protobuf.Int32Value type."
+          "format": "google-duration"
         },
-        "name": {
-          "type": "string",
-          "description": "The option's name. For protobuf built-in options (options defined in descriptor.proto), this is the short name. For example, \"map_entry\". For custom options, it should be the fully-qualified name. For example, \"google.api.http\"."
-        }
-      },
-      "id": "Option"
-    },
-    "MetricsScope": {
-      "id": "MetricsScope",
-      "description": "Represents a Metrics Scope (https://cloud.google.com/monitoring/settings#concept-scope) in Cloud Monitoring, which specifies one or more Google projects and zero or more AWS accounts to monitor together.",
-      "properties": {
-        "monitoredProjects": {
-          "items": {
-            "$ref": "MonitoredProject"
-          },
-          "type": "array",
-          "description": "Output only. The list of projects monitored by this Metrics Scope.",
-          "readOnly": true
-        },
-        "name": {
-          "description": "Immutable. The resource name of the Monitoring Metrics Scope. On input, the resource name can be specified with the scoping project ID or number. On output, the resource name is specified with the scoping project number. Example: locations/global/metricsScopes/{SCOPING_PROJECT_ID_OR_NUMBER}",
-          "type": "string"
-        },
-        "updateTime": {
-          "description": "Output only. The time when this Metrics Scope record was last updated.",
-          "type": "string",
-          "readOnly": true,
-          "format": "google-datetime"
-        },
-        "createTime": {
-          "description": "Output only. The time when this Metrics Scope was created.",
-          "format": "google-datetime",
-          "type": "string",
-          "readOnly": true
-        }
-      },
-      "type": "object"
-    },
-    "SpanContext": {
-      "type": "object",
-      "description": "The context of a span. This is attached to an Exemplar in Distribution values during aggregation.It contains the name of a span with format: projects/[PROJECT_ID_OR_NUMBER]/traces/[TRACE_ID]/spans/[SPAN_ID] ",
-      "properties": {
-        "spanName": {
-          "type": "string",
-          "description": "The resource name of the span. The format is: projects/[PROJECT_ID_OR_NUMBER]/traces/[TRACE_ID]/spans/[SPAN_ID] [TRACE_ID] is a unique identifier for a trace within a project; it is a 32-character hexadecimal encoding of a 16-byte array.[SPAN_ID] is a unique identifier for a span within a trace; it is a 16-character hexadecimal encoding of an 8-byte array."
-        }
-      },
-      "id": "SpanContext"
-    },
-    "Threshold": {
-      "type": "object",
-      "properties": {
-        "value": {
-          "format": "double",
-          "description": "The value of the threshold. The value should be defined in the native scale of the metric.",
-          "type": "number"
-        },
-        "targetAxis": {
-          "enumDescriptions": [
-            "The target axis was not specified. Defaults to Y1.",
-            "The y_axis (the right axis of chart).",
-            "The y2_axis (the left axis of chart)."
-          ],
-          "enum": [
-            "TARGET_AXIS_UNSPECIFIED",
-            "Y1",
-            "Y2"
-          ],
-          "description": "The target axis to use for plotting the threshold. Target axis is not allowed in a Scorecard.",
-          "type": "string"
-        },
-        "color": {
-          "enum": [
-            "COLOR_UNSPECIFIED",
-            "YELLOW",
-            "RED"
-          ],
-          "enumDescriptions": [
-            "Color is unspecified. Not allowed in well-formed requests.",
-            "Crossing the threshold is \"concerning\" behavior.",
-            "Crossing the threshold is \"emergency\" behavior."
-          ],
-          "description": "The state color for this threshold. Color is not allowed in a XyChart.",
-          "type": "string"
-        },
-        "label": {
-          "type": "string",
-          "description": "A label for the threshold."
-        },
-        "direction": {
-          "enum": [
-            "DIRECTION_UNSPECIFIED",
-            "ABOVE",
-            "BELOW"
-          ],
-          "description": "The direction for the current threshold. Direction is not allowed in a XyChart.",
+        "sparkChartType": {
+          "description": "Required. The type of sparkchart to show in this chartView.",
           "type": "string",
           "enumDescriptions": [
             "Not allowed in well-formed requests.",
-            "The threshold will be considered crossed if the actual value is above the threshold value.",
-            "The threshold will be considered crossed if the actual value is below the threshold value."
+            "The sparkline will be rendered as a small line chart.",
+            "The sparkbar will be rendered as a small bar chart."
+          ],
+          "enum": [
+            "SPARK_CHART_TYPE_UNSPECIFIED",
+            "SPARK_LINE",
+            "SPARK_BAR"
           ]
         }
       },
-      "description": "Defines a threshold for categorizing time series values.",
-      "id": "Threshold"
-    },
-    "MonitoredProject": {
-      "id": "MonitoredProject",
-      "description": "A project being monitored (https://cloud.google.com/monitoring/settings/multiple-projects#create-multi) by a Metrics Scope.",
+      "id": "SparkChartView",
       "type": "object",
-      "properties": {
-        "name": {
-          "description": "Immutable. The resource name of the MonitoredProject. On input, the resource name includes the scoping project ID and monitored project ID. On output, it contains the equivalent project numbers. Example: locations/global/metricsScopes/{SCOPING_PROJECT_ID_OR_NUMBER}/projects/{MONITORED_PROJECT_ID_OR_NUMBER}",
-          "type": "string"
-        },
-        "createTime": {
-          "description": "Output only. The time when this MonitoredProject was created.",
-          "readOnly": true,
-          "type": "string",
-          "format": "google-datetime"
-        }
-      }
+      "description": "A sparkChart is a small chart suitable for inclusion in a table-cell or inline in text. This message contains the configuration for a sparkChart to show up on a Scorecard, showing recent trends of the scorecard's timeseries."
     },
-    "ListMetricsScopesByMonitoredProjectResponse": {
-      "properties": {
-        "metricsScopes": {
-          "description": "A set of all metrics scopes that the specified monitored project has been added to.",
-          "items": {
-            "$ref": "MetricsScope"
-          },
-          "type": "array"
-        }
-      },
+    "DataSet": {
       "type": "object",
-      "id": "ListMetricsScopesByMonitoredProjectResponse",
-      "description": "Response for the ListMetricsScopesByMonitoredProject method."
-    },
-    "HttpBody": {
-      "properties": {
-        "extensions": {
-          "type": "array",
-          "description": "Application specific response metadata. Must be set in the first response for streaming APIs.",
-          "items": {
-            "additionalProperties": {
-              "type": "any",
-              "description": "Properties of the object. Contains field @type with type URL."
-            },
-            "type": "object"
-          }
-        },
-        "data": {
-          "description": "The HTTP request/response body as raw binary.",
-          "type": "string",
-          "format": "byte"
-        },
-        "contentType": {
-          "type": "string",
-          "description": "The HTTP Content-Type header value specifying the content type of the body."
-        }
-      },
-      "type": "object",
-      "id": "HttpBody",
-      "description": "Message that represents an arbitrary HTTP body. It should only be used for payload formats that can't be represented as JSON, such as raw binary or an HTML page.This message can be used both in streaming and non-streaming API methods in the request as well as the response.It can be used as a top-level request field, which is convenient if one wants to extract parameters from either the URL or HTTP template into the request fields and also want access to the raw HTTP body.Example: message GetResourceRequest { // A unique request id. string request_id = 1; // The raw HTTP body is bound to this field. google.api.HttpBody http_body = 2; } service ResourceService { rpc GetResource(GetResourceRequest) returns (google.api.HttpBody); rpc UpdateResource(google.api.HttpBody) returns (google.protobuf.Empty); } Example with streaming methods: service CaldavService { rpc GetCalendar(stream google.api.HttpBody) returns (stream google.api.HttpBody); rpc UpdateCalendar(stream google.api.HttpBody) returns (stream google.api.HttpBody); } Use of this type only changes how the request and response bodies are handled, all other features will continue to work unchanged."
-    },
-    "Row": {
-      "properties": {
-        "widgets": {
-          "type": "array",
-          "items": {
-            "$ref": "Widget"
-          },
-          "description": "The display widgets arranged horizontally in this row."
-        },
-        "weight": {
-          "format": "int64",
-          "type": "string",
-          "description": "The relative weight of this row. The row weight is used to adjust the height of rows on the screen (relative to peers). Greater the weight, greater the height of the row on the screen. If omitted, a value of 1 is used while rendering."
-        }
-      },
-      "description": "Defines the layout properties and content for a row.",
-      "id": "Row",
-      "type": "object"
-    },
-    "Empty": {
-      "type": "object",
-      "properties": {},
-      "description": "A generic empty message that you can re-use to avoid defining duplicated empty messages in your APIs. A typical example is to use it as the request or the response type of an API method. For instance: service Foo { rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty); } ",
-      "id": "Empty"
-    },
-    "TableDataSet": {
-      "type": "object",
-      "description": "Groups a time series query definition with table options.",
-      "id": "TableDataSet",
+      "description": "Groups a time series query definition with charting options.",
       "properties": {
         "minAlignmentPeriod": {
-          "description": "Optional. The lower bound on data point frequency for this data set, implemented by specifying the minimum alignment period to use in a time series query For example, if the data is published once every 10 minutes, the min_alignment_period should be at least 10 minutes. It would not make sense to fetch and align data at one minute intervals.",
+          "type": "string",
           "format": "google-duration",
-          "type": "string"
+          "description": "Optional. The lower bound on data point frequency for this data set, implemented by specifying the minimum alignment period to use in a time series query For example, if the data is published once every 10 minutes, the min_alignment_period should be at least 10 minutes. It would not make sense to fetch and align data at one minute intervals."
+        },
+        "legendTemplate": {
+          "type": "string",
+          "description": "A template string for naming TimeSeries in the resulting data set. This should be a string with interpolations of the form ${label_name}, which will resolve to the label's value."
         },
         "timeSeriesQuery": {
           "description": "Required. Fields for querying time series data from the Stackdriver metrics API.",
           "$ref": "TimeSeriesQuery"
         },
-        "tableDisplayOptions": {
-          "$ref": "TableDisplayOptions",
-          "description": "Optional. Table display options for configuring how the table is rendered."
-        },
-        "tableTemplate": {
-          "description": "Optional. A template string for naming TimeSeries in the resulting data set. This should be a string with interpolations of the form ${label_name}, which will resolve to the label's value i.e. \"${resource.labels.project_id}.\"",
-          "type": "string"
-        }
-      }
-    },
-    "RatioPart": {
-      "properties": {
-        "filter": {
-          "type": "string",
-          "description": "Required. The monitoring filter (https://cloud.google.com/monitoring/api/v3/filters) that identifies the metric types, resources, and projects to query."
-        },
-        "aggregation": {
-          "description": "By default, the raw time series data is returned. Use this field to combine multiple time series for different views of the data.",
-          "$ref": "Aggregation"
-        }
-      },
-      "type": "object",
-      "id": "RatioPart",
-      "description": "Describes a query to build the numerator or denominator of a TimeSeriesFilterRatio."
-    },
-    "QuerySeriesRequest": {
-      "description": "QuerySeries holds all parameters of the Prometheus upstream API for querying series.",
-      "type": "object",
-      "id": "QuerySeriesRequest",
-      "properties": {
-        "end": {
-          "description": "The end time to evaluate the query for. Either floating point UNIX seconds or RFC3339 formatted timestamp.",
-          "type": "string"
-        },
-        "start": {
-          "type": "string",
-          "description": "The start time to evaluate the query for. Either floating point UNIX seconds or RFC3339 formatted timestamp."
-        }
-      }
-    },
-    "GridLayout": {
-      "properties": {
-        "columns": {
-          "description": "The number of columns into which the view's width is divided. If omitted or set to zero, a system default will be used while rendering.",
-          "type": "string",
-          "format": "int64"
-        },
-        "widgets": {
-          "description": "The informational elements that are arranged into the columns row-first.",
-          "items": {
-            "$ref": "Widget"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object",
-      "id": "GridLayout",
-      "description": "A basic layout divides the available space into vertical columns of equal width and arranges a list of widgets using a row-first strategy."
-    },
-    "Widget": {
-      "description": "Widget contains a single dashboard component and configuration of how to present the component in the dashboard.",
-      "type": "object",
-      "id": "Widget",
-      "properties": {
-        "scorecard": {
-          "$ref": "Scorecard",
-          "description": "A scorecard summarizing time series data."
-        },
-        "title": {
-          "type": "string",
-          "description": "Optional. The title of the widget."
-        },
-        "timeSeriesTable": {
-          "$ref": "TimeSeriesTable",
-          "description": "A widget that displays time series data in a tabular format."
-        },
-        "xyChart": {
-          "$ref": "XyChart",
-          "description": "A chart of time series data."
-        },
-        "logsPanel": {
-          "description": "A widget that shows a stream of logs.",
-          "$ref": "LogsPanel"
-        },
-        "collapsibleGroup": {
-          "$ref": "CollapsibleGroup",
-          "description": "A widget that groups the other widgets. All widgets that are within the area spanned by the grouping widget are considered member widgets."
-        },
-        "blank": {
-          "description": "A blank space.",
-          "$ref": "Empty"
-        },
-        "text": {
-          "$ref": "Text",
-          "description": "A raw string or markdown displaying textual content."
-        },
-        "alertChart": {
-          "description": "A chart of alert policy data.",
-          "$ref": "AlertChart"
-        }
-      }
-    },
-    "MosaicLayout": {
-      "id": "MosaicLayout",
-      "type": "object",
-      "properties": {
-        "columns": {
-          "format": "int32",
-          "description": "The number of columns in the mosaic grid. The number of columns must be between 1 and 12, inclusive.",
-          "type": "integer"
-        },
-        "tiles": {
-          "type": "array",
-          "items": {
-            "$ref": "Tile"
-          },
-          "description": "The tiles to display."
-        }
-      },
-      "description": "A mosaic layout divides the available space into a grid of blocks, and overlays the grid with tiles. Unlike GridLayout, tiles may span multiple grid blocks and can be placed at arbitrary locations in the grid."
-    },
-    "Tile": {
-      "properties": {
-        "xPos": {
-          "format": "int32",
-          "description": "The zero-indexed position of the tile in grid blocks relative to the left edge of the grid. Tiles must be contained within the specified number of columns. x_pos cannot be negative.",
-          "type": "integer"
-        },
-        "height": {
-          "format": "int32",
-          "type": "integer",
-          "description": "The height of the tile, measured in grid blocks. Tiles must have a minimum height of 1."
-        },
-        "yPos": {
-          "type": "integer",
-          "description": "The zero-indexed position of the tile in grid blocks relative to the top edge of the grid. y_pos cannot be negative.",
-          "format": "int32"
-        },
-        "width": {
-          "type": "integer",
-          "description": "The width of the tile, measured in grid blocks. Tiles must have a minimum width of 1.",
-          "format": "int32"
-        },
-        "widget": {
-          "description": "The informational widget contained in the tile. For example an XyChart.",
-          "$ref": "Widget"
-        }
-      },
-      "type": "object",
-      "description": "A single tile in the mosaic. The placement and size of the tile are configurable.",
-      "id": "Tile"
-    },
-    "ColumnLayout": {
-      "type": "object",
-      "id": "ColumnLayout",
-      "properties": {
-        "columns": {
-          "type": "array",
-          "description": "The columns of content to display.",
-          "items": {
-            "$ref": "Column"
-          }
-        }
-      },
-      "description": "A simplified layout that divides the available space into vertical columns and arranges a set of widgets vertically in each column."
-    },
-    "Column": {
-      "description": "Defines the layout properties and content for a column.",
-      "id": "Column",
-      "properties": {
-        "weight": {
-          "description": "The relative weight of this column. The column weight is used to adjust the width of columns on the screen (relative to peers). Greater the weight, greater the width of the column on the screen. If omitted, a value of 1 is used while rendering.",
-          "format": "int64",
-          "type": "string"
-        },
-        "widgets": {
-          "items": {
-            "$ref": "Widget"
-          },
-          "description": "The display widgets arranged vertically in this column.",
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "DataSet": {
-      "id": "DataSet",
-      "properties": {
-        "legendTemplate": {
-          "description": "A template string for naming TimeSeries in the resulting data set. This should be a string with interpolations of the form ${label_name}, which will resolve to the label's value.",
-          "type": "string"
-        },
-        "timeSeriesQuery": {
-          "$ref": "TimeSeriesQuery",
-          "description": "Required. Fields for querying time series data from the Stackdriver metrics API."
-        },
         "plotType": {
-          "enum": [
-            "PLOT_TYPE_UNSPECIFIED",
-            "LINE",
-            "STACKED_AREA",
-            "STACKED_BAR",
-            "HEATMAP"
-          ],
-          "type": "string",
-          "description": "How this data should be plotted on the chart.",
           "enumDescriptions": [
             "Plot type is unspecified. The view will default to LINE.",
             "The data is plotted as a set of lines (one line per series).",
             "The data is plotted as a set of filled areas (one area per series), with the areas stacked vertically (the base of each area is the top of its predecessor, and the base of the first area is the X axis). Since the areas do not overlap, each is filled with a different opaque color.",
             "The data is plotted as a set of rectangular boxes (one box per series), with the boxes stacked vertically (the base of each box is the top of its predecessor, and the base of the first box is the X axis). Since the boxes do not overlap, each is filled with a different opaque color.",
             "The data is plotted as a heatmap. The series being plotted must have a DISTRIBUTION value type. The value of each bucket in the distribution is displayed as a color. This type is not currently available in the Stackdriver Monitoring application."
+          ],
+          "type": "string",
+          "description": "How this data should be plotted on the chart.",
+          "enum": [
+            "PLOT_TYPE_UNSPECIFIED",
+            "LINE",
+            "STACKED_AREA",
+            "STACKED_BAR",
+            "HEATMAP"
           ]
         },
-        "minAlignmentPeriod": {
-          "description": "Optional. The lower bound on data point frequency for this data set, implemented by specifying the minimum alignment period to use in a time series query For example, if the data is published once every 10 minutes, the min_alignment_period should be at least 10 minutes. It would not make sense to fetch and align data at one minute intervals.",
-          "format": "google-duration",
-          "type": "string"
-        },
         "targetAxis": {
-          "description": "Optional. The target axis to use for plotting the metric.",
-          "type": "string",
+          "enumDescriptions": [
+            "The target axis was not specified. Defaults to Y1.",
+            "The y_axis (the right axis of chart).",
+            "The y2_axis (the left axis of chart)."
+          ],
           "enum": [
             "TARGET_AXIS_UNSPECIFIED",
             "Y1",
             "Y2"
           ],
-          "enumDescriptions": [
-            "The target axis was not specified. Defaults to Y1.",
-            "The y_axis (the right axis of chart).",
-            "The y2_axis (the left axis of chart)."
-          ]
+          "type": "string",
+          "description": "Optional. The target axis to use for plotting the metric."
         }
       },
-      "type": "object",
-      "description": "Groups a time series query definition with charting options."
+      "id": "DataSet"
     },
-    "TimeSeriesQuery": {
-      "id": "TimeSeriesQuery",
-      "type": "object",
+    "Status": {
       "properties": {
-        "timeSeriesFilter": {
-          "$ref": "TimeSeriesFilter",
-          "description": "Filter parameters to fetch time series."
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The status code, which should be an enum value of google.rpc.Code."
         },
-        "timeSeriesFilterRatio": {
-          "$ref": "TimeSeriesFilterRatio",
-          "description": "Parameters to fetch a ratio between two time series filters."
+        "message": {
+          "type": "string",
+          "description": "A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the google.rpc.Status.details field, or localized by the client."
         },
-        "timeSeriesQueryLanguage": {
-          "description": "A query used to fetch time series with MQL.",
-          "type": "string"
-        },
-        "unitOverride": {
-          "description": "The unit of data contained in fetched time series. If non-empty, this unit will override any unit that accompanies fetched data. The format is the same as the unit (https://cloud.google.com/monitoring/api/ref_v3/rest/v3/projects.metricDescriptors) field in MetricDescriptor.",
-          "type": "string"
-        }
-      },
-      "description": "TimeSeriesQuery collects the set of supported methods for querying time series data from the Stackdriver metrics API."
-    },
-    "Type": {
-      "description": "A protocol buffer message type.",
-      "id": "Type",
-      "type": "object",
-      "properties": {
-        "fields": {
+        "details": {
+          "description": "A list of messages that carry the error details. There is a common set of message types for APIs to use.",
           "items": {
-            "$ref": "Field"
+            "additionalProperties": {
+              "type": "any",
+              "description": "Properties of the object. Contains field @type with type URL."
+            },
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object",
+      "id": "Status",
+      "description": "The Status type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by gRPC (https://github.com/grpc). Each Status message contains three pieces of data: error code, error message, and error details.You can find out more about this error model and how to work with it in the API Design Guide (https://cloud.google.com/apis/design/errors)."
+    },
+    "TimeSeriesTable": {
+      "type": "object",
+      "properties": {
+        "dataSets": {
+          "items": {
+            "$ref": "TableDataSet"
           },
           "type": "array",
-          "description": "The list of fields."
+          "description": "Required. The data displayed in this table."
+        }
+      },
+      "description": "A table that displays time series data.",
+      "id": "TimeSeriesTable"
+    },
+    "TableDataSet": {
+      "description": "Groups a time series query definition with table options.",
+      "type": "object",
+      "properties": {
+        "minAlignmentPeriod": {
+          "type": "string",
+          "format": "google-duration",
+          "description": "Optional. The lower bound on data point frequency for this data set, implemented by specifying the minimum alignment period to use in a time series query For example, if the data is published once every 10 minutes, the min_alignment_period should be at least 10 minutes. It would not make sense to fetch and align data at one minute intervals."
         },
-        "sourceContext": {
-          "$ref": "SourceContext",
-          "description": "The source context."
+        "tableTemplate": {
+          "type": "string",
+          "description": "Optional. A template string for naming TimeSeries in the resulting data set. This should be a string with interpolations of the form ${label_name}, which will resolve to the label's value i.e. \"${resource.labels.project_id}.\""
         },
-        "options": {
-          "items": {
-            "$ref": "Option"
-          },
-          "description": "The protocol buffer options.",
-          "type": "array"
+        "timeSeriesQuery": {
+          "$ref": "TimeSeriesQuery",
+          "description": "Required. Fields for querying time series data from the Stackdriver metrics API."
         },
-        "syntax": {
-          "description": "The source syntax.",
-          "enum": [
-            "SYNTAX_PROTO2",
-            "SYNTAX_PROTO3"
-          ],
-          "enumDescriptions": [
-            "Syntax proto2.",
-            "Syntax proto3."
-          ],
-          "type": "string"
-        },
-        "oneofs": {
-          "description": "The list of types appearing in oneof definitions in this type.",
+        "tableDisplayOptions": {
+          "$ref": "TableDisplayOptions",
+          "description": "Optional. Table display options for configuring how the table is rendered."
+        }
+      },
+      "id": "TableDataSet"
+    },
+    "TableDisplayOptions": {
+      "id": "TableDisplayOptions",
+      "type": "object",
+      "properties": {
+        "shownColumns": {
           "type": "array",
           "items": {
             "type": "string"
-          }
-        },
-        "name": {
-          "description": "The fully qualified message name.",
-          "type": "string"
-        }
-      }
-    },
-    "StatisticalTimeSeriesFilter": {
-      "type": "object",
-      "description": "A filter that ranks streams based on their statistical relation to other streams in a request. Note: This field is deprecated and completely ignored by the API.",
-      "properties": {
-        "rankingMethod": {
-          "enum": [
-            "METHOD_UNSPECIFIED",
-            "METHOD_CLUSTER_OUTLIER"
-          ],
-          "type": "string",
-          "description": "rankingMethod is applied to a set of time series, and then the produced value for each individual time series is used to compare a given time series to others. These are methods that cannot be applied stream-by-stream, but rather require the full context of a request to evaluate time series.",
-          "enumDescriptions": [
-            "Not allowed in well-formed requests.",
-            "Compute the outlier score of each stream."
-          ]
-        },
-        "numTimeSeries": {
-          "format": "int32",
-          "type": "integer",
-          "description": "How many time series to output."
+          },
+          "description": "Optional. Columns to display in the table. Leave empty to display all available columns. Note: This field is for future features and is not currently used."
         }
       },
-      "id": "StatisticalTimeSeriesFilter"
+      "description": "Table display options that can be reused."
+    },
+    "XyChart": {
+      "id": "XyChart",
+      "properties": {
+        "y2Axis": {
+          "$ref": "Axis",
+          "description": "The properties applied to the Y2 axis."
+        },
+        "yAxis": {
+          "description": "The properties applied to the Y axis.",
+          "$ref": "Axis"
+        },
+        "dataSets": {
+          "items": {
+            "$ref": "DataSet"
+          },
+          "type": "array",
+          "description": "Required. The data displayed in this chart."
+        },
+        "xAxis": {
+          "$ref": "Axis",
+          "description": "The properties applied to the X axis."
+        },
+        "timeshiftDuration": {
+          "type": "string",
+          "description": "The duration used to display a comparison chart. A comparison chart simultaneously shows values from two similar-length time periods (e.g., week-over-week metrics). The duration must be positive, and it can only be applied to charts with data sets of LINE plot type.",
+          "format": "google-duration"
+        },
+        "chartOptions": {
+          "description": "Display options for the chart.",
+          "$ref": "ChartOptions"
+        },
+        "thresholds": {
+          "items": {
+            "$ref": "Threshold"
+          },
+          "description": "Threshold lines drawn horizontally across the chart.",
+          "type": "array"
+        }
+      },
+      "description": "A chart that displays data on a 2D (X and Y axes) plane.",
+      "type": "object"
     },
     "AlertChart": {
       "type": "object",
@@ -1125,14 +729,84 @@
       },
       "description": "A chart that displays alert policy data."
     },
-    "TimeSeriesFilter": {
-      "description": "A filter that defines a subset of time series data that is displayed in a widget. Time series data is fetched using the ListTimeSeries (https://cloud.google.com/monitoring/api/ref_v3/rest/v3/projects.timeSeries/list) method.",
-      "id": "TimeSeriesFilter",
+    "MonitoredProject": {
+      "type": "object",
       "properties": {
-        "statisticalTimeSeriesFilter": {
-          "$ref": "StatisticalTimeSeriesFilter",
-          "description": "Statistics based time series filter. Note: This field is deprecated and completely ignored by the API."
+        "name": {
+          "type": "string",
+          "description": "Immutable. The resource name of the MonitoredProject. On input, the resource name includes the scoping project ID and monitored project ID. On output, it contains the equivalent project numbers. Example: locations/global/metricsScopes/{SCOPING_PROJECT_ID_OR_NUMBER}/projects/{MONITORED_PROJECT_ID_OR_NUMBER}"
         },
+        "createTime": {
+          "format": "google-datetime",
+          "type": "string",
+          "description": "Output only. The time when this MonitoredProject was created.",
+          "readOnly": true
+        }
+      },
+      "id": "MonitoredProject",
+      "description": "A project being monitored (https://cloud.google.com/monitoring/settings/multiple-projects#create-multi) by a Metrics Scope."
+    },
+    "QuerySeriesRequest": {
+      "id": "QuerySeriesRequest",
+      "description": "QuerySeries holds all parameters of the Prometheus upstream API for querying series.",
+      "type": "object",
+      "properties": {
+        "start": {
+          "description": "The start time to evaluate the query for. Either floating point UNIX seconds or RFC3339 formatted timestamp.",
+          "type": "string"
+        },
+        "end": {
+          "type": "string",
+          "description": "The end time to evaluate the query for. Either floating point UNIX seconds or RFC3339 formatted timestamp."
+        }
+      }
+    },
+    "Widget": {
+      "type": "object",
+      "properties": {
+        "collapsibleGroup": {
+          "$ref": "CollapsibleGroup",
+          "description": "A widget that groups the other widgets. All widgets that are within the area spanned by the grouping widget are considered member widgets."
+        },
+        "timeSeriesTable": {
+          "description": "A widget that displays time series data in a tabular format.",
+          "$ref": "TimeSeriesTable"
+        },
+        "blank": {
+          "description": "A blank space.",
+          "$ref": "Empty"
+        },
+        "xyChart": {
+          "$ref": "XyChart",
+          "description": "A chart of time series data."
+        },
+        "logsPanel": {
+          "$ref": "LogsPanel",
+          "description": "A widget that shows a stream of logs."
+        },
+        "alertChart": {
+          "$ref": "AlertChart",
+          "description": "A chart of alert policy data."
+        },
+        "text": {
+          "$ref": "Text",
+          "description": "A raw string or markdown displaying textual content."
+        },
+        "scorecard": {
+          "$ref": "Scorecard",
+          "description": "A scorecard summarizing time series data."
+        },
+        "title": {
+          "type": "string",
+          "description": "Optional. The title of the widget."
+        }
+      },
+      "id": "Widget",
+      "description": "Widget contains a single dashboard component and configuration of how to present the component in the dashboard."
+    },
+    "RatioPart": {
+      "id": "RatioPart",
+      "properties": {
         "aggregation": {
           "$ref": "Aggregation",
           "description": "By default, the raw time series data is returned. Use this field to combine multiple time series for different views of the data."
@@ -1140,128 +814,373 @@
         "filter": {
           "description": "Required. The monitoring filter (https://cloud.google.com/monitoring/api/v3/filters) that identifies the metric types, resources, and projects to query.",
           "type": "string"
-        },
-        "secondaryAggregation": {
-          "$ref": "Aggregation",
-          "description": "Apply a second aggregation after aggregation is applied."
-        },
-        "pickTimeSeriesFilter": {
-          "$ref": "PickTimeSeriesFilter",
-          "description": "Ranking based time series filter."
         }
       },
-      "type": "object"
-    },
-    "ListDashboardsResponse": {
       "type": "object",
-      "id": "ListDashboardsResponse",
+      "description": "Describes a query to build the numerator or denominator of a TimeSeriesFilterRatio."
+    },
+    "LogsPanel": {
+      "description": "A widget that displays a stream of log.",
+      "type": "object",
+      "id": "LogsPanel",
       "properties": {
-        "dashboards": {
+        "filter": {
+          "description": "A filter that chooses which log entries to return. See Advanced Logs Queries (https://cloud.google.com/logging/docs/view/advanced-queries). Only log entries that match the filter are returned. An empty filter matches all log entries.",
+          "type": "string"
+        },
+        "resourceNames": {
+          "description": "The names of logging resources to collect logs for. Currently only projects are supported. If empty, the widget will default to the host project.",
           "type": "array",
-          "description": "The list of requested dashboards.",
           "items": {
-            "$ref": "Dashboard"
+            "type": "string"
           }
-        },
-        "nextPageToken": {
-          "type": "string",
-          "description": "If there are more results than have been returned, then this field is set to a non-empty value. To see the additional results, use that value as page_token in the next call to this method."
         }
-      },
-      "description": "The ListDashboards request."
+      }
     },
-    "Operation": {
+    "GridLayout": {
       "type": "object",
-      "id": "Operation",
+      "id": "GridLayout",
+      "description": "A basic layout divides the available space into vertical columns of equal width and arranges a list of widgets using a row-first strategy.",
       "properties": {
-        "response": {
+        "columns": {
+          "type": "string",
+          "description": "The number of columns into which the view's width is divided. If omitted or set to zero, a system default will be used while rendering.",
+          "format": "int64"
+        },
+        "widgets": {
+          "items": {
+            "$ref": "Widget"
+          },
+          "description": "The informational elements that are arranged into the columns row-first.",
+          "type": "array"
+        }
+      }
+    },
+    "Option": {
+      "properties": {
+        "value": {
+          "description": "The option's value packed in an Any message. If the value is a primitive, the corresponding wrapper type defined in google/protobuf/wrappers.proto should be used. If the value is an enum, it should be stored as an int32 value using the google.protobuf.Int32Value type.",
           "type": "object",
           "additionalProperties": {
             "type": "any",
             "description": "Properties of the object. Contains field @type with type URL."
+          }
+        },
+        "name": {
+          "type": "string",
+          "description": "The option's name. For protobuf built-in options (options defined in descriptor.proto), this is the short name. For example, \"map_entry\". For custom options, it should be the fully-qualified name. For example, \"google.api.http\"."
+        }
+      },
+      "type": "object",
+      "id": "Option",
+      "description": "A protocol buffer option, which can be attached to a message, field, enumeration, etc."
+    },
+    "MosaicLayout": {
+      "properties": {
+        "tiles": {
+          "type": "array",
+          "description": "The tiles to display.",
+          "items": {
+            "$ref": "Tile"
+          }
+        },
+        "columns": {
+          "description": "The number of columns in the mosaic grid. The number of columns must be between 1 and 12, inclusive.",
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "id": "MosaicLayout",
+      "description": "A mosaic layout divides the available space into a grid of blocks, and overlays the grid with tiles. Unlike GridLayout, tiles may span multiple grid blocks and can be placed at arbitrary locations in the grid.",
+      "type": "object"
+    },
+    "TimeSeriesQuery": {
+      "type": "object",
+      "id": "TimeSeriesQuery",
+      "properties": {
+        "timeSeriesFilterRatio": {
+          "$ref": "TimeSeriesFilterRatio",
+          "description": "Parameters to fetch a ratio between two time series filters."
+        },
+        "timeSeriesFilter": {
+          "$ref": "TimeSeriesFilter",
+          "description": "Filter parameters to fetch time series."
+        },
+        "timeSeriesQueryLanguage": {
+          "description": "A query used to fetch time series with MQL.",
+          "type": "string"
+        },
+        "unitOverride": {
+          "description": "The unit of data contained in fetched time series. If non-empty, this unit will override any unit that accompanies fetched data. The format is the same as the unit (https://cloud.google.com/monitoring/api/ref_v3/rest/v3/projects.metricDescriptors) field in MetricDescriptor.",
+          "type": "string"
+        }
+      },
+      "description": "TimeSeriesQuery collects the set of supported methods for querying time series data from the Stackdriver metrics API."
+    },
+    "DroppedLabels": {
+      "type": "object",
+      "description": "A set of (label, value) pairs that were removed from a Distribution time series during aggregation and then added as an attachment to a Distribution.Exemplar.The full label set for the exemplars is constructed by using the dropped pairs in combination with the label values that remain on the aggregated Distribution time series. The constructed full label set can be used to identify the specific entity, such as the instance or job, which might be contributing to a long-tail. However, with dropped labels, the storage requirements are reduced because only the aggregated distribution values for a large group of time series are stored.Note that there are no guarantees on ordering of the labels from exemplar-to-exemplar and from distribution-to-distribution in the same stream, and there may be duplicates. It is up to clients to resolve any ambiguities.",
+      "id": "DroppedLabels",
+      "properties": {
+        "label": {
+          "additionalProperties": {
+            "type": "string"
           },
-          "description": "The normal response of the operation in case of success. If the original method returns no data on success, such as Delete, the response is google.protobuf.Empty. If the original method is standard Get/Create/Update, the response should be the resource. For other methods, the response should have the type XxxResponse, where Xxx is the original method name. For example, if the original method name is TakeSnapshot(), the inferred response type is TakeSnapshotResponse."
+          "description": "Map from label to its value, for all labels dropped in any aggregation.",
+          "type": "object"
+        }
+      }
+    },
+    "Text": {
+      "properties": {
+        "content": {
+          "type": "string",
+          "description": "The text content to be displayed."
+        },
+        "format": {
+          "enumDescriptions": [
+            "Format is unspecified. Defaults to MARKDOWN.",
+            "The text contains Markdown formatting.",
+            "The text contains no special formatting."
+          ],
+          "description": "How the text content is formatted.",
+          "enum": [
+            "FORMAT_UNSPECIFIED",
+            "MARKDOWN",
+            "RAW"
+          ],
+          "type": "string"
+        }
+      },
+      "id": "Text",
+      "description": "A widget that displays textual content.",
+      "type": "object"
+    },
+    "PickTimeSeriesFilter": {
+      "description": "Describes a ranking-based time series filter. Each input time series is ranked with an aligner. The filter will allow up to num_time_series time series to pass through it, selecting them based on the relative ranking.For example, if ranking_method is METHOD_MEAN,direction is BOTTOM, and num_time_series is 3, then the 3 times series with the lowest mean values will pass through the filter.",
+      "type": "object",
+      "properties": {
+        "direction": {
+          "enumDescriptions": [
+            "Not allowed. You must specify a different Direction if you specify a PickTimeSeriesFilter.",
+            "Pass the highest num_time_series ranking inputs.",
+            "Pass the lowest num_time_series ranking inputs."
+          ],
+          "description": "How to use the ranking to select time series that pass through the filter.",
+          "type": "string",
+          "enum": [
+            "DIRECTION_UNSPECIFIED",
+            "TOP",
+            "BOTTOM"
+          ]
+        },
+        "numTimeSeries": {
+          "type": "integer",
+          "format": "int32",
+          "description": "How many time series to allow to pass through the filter."
+        },
+        "rankingMethod": {
+          "description": "ranking_method is applied to each time series independently to produce the value which will be used to compare the time series to other time series.",
+          "enumDescriptions": [
+            "Not allowed. You must specify a different Method if you specify a PickTimeSeriesFilter.",
+            "Select the mean of all values.",
+            "Select the maximum value.",
+            "Select the minimum value.",
+            "Compute the sum of all values.",
+            "Select the most recent value."
+          ],
+          "enum": [
+            "METHOD_UNSPECIFIED",
+            "METHOD_MEAN",
+            "METHOD_MAX",
+            "METHOD_MIN",
+            "METHOD_SUM",
+            "METHOD_LATEST"
+          ],
+          "type": "string"
+        }
+      },
+      "id": "PickTimeSeriesFilter"
+    },
+    "Threshold": {
+      "properties": {
+        "value": {
+          "description": "The value of the threshold. The value should be defined in the native scale of the metric.",
+          "format": "double",
+          "type": "number"
+        },
+        "label": {
+          "description": "A label for the threshold.",
+          "type": "string"
+        },
+        "targetAxis": {
+          "enumDescriptions": [
+            "The target axis was not specified. Defaults to Y1.",
+            "The y_axis (the right axis of chart).",
+            "The y2_axis (the left axis of chart)."
+          ],
+          "enum": [
+            "TARGET_AXIS_UNSPECIFIED",
+            "Y1",
+            "Y2"
+          ],
+          "type": "string",
+          "description": "The target axis to use for plotting the threshold. Target axis is not allowed in a Scorecard."
+        },
+        "direction": {
+          "description": "The direction for the current threshold. Direction is not allowed in a XyChart.",
+          "type": "string",
+          "enum": [
+            "DIRECTION_UNSPECIFIED",
+            "ABOVE",
+            "BELOW"
+          ],
+          "enumDescriptions": [
+            "Not allowed in well-formed requests.",
+            "The threshold will be considered crossed if the actual value is above the threshold value.",
+            "The threshold will be considered crossed if the actual value is below the threshold value."
+          ]
+        },
+        "color": {
+          "description": "The state color for this threshold. Color is not allowed in a XyChart.",
+          "enum": [
+            "COLOR_UNSPECIFIED",
+            "YELLOW",
+            "RED"
+          ],
+          "type": "string",
+          "enumDescriptions": [
+            "Color is unspecified. Not allowed in well-formed requests.",
+            "Crossing the threshold is \"concerning\" behavior.",
+            "Crossing the threshold is \"emergency\" behavior."
+          ]
+        }
+      },
+      "id": "Threshold",
+      "type": "object",
+      "description": "Defines a threshold for categorizing time series values."
+    },
+    "Operation": {
+      "properties": {
+        "done": {
+          "type": "boolean",
+          "description": "If the value is false, it means the operation is still in progress. If true, the operation is completed, and either error or response is available."
+        },
+        "error": {
+          "$ref": "Status",
+          "description": "The error result of the operation in case of failure or cancellation."
         },
         "metadata": {
-          "description": "Service-specific metadata associated with the operation. It typically contains progress information and common metadata such as create time. Some services might not provide such metadata. Any method that returns a long-running operation should document the metadata type, if any.",
           "type": "object",
           "additionalProperties": {
             "description": "Properties of the object. Contains field @type with type URL.",
             "type": "any"
-          }
+          },
+          "description": "Service-specific metadata associated with the operation. It typically contains progress information and common metadata such as create time. Some services might not provide such metadata. Any method that returns a long-running operation should document the metadata type, if any."
         },
-        "error": {
-          "description": "The error result of the operation in case of failure or cancellation.",
-          "$ref": "Status"
+        "response": {
+          "type": "object",
+          "additionalProperties": {
+            "description": "Properties of the object. Contains field @type with type URL.",
+            "type": "any"
+          },
+          "description": "The normal response of the operation in case of success. If the original method returns no data on success, such as Delete, the response is google.protobuf.Empty. If the original method is standard Get/Create/Update, the response should be the resource. For other methods, the response should have the type XxxResponse, where Xxx is the original method name. For example, if the original method name is TakeSnapshot(), the inferred response type is TakeSnapshotResponse."
         },
         "name": {
           "description": "The server-assigned name, which is only unique within the same service that originally returns it. If you use the default HTTP mapping, the name should be a resource name ending with operations/{unique_id}.",
           "type": "string"
-        },
-        "done": {
-          "description": "If the value is false, it means the operation is still in progress. If true, the operation is completed, and either error or response is available.",
-          "type": "boolean"
-        }
-      },
-      "description": "This resource represents a long-running operation that is the result of a network API call."
-    },
-    "LogsPanel": {
-      "properties": {
-        "filter": {
-          "type": "string",
-          "description": "A filter that chooses which log entries to return. See Advanced Logs Queries (https://cloud.google.com/logging/docs/view/advanced-queries). Only log entries that match the filter are returned. An empty filter matches all log entries."
-        },
-        "resourceNames": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "The names of logging resources to collect logs for. Currently only projects are supported. If empty, the widget will default to the host project."
-        }
-      },
-      "id": "LogsPanel",
-      "type": "object",
-      "description": "A widget that displays a stream of log."
-    },
-    "TableDisplayOptions": {
-      "properties": {
-        "shownColumns": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array",
-          "description": "Optional. Columns to display in the table. Leave empty to display all available columns. Note: This field is for future features and is not currently used."
         }
       },
       "type": "object",
-      "id": "TableDisplayOptions",
-      "description": "Table display options that can be reused."
+      "description": "This resource represents a long-running operation that is the result of a network API call.",
+      "id": "Operation"
     },
     "ChartOptions": {
-      "id": "ChartOptions",
-      "description": "Options to control visual rendering of a chart.",
       "properties": {
         "mode": {
+          "description": "The chart mode.",
           "enum": [
             "MODE_UNSPECIFIED",
             "COLOR",
             "X_RAY",
             "STATS"
           ],
+          "type": "string",
           "enumDescriptions": [
             "Mode is unspecified. The view will default to COLOR.",
             "The chart distinguishes data series using different color. Line colors may get reused when there are many lines in the chart.",
             "The chart uses the Stackdriver x-ray mode, in which each data set is plotted using the same semi-transparent color.",
             "The chart displays statistics such as average, median, 95th percentile, and more."
-          ],
-          "type": "string",
-          "description": "The chart mode."
+          ]
         }
       },
+      "description": "Options to control visual rendering of a chart.",
+      "id": "ChartOptions",
       "type": "object"
     },
-    "Aggregation": {
+    "SpanContext": {
+      "properties": {
+        "spanName": {
+          "description": "The resource name of the span. The format is: projects/[PROJECT_ID_OR_NUMBER]/traces/[TRACE_ID]/spans/[SPAN_ID] [TRACE_ID] is a unique identifier for a trace within a project; it is a 32-character hexadecimal encoding of a 16-byte array.[SPAN_ID] is a unique identifier for a span within a trace; it is a 16-character hexadecimal encoding of an 8-byte array.",
+          "type": "string"
+        }
+      },
       "type": "object",
+      "description": "The context of a span. This is attached to an Exemplar in Distribution values during aggregation.It contains the name of a span with format: projects/[PROJECT_ID_OR_NUMBER]/traces/[TRACE_ID]/spans/[SPAN_ID] ",
+      "id": "SpanContext"
+    },
+    "Type": {
+      "type": "object",
+      "id": "Type",
+      "properties": {
+        "syntax": {
+          "enumDescriptions": [
+            "Syntax proto2.",
+            "Syntax proto3."
+          ],
+          "enum": [
+            "SYNTAX_PROTO2",
+            "SYNTAX_PROTO3"
+          ],
+          "description": "The source syntax.",
+          "type": "string"
+        },
+        "fields": {
+          "items": {
+            "$ref": "Field"
+          },
+          "type": "array",
+          "description": "The list of fields."
+        },
+        "sourceContext": {
+          "description": "The source context.",
+          "$ref": "SourceContext"
+        },
+        "oneofs": {
+          "description": "The list of types appearing in oneof definitions in this type.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string",
+          "description": "The fully qualified message name."
+        },
+        "options": {
+          "type": "array",
+          "description": "The protocol buffer options.",
+          "items": {
+            "$ref": "Option"
+          }
+        }
+      },
+      "description": "A protocol buffer message type."
+    },
+    "Aggregation": {
+      "id": "Aggregation",
+      "type": "object",
+      "description": "Describes how to combine multiple time series to provide a different view of the data. Aggregation of time series is done in two steps. First, each time series in the set is aligned to the same time interval boundaries, then the set of time series is optionally reduced in number.Alignment consists of applying the per_series_aligner operation to each time series after its data has been divided into regular alignment_period time intervals. This process takes all of the data points in an alignment period, applies a mathematical transformation such as averaging, minimum, maximum, delta, etc., and converts them into a single data point per period.Reduction is when the aligned and transformed time series can optionally be combined, reducing the number of time series through similar mathematical transformations. Reduction involves applying a cross_series_reducer to all the time series, optionally sorting the time series into subsets with group_by_fields, and applying the reducer to each subset.The raw time series data can contain a huge amount of information from multiple sources. Alignment and reduction transforms this mass of data into a more manageable and representative collection of data, for example \"the 95% latency across the average of all tasks in a cluster\". This representative data can be more easily graphed and comprehended, and the individual time series data is still available for later drilldown. For more details, see Filtering and aggregation (https://cloud.google.com/monitoring/api/v3/aggregation).",
       "properties": {
         "groupByFields": {
           "type": "array",
@@ -1272,27 +1191,6 @@
         },
         "perSeriesAligner": {
           "type": "string",
-          "enumDescriptions": [
-            "No alignment. Raw data is returned. Not valid if cross-series reduction is requested. The value_type of the result is the same as the value_type of the input.",
-            "Align and convert to DELTA. The output is delta = y1 - y0.This alignment is valid for CUMULATIVE and DELTA metrics. If the selected alignment period results in periods with no data, then the aligned value for such a period is created by interpolation. The value_type of the aligned result is the same as the value_type of the input.",
-            "Align and convert to a rate. The result is computed as rate = (y1 - y0)/(t1 - t0), or \"delta over time\". Think of this aligner as providing the slope of the line that passes through the value at the start and at the end of the alignment_period.This aligner is valid for CUMULATIVE and DELTA metrics with numeric values. If the selected alignment period results in periods with no data, then the aligned value for such a period is created by interpolation. The output is a GAUGE metric with value_type DOUBLE.If, by \"rate\", you mean \"percentage change\", see the ALIGN_PERCENT_CHANGE aligner instead.",
-            "Align by interpolating between adjacent points around the alignment period boundary. This aligner is valid for GAUGE metrics with numeric values. The value_type of the aligned result is the same as the value_type of the input.",
-            "Align by moving the most recent data point before the end of the alignment period to the boundary at the end of the alignment period. This aligner is valid for GAUGE metrics. The value_type of the aligned result is the same as the value_type of the input.",
-            "Align the time series by returning the minimum value in each alignment period. This aligner is valid for GAUGE and DELTA metrics with numeric values. The value_type of the aligned result is the same as the value_type of the input.",
-            "Align the time series by returning the maximum value in each alignment period. This aligner is valid for GAUGE and DELTA metrics with numeric values. The value_type of the aligned result is the same as the value_type of the input.",
-            "Align the time series by returning the mean value in each alignment period. This aligner is valid for GAUGE and DELTA metrics with numeric values. The value_type of the aligned result is DOUBLE.",
-            "Align the time series by returning the number of values in each alignment period. This aligner is valid for GAUGE and DELTA metrics with numeric or Boolean values. The value_type of the aligned result is INT64.",
-            "Align the time series by returning the sum of the values in each alignment period. This aligner is valid for GAUGE and DELTA metrics with numeric and distribution values. The value_type of the aligned result is the same as the value_type of the input.",
-            "Align the time series by returning the standard deviation of the values in each alignment period. This aligner is valid for GAUGE and DELTA metrics with numeric values. The value_type of the output is DOUBLE.",
-            "Align the time series by returning the number of True values in each alignment period. This aligner is valid for GAUGE metrics with Boolean values. The value_type of the output is INT64.",
-            "Align the time series by returning the number of False values in each alignment period. This aligner is valid for GAUGE metrics with Boolean values. The value_type of the output is INT64.",
-            "Align the time series by returning the ratio of the number of True values to the total number of values in each alignment period. This aligner is valid for GAUGE metrics with Boolean values. The output value is in the range 0.0, 1.0 and has value_type DOUBLE.",
-            "Align the time series by using percentile aggregation (https://en.wikipedia.org/wiki/Percentile). The resulting data point in each alignment period is the 99th percentile of all data points in the period. This aligner is valid for GAUGE and DELTA metrics with distribution values. The output is a GAUGE metric with value_type DOUBLE.",
-            "Align the time series by using percentile aggregation (https://en.wikipedia.org/wiki/Percentile). The resulting data point in each alignment period is the 95th percentile of all data points in the period. This aligner is valid for GAUGE and DELTA metrics with distribution values. The output is a GAUGE metric with value_type DOUBLE.",
-            "Align the time series by using percentile aggregation (https://en.wikipedia.org/wiki/Percentile). The resulting data point in each alignment period is the 50th percentile of all data points in the period. This aligner is valid for GAUGE and DELTA metrics with distribution values. The output is a GAUGE metric with value_type DOUBLE.",
-            "Align the time series by using percentile aggregation (https://en.wikipedia.org/wiki/Percentile). The resulting data point in each alignment period is the 5th percentile of all data points in the period. This aligner is valid for GAUGE and DELTA metrics with distribution values. The output is a GAUGE metric with value_type DOUBLE.",
-            "Align and convert to a percentage change. This aligner is valid for GAUGE and DELTA metrics with numeric values. This alignment returns ((current - previous)/previous) * 100, where the value of previous is determined based on the alignment_period.If the values of current and previous are both 0, then the returned value is 0. If only previous is 0, the returned value is infinity.A 10-minute moving mean is computed at each point of the alignment period prior to the above calculation to smooth the metric and prevent false positives from very short-lived spikes. The moving mean is only applicable for data whose values are \u003e= 0. Any values \u003c 0 are treated as a missing datapoint, and are ignored. While DELTA metrics are accepted by this alignment, special care should be taken that the values for the metric will always be positive. The output is a GAUGE metric with value_type DOUBLE."
-          ],
           "enum": [
             "ALIGN_NONE",
             "ALIGN_DELTA",
@@ -1314,14 +1212,37 @@
             "ALIGN_PERCENTILE_05",
             "ALIGN_PERCENT_CHANGE"
           ],
-          "description": "An Aligner describes how to bring the data points in a single time series into temporal alignment. Except for ALIGN_NONE, all alignments cause all the data points in an alignment_period to be mathematically grouped together, resulting in a single data point for each alignment_period with end timestamp at the end of the period.Not all alignment operations may be applied to all time series. The valid choices depend on the metric_kind and value_type of the original time series. Alignment can change the metric_kind or the value_type of the time series.Time series data must be aligned in order to perform cross-time series reduction. If cross_series_reducer is specified, then per_series_aligner must be specified and not equal to ALIGN_NONE and alignment_period must be specified; otherwise, an error is returned."
+          "description": "An Aligner describes how to bring the data points in a single time series into temporal alignment. Except for ALIGN_NONE, all alignments cause all the data points in an alignment_period to be mathematically grouped together, resulting in a single data point for each alignment_period with end timestamp at the end of the period.Not all alignment operations may be applied to all time series. The valid choices depend on the metric_kind and value_type of the original time series. Alignment can change the metric_kind or the value_type of the time series.Time series data must be aligned in order to perform cross-time series reduction. If cross_series_reducer is specified, then per_series_aligner must be specified and not equal to ALIGN_NONE and alignment_period must be specified; otherwise, an error is returned.",
+          "enumDescriptions": [
+            "No alignment. Raw data is returned. Not valid if cross-series reduction is requested. The value_type of the result is the same as the value_type of the input.",
+            "Align and convert to DELTA. The output is delta = y1 - y0.This alignment is valid for CUMULATIVE and DELTA metrics. If the selected alignment period results in periods with no data, then the aligned value for such a period is created by interpolation. The value_type of the aligned result is the same as the value_type of the input.",
+            "Align and convert to a rate. The result is computed as rate = (y1 - y0)/(t1 - t0), or \"delta over time\". Think of this aligner as providing the slope of the line that passes through the value at the start and at the end of the alignment_period.This aligner is valid for CUMULATIVE and DELTA metrics with numeric values. If the selected alignment period results in periods with no data, then the aligned value for such a period is created by interpolation. The output is a GAUGE metric with value_type DOUBLE.If, by \"rate\", you mean \"percentage change\", see the ALIGN_PERCENT_CHANGE aligner instead.",
+            "Align by interpolating between adjacent points around the alignment period boundary. This aligner is valid for GAUGE metrics with numeric values. The value_type of the aligned result is the same as the value_type of the input.",
+            "Align by moving the most recent data point before the end of the alignment period to the boundary at the end of the alignment period. This aligner is valid for GAUGE metrics. The value_type of the aligned result is the same as the value_type of the input.",
+            "Align the time series by returning the minimum value in each alignment period. This aligner is valid for GAUGE and DELTA metrics with numeric values. The value_type of the aligned result is the same as the value_type of the input.",
+            "Align the time series by returning the maximum value in each alignment period. This aligner is valid for GAUGE and DELTA metrics with numeric values. The value_type of the aligned result is the same as the value_type of the input.",
+            "Align the time series by returning the mean value in each alignment period. This aligner is valid for GAUGE and DELTA metrics with numeric values. The value_type of the aligned result is DOUBLE.",
+            "Align the time series by returning the number of values in each alignment period. This aligner is valid for GAUGE and DELTA metrics with numeric or Boolean values. The value_type of the aligned result is INT64.",
+            "Align the time series by returning the sum of the values in each alignment period. This aligner is valid for GAUGE and DELTA metrics with numeric and distribution values. The value_type of the aligned result is the same as the value_type of the input.",
+            "Align the time series by returning the standard deviation of the values in each alignment period. This aligner is valid for GAUGE and DELTA metrics with numeric values. The value_type of the output is DOUBLE.",
+            "Align the time series by returning the number of True values in each alignment period. This aligner is valid for GAUGE metrics with Boolean values. The value_type of the output is INT64.",
+            "Align the time series by returning the number of False values in each alignment period. This aligner is valid for GAUGE metrics with Boolean values. The value_type of the output is INT64.",
+            "Align the time series by returning the ratio of the number of True values to the total number of values in each alignment period. This aligner is valid for GAUGE metrics with Boolean values. The output value is in the range 0.0, 1.0 and has value_type DOUBLE.",
+            "Align the time series by using percentile aggregation (https://en.wikipedia.org/wiki/Percentile). The resulting data point in each alignment period is the 99th percentile of all data points in the period. This aligner is valid for GAUGE and DELTA metrics with distribution values. The output is a GAUGE metric with value_type DOUBLE.",
+            "Align the time series by using percentile aggregation (https://en.wikipedia.org/wiki/Percentile). The resulting data point in each alignment period is the 95th percentile of all data points in the period. This aligner is valid for GAUGE and DELTA metrics with distribution values. The output is a GAUGE metric with value_type DOUBLE.",
+            "Align the time series by using percentile aggregation (https://en.wikipedia.org/wiki/Percentile). The resulting data point in each alignment period is the 50th percentile of all data points in the period. This aligner is valid for GAUGE and DELTA metrics with distribution values. The output is a GAUGE metric with value_type DOUBLE.",
+            "Align the time series by using percentile aggregation (https://en.wikipedia.org/wiki/Percentile). The resulting data point in each alignment period is the 5th percentile of all data points in the period. This aligner is valid for GAUGE and DELTA metrics with distribution values. The output is a GAUGE metric with value_type DOUBLE.",
+            "Align and convert to a percentage change. This aligner is valid for GAUGE and DELTA metrics with numeric values. This alignment returns ((current - previous)/previous) * 100, where the value of previous is determined based on the alignment_period.If the values of current and previous are both 0, then the returned value is 0. If only previous is 0, the returned value is infinity.A 10-minute moving mean is computed at each point of the alignment period prior to the above calculation to smooth the metric and prevent false positives from very short-lived spikes. The moving mean is only applicable for data whose values are \u003e= 0. Any values \u003c 0 are treated as a missing datapoint, and are ignored. While DELTA metrics are accepted by this alignment, special care should be taken that the values for the metric will always be positive. The output is a GAUGE metric with value_type DOUBLE."
+          ]
         },
         "alignmentPeriod": {
+          "description": "The alignment_period specifies a time interval, in seconds, that is used to divide the data in all the time series into consistent blocks of time. This will be done before the per-series aligner can be applied to the data.The value must be at least 60 seconds. If a per-series aligner other than ALIGN_NONE is specified, this field is required or an error is returned. If no per-series aligner is specified, or the aligner ALIGN_NONE is specified, then this field is ignored.The maximum value of the alignment_period is 2 years, or 104 weeks.",
           "type": "string",
-          "format": "google-duration",
-          "description": "The alignment_period specifies a time interval, in seconds, that is used to divide the data in all the time series into consistent blocks of time. This will be done before the per-series aligner can be applied to the data.The value must be at least 60 seconds. If a per-series aligner other than ALIGN_NONE is specified, this field is required or an error is returned. If no per-series aligner is specified, or the aligner ALIGN_NONE is specified, then this field is ignored.The maximum value of the alignment_period is 2 years, or 104 weeks."
+          "format": "google-duration"
         },
         "crossSeriesReducer": {
+          "type": "string",
+          "description": "The reduction operation to be used to combine time series into a single time series, where the value of each data point in the resulting series is a function of all the already aligned values in the input time series.Not all reducer operations can be applied to all time series. The valid choices depend on the metric_kind and the value_type of the original time series. Reduction can yield a time series with a different metric_kind or value_type than the input time series.Time series data must first be aligned (see per_series_aligner) in order to perform cross-time series reduction. If cross_series_reducer is specified, then per_series_aligner must be specified, and must not be ALIGN_NONE. An alignment_period must also be specified; otherwise, an error is returned.",
           "enumDescriptions": [
             "No cross-time series reduction. The output of the Aligner is returned.",
             "Reduce by computing the mean value across time series for each alignment period. This reducer is valid for DELTA and GAUGE metrics with numeric or distribution values. The value_type of the output is DOUBLE.",
@@ -1338,7 +1259,6 @@
             "Reduce by computing the 50th percentile (https://en.wikipedia.org/wiki/Percentile) of data points across time series for each alignment period. This reducer is valid for GAUGE and DELTA metrics of numeric and distribution type. The value of the output is DOUBLE.",
             "Reduce by computing the 5th percentile (https://en.wikipedia.org/wiki/Percentile) of data points across time series for each alignment period. This reducer is valid for GAUGE and DELTA metrics of numeric and distribution type. The value of the output is DOUBLE."
           ],
-          "type": "string",
           "enum": [
             "REDUCE_NONE",
             "REDUCE_MEAN",
@@ -1354,265 +1274,234 @@
             "REDUCE_PERCENTILE_95",
             "REDUCE_PERCENTILE_50",
             "REDUCE_PERCENTILE_05"
-          ],
-          "description": "The reduction operation to be used to combine time series into a single time series, where the value of each data point in the resulting series is a function of all the already aligned values in the input time series.Not all reducer operations can be applied to all time series. The valid choices depend on the metric_kind and the value_type of the original time series. Reduction can yield a time series with a different metric_kind or value_type than the input time series.Time series data must first be aligned (see per_series_aligner) in order to perform cross-time series reduction. If cross_series_reducer is specified, then per_series_aligner must be specified, and must not be ALIGN_NONE. An alignment_period must also be specified; otherwise, an error is returned."
-        }
-      },
-      "description": "Describes how to combine multiple time series to provide a different view of the data. Aggregation of time series is done in two steps. First, each time series in the set is aligned to the same time interval boundaries, then the set of time series is optionally reduced in number.Alignment consists of applying the per_series_aligner operation to each time series after its data has been divided into regular alignment_period time intervals. This process takes all of the data points in an alignment period, applies a mathematical transformation such as averaging, minimum, maximum, delta, etc., and converts them into a single data point per period.Reduction is when the aligned and transformed time series can optionally be combined, reducing the number of time series through similar mathematical transformations. Reduction involves applying a cross_series_reducer to all the time series, optionally sorting the time series into subsets with group_by_fields, and applying the reducer to each subset.The raw time series data can contain a huge amount of information from multiple sources. Alignment and reduction transforms this mass of data into a more manageable and representative collection of data, for example \"the 95% latency across the average of all tasks in a cluster\". This representative data can be more easily graphed and comprehended, and the individual time series data is still available for later drilldown. For more details, see Filtering and aggregation (https://cloud.google.com/monitoring/api/v3/aggregation).",
-      "id": "Aggregation"
-    },
-    "Text": {
-      "properties": {
-        "format": {
-          "enum": [
-            "FORMAT_UNSPECIFIED",
-            "MARKDOWN",
-            "RAW"
-          ],
-          "type": "string",
-          "description": "How the text content is formatted.",
-          "enumDescriptions": [
-            "Format is unspecified. Defaults to MARKDOWN.",
-            "The text contains Markdown formatting.",
-            "The text contains no special formatting."
           ]
-        },
-        "content": {
-          "type": "string",
-          "description": "The text content to be displayed."
-        }
-      },
-      "description": "A widget that displays textual content.",
-      "type": "object",
-      "id": "Text"
-    },
-    "CollapsibleGroup": {
-      "id": "CollapsibleGroup",
-      "type": "object",
-      "description": "A widget that groups the other widgets. All widgets that are within the area spanned by the grouping widget are considered member widgets.",
-      "properties": {
-        "collapsed": {
-          "type": "boolean",
-          "description": "The collapsed state of the widget on first page load."
         }
       }
     },
-    "TimeSeriesTable": {
-      "description": "A table that displays time series data.",
-      "properties": {
-        "dataSets": {
-          "description": "Required. The data displayed in this table.",
-          "items": {
-            "$ref": "TableDataSet"
-          },
-          "type": "array"
-        }
-      },
-      "id": "TimeSeriesTable",
+    "Empty": {
+      "properties": {},
+      "description": "A generic empty message that you can re-use to avoid defining duplicated empty messages in your APIs. A typical example is to use it as the request or the response type of an API method. For instance: service Foo { rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty); } ",
+      "id": "Empty",
       "type": "object"
-    }
-  },
-  "servicePath": "",
-  "resources": {
-    "operations": {
-      "methods": {
-        "get": {
-          "scopes": [
-            "https://www.googleapis.com/auth/cloud-platform",
-            "https://www.googleapis.com/auth/monitoring",
-            "https://www.googleapis.com/auth/monitoring.read"
-          ],
-          "response": {
-            "$ref": "Operation"
-          },
-          "description": "Gets the latest state of a long-running operation. Clients can use this method to poll the operation result at intervals as recommended by the API service.",
-          "id": "monitoring.operations.get",
-          "httpMethod": "GET",
-          "parameters": {
-            "name": {
-              "type": "string",
-              "location": "path",
-              "description": "The name of the operation resource.",
-              "pattern": "^operations/.*$",
-              "required": true
-            }
-          },
-          "path": "v1/{+name}",
-          "flatPath": "v1/operations/{operationsId}",
-          "parameterOrder": [
-            "name"
-          ]
-        }
-      }
     },
-    "projects": {
-      "resources": {
-        "dashboards": {
-          "methods": {
-            "patch": {
-              "description": "Replaces an existing custom dashboard with a new definition.This method requires the monitoring.dashboards.update permission on the specified dashboard. For more information, see Cloud Identity and Access Management (https://cloud.google.com/iam).",
-              "request": {
-                "$ref": "Dashboard"
-              },
-              "path": "v1/{+name}",
-              "parameters": {
-                "name": {
-                  "location": "path",
-                  "required": true,
-                  "type": "string",
-                  "pattern": "^projects/[^/]+/dashboards/[^/]+$",
-                  "description": "Immutable. The resource name of the dashboard."
-                },
-                "validateOnly": {
-                  "description": "If set, validate the request and preview the review, but do not actually save it.",
-                  "type": "boolean",
-                  "location": "query"
-                }
-              },
-              "httpMethod": "PATCH",
-              "parameterOrder": [
-                "name"
-              ],
-              "scopes": [
-                "https://www.googleapis.com/auth/cloud-platform",
-                "https://www.googleapis.com/auth/monitoring",
-                "https://www.googleapis.com/auth/monitoring.write"
-              ],
-              "id": "monitoring.projects.dashboards.patch",
-              "flatPath": "v1/projects/{projectsId}/dashboards/{dashboardsId}",
-              "response": {
-                "$ref": "Dashboard"
-              }
-            },
-            "create": {
-              "description": "Creates a new custom dashboard. For examples on how you can use this API to create dashboards, see Managing dashboards by API (https://cloud.google.com/monitoring/dashboards/api-dashboard). This method requires the monitoring.dashboards.create permission on the specified project. For more information about permissions, see Cloud Identity and Access Management (https://cloud.google.com/iam).",
-              "response": {
-                "$ref": "Dashboard"
-              },
-              "scopes": [
-                "https://www.googleapis.com/auth/cloud-platform",
-                "https://www.googleapis.com/auth/monitoring",
-                "https://www.googleapis.com/auth/monitoring.write"
-              ],
-              "id": "monitoring.projects.dashboards.create",
-              "flatPath": "v1/projects/{projectsId}/dashboards",
-              "parameters": {
-                "validateOnly": {
-                  "location": "query",
-                  "description": "If set, validate the request and preview the review, but do not actually save it.",
-                  "type": "boolean"
-                },
-                "parent": {
-                  "pattern": "^projects/[^/]+$",
-                  "location": "path",
-                  "required": true,
-                  "type": "string",
-                  "description": "Required. The project on which to execute the request. The format is: projects/[PROJECT_ID_OR_NUMBER] The [PROJECT_ID_OR_NUMBER] must match the dashboard resource name."
-                }
-              },
-              "parameterOrder": [
-                "parent"
-              ],
-              "request": {
-                "$ref": "Dashboard"
-              },
-              "httpMethod": "POST",
-              "path": "v1/{+parent}/dashboards"
-            },
-            "list": {
-              "scopes": [
-                "https://www.googleapis.com/auth/cloud-platform",
-                "https://www.googleapis.com/auth/monitoring",
-                "https://www.googleapis.com/auth/monitoring.read"
-              ],
-              "httpMethod": "GET",
-              "id": "monitoring.projects.dashboards.list",
-              "path": "v1/{+parent}/dashboards",
-              "description": "Lists the existing dashboards.This method requires the monitoring.dashboards.list permission on the specified project. For more information, see Cloud Identity and Access Management (https://cloud.google.com/iam).",
-              "response": {
-                "$ref": "ListDashboardsResponse"
-              },
-              "parameters": {
-                "parent": {
-                  "pattern": "^projects/[^/]+$",
-                  "type": "string",
-                  "required": true,
-                  "description": "Required. The scope of the dashboards to list. The format is: projects/[PROJECT_ID_OR_NUMBER] ",
-                  "location": "path"
-                },
-                "pageToken": {
-                  "description": "If this field is not empty then it must contain the nextPageToken value returned by a previous call to this method. Using this field causes the method to return additional results from the previous method call.",
-                  "type": "string",
-                  "location": "query"
-                },
-                "pageSize": {
-                  "type": "integer",
-                  "format": "int32",
-                  "description": "A positive number that is the maximum number of results to return. If unspecified, a default of 1000 is used.",
-                  "location": "query"
-                }
-              },
-              "flatPath": "v1/projects/{projectsId}/dashboards",
-              "parameterOrder": [
-                "parent"
-              ]
-            },
-            "delete": {
-              "scopes": [
-                "https://www.googleapis.com/auth/cloud-platform",
-                "https://www.googleapis.com/auth/monitoring",
-                "https://www.googleapis.com/auth/monitoring.write"
-              ],
-              "httpMethod": "DELETE",
-              "id": "monitoring.projects.dashboards.delete",
-              "response": {
-                "$ref": "Empty"
-              },
-              "path": "v1/{+name}",
-              "description": "Deletes an existing custom dashboard.This method requires the monitoring.dashboards.delete permission on the specified dashboard. For more information, see Cloud Identity and Access Management (https://cloud.google.com/iam).",
-              "parameterOrder": [
-                "name"
-              ],
-              "flatPath": "v1/projects/{projectsId}/dashboards/{dashboardsId}",
-              "parameters": {
-                "name": {
-                  "description": "Required. The resource name of the Dashboard. The format is: projects/[PROJECT_ID_OR_NUMBER]/dashboards/[DASHBOARD_ID] ",
-                  "location": "path",
-                  "required": true,
-                  "pattern": "^projects/[^/]+/dashboards/[^/]+$",
-                  "type": "string"
-                }
-              }
-            },
-            "get": {
-              "id": "monitoring.projects.dashboards.get",
-              "flatPath": "v1/projects/{projectsId}/dashboards/{dashboardsId}",
-              "parameterOrder": [
-                "name"
-              ],
-              "parameters": {
-                "name": {
-                  "pattern": "^projects/[^/]+/dashboards/[^/]+$",
-                  "required": true,
-                  "type": "string",
-                  "location": "path",
-                  "description": "Required. The resource name of the Dashboard. The format is one of: dashboards/[DASHBOARD_ID] (for system dashboards) projects/[PROJECT_ID_OR_NUMBER]/dashboards/[DASHBOARD_ID] (for custom dashboards)."
-                }
-              },
-              "path": "v1/{+name}",
-              "scopes": [
-                "https://www.googleapis.com/auth/cloud-platform",
-                "https://www.googleapis.com/auth/monitoring",
-                "https://www.googleapis.com/auth/monitoring.read"
-              ],
-              "response": {
-                "$ref": "Dashboard"
-              },
-              "httpMethod": "GET",
-              "description": "Fetches a specific dashboard.This method requires the monitoring.dashboards.get permission on the specified dashboard. For more information, see Cloud Identity and Access Management (https://cloud.google.com/iam)."
+    "QueryRangeRequest": {
+      "description": "QueryRangeRequest holds all parameters of the Prometheus upstream range query API plus GCM specific parameters.",
+      "id": "QueryRangeRequest",
+      "properties": {
+        "start": {
+          "type": "string",
+          "description": "The start time to evaluate the query for. Either floating point UNIX seconds or RFC3339 formatted timestamp."
+        },
+        "end": {
+          "description": "The end time to evaluate the query for. Either floating point UNIX seconds or RFC3339 formatted timestamp.",
+          "type": "string"
+        },
+        "timeout": {
+          "type": "string",
+          "description": "An upper bound timeout for the query. Either a Prometheus duration string (https://prometheus.io/docs/prometheus/latest/querying/basics/#time-durations) or floating point seconds. This non-standard encoding must be used for compatibility with the open source API. Clients may still implement timeouts at the connection level while ignoring this field."
+        },
+        "query": {
+          "description": "A PromQL query string. Query lanauge documentation: https://prometheus.io/docs/prometheus/latest/querying/basics/.",
+          "type": "string"
+        },
+        "step": {
+          "type": "string",
+          "description": "The resolution of query result. Either a Prometheus duration string (https://prometheus.io/docs/prometheus/latest/querying/basics/#time-durations) or floating point seconds. This non-standard encoding must be used for compatibility with the open source API. Clients may still implement timeouts at the connection level while ignoring this field."
+        }
+      },
+      "type": "object"
+    },
+    "HttpBody": {
+      "properties": {
+        "contentType": {
+          "description": "The HTTP Content-Type header value specifying the content type of the body.",
+          "type": "string"
+        },
+        "data": {
+          "type": "string",
+          "description": "The HTTP request/response body as raw binary.",
+          "format": "byte"
+        },
+        "extensions": {
+          "description": "Application specific response metadata. Must be set in the first response for streaming APIs.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "Properties of the object. Contains field @type with type URL.",
+              "type": "any"
             }
           }
+        }
+      },
+      "id": "HttpBody",
+      "type": "object",
+      "description": "Message that represents an arbitrary HTTP body. It should only be used for payload formats that can't be represented as JSON, such as raw binary or an HTML page.This message can be used both in streaming and non-streaming API methods in the request as well as the response.It can be used as a top-level request field, which is convenient if one wants to extract parameters from either the URL or HTTP template into the request fields and also want access to the raw HTTP body.Example: message GetResourceRequest { // A unique request id. string request_id = 1; // The raw HTTP body is bound to this field. google.api.HttpBody http_body = 2; } service ResourceService { rpc GetResource(GetResourceRequest) returns (google.api.HttpBody); rpc UpdateResource(google.api.HttpBody) returns (google.protobuf.Empty); } Example with streaming methods: service CaldavService { rpc GetCalendar(stream google.api.HttpBody) returns (stream google.api.HttpBody); rpc UpdateCalendar(stream google.api.HttpBody) returns (stream google.api.HttpBody); } Use of this type only changes how the request and response bodies are handled, all other features will continue to work unchanged."
+    },
+    "ColumnLayout": {
+      "id": "ColumnLayout",
+      "properties": {
+        "columns": {
+          "type": "array",
+          "description": "The columns of content to display.",
+          "items": {
+            "$ref": "Column"
+          }
+        }
+      },
+      "description": "A simplified layout that divides the available space into vertical columns and arranges a set of widgets vertically in each column.",
+      "type": "object"
+    },
+    "GaugeView": {
+      "description": "A gauge chart shows where the current value sits within a pre-defined range. The upper and lower bounds should define the possible range of values for the scorecard's query (inclusive).",
+      "properties": {
+        "upperBound": {
+          "type": "number",
+          "description": "The upper bound for this gauge chart. The value of the chart should always be less than or equal to this.",
+          "format": "double"
         },
+        "lowerBound": {
+          "type": "number",
+          "format": "double",
+          "description": "The lower bound for this gauge chart. The value of the chart should always be greater than or equal to this."
+        }
+      },
+      "id": "GaugeView",
+      "type": "object"
+    },
+    "StatisticalTimeSeriesFilter": {
+      "properties": {
+        "rankingMethod": {
+          "description": "rankingMethod is applied to a set of time series, and then the produced value for each individual time series is used to compare a given time series to others. These are methods that cannot be applied stream-by-stream, but rather require the full context of a request to evaluate time series.",
+          "enum": [
+            "METHOD_UNSPECIFIED",
+            "METHOD_CLUSTER_OUTLIER"
+          ],
+          "enumDescriptions": [
+            "Not allowed in well-formed requests.",
+            "Compute the outlier score of each stream."
+          ],
+          "type": "string"
+        },
+        "numTimeSeries": {
+          "format": "int32",
+          "type": "integer",
+          "description": "How many time series to output."
+        }
+      },
+      "description": "A filter that ranks streams based on their statistical relation to other streams in a request. Note: This field is deprecated and completely ignored by the API.",
+      "type": "object",
+      "id": "StatisticalTimeSeriesFilter"
+    },
+    "TimeSeriesFilterRatio": {
+      "type": "object",
+      "id": "TimeSeriesFilterRatio",
+      "properties": {
+        "secondaryAggregation": {
+          "$ref": "Aggregation",
+          "description": "Apply a second aggregation after the ratio is computed."
+        },
+        "numerator": {
+          "description": "The numerator of the ratio.",
+          "$ref": "RatioPart"
+        },
+        "statisticalTimeSeriesFilter": {
+          "$ref": "StatisticalTimeSeriesFilter",
+          "description": "Statistics based time series filter. Note: This field is deprecated and completely ignored by the API."
+        },
+        "pickTimeSeriesFilter": {
+          "$ref": "PickTimeSeriesFilter",
+          "description": "Ranking based time series filter."
+        },
+        "denominator": {
+          "$ref": "RatioPart",
+          "description": "The denominator of the ratio."
+        }
+      },
+      "description": "A pair of time series filters that define a ratio computation. The output time series is the pair-wise division of each aligned element from the numerator and denominator time series."
+    }
+  },
+  "canonicalName": "Monitoring",
+  "parameters": {
+    "callback": {
+      "type": "string",
+      "description": "JSONP",
+      "location": "query"
+    },
+    "uploadType": {
+      "type": "string",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
+      "location": "query"
+    },
+    "alt": {
+      "description": "Data format for response.",
+      "type": "string",
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "default": "json",
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "location": "query"
+    },
+    "upload_protocol": {
+      "location": "query",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
+      "type": "string"
+    },
+    "key": {
+      "type": "string",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+      "location": "query"
+    },
+    "fields": {
+      "location": "query",
+      "description": "Selector specifying which fields to include in a partial response.",
+      "type": "string"
+    },
+    "quotaUser": {
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
+      "type": "string",
+      "location": "query"
+    },
+    "access_token": {
+      "location": "query",
+      "type": "string",
+      "description": "OAuth access token."
+    },
+    "prettyPrint": {
+      "location": "query",
+      "default": "true",
+      "type": "boolean",
+      "description": "Returns response with indentations and line breaks."
+    },
+    "$.xgafv": {
+      "type": "string",
+      "location": "query",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "description": "V1 error format."
+    },
+    "oauth_token": {
+      "description": "OAuth 2.0 token for the current user.",
+      "type": "string",
+      "location": "query"
+    }
+  },
+  "resources": {
+    "projects": {
+      "resources": {
         "location": {
           "resources": {
             "prometheus": {
@@ -1624,101 +1513,52 @@
                         "label": {
                           "methods": {
                             "values": {
-                              "description": "Lists possible values for a given label name.",
-                              "parameterOrder": [
-                                "name",
-                                "location",
-                                "label"
-                              ],
-                              "httpMethod": "GET",
-                              "response": {
-                                "$ref": "HttpBody"
-                              },
-                              "scopes": [
-                                "https://www.googleapis.com/auth/cloud-platform",
-                                "https://www.googleapis.com/auth/monitoring",
-                                "https://www.googleapis.com/auth/monitoring.read"
-                              ],
                               "parameters": {
-                                "label": {
-                                  "type": "string",
-                                  "location": "path",
-                                  "description": "The label name for which values are queried.",
-                                  "required": true
-                                },
                                 "match": {
                                   "location": "query",
-                                  "type": "string",
-                                  "description": "A list of matchers encoded in the Prometheus label matcher format to constrain the values to series that satisfy them."
+                                  "description": "A list of matchers encoded in the Prometheus label matcher format to constrain the values to series that satisfy them.",
+                                  "type": "string"
                                 },
-                                "end": {
-                                  "location": "query",
+                                "location": {
+                                  "location": "path",
                                   "type": "string",
-                                  "description": "The end time to evaluate the query for. Either floating point UNIX seconds or RFC3339 formatted timestamp."
+                                  "description": "Location of the resource information. Has to be \"global\" now.",
+                                  "required": true
+                                },
+                                "label": {
+                                  "required": true,
+                                  "type": "string",
+                                  "location": "path",
+                                  "description": "The label name for which values are queried."
                                 },
                                 "start": {
                                   "description": "The start time to evaluate the query for. Either floating point UNIX seconds or RFC3339 formatted timestamp.",
                                   "location": "query",
                                   "type": "string"
                                 },
-                                "location": {
-                                  "location": "path",
-                                  "description": "Location of the resource information. Has to be \"global\" now.",
+                                "end": {
                                   "type": "string",
-                                  "required": true
+                                  "description": "The end time to evaluate the query for. Either floating point UNIX seconds or RFC3339 formatted timestamp.",
+                                  "location": "query"
                                 },
                                 "name": {
                                   "pattern": "^projects/[^/]+$",
-                                  "location": "path",
-                                  "type": "string",
+                                  "required": true,
                                   "description": "The workspace on which to execute the request. It is not part of the open source API but used as a request path prefix to distinguish different virtual Prometheus instances of Google Prometheus Engine. The format is: projects/PROJECT_ID_OR_NUMBER.",
-                                  "required": true
-                                }
-                              },
-                              "id": "monitoring.projects.location.prometheus.api.v1.label.values",
-                              "flatPath": "v1/projects/{projectsId}/location/{location}/prometheus/api/v1/label/{label}/values",
-                              "path": "v1/{+name}/location/{location}/prometheus/api/v1/label/{label}/values"
-                            }
-                          }
-                        },
-                        "metadata": {
-                          "methods": {
-                            "list": {
-                              "parameterOrder": [
-                                "name",
-                                "location"
-                              ],
-                              "description": "Lists metadata for metrics.",
-                              "httpMethod": "GET",
-                              "flatPath": "v1/projects/{projectsId}/location/{location}/prometheus/api/v1/metadata",
-                              "parameters": {
-                                "metric": {
-                                  "type": "string",
-                                  "description": "The metric name for which to query metadata. If unset, all metric metadata is returned.",
-                                  "location": "query"
-                                },
-                                "limit": {
-                                  "location": "query",
-                                  "type": "string",
-                                  "format": "int64",
-                                  "description": "Maximum number of metrics to return."
-                                },
-                                "name": {
-                                  "description": "Required. The workspace on which to execute the request. It is not part of the open source API but used as a request path prefix to distinguish different virtual Prometheus instances of Google Prometheus Engine. The format is: projects/PROJECT_ID_OR_NUMBER.",
-                                  "required": true,
-                                  "type": "string",
                                   "location": "path",
-                                  "pattern": "^projects/[^/]+$"
-                                },
-                                "location": {
-                                  "description": "Location of the resource information. Has to be \"global\" for now.",
-                                  "location": "path",
-                                  "required": true,
                                   "type": "string"
                                 }
                               },
-                              "path": "v1/{+name}/location/{location}/prometheus/api/v1/metadata",
-                              "id": "monitoring.projects.location.prometheus.api.v1.metadata.list",
+                              "flatPath": "v1/projects/{projectsId}/location/{location}/prometheus/api/v1/label/{label}/values",
+                              "description": "Lists possible values for a given label name.",
+                              "path": "v1/{+name}/location/{location}/prometheus/api/v1/label/{label}/values",
+                              "httpMethod": "GET",
+                              "id": "monitoring.projects.location.prometheus.api.v1.label.values",
+                              "parameterOrder": [
+                                "name",
+                                "location",
+                                "label"
+                              ],
                               "scopes": [
                                 "https://www.googleapis.com/auth/cloud-platform",
                                 "https://www.googleapis.com/auth/monitoring",
@@ -1729,119 +1569,258 @@
                               }
                             }
                           }
+                        },
+                        "metadata": {
+                          "methods": {
+                            "list": {
+                              "path": "v1/{+name}/location/{location}/prometheus/api/v1/metadata",
+                              "parameterOrder": [
+                                "name",
+                                "location"
+                              ],
+                              "parameters": {
+                                "limit": {
+                                  "type": "string",
+                                  "format": "int64",
+                                  "description": "Maximum number of metrics to return.",
+                                  "location": "query"
+                                },
+                                "name": {
+                                  "description": "Required. The workspace on which to execute the request. It is not part of the open source API but used as a request path prefix to distinguish different virtual Prometheus instances of Google Prometheus Engine. The format is: projects/PROJECT_ID_OR_NUMBER.",
+                                  "pattern": "^projects/[^/]+$",
+                                  "required": true,
+                                  "type": "string",
+                                  "location": "path"
+                                },
+                                "metric": {
+                                  "location": "query",
+                                  "description": "The metric name for which to query metadata. If unset, all metric metadata is returned.",
+                                  "type": "string"
+                                },
+                                "location": {
+                                  "type": "string",
+                                  "required": true,
+                                  "location": "path",
+                                  "description": "Location of the resource information. Has to be \"global\" for now."
+                                }
+                              },
+                              "httpMethod": "GET",
+                              "flatPath": "v1/projects/{projectsId}/location/{location}/prometheus/api/v1/metadata",
+                              "id": "monitoring.projects.location.prometheus.api.v1.metadata.list",
+                              "response": {
+                                "$ref": "HttpBody"
+                              },
+                              "description": "Lists metadata for metrics.",
+                              "scopes": [
+                                "https://www.googleapis.com/auth/cloud-platform",
+                                "https://www.googleapis.com/auth/monitoring",
+                                "https://www.googleapis.com/auth/monitoring.read"
+                              ]
+                            }
+                          }
+                        },
+                        "labels": {
+                          "methods": {
+                            "list": {
+                              "path": "v1/{+name}/location/{location}/prometheus/api/v1/labels",
+                              "id": "monitoring.projects.location.prometheus.api.v1.labels.list",
+                              "scopes": [
+                                "https://www.googleapis.com/auth/cloud-platform",
+                                "https://www.googleapis.com/auth/monitoring",
+                                "https://www.googleapis.com/auth/monitoring.read"
+                              ],
+                              "parameterOrder": [
+                                "name",
+                                "location"
+                              ],
+                              "parameters": {
+                                "start": {
+                                  "description": "The start time to evaluate the query for. Either floating point UNIX seconds or RFC3339 formatted timestamp.",
+                                  "location": "query",
+                                  "type": "string"
+                                },
+                                "end": {
+                                  "description": "The end time to evaluate the query for. Either floating point UNIX seconds or RFC3339 formatted timestamp.",
+                                  "location": "query",
+                                  "type": "string"
+                                },
+                                "match": {
+                                  "description": "A list of matchers encoded in the Prometheus label matcher format to constrain the values to series that satisfy them.",
+                                  "location": "query",
+                                  "type": "string"
+                                },
+                                "location": {
+                                  "description": "Location of the resource information. Has to be \"global\" now.",
+                                  "type": "string",
+                                  "required": true,
+                                  "location": "path"
+                                },
+                                "name": {
+                                  "required": true,
+                                  "type": "string",
+                                  "description": "The workspace on which to execute the request. It is not part of the open source API but used as a request path prefix to distinguish different virtual Prometheus instances of Google Prometheus Engine. The format is: projects/PROJECT_ID_OR_NUMBER.",
+                                  "location": "path",
+                                  "pattern": "^projects/[^/]+$"
+                                }
+                              },
+                              "flatPath": "v1/projects/{projectsId}/location/{location}/prometheus/api/v1/labels",
+                              "httpMethod": "GET",
+                              "response": {
+                                "$ref": "HttpBody"
+                              },
+                              "description": "Lists labels for metrics."
+                            }
+                          }
                         }
                       },
                       "methods": {
-                        "query_range": {
+                        "labels": {
+                          "id": "monitoring.projects.location.prometheus.api.v1.labels",
+                          "path": "v1/{+name}/location/{location}/prometheus/api/v1/labels",
                           "parameterOrder": [
                             "name",
                             "location"
                           ],
-                          "httpMethod": "POST",
-                          "request": {
-                            "$ref": "QueryRangeRequest"
-                          },
-                          "path": "v1/{+name}/location/{location}/prometheus/api/v1/query_range",
-                          "flatPath": "v1/projects/{projectsId}/location/{location}/prometheus/api/v1/query_range",
                           "parameters": {
+                            "name": {
+                              "description": "The workspace on which to execute the request. It is not part of the open source API but used as a request path prefix to distinguish different virtual Prometheus instances of Google Prometheus Engine. The format is: projects/PROJECT_ID_OR_NUMBER.",
+                              "type": "string",
+                              "location": "path",
+                              "required": true,
+                              "pattern": "^projects/[^/]+$"
+                            },
                             "location": {
+                              "required": true,
                               "type": "string",
                               "description": "Location of the resource information. Has to be \"global\" now.",
-                              "required": true,
                               "location": "path"
-                            },
-                            "name": {
-                              "description": "The project on which to execute the request. Data associcated with the project's workspace stored under the The format is: projects/PROJECT_ID_OR_NUMBER. Open source API but used as a request path prefix to distinguish different virtual Prometheus instances of Google Prometheus Engine.",
-                              "location": "path",
-                              "pattern": "^projects/[^/]+$",
-                              "required": true,
-                              "type": "string"
                             }
                           },
-                          "description": "Evaluate a PromQL query with start, end time range.",
+                          "flatPath": "v1/projects/{projectsId}/location/{location}/prometheus/api/v1/labels",
+                          "request": {
+                            "$ref": "ListLabelsRequest"
+                          },
                           "scopes": [
                             "https://www.googleapis.com/auth/cloud-platform",
                             "https://www.googleapis.com/auth/monitoring",
                             "https://www.googleapis.com/auth/monitoring.read"
                           ],
-                          "id": "monitoring.projects.location.prometheus.api.v1.query_range",
+                          "description": "Lists labels for metrics.",
+                          "httpMethod": "POST",
                           "response": {
                             "$ref": "HttpBody"
                           }
                         },
                         "query": {
+                          "parameterOrder": [
+                            "name",
+                            "location"
+                          ],
+                          "scopes": [
+                            "https://www.googleapis.com/auth/cloud-platform",
+                            "https://www.googleapis.com/auth/monitoring",
+                            "https://www.googleapis.com/auth/monitoring.read"
+                          ],
+                          "id": "monitoring.projects.location.prometheus.api.v1.query",
+                          "flatPath": "v1/projects/{projectsId}/location/{location}/prometheus/api/v1/query",
+                          "path": "v1/{+name}/location/{location}/prometheus/api/v1/query",
+                          "httpMethod": "POST",
                           "request": {
                             "$ref": "QueryInstantRequest"
                           },
-                          "httpMethod": "POST",
-                          "parameterOrder": [
-                            "name",
-                            "location"
-                          ],
                           "parameters": {
                             "location": {
-                              "description": "Location of the resource information. Has to be \"global\" now.",
-                              "type": "string",
+                              "location": "path",
                               "required": true,
-                              "location": "path"
+                              "description": "Location of the resource information. Has to be \"global\" now.",
+                              "type": "string"
                             },
                             "name": {
-                              "required": true,
+                              "type": "string",
                               "description": "The project on which to execute the request. Data associcated with the project's workspace stored under the The format is: projects/PROJECT_ID_OR_NUMBER. Open source API but used as a request path prefix to distinguish different virtual Prometheus instances of Google Prometheus Engine.",
-                              "location": "path",
                               "pattern": "^projects/[^/]+$",
-                              "type": "string"
+                              "required": true,
+                              "location": "path"
                             }
-                          },
-                          "response": {
-                            "$ref": "HttpBody"
                           },
                           "description": "Evaluate a PromQL query at a single point in time.",
-                          "flatPath": "v1/projects/{projectsId}/location/{location}/prometheus/api/v1/query",
-                          "scopes": [
-                            "https://www.googleapis.com/auth/cloud-platform",
-                            "https://www.googleapis.com/auth/monitoring",
-                            "https://www.googleapis.com/auth/monitoring.read"
-                          ],
-                          "path": "v1/{+name}/location/{location}/prometheus/api/v1/query",
-                          "id": "monitoring.projects.location.prometheus.api.v1.query"
-                        },
-                        "series": {
-                          "scopes": [
-                            "https://www.googleapis.com/auth/cloud-platform",
-                            "https://www.googleapis.com/auth/monitoring",
-                            "https://www.googleapis.com/auth/monitoring.read"
-                          ],
-                          "httpMethod": "POST",
-                          "flatPath": "v1/projects/{projectsId}/location/{location}/prometheus/api/v1/series",
-                          "description": "Lists metadata for metrics.",
-                          "parameters": {
-                            "name": {
-                              "type": "string",
-                              "pattern": "^projects/[^/]+$",
-                              "description": "Required. The workspace on which to execute the request. It is not part of the open source API but used as a request path prefix to distinguish different virtual Prometheus instances of Google Prometheus Engine. The format is: projects/PROJECT_ID_OR_NUMBER.",
-                              "required": true,
-                              "location": "path"
-                            },
-                            "location": {
-                              "description": "Location of the resource information. Has to be \"global\" for now.",
-                              "location": "path",
-                              "type": "string",
-                              "required": true
-                            }
-                          },
-                          "id": "monitoring.projects.location.prometheus.api.v1.series",
-                          "request": {
-                            "$ref": "QuerySeriesRequest"
-                          },
-                          "parameterOrder": [
-                            "name",
-                            "location"
-                          ],
-                          "path": "v1/{+name}/location/{location}/prometheus/api/v1/series",
                           "response": {
                             "$ref": "HttpBody"
                           }
+                        },
+                        "series": {
+                          "parameters": {
+                            "name": {
+                              "location": "path",
+                              "required": true,
+                              "pattern": "^projects/[^/]+$",
+                              "type": "string",
+                              "description": "Required. The workspace on which to execute the request. It is not part of the open source API but used as a request path prefix to distinguish different virtual Prometheus instances of Google Prometheus Engine. The format is: projects/PROJECT_ID_OR_NUMBER."
+                            },
+                            "location": {
+                              "required": true,
+                              "type": "string",
+                              "location": "path",
+                              "description": "Location of the resource information. Has to be \"global\" for now."
+                            }
+                          },
+                          "response": {
+                            "$ref": "HttpBody"
+                          },
+                          "scopes": [
+                            "https://www.googleapis.com/auth/cloud-platform",
+                            "https://www.googleapis.com/auth/monitoring",
+                            "https://www.googleapis.com/auth/monitoring.read"
+                          ],
+                          "id": "monitoring.projects.location.prometheus.api.v1.series",
+                          "path": "v1/{+name}/location/{location}/prometheus/api/v1/series",
+                          "request": {
+                            "$ref": "QuerySeriesRequest"
+                          },
+                          "flatPath": "v1/projects/{projectsId}/location/{location}/prometheus/api/v1/series",
+                          "description": "Lists metadata for metrics.",
+                          "httpMethod": "POST",
+                          "parameterOrder": [
+                            "name",
+                            "location"
+                          ]
+                        },
+                        "query_range": {
+                          "flatPath": "v1/projects/{projectsId}/location/{location}/prometheus/api/v1/query_range",
+                          "request": {
+                            "$ref": "QueryRangeRequest"
+                          },
+                          "path": "v1/{+name}/location/{location}/prometheus/api/v1/query_range",
+                          "description": "Evaluate a PromQL query with start, end time range.",
+                          "id": "monitoring.projects.location.prometheus.api.v1.query_range",
+                          "response": {
+                            "$ref": "HttpBody"
+                          },
+                          "parameters": {
+                            "name": {
+                              "type": "string",
+                              "required": true,
+                              "pattern": "^projects/[^/]+$",
+                              "description": "The project on which to execute the request. Data associcated with the project's workspace stored under the The format is: projects/PROJECT_ID_OR_NUMBER. Open source API but used as a request path prefix to distinguish different virtual Prometheus instances of Google Prometheus Engine.",
+                              "location": "path"
+                            },
+                            "location": {
+                              "location": "path",
+                              "description": "Location of the resource information. Has to be \"global\" now.",
+                              "required": true,
+                              "type": "string"
+                            }
+                          },
+                          "httpMethod": "POST",
+                          "parameterOrder": [
+                            "name",
+                            "location"
+                          ],
+                          "scopes": [
+                            "https://www.googleapis.com/auth/cloud-platform",
+                            "https://www.googleapis.com/auth/monitoring",
+                            "https://www.googleapis.com/auth/monitoring.read"
+                          ]
                         }
                       }
                     }
@@ -1850,6 +1829,203 @@
               }
             }
           }
+        },
+        "dashboards": {
+          "methods": {
+            "delete": {
+              "httpMethod": "DELETE",
+              "parameters": {
+                "name": {
+                  "pattern": "^projects/[^/]+/dashboards/[^/]+$",
+                  "type": "string",
+                  "description": "Required. The resource name of the Dashboard. The format is: projects/[PROJECT_ID_OR_NUMBER]/dashboards/[DASHBOARD_ID] ",
+                  "required": true,
+                  "location": "path"
+                }
+              },
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform",
+                "https://www.googleapis.com/auth/monitoring",
+                "https://www.googleapis.com/auth/monitoring.write"
+              ],
+              "description": "Deletes an existing custom dashboard.This method requires the monitoring.dashboards.delete permission on the specified dashboard. For more information, see Cloud Identity and Access Management (https://cloud.google.com/iam).",
+              "response": {
+                "$ref": "Empty"
+              },
+              "parameterOrder": [
+                "name"
+              ],
+              "id": "monitoring.projects.dashboards.delete",
+              "path": "v1/{+name}",
+              "flatPath": "v1/projects/{projectsId}/dashboards/{dashboardsId}"
+            },
+            "list": {
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform",
+                "https://www.googleapis.com/auth/monitoring",
+                "https://www.googleapis.com/auth/monitoring.read"
+              ],
+              "httpMethod": "GET",
+              "path": "v1/{+parent}/dashboards",
+              "description": "Lists the existing dashboards.This method requires the monitoring.dashboards.list permission on the specified project. For more information, see Cloud Identity and Access Management (https://cloud.google.com/iam).",
+              "response": {
+                "$ref": "ListDashboardsResponse"
+              },
+              "id": "monitoring.projects.dashboards.list",
+              "parameterOrder": [
+                "parent"
+              ],
+              "parameters": {
+                "parent": {
+                  "description": "Required. The scope of the dashboards to list. The format is: projects/[PROJECT_ID_OR_NUMBER] ",
+                  "required": true,
+                  "type": "string",
+                  "pattern": "^projects/[^/]+$",
+                  "location": "path"
+                },
+                "pageSize": {
+                  "type": "integer",
+                  "format": "int32",
+                  "location": "query",
+                  "description": "A positive number that is the maximum number of results to return. If unspecified, a default of 1000 is used."
+                },
+                "pageToken": {
+                  "description": "If this field is not empty then it must contain the nextPageToken value returned by a previous call to this method. Using this field causes the method to return additional results from the previous method call.",
+                  "type": "string",
+                  "location": "query"
+                }
+              },
+              "flatPath": "v1/projects/{projectsId}/dashboards"
+            },
+            "get": {
+              "response": {
+                "$ref": "Dashboard"
+              },
+              "parameters": {
+                "name": {
+                  "required": true,
+                  "location": "path",
+                  "pattern": "^projects/[^/]+/dashboards/[^/]+$",
+                  "description": "Required. The resource name of the Dashboard. The format is one of: dashboards/[DASHBOARD_ID] (for system dashboards) projects/[PROJECT_ID_OR_NUMBER]/dashboards/[DASHBOARD_ID] (for custom dashboards).",
+                  "type": "string"
+                }
+              },
+              "description": "Fetches a specific dashboard.This method requires the monitoring.dashboards.get permission on the specified dashboard. For more information, see Cloud Identity and Access Management (https://cloud.google.com/iam).",
+              "flatPath": "v1/projects/{projectsId}/dashboards/{dashboardsId}",
+              "httpMethod": "GET",
+              "parameterOrder": [
+                "name"
+              ],
+              "path": "v1/{+name}",
+              "id": "monitoring.projects.dashboards.get",
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform",
+                "https://www.googleapis.com/auth/monitoring",
+                "https://www.googleapis.com/auth/monitoring.read"
+              ]
+            },
+            "create": {
+              "request": {
+                "$ref": "Dashboard"
+              },
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform",
+                "https://www.googleapis.com/auth/monitoring",
+                "https://www.googleapis.com/auth/monitoring.write"
+              ],
+              "description": "Creates a new custom dashboard. For examples on how you can use this API to create dashboards, see Managing dashboards by API (https://cloud.google.com/monitoring/dashboards/api-dashboard). This method requires the monitoring.dashboards.create permission on the specified project. For more information about permissions, see Cloud Identity and Access Management (https://cloud.google.com/iam).",
+              "id": "monitoring.projects.dashboards.create",
+              "response": {
+                "$ref": "Dashboard"
+              },
+              "httpMethod": "POST",
+              "parameterOrder": [
+                "parent"
+              ],
+              "parameters": {
+                "validateOnly": {
+                  "description": "If set, validate the request and preview the review, but do not actually save it.",
+                  "location": "query",
+                  "type": "boolean"
+                },
+                "parent": {
+                  "type": "string",
+                  "description": "Required. The project on which to execute the request. The format is: projects/[PROJECT_ID_OR_NUMBER] The [PROJECT_ID_OR_NUMBER] must match the dashboard resource name.",
+                  "location": "path",
+                  "required": true,
+                  "pattern": "^projects/[^/]+$"
+                }
+              },
+              "path": "v1/{+parent}/dashboards",
+              "flatPath": "v1/projects/{projectsId}/dashboards"
+            },
+            "patch": {
+              "flatPath": "v1/projects/{projectsId}/dashboards/{dashboardsId}",
+              "httpMethod": "PATCH",
+              "id": "monitoring.projects.dashboards.patch",
+              "parameters": {
+                "validateOnly": {
+                  "description": "If set, validate the request and preview the review, but do not actually save it.",
+                  "type": "boolean",
+                  "location": "query"
+                },
+                "name": {
+                  "type": "string",
+                  "required": true,
+                  "description": "Immutable. The resource name of the dashboard.",
+                  "location": "path",
+                  "pattern": "^projects/[^/]+/dashboards/[^/]+$"
+                }
+              },
+              "parameterOrder": [
+                "name"
+              ],
+              "request": {
+                "$ref": "Dashboard"
+              },
+              "response": {
+                "$ref": "Dashboard"
+              },
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform",
+                "https://www.googleapis.com/auth/monitoring",
+                "https://www.googleapis.com/auth/monitoring.write"
+              ],
+              "path": "v1/{+name}",
+              "description": "Replaces an existing custom dashboard with a new definition.This method requires the monitoring.dashboards.update permission on the specified dashboard. For more information, see Cloud Identity and Access Management (https://cloud.google.com/iam)."
+            }
+          }
+        }
+      }
+    },
+    "operations": {
+      "methods": {
+        "get": {
+          "path": "v1/{+name}",
+          "description": "Gets the latest state of a long-running operation. Clients can use this method to poll the operation result at intervals as recommended by the API service.",
+          "httpMethod": "GET",
+          "id": "monitoring.operations.get",
+          "flatPath": "v1/operations/{operationsId}",
+          "parameters": {
+            "name": {
+              "type": "string",
+              "location": "path",
+              "description": "The name of the operation resource.",
+              "pattern": "^operations/.*$",
+              "required": true
+            }
+          },
+          "response": {
+            "$ref": "Operation"
+          },
+          "parameterOrder": [
+            "name"
+          ],
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform",
+            "https://www.googleapis.com/auth/monitoring",
+            "https://www.googleapis.com/auth/monitoring.read"
+          ]
         }
       }
     },
@@ -1861,114 +2037,114 @@
               "methods": {
                 "get": {
                   "flatPath": "v1/locations/global/metricsScopes/{metricsScopesId}",
-                  "parameters": {
-                    "name": {
-                      "location": "path",
-                      "description": "Required. The resource name of the Metrics Scope. Example: locations/global/metricsScopes/{SCOPING_PROJECT_ID_OR_NUMBER}",
-                      "pattern": "^locations/global/metricsScopes/[^/]+$",
-                      "type": "string",
-                      "required": true
-                    }
-                  },
-                  "httpMethod": "GET",
+                  "path": "v1/{+name}",
                   "parameterOrder": [
                     "name"
-                  ],
-                  "scopes": [
-                    "https://www.googleapis.com/auth/cloud-platform",
-                    "https://www.googleapis.com/auth/monitoring",
-                    "https://www.googleapis.com/auth/monitoring.read"
                   ],
                   "response": {
                     "$ref": "MetricsScope"
                   },
-                  "id": "monitoring.locations.global.metricsScopes.get",
-                  "description": "Returns a specific Metrics Scope, including the list of projects monitored by the specified Metrics Scope.",
-                  "path": "v1/{+name}"
-                },
-                "listMetricsScopesByMonitoredProject": {
-                  "parameterOrder": [],
-                  "description": "Returns a list of every Metrics Scope that a specific MonitoredProject has been added to. The metrics scope representing the specified monitored project will always be the first entry in the response.",
-                  "path": "v1/locations/global/metricsScopes:listMetricsScopesByMonitoredProject",
-                  "flatPath": "v1/locations/global/metricsScopes:listMetricsScopesByMonitoredProject",
                   "scopes": [
                     "https://www.googleapis.com/auth/cloud-platform",
                     "https://www.googleapis.com/auth/monitoring",
                     "https://www.googleapis.com/auth/monitoring.read"
                   ],
-                  "response": {
-                    "$ref": "ListMetricsScopesByMonitoredProjectResponse"
-                  },
+                  "description": "Returns a specific Metrics Scope, including the list of projects monitored by the specified Metrics Scope.",
+                  "id": "monitoring.locations.global.metricsScopes.get",
+                  "httpMethod": "GET",
+                  "parameters": {
+                    "name": {
+                      "description": "Required. The resource name of the Metrics Scope. Example: locations/global/metricsScopes/{SCOPING_PROJECT_ID_OR_NUMBER}",
+                      "required": true,
+                      "location": "path",
+                      "type": "string",
+                      "pattern": "^locations/global/metricsScopes/[^/]+$"
+                    }
+                  }
+                },
+                "listMetricsScopesByMonitoredProject": {
+                  "description": "Returns a list of every Metrics Scope that a specific MonitoredProject has been added to. The metrics scope representing the specified monitored project will always be the first entry in the response.",
+                  "id": "monitoring.locations.global.metricsScopes.listMetricsScopesByMonitoredProject",
+                  "scopes": [
+                    "https://www.googleapis.com/auth/cloud-platform",
+                    "https://www.googleapis.com/auth/monitoring",
+                    "https://www.googleapis.com/auth/monitoring.read"
+                  ],
+                  "flatPath": "v1/locations/global/metricsScopes:listMetricsScopesByMonitoredProject",
                   "parameters": {
                     "monitoredResourceContainer": {
-                      "location": "query",
                       "type": "string",
+                      "location": "query",
                       "description": "Required. The resource name of the Monitored Project being requested. Example: projects/{MONITORED_PROJECT_ID_OR_NUMBER}"
                     }
                   },
-                  "id": "monitoring.locations.global.metricsScopes.listMetricsScopesByMonitoredProject",
-                  "httpMethod": "GET"
+                  "httpMethod": "GET",
+                  "response": {
+                    "$ref": "ListMetricsScopesByMonitoredProjectResponse"
+                  },
+                  "path": "v1/locations/global/metricsScopes:listMetricsScopesByMonitoredProject",
+                  "parameterOrder": []
                 }
               },
               "resources": {
                 "projects": {
                   "methods": {
                     "delete": {
-                      "description": "Deletes a MonitoredProject from the specified Metrics Scope.",
-                      "flatPath": "v1/locations/global/metricsScopes/{metricsScopesId}/projects/{projectsId}",
                       "path": "v1/{+name}",
+                      "httpMethod": "DELETE",
+                      "description": "Deletes a MonitoredProject from the specified Metrics Scope.",
+                      "response": {
+                        "$ref": "Operation"
+                      },
                       "scopes": [
                         "https://www.googleapis.com/auth/cloud-platform",
                         "https://www.googleapis.com/auth/monitoring",
                         "https://www.googleapis.com/auth/monitoring.write"
                       ],
-                      "id": "monitoring.locations.global.metricsScopes.projects.delete",
                       "parameters": {
                         "name": {
-                          "type": "string",
                           "pattern": "^locations/global/metricsScopes/[^/]+/projects/[^/]+$",
-                          "required": true,
+                          "description": "Required. The resource name of the MonitoredProject. Example: locations/global/metricsScopes/{SCOPING_PROJECT_ID_OR_NUMBER}/projects/{MONITORED_PROJECT_ID_OR_NUMBER}Authorization requires the following Google IAM (https://cloud.google.com/iam) permissions on both the Metrics Scope and on the MonitoredProject: monitoring.metricsScopes.link",
                           "location": "path",
-                          "description": "Required. The resource name of the MonitoredProject. Example: locations/global/metricsScopes/{SCOPING_PROJECT_ID_OR_NUMBER}/projects/{MONITORED_PROJECT_ID_OR_NUMBER}Authorization requires the following Google IAM (https://cloud.google.com/iam) permissions on both the Metrics Scope and on the MonitoredProject: monitoring.metricsScopes.link"
+                          "required": true,
+                          "type": "string"
                         }
                       },
-                      "httpMethod": "DELETE",
                       "parameterOrder": [
                         "name"
                       ],
-                      "response": {
-                        "$ref": "Operation"
-                      }
+                      "flatPath": "v1/locations/global/metricsScopes/{metricsScopesId}/projects/{projectsId}",
+                      "id": "monitoring.locations.global.metricsScopes.projects.delete"
                     },
                     "create": {
+                      "request": {
+                        "$ref": "MonitoredProject"
+                      },
                       "parameters": {
                         "parent": {
                           "pattern": "^locations/global/metricsScopes/[^/]+$",
-                          "location": "path",
                           "required": true,
                           "type": "string",
+                          "location": "path",
                           "description": "Required. The resource name of the existing Metrics Scope that will monitor this project. Example: locations/global/metricsScopes/{SCOPING_PROJECT_ID_OR_NUMBER}"
                         }
                       },
+                      "id": "monitoring.locations.global.metricsScopes.projects.create",
                       "response": {
                         "$ref": "Operation"
                       },
-                      "httpMethod": "POST",
-                      "description": "Adds a MonitoredProject with the given project ID to the specified Metrics Scope.",
-                      "flatPath": "v1/locations/global/metricsScopes/{metricsScopesId}/projects",
                       "scopes": [
                         "https://www.googleapis.com/auth/cloud-platform",
                         "https://www.googleapis.com/auth/monitoring",
                         "https://www.googleapis.com/auth/monitoring.write"
                       ],
+                      "flatPath": "v1/locations/global/metricsScopes/{metricsScopesId}/projects",
+                      "path": "v1/{+parent}/projects",
+                      "description": "Adds a MonitoredProject with the given project ID to the specified Metrics Scope.",
                       "parameterOrder": [
                         "parent"
                       ],
-                      "path": "v1/{+parent}/projects",
-                      "request": {
-                        "$ref": "MonitoredProject"
-                      },
-                      "id": "monitoring.locations.global.metricsScopes.projects.create"
+                      "httpMethod": "POST"
                     }
                   }
                 }
@@ -1979,107 +2155,40 @@
       }
     }
   },
+  "name": "monitoring",
+  "icons": {
+    "x32": "http://www.google.com/images/icons/product/search-32.gif",
+    "x16": "http://www.google.com/images/icons/product/search-16.gif"
+  },
+  "servicePath": "",
+  "id": "monitoring:v1",
+  "baseUrl": "https://monitoring.googleapis.com/",
+  "version_module": true,
+  "batchPath": "batch",
+  "basePath": "",
+  "mtlsRootUrl": "https://monitoring.mtls.googleapis.com/",
+  "revision": "20220704",
+  "discoveryVersion": "v1",
   "ownerDomain": "google.com",
+  "description": "Manages your Cloud Monitoring data and configurations.",
   "auth": {
     "oauth2": {
       "scopes": {
+        "https://www.googleapis.com/auth/monitoring.read": {
+          "description": "View monitoring data for all of your Google Cloud and third-party projects"
+        },
+        "https://www.googleapis.com/auth/monitoring": {
+          "description": "View and write monitoring data for all of your Google and third-party Cloud and API projects"
+        },
         "https://www.googleapis.com/auth/cloud-platform": {
           "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
         },
         "https://www.googleapis.com/auth/monitoring.write": {
           "description": "Publish metric data to your Google Cloud projects"
-        },
-        "https://www.googleapis.com/auth/monitoring": {
-          "description": "View and write monitoring data for all of your Google and third-party Cloud and API projects"
-        },
-        "https://www.googleapis.com/auth/monitoring.read": {
-          "description": "View monitoring data for all of your Google Cloud and third-party projects"
         }
       }
     }
   },
-  "version_module": true,
-  "basePath": "",
-  "batchPath": "batch",
-  "protocol": "rest",
-  "baseUrl": "https://monitoring.googleapis.com/",
-  "canonicalName": "Monitoring",
-  "revision": "20220418",
-  "parameters": {
-    "key": {
-      "location": "query",
-      "type": "string",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token."
-    },
-    "upload_protocol": {
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
-      "location": "query"
-    },
-    "alt": {
-      "location": "query",
-      "default": "json",
-      "type": "string",
-      "description": "Data format for response.",
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ]
-    },
-    "uploadType": {
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
-      "type": "string",
-      "location": "query"
-    },
-    "access_token": {
-      "type": "string",
-      "location": "query",
-      "description": "OAuth access token."
-    },
-    "callback": {
-      "description": "JSONP",
-      "location": "query",
-      "type": "string"
-    },
-    "$.xgafv": {
-      "description": "V1 error format.",
-      "enum": [
-        "1",
-        "2"
-      ],
-      "location": "query",
-      "type": "string",
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ]
-    },
-    "prettyPrint": {
-      "location": "query",
-      "description": "Returns response with indentations and line breaks.",
-      "type": "boolean",
-      "default": "true"
-    },
-    "quotaUser": {
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
-      "location": "query",
-      "type": "string"
-    },
-    "oauth_token": {
-      "location": "query",
-      "type": "string",
-      "description": "OAuth 2.0 token for the current user."
-    },
-    "fields": {
-      "type": "string",
-      "description": "Selector specifying which fields to include in a partial response.",
-      "location": "query"
-    }
-  }
+  "rootUrl": "https://monitoring.googleapis.com/",
+  "version": "v1"
 }
