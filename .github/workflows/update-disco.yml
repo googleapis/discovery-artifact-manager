@@ -1,0 +1,29 @@
+name: Update Discoveries Directory
+on:
+  schedule:
+    - cron: '50 * * * *'
+  workflow_dispatch:
+    inputs:
+      args:
+        description: "Extra command line arguments."
+        required: false
+
+jobs:
+  update-discoveries:
+    if: ${{ github.repository == 'googleapis/discovery-artifact-manager' }}
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.YOSHI_CODE_BOT_TOKEN }}
+      APPROVAL_GITHUB_TOKEN: ${{secrets.YOSHI_APPROVER_TOKEN}}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+      - name: Install Ruby 3.1
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.1"
+      - name: Install tools
+        run: "gem install --no-document toys"
+      - name: execute
+        run: |
+          toys update-disco -v --fork ${{ github.event.inputs.args }}
