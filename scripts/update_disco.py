@@ -221,4 +221,5 @@ def update_index(index_document: DocumentInfo) -> None:
             f.write(index_document.content)
 
 
-main()
+if __name__ == "__main__":
+    main()

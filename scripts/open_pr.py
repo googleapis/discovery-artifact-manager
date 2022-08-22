@@ -343,4 +343,5 @@ def update_pr(pr_number: str, github_token: Optional[str]) -> None:
         logging.info("Done with automerge setup")
 
 
-main()
+if __name__ == "__main__":
+    main()
