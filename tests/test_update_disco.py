@@ -82,7 +82,8 @@ class TestUpdateDisco(unittest.TestCase):
     def setUp(self):
         self._old_path = Path.cwd()
         self._tmp_path = Path(__file__).parent / "tmp"
-        shutil.rmtree(self._tmp_path)
+        if self._tmp_path.exists():
+            shutil.rmtree(self._tmp_path)
         self._tmp_path.mkdir(parents=True, exist_ok=True)
         os.chdir(self._tmp_path)
 
