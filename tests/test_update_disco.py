@@ -22,61 +22,79 @@ from scripts import update_disco
 
 
 DISCOVERY_0001_CONTENT = b"""{
-    "revision": "0001",
-    "data": "foo"
-}
-"""
+  "revision": "0001",
+  "data": "foo"
+}"""
+
+DISCOVERY_0001_CONTENT_SORTED = b"""{
+  "data": "foo",
+  "revision": "0001"
+}"""
 
 DISCOVERY_0001A_CONTENT = b"""{
-    "revision": "0001",
-    "data": "bar"
-}
-"""
+  "revision": "0001",
+  "data": "bar"
+}"""
 
 DISCOVERY_0002_CONTENT = b"""{
-    "revision": "0002",
-    "data": "bar"
-}
-"""
+  "revision": "0002",
+  "data": "bar"
+}"""
+
+DISCOVERY_0002_CONTENT_SORTED = b"""{
+  "data": "bar",
+  "revision": "0002"
+}"""
 
 DISCOVERY_0003_CONTENT = b"""{
-    "revision": "0003",
-    "data": "bar"
-}
-"""
+  "revision": "0003",
+  "data": "bar"
+}"""
 
 INDEX_1_CONTENT = b"""{
-    "items": [
-        {
-            "name": "service1",
-            "version": "v1",
-            "discoveryRestUrl": "https://example.com/service1_v1.json"
-        },
-        {
-            "name": "service2",
-            "version": "v1",
-            "discoveryRestUrl": "https://example.com/service2_v1.json"
-        }
-    ]
-}
-"""
+  "items": [
+    {
+      "name": "service1",
+      "version": "v1",
+      "discoveryRestUrl": "https://example.com/service1_v1.json"
+    },
+    {
+      "name": "service2",
+      "version": "v1",
+      "discoveryRestUrl": "https://example.com/service2_v1.json"
+    }
+  ]
+}"""
 
 INDEX_2_CONTENT = b"""{
-    "items": [
-        {
-            "name": "service1",
-            "version": "v1",
-            "discoveryRestUrl": "https://example.com/service1_v1.json"
-        },
-        {
-            "name": "service1",
-            "version": "v2",
-            "discoveryRestUrl": "https://example.com/service1_v2.json"
-        }
-    ]
-}
-"""
+  "items": [
+    {
+      "name": "service1",
+      "version": "v1",
+      "discoveryRestUrl": "https://example.com/service1_v1.json"
+    },
+    {
+      "name": "service1",
+      "version": "v2",
+      "discoveryRestUrl": "https://example.com/service1_v2.json"
+    }
+  ]
+}"""
 
+INDEX_2_CONTENT_SORTED = b"""{
+  "items": [
+    {
+      "discoveryRestUrl": "https://example.com/service1_v1.json",
+      "name": "service1",
+      "version": "v1"
+    },
+    {
+      "discoveryRestUrl": "https://example.com/service1_v2.json",
+      "name": "service1",
+      "version": "v2"
+    }
+  ]
+}"""
 
 class TestUpdateDisco(unittest.TestCase):
     def setUp(self):
@@ -127,13 +145,14 @@ class TestUpdateDisco(unittest.TestCase):
         self.assertIsNone(doc.json)
         self.assertIsNone(doc.revision)
         self.assertIsNone(doc.json_without_revision)
+        self.assertEqual(doc.json_string, "")
 
     def test_update_index(self):
         index_path = Path("index.json")
         index_path.write_bytes(INDEX_1_CONTENT)
         doc = update_disco.DocumentInfo(INDEX_2_CONTENT)
         update_disco.update_index(doc)
-        self.assertEqual(INDEX_2_CONTENT, index_path.read_bytes())
+        self.assertEqual(INDEX_2_CONTENT_SORTED, index_path.read_bytes())
 
     def test_delete_unused_files(self):
         index_path = Path("index.json")
@@ -182,14 +201,14 @@ class TestUpdateDisco(unittest.TestCase):
         self.assertEqual(DISCOVERY_0001_CONTENT, disc_path.read_bytes())
         disc_doc = update_disco.DocumentInfo(DISCOVERY_0002_CONTENT, "disc.json")
         update_disco.update_files([disc_doc])
-        self.assertEqual(DISCOVERY_0002_CONTENT, disc_path.read_bytes())
+        self.assertEqual(DISCOVERY_0002_CONTENT_SORTED, disc_path.read_bytes())
 
     def test_update_files_new_file(self):
         disc_path = Path("disc.json")
         self.assertFalse(disc_path.exists())
         disc_doc = update_disco.DocumentInfo(DISCOVERY_0001_CONTENT, "disc.json")
         update_disco.update_files([disc_doc])
-        self.assertEqual(DISCOVERY_0001_CONTENT, disc_path.read_bytes())
+        self.assertEqual(DISCOVERY_0001_CONTENT_SORTED, disc_path.read_bytes())
 
     @patch("urllib.request.urlopen")
     def test_load_index(self, mock_urlopen):
