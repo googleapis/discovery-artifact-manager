@@ -1,166 +1,223 @@
 {
-  "documentationLink": "https://cloud.google.com/web-risk/",
-  "canonicalName": "Web Risk",
-  "mtlsRootUrl": "https://webrisk.mtls.googleapis.com/",
+  "discoveryVersion": "v1",
+  "parameters": {
+    "$.xgafv": {
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "location": "query",
+      "description": "V1 error format.",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "type": "string"
+    },
+    "callback": {
+      "location": "query",
+      "description": "JSONP",
+      "type": "string"
+    },
+    "uploadType": {
+      "type": "string",
+      "location": "query",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\")."
+    },
+    "key": {
+      "location": "query",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+      "type": "string"
+    },
+    "fields": {
+      "type": "string",
+      "location": "query",
+      "description": "Selector specifying which fields to include in a partial response."
+    },
+    "alt": {
+      "type": "string",
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "description": "Data format for response.",
+      "default": "json",
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "location": "query"
+    },
+    "access_token": {
+      "location": "query",
+      "type": "string",
+      "description": "OAuth access token."
+    },
+    "upload_protocol": {
+      "type": "string",
+      "location": "query",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\")."
+    },
+    "prettyPrint": {
+      "description": "Returns response with indentations and line breaks.",
+      "location": "query",
+      "default": "true",
+      "type": "boolean"
+    },
+    "quotaUser": {
+      "type": "string",
+      "location": "query",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters."
+    },
+    "oauth_token": {
+      "type": "string",
+      "location": "query",
+      "description": "OAuth 2.0 token for the current user."
+    }
+  },
   "id": "webrisk:v1",
-  "basePath": "",
-  "version_module": true,
-  "ownerName": "Google",
-  "baseUrl": "https://webrisk.googleapis.com/",
   "schemas": {
-    "GoogleCloudWebriskV1ThreatEntryRemovals": {
+    "GoogleProtobufEmpty": {
+      "description": "A generic empty message that you can re-use to avoid defining duplicated empty messages in your APIs. A typical example is to use it as the request or the response type of an API method. For instance: service Foo { rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty); }",
       "type": "object",
-      "id": "GoogleCloudWebriskV1ThreatEntryRemovals",
-      "description": "Contains the set of entries to remove from a local database.",
+      "id": "GoogleProtobufEmpty",
+      "properties": {}
+    },
+    "GoogleCloudWebriskV1RawIndices": {
+      "description": "A set of raw indices to remove from a local list.",
+      "type": "object",
+      "id": "GoogleCloudWebriskV1RawIndices",
       "properties": {
-        "riceIndices": {
-          "description": "The encoded local, lexicographically-sorted list indices, using a Golomb-Rice encoding. Used for sending compressed removal indices. The removal indices (uint32) are sorted in ascending order, then delta encoded and stored as encoded_data.",
-          "$ref": "GoogleCloudWebriskV1RiceDeltaEncoding"
-        },
-        "rawIndices": {
-          "$ref": "GoogleCloudWebriskV1RawIndices",
-          "description": "The raw removal indices for a local list."
+        "indices": {
+          "type": "array",
+          "description": "The indices to remove from a lexicographically-sorted local list.",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
         }
       }
     },
-    "GoogleCloudWebriskV1ThreatEntryAdditions": {
+    "GoogleCloudWebriskV1RiceDeltaEncoding": {
       "properties": {
-        "rawHashes": {
-          "items": {
-            "$ref": "GoogleCloudWebriskV1RawHashes"
-          },
-          "description": "The raw SHA256-formatted entries. Repeated to allow returning sets of hashes with different prefix sizes.",
-          "type": "array"
+        "riceParameter": {
+          "description": "The Golomb-Rice parameter, which is a number between 2 and 28. This field is missing (that is, zero) if `num_entries` is zero.",
+          "type": "integer",
+          "format": "int32"
         },
-        "riceHashes": {
-          "description": "The encoded 4-byte prefixes of SHA256-formatted entries, using a Golomb-Rice encoding. The hashes are converted to uint32, sorted in ascending order, then delta encoded and stored as encoded_data.",
-          "$ref": "GoogleCloudWebriskV1RiceDeltaEncoding"
+        "entryCount": {
+          "type": "integer",
+          "description": "The number of entries that are delta encoded in the encoded data. If only a single integer was encoded, this will be zero and the single value will be stored in `first_value`.",
+          "format": "int32"
+        },
+        "firstValue": {
+          "description": "The offset of the first entry in the encoded data, or, if only a single integer was encoded, that single integer's value. If the field is empty or missing, assume zero.",
+          "type": "string",
+          "format": "int64"
+        },
+        "encodedData": {
+          "type": "string",
+          "description": "The encoded deltas that are encoded using the Golomb-Rice coder.",
+          "format": "byte"
         }
       },
-      "description": "Contains the set of entries to add to a local database. May contain a combination of compressed and raw data in a single response.",
-      "id": "GoogleCloudWebriskV1ThreatEntryAdditions",
+      "description": "The Rice-Golomb encoded data. Used for sending compressed 4-byte hashes or compressed removal indices.",
+      "id": "GoogleCloudWebriskV1RiceDeltaEncoding",
       "type": "object"
     },
-    "GoogleRpcStatus": {
-      "type": "object",
-      "properties": {
-        "message": {
-          "type": "string",
-          "description": "A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the google.rpc.Status.details field, or localized by the client."
-        },
-        "details": {
-          "items": {
-            "additionalProperties": {
-              "type": "any",
-              "description": "Properties of the object. Contains field @type with type URL."
-            },
-            "type": "object"
-          },
-          "type": "array",
-          "description": "A list of messages that carry the error details. There is a common set of message types for APIs to use."
-        },
-        "code": {
-          "type": "integer",
-          "format": "int32",
-          "description": "The status code, which should be an enum value of google.rpc.Code."
-        }
-      },
-      "description": "The `Status` type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by [gRPC](https://github.com/grpc). Each `Status` message contains three pieces of data: error code, error message, and error details. You can find out more about this error model and how to work with it in the [API Design Guide](https://cloud.google.com/apis/design/errors).",
-      "id": "GoogleRpcStatus"
-    },
-    "GoogleLongrunningCancelOperationRequest": {
-      "type": "object",
-      "description": "The request message for Operations.CancelOperation.",
-      "id": "GoogleLongrunningCancelOperationRequest",
-      "properties": {}
-    },
     "GoogleCloudWebriskV1ComputeThreatListDiffResponseChecksum": {
-      "type": "object",
       "properties": {
         "sha256": {
+          "type": "string",
           "description": "The SHA256 hash of the client state; that is, of the sorted list of all hashes present in the database.",
+          "format": "byte"
+        }
+      },
+      "id": "GoogleCloudWebriskV1ComputeThreatListDiffResponseChecksum",
+      "type": "object",
+      "description": "The expected state of a client's local database."
+    },
+    "GoogleCloudWebriskV1RawHashes": {
+      "type": "object",
+      "id": "GoogleCloudWebriskV1RawHashes",
+      "properties": {
+        "prefixSize": {
+          "description": "The number of bytes for each prefix encoded below. This field can be anywhere from 4 (shortest prefix) to 32 (full SHA256 hash). In practice this is almost always 4, except in exceptional circumstances.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "rawHashes": {
+          "description": "The hashes, in binary format, concatenated into one long string. Hashes are sorted in lexicographic order. For JSON API users, hashes are base64-encoded.",
           "format": "byte",
           "type": "string"
         }
       },
-      "description": "The expected state of a client's local database.",
-      "id": "GoogleCloudWebriskV1ComputeThreatListDiffResponseChecksum"
+      "description": "The uncompressed threat entries in hash format. Hashes can be anywhere from 4 to 32 bytes in size. A large majority are 4 bytes, but some hashes are lengthened if they collide with the hash of a popular URI. Used for sending ThreatEntryAdditons to clients that do not support compression, or when sending non-4-byte hashes to clients that do support compression."
     },
-    "GoogleCloudWebriskV1SearchUrisResponse": {
+    "GoogleCloudWebriskV1SearchHashesResponseThreatHash": {
+      "description": "Contains threat information on a matching hash.",
       "type": "object",
-      "id": "GoogleCloudWebriskV1SearchUrisResponse",
+      "id": "GoogleCloudWebriskV1SearchHashesResponseThreatHash",
       "properties": {
-        "threat": {
-          "description": "The threat list matches. This might be empty if the URI is on no list.",
-          "$ref": "GoogleCloudWebriskV1SearchUrisResponseThreatUri"
+        "expireTime": {
+          "format": "google-datetime",
+          "type": "string",
+          "description": "The cache lifetime for the returned match. Clients must not cache this response past this timestamp to avoid false positives."
+        },
+        "threatTypes": {
+          "description": "The ThreatList this threat belongs to. This must contain at least one entry.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "THREAT_TYPE_UNSPECIFIED",
+              "MALWARE",
+              "SOCIAL_ENGINEERING",
+              "UNWANTED_SOFTWARE",
+              "SOCIAL_ENGINEERING_EXTENDED_COVERAGE"
+            ],
+            "enumDescriptions": [
+              "No entries should match this threat type. This threat type is unused.",
+              "Malware targeting any platform.",
+              "Social engineering targeting any platform.",
+              "Unwanted software targeting any platform.",
+              "A list of extended coverage social engineering URIs targeting any platform."
+            ]
+          }
+        },
+        "hash": {
+          "format": "byte",
+          "description": "A 32 byte SHA256 hash. This field is in binary format. For JSON requests, hashes are base64-encoded.",
+          "type": "string"
         }
       }
     },
-    "GoogleCloudWebriskV1RawHashes": {
-      "id": "GoogleCloudWebriskV1RawHashes",
-      "description": "The uncompressed threat entries in hash format. Hashes can be anywhere from 4 to 32 bytes in size. A large majority are 4 bytes, but some hashes are lengthened if they collide with the hash of a popular URI. Used for sending ThreatEntryAdditons to clients that do not support compression, or when sending non-4-byte hashes to clients that do support compression.",
-      "properties": {
-        "rawHashes": {
-          "description": "The hashes, in binary format, concatenated into one long string. Hashes are sorted in lexicographic order. For JSON API users, hashes are base64-encoded.",
-          "type": "string",
-          "format": "byte"
-        },
-        "prefixSize": {
-          "description": "The number of bytes for each prefix encoded below. This field can be anywhere from 4 (shortest prefix) to 32 (full SHA256 hash). In practice this is almost always 4, except in exceptional circumstances.",
-          "format": "int32",
-          "type": "integer"
-        }
-      },
-      "type": "object"
-    },
-    "GoogleCloudWebriskV1SubmitUriMetadata": {
-      "properties": {
-        "createTime": {
-          "type": "string",
-          "description": "Creation time of the operation.",
-          "format": "google-datetime"
-        },
-        "state": {
-          "description": "The state of the operation.",
-          "type": "string",
-          "enumDescriptions": [
-            "Default unspecified state.",
-            "The operation is currently running.",
-            "The operation finished with a success status.",
-            "The operation was cancelled.",
-            "The operation finished with a failure status.",
-            "The operation was closed with no action taken."
-          ],
-          "enum": [
-            "STATE_UNSPECIFIED",
-            "RUNNING",
-            "SUCCEEDED",
-            "CANCELLED",
-            "FAILED",
-            "CLOSED"
-          ]
-        },
-        "updateTime": {
-          "description": "Latest update time of the operation.",
-          "format": "google-datetime",
-          "type": "string"
-        }
-      },
-      "id": "GoogleCloudWebriskV1SubmitUriMetadata",
-      "description": "Metadata for the Submit URI long-running operation.",
-      "type": "object"
-    },
     "GoogleLongrunningOperation": {
-      "type": "object",
       "description": "This resource represents a long-running operation that is the result of a network API call.",
+      "type": "object",
+      "id": "GoogleLongrunningOperation",
       "properties": {
+        "name": {
+          "type": "string",
+          "description": "Matches the `/v1/{project-name}/operations/{operation-id}` pattern."
+        },
         "response": {
           "additionalProperties": {
             "type": "any",
             "description": "Properties of the object. Contains field @type with type URL."
           },
-          "description": "The normal response of the operation in case of success. If the original method returns no data on success, such as `Delete`, the response is `google.protobuf.Empty`. If the original method is standard `Get`/`Create`/`Update`, the response should be the resource. For other methods, the response should have the type `XxxResponse`, where `Xxx` is the original method name. For example, if the original method name is `TakeSnapshot()`, the inferred response type is `TakeSnapshotResponse`.",
-          "type": "object"
+          "type": "object",
+          "description": "The normal response of the operation in case of success. If the original method returns no data on success, such as `Delete`, the response is `google.protobuf.Empty`. If the original method is standard `Get`/`Create`/`Update`, the response should be the resource. For other methods, the response should have the type `XxxResponse`, where `Xxx` is the original method name. For example, if the original method name is `TakeSnapshot()`, the inferred response type is `TakeSnapshotResponse`."
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Contains a `SubmitUriMetadata` object.",
+          "additionalProperties": {
+            "type": "any",
+            "description": "Properties of the object. Contains field @type with type URL."
+          }
         },
         "error": {
           "$ref": "GoogleRpcStatus",
@@ -169,47 +226,42 @@
         "done": {
           "type": "boolean",
           "description": "If the value is `false`, it means the operation is still in progress. If `true`, the operation is completed, and either `error` or `response` is available."
-        },
-        "metadata": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "any",
-            "description": "Properties of the object. Contains field @type with type URL."
-          },
-          "description": "Contains a `SubmitUriMetadata` object."
-        },
-        "name": {
-          "description": "Matches the `/v1/{project-name}/operations/{operation-id}` pattern.",
-          "type": "string"
         }
-      },
-      "id": "GoogleLongrunningOperation"
+      }
     },
-    "GoogleLongrunningListOperationsResponse": {
+    "GoogleRpcStatus": {
       "properties": {
-        "nextPageToken": {
-          "description": "The standard List next-page token.",
-          "type": "string"
+        "message": {
+          "type": "string",
+          "description": "A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the google.rpc.Status.details field, or localized by the client."
         },
-        "operations": {
-          "description": "A list of operations that matches the specified filter in the request.",
-          "type": "array",
+        "code": {
+          "description": "The status code, which should be an enum value of google.rpc.Code.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "details": {
           "items": {
-            "$ref": "GoogleLongrunningOperation"
-          }
+            "type": "object",
+            "additionalProperties": {
+              "description": "Properties of the object. Contains field @type with type URL.",
+              "type": "any"
+            }
+          },
+          "description": "A list of messages that carry the error details. There is a common set of message types for APIs to use.",
+          "type": "array"
         }
       },
-      "description": "The response message for Operations.ListOperations.",
-      "id": "GoogleLongrunningListOperationsResponse",
+      "description": "The `Status` type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by [gRPC](https://github.com/grpc). Each `Status` message contains three pieces of data: error code, error message, and error details. You can find out more about this error model and how to work with it in the [API Design Guide](https://cloud.google.com/apis/design/errors).",
+      "id": "GoogleRpcStatus",
       "type": "object"
     },
     "GoogleCloudWebriskV1SearchHashesResponse": {
-      "id": "GoogleCloudWebriskV1SearchHashesResponse",
       "properties": {
         "negativeExpireTime": {
-          "description": "For requested entities that did not match the threat list, how long to cache the response until.",
           "type": "string",
-          "format": "google-datetime"
+          "format": "google-datetime",
+          "description": "For requested entities that did not match the threat list, how long to cache the response until."
         },
         "threats": {
           "description": "The full hashes that matched the requested prefixes. The hash will be populated in the key.",
@@ -219,148 +271,37 @@
           }
         }
       },
+      "id": "GoogleCloudWebriskV1SearchHashesResponse",
       "type": "object"
     },
-    "GoogleProtobufEmpty": {
+    "GoogleLongrunningCancelOperationRequest": {
       "type": "object",
-      "description": "A generic empty message that you can re-use to avoid defining duplicated empty messages in your APIs. A typical example is to use it as the request or the response type of an API method. For instance: service Foo { rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty); }",
-      "id": "GoogleProtobufEmpty",
-      "properties": {}
+      "properties": {},
+      "id": "GoogleLongrunningCancelOperationRequest",
+      "description": "The request message for Operations.CancelOperation."
     },
-    "GoogleCloudWebriskV1RawIndices": {
-      "id": "GoogleCloudWebriskV1RawIndices",
-      "type": "object",
+    "GoogleCloudWebriskV1ThreatEntryRemovals": {
       "properties": {
-        "indices": {
-          "items": {
-            "format": "int32",
-            "type": "integer"
-          },
-          "type": "array",
-          "description": "The indices to remove from a lexicographically-sorted local list."
+        "riceIndices": {
+          "description": "The encoded local, lexicographically-sorted list indices, using a Golomb-Rice encoding. Used for sending compressed removal indices. The removal indices (uint32) are sorted in ascending order, then delta encoded and stored as encoded_data.",
+          "$ref": "GoogleCloudWebriskV1RiceDeltaEncoding"
+        },
+        "rawIndices": {
+          "$ref": "GoogleCloudWebriskV1RawIndices",
+          "description": "The raw removal indices for a local list."
         }
       },
-      "description": "A set of raw indices to remove from a local list."
+      "type": "object",
+      "id": "GoogleCloudWebriskV1ThreatEntryRemovals",
+      "description": "Contains the set of entries to remove from a local database."
     },
     "GoogleCloudWebriskV1Submission": {
+      "id": "GoogleCloudWebriskV1Submission",
       "type": "object",
       "description": "Wraps a URI that might be displaying malicious content.",
       "properties": {
         "uri": {
           "description": "Required. The URI that is being reported for malicious content to be analyzed.",
-          "type": "string"
-        },
-        "threatTypes": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enumDescriptions": [
-              "No entries should match this threat type. This threat type is unused.",
-              "Malware targeting any platform.",
-              "Social engineering targeting any platform.",
-              "Unwanted software targeting any platform.",
-              "A list of extended coverage social engineering URIs targeting any platform."
-            ],
-            "enum": [
-              "THREAT_TYPE_UNSPECIFIED",
-              "MALWARE",
-              "SOCIAL_ENGINEERING",
-              "UNWANTED_SOFTWARE",
-              "SOCIAL_ENGINEERING_EXTENDED_COVERAGE"
-            ]
-          },
-          "description": "ThreatTypes found to be associated with the submitted URI after reviewing it. This might be empty if the URI was not added to any list."
-        }
-      },
-      "id": "GoogleCloudWebriskV1Submission"
-    },
-    "GoogleCloudWebriskV1SubmitUriRequest": {
-      "properties": {
-        "submission": {
-          "description": "Required. The submission that contains the URI to be scanned.",
-          "$ref": "GoogleCloudWebriskV1Submission"
-        }
-      },
-      "description": "Request to send a potentially malicious URI to WebRisk.",
-      "id": "GoogleCloudWebriskV1SubmitUriRequest",
-      "type": "object"
-    },
-    "GoogleCloudWebriskV1SearchHashesResponseThreatHash": {
-      "type": "object",
-      "id": "GoogleCloudWebriskV1SearchHashesResponseThreatHash",
-      "properties": {
-        "hash": {
-          "description": "A 32 byte SHA256 hash. This field is in binary format. For JSON requests, hashes are base64-encoded.",
-          "type": "string",
-          "format": "byte"
-        },
-        "threatTypes": {
-          "type": "array",
-          "description": "The ThreatList this threat belongs to. This must contain at least one entry.",
-          "items": {
-            "type": "string",
-            "enum": [
-              "THREAT_TYPE_UNSPECIFIED",
-              "MALWARE",
-              "SOCIAL_ENGINEERING",
-              "UNWANTED_SOFTWARE",
-              "SOCIAL_ENGINEERING_EXTENDED_COVERAGE"
-            ],
-            "enumDescriptions": [
-              "No entries should match this threat type. This threat type is unused.",
-              "Malware targeting any platform.",
-              "Social engineering targeting any platform.",
-              "Unwanted software targeting any platform.",
-              "A list of extended coverage social engineering URIs targeting any platform."
-            ]
-          }
-        },
-        "expireTime": {
-          "description": "The cache lifetime for the returned match. Clients must not cache this response past this timestamp to avoid false positives.",
-          "type": "string",
-          "format": "google-datetime"
-        }
-      },
-      "description": "Contains threat information on a matching hash."
-    },
-    "GoogleCloudWebriskV1ComputeThreatListDiffResponse": {
-      "id": "GoogleCloudWebriskV1ComputeThreatListDiffResponse",
-      "type": "object",
-      "properties": {
-        "additions": {
-          "description": "A set of entries to add to a local threat type's list.",
-          "$ref": "GoogleCloudWebriskV1ThreatEntryAdditions"
-        },
-        "removals": {
-          "$ref": "GoogleCloudWebriskV1ThreatEntryRemovals",
-          "description": "A set of entries to remove from a local threat type's list. This field may be empty."
-        },
-        "newVersionToken": {
-          "description": "The new opaque client version token. This should be retained by the client and passed into the next call of ComputeThreatListDiff as 'version_token'. A separate version token should be stored and used for each threatList.",
-          "format": "byte",
-          "type": "string"
-        },
-        "responseType": {
-          "description": "The type of response. This may indicate that an action must be taken by the client when the response is received.",
-          "enum": [
-            "RESPONSE_TYPE_UNSPECIFIED",
-            "DIFF",
-            "RESET"
-          ],
-          "enumDescriptions": [
-            "Unknown.",
-            "Partial updates are applied to the client's existing local database.",
-            "Full updates resets the client's entire local database. This means that either the client had no state, was seriously out-of-date, or the client is believed to be corrupt."
-          ],
-          "type": "string"
-        },
-        "checksum": {
-          "$ref": "GoogleCloudWebriskV1ComputeThreatListDiffResponseChecksum",
-          "description": "The expected SHA256 hash of the client state; that is, of the sorted list of all hashes present in the database after applying the provided diff. If the client state doesn't match the expected state, the client must discard this diff and retry later."
-        },
-        "recommendedNextDiff": {
-          "description": "The soonest the client should wait before issuing any diff request. Querying sooner is unlikely to produce a meaningful diff. Waiting longer is acceptable considering the use case. If this field is not set clients may update as soon as they want.",
-          "format": "google-datetime",
           "type": "string"
         }
       }
@@ -368,17 +309,10 @@
     "GoogleCloudWebriskV1SearchUrisResponseThreatUri": {
       "description": "Contains threat information on a matching uri.",
       "type": "object",
-      "id": "GoogleCloudWebriskV1SearchUrisResponseThreatUri",
       "properties": {
-        "expireTime": {
-          "description": "The cache lifetime for the returned match. Clients must not cache this response past this timestamp to avoid false positives.",
-          "type": "string",
-          "format": "google-datetime"
-        },
         "threatTypes": {
-          "type": "array",
+          "description": "The ThreatList this threat belongs to.",
           "items": {
-            "type": "string",
             "enum": [
               "THREAT_TYPE_UNSPECIFIED",
               "MALWARE",
@@ -392,147 +326,136 @@
               "Social engineering targeting any platform.",
               "Unwanted software targeting any platform.",
               "A list of extended coverage social engineering URIs targeting any platform."
-            ]
+            ],
+            "type": "string"
           },
-          "description": "The ThreatList this threat belongs to."
-        }
-      }
-    },
-    "GoogleCloudWebriskV1RiceDeltaEncoding": {
-      "id": "GoogleCloudWebriskV1RiceDeltaEncoding",
-      "type": "object",
-      "properties": {
-        "entryCount": {
-          "description": "The number of entries that are delta encoded in the encoded data. If only a single integer was encoded, this will be zero and the single value will be stored in `first_value`.",
-          "type": "integer",
-          "format": "int32"
+          "type": "array"
         },
-        "firstValue": {
-          "description": "The offset of the first entry in the encoded data, or, if only a single integer was encoded, that single integer's value. If the field is empty or missing, assume zero.",
+        "expireTime": {
           "type": "string",
-          "format": "int64"
-        },
-        "encodedData": {
-          "format": "byte",
-          "description": "The encoded deltas that are encoded using the Golomb-Rice coder.",
-          "type": "string"
-        },
-        "riceParameter": {
-          "type": "integer",
-          "description": "The Golomb-Rice parameter, which is a number between 2 and 28. This field is missing (that is, zero) if `num_entries` is zero.",
-          "format": "int32"
+          "description": "The cache lifetime for the returned match. Clients must not cache this response past this timestamp to avoid false positives.",
+          "format": "google-datetime"
         }
       },
-      "description": "The Rice-Golomb encoded data. Used for sending compressed 4-byte hashes or compressed removal indices."
-    }
-  },
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+      "id": "GoogleCloudWebriskV1SearchUrisResponseThreatUri"
+    },
+    "GoogleLongrunningListOperationsResponse": {
+      "id": "GoogleLongrunningListOperationsResponse",
+      "type": "object",
+      "description": "The response message for Operations.ListOperations.",
+      "properties": {
+        "nextPageToken": {
+          "type": "string",
+          "description": "The standard List next-page token."
+        },
+        "operations": {
+          "items": {
+            "$ref": "GoogleLongrunningOperation"
+          },
+          "description": "A list of operations that matches the specified filter in the request.",
+          "type": "array"
         }
       }
+    },
+    "GoogleCloudWebriskV1SearchUrisResponse": {
+      "id": "GoogleCloudWebriskV1SearchUrisResponse",
+      "type": "object",
+      "properties": {
+        "threat": {
+          "description": "The threat list matches. This might be empty if the URI is on no list.",
+          "$ref": "GoogleCloudWebriskV1SearchUrisResponseThreatUri"
+        }
+      }
+    },
+    "GoogleCloudWebriskV1ComputeThreatListDiffResponse": {
+      "properties": {
+        "responseType": {
+          "enumDescriptions": [
+            "Unknown.",
+            "Partial updates are applied to the client's existing local database.",
+            "Full updates resets the client's entire local database. This means that either the client had no state, was seriously out-of-date, or the client is believed to be corrupt."
+          ],
+          "enum": [
+            "RESPONSE_TYPE_UNSPECIFIED",
+            "DIFF",
+            "RESET"
+          ],
+          "description": "The type of response. This may indicate that an action must be taken by the client when the response is received.",
+          "type": "string"
+        },
+        "additions": {
+          "$ref": "GoogleCloudWebriskV1ThreatEntryAdditions",
+          "description": "A set of entries to add to a local threat type's list."
+        },
+        "newVersionToken": {
+          "format": "byte",
+          "description": "The new opaque client version token. This should be retained by the client and passed into the next call of ComputeThreatListDiff as 'version_token'. A separate version token should be stored and used for each threatList.",
+          "type": "string"
+        },
+        "checksum": {
+          "$ref": "GoogleCloudWebriskV1ComputeThreatListDiffResponseChecksum",
+          "description": "The expected SHA256 hash of the client state; that is, of the sorted list of all hashes present in the database after applying the provided diff. If the client state doesn't match the expected state, the client must discard this diff and retry later."
+        },
+        "recommendedNextDiff": {
+          "format": "google-datetime",
+          "type": "string",
+          "description": "The soonest the client should wait before issuing any diff request. Querying sooner is unlikely to produce a meaningful diff. Waiting longer is acceptable considering the use case. If this field is not set clients may update as soon as they want."
+        },
+        "removals": {
+          "$ref": "GoogleCloudWebriskV1ThreatEntryRemovals",
+          "description": "A set of entries to remove from a local threat type's list. This field may be empty."
+        }
+      },
+      "id": "GoogleCloudWebriskV1ComputeThreatListDiffResponse",
+      "type": "object"
+    },
+    "GoogleCloudWebriskV1ThreatEntryAdditions": {
+      "type": "object",
+      "properties": {
+        "rawHashes": {
+          "type": "array",
+          "description": "The raw SHA256-formatted entries. Repeated to allow returning sets of hashes with different prefix sizes.",
+          "items": {
+            "$ref": "GoogleCloudWebriskV1RawHashes"
+          }
+        },
+        "riceHashes": {
+          "description": "The encoded 4-byte prefixes of SHA256-formatted entries, using a Golomb-Rice encoding. The hashes are converted to uint32, sorted in ascending order, then delta encoded and stored as encoded_data.",
+          "$ref": "GoogleCloudWebriskV1RiceDeltaEncoding"
+        }
+      },
+      "description": "Contains the set of entries to add to a local database. May contain a combination of compressed and raw data in a single response.",
+      "id": "GoogleCloudWebriskV1ThreatEntryAdditions"
     }
   },
-  "name": "webrisk",
-  "rootUrl": "https://webrisk.googleapis.com/",
-  "parameters": {
-    "alt": {
-      "type": "string",
-      "default": "json",
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "description": "Data format for response.",
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ],
-      "location": "query"
-    },
-    "upload_protocol": {
-      "location": "query",
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\")."
-    },
-    "prettyPrint": {
-      "description": "Returns response with indentations and line breaks.",
-      "location": "query",
-      "default": "true",
-      "type": "boolean"
-    },
-    "callback": {
-      "description": "JSONP",
-      "type": "string",
-      "location": "query"
-    },
-    "key": {
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
-      "type": "string",
-      "location": "query"
-    },
-    "quotaUser": {
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
-      "type": "string",
-      "location": "query"
-    },
-    "fields": {
-      "location": "query",
-      "type": "string",
-      "description": "Selector specifying which fields to include in a partial response."
-    },
-    "uploadType": {
-      "location": "query",
-      "type": "string",
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\")."
-    },
-    "access_token": {
-      "location": "query",
-      "description": "OAuth access token.",
-      "type": "string"
-    },
-    "$.xgafv": {
-      "enum": [
-        "1",
-        "2"
-      ],
-      "location": "query",
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ],
-      "description": "V1 error format.",
-      "type": "string"
-    },
-    "oauth_token": {
-      "description": "OAuth 2.0 token for the current user.",
-      "type": "string",
-      "location": "query"
-    }
+  "basePath": "",
+  "mtlsRootUrl": "https://webrisk.mtls.googleapis.com/",
+  "version": "v1",
+  "documentationLink": "https://cloud.google.com/web-risk/",
+  "servicePath": "",
+  "version_module": true,
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
   },
-  "discoveryVersion": "v1",
-  "description": "",
+  "baseUrl": "https://webrisk.googleapis.com/",
   "resources": {
-    "hashes": {
+    "threatLists": {
       "methods": {
-        "search": {
-          "parameterOrder": [],
+        "computeDiff": {
+          "flatPath": "v1/threatLists:computeDiff",
+          "description": "Gets the most recent threat list diffs. These diffs should be applied to a local database of hashes to keep it up-to-date. If the local database is empty or excessively out-of-date, a complete snapshot of the database will be returned. This Method only updates a single ThreatList at a time. To update multiple ThreatList databases, this method needs to be called once for each list.",
           "response": {
-            "$ref": "GoogleCloudWebriskV1SearchHashesResponse"
+            "$ref": "GoogleCloudWebriskV1ComputeThreatListDiffResponse"
           },
           "parameters": {
-            "hashPrefix": {
+            "versionToken": {
               "location": "query",
-              "type": "string",
-              "description": "A hash prefix, consisting of the most significant 4-32 bytes of a SHA256 hash. For JSON requests, this field is base64-encoded. Note that if this parameter is provided by a URI, it must be encoded using the web safe base64 variant (RFC 4648).",
-              "format": "byte"
+              "format": "byte",
+              "description": "The current version token of the client for the requested list (the client version that was received from the last successful diff). If the client does not have a version token (this is the first time calling ComputeThreatListDiff), this may be left empty and a full database snapshot will be returned.",
+              "type": "string"
             },
-            "threatTypes": {
-              "type": "string",
+            "threatType": {
               "enumDescriptions": [
                 "No entries should match this threat type. This threat type is unused.",
                 "Malware targeting any platform.",
@@ -540,7 +463,6 @@
                 "Unwanted software targeting any platform.",
                 "A list of extended coverage social engineering URIs targeting any platform."
               ],
-              "repeated": true,
               "location": "query",
               "enum": [
                 "THREAT_TYPE_UNSPECIFIED",
@@ -549,31 +471,8 @@
                 "UNWANTED_SOFTWARE",
                 "SOCIAL_ENGINEERING_EXTENDED_COVERAGE"
               ],
-              "description": "Required. The ThreatLists to search in. Multiple ThreatLists may be specified."
-            }
-          },
-          "id": "webrisk.hashes.search",
-          "description": "Gets the full hashes that match the requested hash prefix. This is used after a hash prefix is looked up in a threatList and there is a match. The client side threatList only holds partial hashes so the client must query this method to determine if there is a full hash match of a threat.",
-          "flatPath": "v1/hashes:search",
-          "httpMethod": "GET",
-          "scopes": [
-            "https://www.googleapis.com/auth/cloud-platform"
-          ],
-          "path": "v1/hashes:search"
-        }
-      }
-    },
-    "threatLists": {
-      "methods": {
-        "computeDiff": {
-          "httpMethod": "GET",
-          "path": "v1/threatLists:computeDiff",
-          "parameters": {
-            "constraints.maxDiffEntries": {
-              "format": "int32",
-              "type": "integer",
-              "description": "The maximum size in number of entries. The diff will not contain more entries than this value. This should be a power of 2 between 2**10 and 2**20. If zero, no diff size limit is set.",
-              "location": "query"
+              "description": "Required. The threat list to update. Only a single ThreatType should be specified per request. If you want to handle multiple ThreatTypes, you must make one request per ThreatType.",
+              "type": "string"
             },
             "constraints.maxDatabaseEntries": {
               "format": "int32",
@@ -581,73 +480,63 @@
               "type": "integer",
               "description": "Sets the maximum number of entries that the client is willing to have in the local database. This should be a power of 2 between 2**10 and 2**20. If zero, no database size limit is set."
             },
-            "threatType": {
-              "description": "Required. The threat list to update. Only a single ThreatType should be specified per request. If you want to handle multiple ThreatTypes, you must make one request per ThreatType.",
-              "enumDescriptions": [
-                "No entries should match this threat type. This threat type is unused.",
-                "Malware targeting any platform.",
-                "Social engineering targeting any platform.",
-                "Unwanted software targeting any platform.",
-                "A list of extended coverage social engineering URIs targeting any platform."
-              ],
-              "type": "string",
-              "enum": [
-                "THREAT_TYPE_UNSPECIFIED",
-                "MALWARE",
-                "SOCIAL_ENGINEERING",
-                "UNWANTED_SOFTWARE",
-                "SOCIAL_ENGINEERING_EXTENDED_COVERAGE"
-              ],
-              "location": "query"
-            },
-            "versionToken": {
-              "description": "The current version token of the client for the requested list (the client version that was received from the last successful diff). If the client does not have a version token (this is the first time calling ComputeThreatListDiff), this may be left empty and a full database snapshot will be returned.",
-              "location": "query",
-              "format": "byte",
-              "type": "string"
-            },
             "constraints.supportedCompressions": {
-              "repeated": true,
-              "enum": [
-                "COMPRESSION_TYPE_UNSPECIFIED",
-                "RAW",
-                "RICE"
-              ],
-              "type": "string",
-              "location": "query",
               "description": "The compression types supported by the client.",
+              "location": "query",
+              "repeated": true,
+              "type": "string",
               "enumDescriptions": [
                 "Unknown.",
                 "Raw, uncompressed data.",
                 "Rice-Golomb encoded data."
+              ],
+              "enum": [
+                "COMPRESSION_TYPE_UNSPECIFIED",
+                "RAW",
+                "RICE"
               ]
+            },
+            "constraints.maxDiffEntries": {
+              "location": "query",
+              "format": "int32",
+              "type": "integer",
+              "description": "The maximum size in number of entries. The diff will not contain more entries than this value. This should be a power of 2 between 2**10 and 2**20. If zero, no diff size limit is set."
             }
           },
-          "id": "webrisk.threatLists.computeDiff",
           "scopes": [
             "https://www.googleapis.com/auth/cloud-platform"
           ],
-          "description": "Gets the most recent threat list diffs. These diffs should be applied to a local database of hashes to keep it up-to-date. If the local database is empty or excessively out-of-date, a complete snapshot of the database will be returned. This Method only updates a single ThreatList at a time. To update multiple ThreatList databases, this method needs to be called once for each list.",
-          "response": {
-            "$ref": "GoogleCloudWebriskV1ComputeThreatListDiffResponse"
-          },
+          "httpMethod": "GET",
+          "id": "webrisk.threatLists.computeDiff",
           "parameterOrder": [],
-          "flatPath": "v1/threatLists:computeDiff"
+          "path": "v1/threatLists:computeDiff"
         }
       }
     },
-    "uris": {
+    "hashes": {
       "methods": {
         "search": {
+          "description": "Gets the full hashes that match the requested hash prefix. This is used after a hash prefix is looked up in a threatList and there is a match. The client side threatList only holds partial hashes so the client must query this method to determine if there is a full hash match of a threat.",
+          "flatPath": "v1/hashes:search",
+          "path": "v1/hashes:search",
+          "id": "webrisk.hashes.search",
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform"
+          ],
           "response": {
-            "$ref": "GoogleCloudWebriskV1SearchUrisResponse"
+            "$ref": "GoogleCloudWebriskV1SearchHashesResponse"
           },
-          "description": "This method is used to check whether a URI is on a given threatList. Multiple threatLists may be searched in a single query. The response will list all requested threatLists the URI was found to match. If the URI is not found on any of the requested ThreatList an empty response will be returned.",
-          "httpMethod": "GET",
-          "path": "v1/uris:search",
           "parameterOrder": [],
           "parameters": {
+            "hashPrefix": {
+              "format": "byte",
+              "description": "A hash prefix, consisting of the most significant 4-32 bytes of a SHA256 hash. For JSON requests, this field is base64-encoded. Note that if this parameter is provided by a URI, it must be encoded using the web safe base64 variant (RFC 4648).",
+              "location": "query",
+              "type": "string"
+            },
             "threatTypes": {
+              "description": "Required. The ThreatLists to search in. Multiple ThreatLists may be specified.",
+              "repeated": true,
               "enumDescriptions": [
                 "No entries should match this threat type. This threat type is unused.",
                 "Malware targeting any platform.",
@@ -655,7 +544,7 @@
                 "Unwanted software targeting any platform.",
                 "A list of extended coverage social engineering URIs targeting any platform."
               ],
-              "repeated": true,
+              "type": "string",
               "location": "query",
               "enum": [
                 "THREAT_TYPE_UNSPECIFIED",
@@ -663,52 +552,123 @@
                 "SOCIAL_ENGINEERING",
                 "UNWANTED_SOFTWARE",
                 "SOCIAL_ENGINEERING_EXTENDED_COVERAGE"
-              ],
-              "type": "string",
-              "description": "Required. The ThreatLists to search in. Multiple ThreatLists may be specified."
-            },
-            "uri": {
-              "description": "Required. The URI to be checked for matches.",
-              "type": "string",
-              "location": "query"
+              ]
             }
           },
-          "flatPath": "v1/uris:search",
-          "id": "webrisk.uris.search",
-          "scopes": [
-            "https://www.googleapis.com/auth/cloud-platform"
-          ]
+          "httpMethod": "GET"
         }
       }
     },
     "projects": {
       "resources": {
-        "uris": {
+        "operations": {
           "methods": {
-            "submit": {
-              "path": "v1/{+parent}/uris:submit",
-              "id": "webrisk.projects.uris.submit",
+            "cancel": {
+              "description": "Starts asynchronous cancellation on a long-running operation. The server makes a best effort to cancel the operation, but success is not guaranteed. If the server doesn't support this method, it returns `google.rpc.Code.UNIMPLEMENTED`. Clients can use Operations.GetOperation or other methods to check whether the cancellation succeeded or whether the operation completed despite cancellation. On successful cancellation, the operation is not deleted; instead, it becomes an operation with an Operation.error value with a google.rpc.Status.code of 1, corresponding to `Code.CANCELLED`.",
+              "response": {
+                "$ref": "GoogleProtobufEmpty"
+              },
+              "parameterOrder": [
+                "name"
+              ],
+              "request": {
+                "$ref": "GoogleLongrunningCancelOperationRequest"
+              },
+              "path": "v1/{+name}:cancel",
+              "id": "webrisk.projects.operations.cancel",
+              "parameters": {
+                "name": {
+                  "description": "The name of the operation resource to be cancelled.",
+                  "pattern": "^projects/[^/]+/operations/[^/]+$",
+                  "type": "string",
+                  "location": "path",
+                  "required": true
+                }
+              },
+              "flatPath": "v1/projects/{projectsId}/operations/{operationsId}:cancel",
+              "httpMethod": "POST"
+            },
+            "list": {
+              "parameterOrder": [
+                "name"
+              ],
+              "response": {
+                "$ref": "GoogleLongrunningListOperationsResponse"
+              },
+              "parameters": {
+                "pageSize": {
+                  "type": "integer",
+                  "description": "The standard list page size.",
+                  "location": "query",
+                  "format": "int32"
+                },
+                "name": {
+                  "type": "string",
+                  "pattern": "^projects/[^/]+$",
+                  "location": "path",
+                  "description": "The name of the operation's parent resource.",
+                  "required": true
+                },
+                "filter": {
+                  "type": "string",
+                  "description": "The standard list filter.",
+                  "location": "query"
+                },
+                "pageToken": {
+                  "description": "The standard list page token.",
+                  "type": "string",
+                  "location": "query"
+                }
+              },
+              "httpMethod": "GET",
+              "id": "webrisk.projects.operations.list",
+              "flatPath": "v1/projects/{projectsId}/operations",
+              "description": "Lists operations that match the specified filter in the request. If the server doesn't support this method, it returns `UNIMPLEMENTED`.",
+              "path": "v1/{+name}/operations"
+            },
+            "delete": {
+              "parameterOrder": [
+                "name"
+              ],
+              "parameters": {
+                "name": {
+                  "description": "The name of the operation resource to be deleted.",
+                  "type": "string",
+                  "required": true,
+                  "location": "path",
+                  "pattern": "^projects/[^/]+/operations/[^/]+$"
+                }
+              },
+              "id": "webrisk.projects.operations.delete",
+              "flatPath": "v1/projects/{projectsId}/operations/{operationsId}",
+              "response": {
+                "$ref": "GoogleProtobufEmpty"
+              },
+              "path": "v1/{+name}",
+              "httpMethod": "DELETE",
+              "description": "Deletes a long-running operation. This method indicates that the client is no longer interested in the operation result. It does not cancel the operation. If the server doesn't support this method, it returns `google.rpc.Code.UNIMPLEMENTED`."
+            },
+            "get": {
+              "flatPath": "v1/projects/{projectsId}/operations/{operationsId}",
+              "parameters": {
+                "name": {
+                  "pattern": "^projects/[^/]+/operations/[^/]+$",
+                  "description": "The name of the operation resource.",
+                  "location": "path",
+                  "type": "string",
+                  "required": true
+                }
+              },
               "scopes": [
                 "https://www.googleapis.com/auth/cloud-platform"
               ],
+              "description": "Gets the latest state of a long-running operation. Clients can use this method to poll the operation result at intervals as recommended by the API service.",
               "parameterOrder": [
-                "parent"
+                "name"
               ],
-              "description": "Submits a URI suspected of containing malicious content to be reviewed. Returns a google.longrunning.Operation which, once the review is complete, is updated with its result. You can use the [Pub/Sub API] (https://cloud.google.com/pubsub) to receive notifications for the returned Operation. If the result verifies the existence of malicious content, the site will be added to the [Google's Social Engineering lists] (https://support.google.com/webmasters/answer/6350487/) in order to protect users that could get exposed to this threat in the future. Only allowlisted projects can use this method during Early Access. Please reach out to Sales or your customer engineer to obtain access.",
-              "request": {
-                "$ref": "GoogleCloudWebriskV1SubmitUriRequest"
-              },
-              "flatPath": "v1/projects/{projectsId}/uris:submit",
-              "httpMethod": "POST",
-              "parameters": {
-                "parent": {
-                  "description": "Required. The name of the project that is making the submission. This string is in the format \"projects/{project_number}\".",
-                  "type": "string",
-                  "pattern": "^projects/[^/]+$",
-                  "required": true,
-                  "location": "path"
-                }
-              },
+              "path": "v1/{+name}",
+              "id": "webrisk.projects.operations.get",
+              "httpMethod": "GET",
               "response": {
                 "$ref": "GoogleLongrunningOperation"
               }
@@ -718,163 +678,102 @@
         "submissions": {
           "methods": {
             "create": {
-              "request": {
-                "$ref": "GoogleCloudWebriskV1Submission"
+              "parameters": {
+                "parent": {
+                  "type": "string",
+                  "required": true,
+                  "description": "Required. The name of the project that is making the submission. This string is in the format \"projects/{project_number}\".",
+                  "pattern": "^projects/[^/]+$",
+                  "location": "path"
+                }
               },
-              "flatPath": "v1/projects/{projectsId}/submissions",
-              "httpMethod": "POST",
-              "id": "webrisk.projects.submissions.create",
-              "description": "Creates a Submission of a URI suspected of containing phishing content to be reviewed. If the result verifies the existence of malicious phishing content, the site will be added to the [Google's Social Engineering lists](https://support.google.com/webmasters/answer/6350487/) in order to protect users that could get exposed to this threat in the future. Only allowlisted projects can use this method during Early Access. Please reach out to Sales or your customer engineer to obtain access.",
               "parameterOrder": [
                 "parent"
               ],
-              "path": "v1/{+parent}/submissions",
-              "parameters": {
-                "parent": {
-                  "pattern": "^projects/[^/]+$",
-                  "description": "Required. The name of the project that is making the submission. This string is in the format \"projects/{project_number}\".",
-                  "type": "string",
-                  "required": true,
-                  "location": "path"
-                }
-              },
               "scopes": [
                 "https://www.googleapis.com/auth/cloud-platform"
               ],
+              "description": "Creates a Submission of a URI suspected of containing phishing content to be reviewed. If the result verifies the existence of malicious phishing content, the site will be added to the [Google's Social Engineering lists](https://support.google.com/webmasters/answer/6350487/) in order to protect users that could get exposed to this threat in the future. Only allowlisted projects can use this method during Early Access. Please reach out to Sales or your customer engineer to obtain access.",
               "response": {
                 "$ref": "GoogleCloudWebriskV1Submission"
-              }
+              },
+              "request": {
+                "$ref": "GoogleCloudWebriskV1Submission"
+              },
+              "id": "webrisk.projects.submissions.create",
+              "path": "v1/{+parent}/submissions",
+              "httpMethod": "POST",
+              "flatPath": "v1/projects/{projectsId}/submissions"
             }
           }
-        },
-        "operations": {
-          "methods": {
-            "delete": {
-              "id": "webrisk.projects.operations.delete",
-              "flatPath": "v1/projects/{projectsId}/operations/{operationsId}",
-              "path": "v1/{+name}",
-              "parameterOrder": [
-                "name"
+        }
+      }
+    },
+    "uris": {
+      "methods": {
+        "search": {
+          "path": "v1/uris:search",
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform"
+          ],
+          "parameterOrder": [],
+          "description": "This method is used to check whether a URI is on a given threatList. Multiple threatLists may be searched in a single query. The response will list all requested threatLists the URI was found to match. If the URI is not found on any of the requested ThreatList an empty response will be returned.",
+          "httpMethod": "GET",
+          "id": "webrisk.uris.search",
+          "response": {
+            "$ref": "GoogleCloudWebriskV1SearchUrisResponse"
+          },
+          "flatPath": "v1/uris:search",
+          "parameters": {
+            "threatTypes": {
+              "enum": [
+                "THREAT_TYPE_UNSPECIFIED",
+                "MALWARE",
+                "SOCIAL_ENGINEERING",
+                "UNWANTED_SOFTWARE",
+                "SOCIAL_ENGINEERING_EXTENDED_COVERAGE"
               ],
-              "parameters": {
-                "name": {
-                  "type": "string",
-                  "location": "path",
-                  "required": true,
-                  "pattern": "^projects/[^/]+/operations/[^/]+$",
-                  "description": "The name of the operation resource to be deleted."
-                }
-              },
-              "description": "Deletes a long-running operation. This method indicates that the client is no longer interested in the operation result. It does not cancel the operation. If the server doesn't support this method, it returns `google.rpc.Code.UNIMPLEMENTED`.",
-              "httpMethod": "DELETE",
-              "response": {
-                "$ref": "GoogleProtobufEmpty"
-              }
+              "enumDescriptions": [
+                "No entries should match this threat type. This threat type is unused.",
+                "Malware targeting any platform.",
+                "Social engineering targeting any platform.",
+                "Unwanted software targeting any platform.",
+                "A list of extended coverage social engineering URIs targeting any platform."
+              ],
+              "location": "query",
+              "description": "Required. The ThreatLists to search in. Multiple ThreatLists may be specified.",
+              "type": "string",
+              "repeated": true
             },
-            "get": {
-              "response": {
-                "$ref": "GoogleLongrunningOperation"
-              },
-              "httpMethod": "GET",
-              "flatPath": "v1/projects/{projectsId}/operations/{operationsId}",
-              "description": "Gets the latest state of a long-running operation. Clients can use this method to poll the operation result at intervals as recommended by the API service.",
-              "parameters": {
-                "name": {
-                  "location": "path",
-                  "description": "The name of the operation resource.",
-                  "required": true,
-                  "type": "string",
-                  "pattern": "^projects/[^/]+/operations/[^/]+$"
-                }
-              },
-              "path": "v1/{+name}",
-              "parameterOrder": [
-                "name"
-              ],
-              "id": "webrisk.projects.operations.get",
-              "scopes": [
-                "https://www.googleapis.com/auth/cloud-platform"
-              ]
-            },
-            "list": {
-              "httpMethod": "GET",
-              "flatPath": "v1/projects/{projectsId}/operations",
-              "response": {
-                "$ref": "GoogleLongrunningListOperationsResponse"
-              },
-              "id": "webrisk.projects.operations.list",
-              "parameters": {
-                "name": {
-                  "required": true,
-                  "description": "The name of the operation's parent resource.",
-                  "type": "string",
-                  "pattern": "^projects/[^/]+$",
-                  "location": "path"
-                },
-                "pageToken": {
-                  "type": "string",
-                  "description": "The standard list page token.",
-                  "location": "query"
-                },
-                "pageSize": {
-                  "format": "int32",
-                  "description": "The standard list page size.",
-                  "type": "integer",
-                  "location": "query"
-                },
-                "filter": {
-                  "location": "query",
-                  "description": "The standard list filter.",
-                  "type": "string"
-                }
-              },
-              "parameterOrder": [
-                "name"
-              ],
-              "description": "Lists operations that match the specified filter in the request. If the server doesn't support this method, it returns `UNIMPLEMENTED`. NOTE: the `name` binding allows API services to override the binding to use different resource name schemes, such as `users/*/operations`. To override the binding, API services can add a binding such as `\"/v1/{name=users/*}/operations\"` to their service configuration. For backwards compatibility, the default name includes the operations collection id, however overriding users must ensure the name binding is the parent resource, without the operations collection id.",
-              "path": "v1/{+name}/operations"
-            },
-            "cancel": {
-              "request": {
-                "$ref": "GoogleLongrunningCancelOperationRequest"
-              },
-              "parameterOrder": [
-                "name"
-              ],
-              "flatPath": "v1/projects/{projectsId}/operations/{operationsId}:cancel",
-              "path": "v1/{+name}:cancel",
-              "id": "webrisk.projects.operations.cancel",
-              "parameters": {
-                "name": {
-                  "description": "The name of the operation resource to be cancelled.",
-                  "type": "string",
-                  "pattern": "^projects/[^/]+/operations/[^/]+$",
-                  "required": true,
-                  "location": "path"
-                }
-              },
-              "response": {
-                "$ref": "GoogleProtobufEmpty"
-              },
-              "description": "Starts asynchronous cancellation on a long-running operation. The server makes a best effort to cancel the operation, but success is not guaranteed. If the server doesn't support this method, it returns `google.rpc.Code.UNIMPLEMENTED`. Clients can use Operations.GetOperation or other methods to check whether the cancellation succeeded or whether the operation completed despite cancellation. On successful cancellation, the operation is not deleted; instead, it becomes an operation with an Operation.error value with a google.rpc.Status.code of 1, corresponding to `Code.CANCELLED`.",
-              "httpMethod": "POST"
+            "uri": {
+              "type": "string",
+              "description": "Required. The URI to be checked for matches.",
+              "location": "query"
             }
           }
         }
       }
     }
   },
-  "kind": "discovery#restDescription",
+  "ownerName": "Google",
   "ownerDomain": "google.com",
   "batchPath": "batch",
-  "version": "v1",
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
+  "kind": "discovery#restDescription",
   "protocol": "rest",
   "fullyEncodeReservedExpansion": true,
-  "revision": "20221016",
-  "servicePath": "",
+  "description": "",
+  "revision": "20230304",
+  "name": "webrisk",
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        }
+      }
+    }
+  },
+  "canonicalName": "Web Risk",
+  "rootUrl": "https://webrisk.googleapis.com/",
   "title": "Web Risk API"
 }
