@@ -1,85 +1,33 @@
 {
+  "batchPath": "batch",
   "schemas": {
-    "GoogleProtobufEmpty": {
-      "id": "GoogleProtobufEmpty",
-      "description": "A generic empty message that you can re-use to avoid defining duplicated empty messages in your APIs. A typical example is to use it as the request or the response type of an API method. For instance: service Foo { rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty); }",
-      "type": "object",
-      "properties": {}
-    },
-    "GoogleCloudEssentialcontactsV1SendTestMessageRequest": {
-      "properties": {
-        "contacts": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Required. The list of names of the contacts to send a test message to. Format: organizations/{organization_id}/contacts/{contact_id}, folders/{folder_id}/contacts/{contact_id} or projects/{project_id}/contacts/{contact_id}"
-        },
-        "notificationCategory": {
-          "enum": [
-            "NOTIFICATION_CATEGORY_UNSPECIFIED",
-            "ALL",
-            "SUSPENSION",
-            "SECURITY",
-            "TECHNICAL",
-            "BILLING",
-            "LEGAL",
-            "PRODUCT_UPDATES",
-            "TECHNICAL_INCIDENTS"
-          ],
-          "description": "Required. The notification category to send the test message for. All contacts must be subscribed to this category.",
-          "enumDescriptions": [
-            "Notification category is unrecognized or unspecified.",
-            "All notifications related to the resource, including notifications pertaining to categories added in the future.",
-            "Notifications related to imminent account suspension.",
-            "Notifications related to security/privacy incidents, notifications, and vulnerabilities.",
-            "Notifications related to technical events and issues such as outages, errors, or bugs.",
-            "Notifications related to billing and payments notifications, price updates, errors, or credits.",
-            "Notifications related to enforcement actions, regulatory compliance, or government notices.",
-            "Notifications related to new versions, product terms updates, or deprecations.",
-            "Child category of TECHNICAL. If assigned, technical incident notifications will go to these contacts instead of TECHNICAL."
-          ],
-          "type": "string"
-        }
-      },
-      "id": "GoogleCloudEssentialcontactsV1SendTestMessageRequest",
-      "description": "Request message for the SendTestMessage method.",
-      "type": "object"
-    },
-    "GoogleCloudEssentialcontactsV1ListContactsResponse": {
-      "id": "GoogleCloudEssentialcontactsV1ListContactsResponse",
-      "description": "Response message for the ListContacts method.",
-      "properties": {
-        "contacts": {
-          "type": "array",
-          "description": "The contacts for the specified resource.",
-          "items": {
-            "$ref": "GoogleCloudEssentialcontactsV1Contact"
-          }
-        },
-        "nextPageToken": {
-          "description": "If there are more results than those appearing in this response, then `next_page_token` is included. To get the next set of results, call this method again using the value of `next_page_token` as `page_token` and the rest of the parameters the same as the original request.",
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
     "GoogleCloudEssentialcontactsV1Contact": {
-      "description": "A contact that will receive notifications from Google Cloud.",
       "id": "GoogleCloudEssentialcontactsV1Contact",
+      "description": "A contact that will receive notifications from Google Cloud.",
       "type": "object",
       "properties": {
+        "validationState": {
+          "type": "string",
+          "enumDescriptions": [
+            "The validation state is unknown or unspecified.",
+            "The contact is marked as valid. This is usually done manually by the contact admin. All new contacts begin in the valid state.",
+            "The contact is considered invalid. This may become the state if the contact's email is found to be unreachable."
+          ],
+          "enum": [
+            "VALIDATION_STATE_UNSPECIFIED",
+            "VALID",
+            "INVALID"
+          ],
+          "description": "The validity of the contact. A contact is considered valid if it is the correct recipient for notifications for a particular resource."
+        },
         "validateTime": {
           "description": "The last time the validation_state was updated, either manually or automatically. A contact is considered stale if its validation state was updated more than 1 year ago.",
           "type": "string",
           "format": "google-datetime"
         },
-        "name": {
-          "readOnly": true,
-          "description": "Output only. The identifier for the contact. Format: {resource_type}/{resource_id}/contacts/{contact_id}",
-          "type": "string"
-        },
         "notificationCategorySubscriptions": {
+          "type": "array",
+          "description": "Required. The categories of notifications that the contact will receive communications for.",
           "items": {
             "enum": [
               "NOTIFICATION_CATEGORY_UNSPECIFIED",
@@ -104,53 +52,108 @@
               "Notifications related to new versions, product terms updates, or deprecations.",
               "Child category of TECHNICAL. If assigned, technical incident notifications will go to these contacts instead of TECHNICAL."
             ]
-          },
-          "type": "array",
-          "description": "Required. The categories of notifications that the contact will receive communications for."
+          }
         },
         "email": {
-          "type": "string",
-          "description": "Required. The email address to send notifications to. The email address does not need to be a Google Account."
+          "description": "Required. The email address to send notifications to. The email address does not need to be a Google Account.",
+          "type": "string"
         },
-        "validationState": {
-          "description": "The validity of the contact. A contact is considered valid if it is the correct recipient for notifications for a particular resource.",
-          "enum": [
-            "VALIDATION_STATE_UNSPECIFIED",
-            "VALID",
-            "INVALID"
-          ],
-          "type": "string",
-          "enumDescriptions": [
-            "The validation state is unknown or unspecified.",
-            "The contact is marked as valid. This is usually done manually by the contact admin. All new contacts begin in the valid state.",
-            "The contact is considered invalid. This may become the state if the contact's email is found to be unreachable."
-          ]
+        "name": {
+          "description": "Output only. The identifier for the contact. Format: {resource_type}/{resource_id}/contacts/{contact_id}",
+          "readOnly": true,
+          "type": "string"
         },
         "languageTag": {
-          "type": "string",
-          "description": "Required. The preferred language for notifications, as a ISO 639-1 language code. See [Supported languages](https://cloud.google.com/resource-manager/docs/managing-notification-contacts#supported-languages) for a list of supported languages."
+          "description": "Required. The preferred language for notifications, as a ISO 639-1 language code. See [Supported languages](https://cloud.google.com/resource-manager/docs/managing-notification-contacts#supported-languages) for a list of supported languages.",
+          "type": "string"
         }
       }
     },
-    "GoogleCloudEssentialcontactsV1ComputeContactsResponse": {
-      "description": "Response message for the ComputeContacts method.",
-      "id": "GoogleCloudEssentialcontactsV1ComputeContactsResponse",
+    "GoogleProtobufEmpty": {
+      "type": "object",
+      "description": "A generic empty message that you can re-use to avoid defining duplicated empty messages in your APIs. A typical example is to use it as the request or the response type of an API method. For instance: service Foo { rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty); }",
+      "properties": {},
+      "id": "GoogleProtobufEmpty"
+    },
+    "GoogleCloudEssentialcontactsV1ListContactsResponse": {
       "properties": {
         "nextPageToken": {
-          "type": "string",
-          "description": "If there are more results than those appearing in this response, then `next_page_token` is included. To get the next set of results, call this method again using the value of `next_page_token` as `page_token` and the rest of the parameters the same as the original request."
+          "description": "If there are more results than those appearing in this response, then `next_page_token` is included. To get the next set of results, call this method again using the value of `next_page_token` as `page_token` and the rest of the parameters the same as the original request.",
+          "type": "string"
         },
+        "contacts": {
+          "type": "array",
+          "description": "The contacts for the specified resource.",
+          "items": {
+            "$ref": "GoogleCloudEssentialcontactsV1Contact"
+          }
+        }
+      },
+      "id": "GoogleCloudEssentialcontactsV1ListContactsResponse",
+      "type": "object",
+      "description": "Response message for the ListContacts method."
+    },
+    "GoogleCloudEssentialcontactsV1ComputeContactsResponse": {
+      "properties": {
         "contacts": {
           "items": {
             "$ref": "GoogleCloudEssentialcontactsV1Contact"
           },
-          "type": "array",
-          "description": "All contacts for the resource that are subscribed to the specified notification categories, including contacts inherited from any parent resources."
+          "description": "All contacts for the resource that are subscribed to the specified notification categories, including contacts inherited from any parent resources.",
+          "type": "array"
+        },
+        "nextPageToken": {
+          "type": "string",
+          "description": "If there are more results than those appearing in this response, then `next_page_token` is included. To get the next set of results, call this method again using the value of `next_page_token` as `page_token` and the rest of the parameters the same as the original request."
         }
       },
+      "description": "Response message for the ComputeContacts method.",
+      "id": "GoogleCloudEssentialcontactsV1ComputeContactsResponse",
       "type": "object"
+    },
+    "GoogleCloudEssentialcontactsV1SendTestMessageRequest": {
+      "type": "object",
+      "properties": {
+        "notificationCategory": {
+          "enum": [
+            "NOTIFICATION_CATEGORY_UNSPECIFIED",
+            "ALL",
+            "SUSPENSION",
+            "SECURITY",
+            "TECHNICAL",
+            "BILLING",
+            "LEGAL",
+            "PRODUCT_UPDATES",
+            "TECHNICAL_INCIDENTS"
+          ],
+          "type": "string",
+          "description": "Required. The notification category to send the test message for. All contacts must be subscribed to this category.",
+          "enumDescriptions": [
+            "Notification category is unrecognized or unspecified.",
+            "All notifications related to the resource, including notifications pertaining to categories added in the future.",
+            "Notifications related to imminent account suspension.",
+            "Notifications related to security/privacy incidents, notifications, and vulnerabilities.",
+            "Notifications related to technical events and issues such as outages, errors, or bugs.",
+            "Notifications related to billing and payments notifications, price updates, errors, or credits.",
+            "Notifications related to enforcement actions, regulatory compliance, or government notices.",
+            "Notifications related to new versions, product terms updates, or deprecations.",
+            "Child category of TECHNICAL. If assigned, technical incident notifications will go to these contacts instead of TECHNICAL."
+          ]
+        },
+        "contacts": {
+          "description": "Required. The list of names of the contacts to send a test message to. Format: organizations/{organization_id}/contacts/{contact_id}, folders/{folder_id}/contacts/{contact_id} or projects/{project_id}/contacts/{contact_id}",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Request message for the SendTestMessage method.",
+      "id": "GoogleCloudEssentialcontactsV1SendTestMessageRequest"
     }
   },
+  "ownerName": "Google",
+  "version": "v1",
   "resources": {
     "organizations": {
       "resources": {
@@ -158,141 +161,204 @@
           "methods": {
             "delete": {
               "httpMethod": "DELETE",
+              "flatPath": "v1/organizations/{organizationsId}/contacts/{contactsId}",
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
+              ],
+              "description": "Deletes a contact.",
+              "path": "v1/{+name}",
               "parameters": {
                 "name": {
                   "location": "path",
-                  "description": "Required. The name of the contact to delete. Format: organizations/{organization_id}/contacts/{contact_id}, folders/{folder_id}/contacts/{contact_id} or projects/{project_id}/contacts/{contact_id}",
                   "pattern": "^organizations/[^/]+/contacts/[^/]+$",
-                  "required": true,
-                  "type": "string"
+                  "type": "string",
+                  "description": "Required. The name of the contact to delete. Format: organizations/{organization_id}/contacts/{contact_id}, folders/{folder_id}/contacts/{contact_id} or projects/{project_id}/contacts/{contact_id}",
+                  "required": true
                 }
               },
-              "path": "v1/{+name}",
+              "id": "essentialcontacts.organizations.contacts.delete",
               "parameterOrder": [
                 "name"
               ],
-              "description": "Deletes a contact.",
-              "flatPath": "v1/organizations/{organizationsId}/contacts/{contactsId}",
-              "id": "essentialcontacts.organizations.contacts.delete",
               "response": {
                 "$ref": "GoogleProtobufEmpty"
               }
             },
-            "list": {
-              "parameters": {
-                "pageToken": {
-                  "type": "string",
-                  "description": "Optional. If present, retrieves the next batch of results from the preceding call to this method. `page_token` must be the value of `next_page_token` from the previous response. The values of other method parameters should be identical to those in the previous call.",
-                  "location": "query"
-                },
-                "parent": {
-                  "location": "path",
-                  "pattern": "^organizations/[^/]+$",
-                  "type": "string",
-                  "required": true,
-                  "description": "Required. The parent resource name. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}"
-                },
-                "pageSize": {
-                  "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of `next_page_token` in the response indicates that more results might be available. If not specified, the default page_size is 100.",
-                  "type": "integer",
-                  "location": "query",
-                  "format": "int32"
-                }
-              },
-              "parameterOrder": [
-                "parent"
-              ],
-              "description": "Lists the contacts that have been set on a resource.",
-              "httpMethod": "GET",
-              "path": "v1/{+parent}/contacts",
-              "flatPath": "v1/organizations/{organizationsId}/contacts",
-              "response": {
-                "$ref": "GoogleCloudEssentialcontactsV1ListContactsResponse"
-              },
-              "id": "essentialcontacts.organizations.contacts.list"
-            },
-            "create": {
-              "description": "Adds a new contact for a resource.",
-              "response": {
-                "$ref": "GoogleCloudEssentialcontactsV1Contact"
-              },
-              "parameters": {
-                "parent": {
-                  "type": "string",
-                  "description": "Required. The resource to save this contact for. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}",
-                  "pattern": "^organizations/[^/]+$",
-                  "required": true,
-                  "location": "path"
-                }
-              },
-              "id": "essentialcontacts.organizations.contacts.create",
-              "parameterOrder": [
-                "parent"
-              ],
-              "httpMethod": "POST",
-              "request": {
-                "$ref": "GoogleCloudEssentialcontactsV1Contact"
-              },
-              "flatPath": "v1/organizations/{organizationsId}/contacts",
-              "path": "v1/{+parent}/contacts"
-            },
             "sendTestMessage": {
+              "path": "v1/{+resource}/contacts:sendTestMessage",
+              "httpMethod": "POST",
               "request": {
                 "$ref": "GoogleCloudEssentialcontactsV1SendTestMessageRequest"
               },
-              "path": "v1/{+resource}/contacts:sendTestMessage",
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
+              ],
               "description": "Allows a contact admin to send a test message to contact to verify that it has been configured correctly.",
-              "id": "essentialcontacts.organizations.contacts.sendTestMessage",
-              "httpMethod": "POST",
               "response": {
                 "$ref": "GoogleProtobufEmpty"
               },
+              "flatPath": "v1/organizations/{organizationsId}/contacts:sendTestMessage",
               "parameters": {
                 "resource": {
+                  "required": true,
+                  "description": "Required. The name of the resource to send the test message for. All contacts must either be set directly on this resource or inherited from another resource that is an ancestor of this one. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}",
                   "location": "path",
                   "type": "string",
-                  "description": "Required. The name of the resource to send the test message for. All contacts must either be set directly on this resource or inherited from another resource that is an ancestor of this one. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}",
-                  "pattern": "^organizations/[^/]+$",
-                  "required": true
+                  "pattern": "^organizations/[^/]+$"
                 }
               },
+              "id": "essentialcontacts.organizations.contacts.sendTestMessage",
               "parameterOrder": [
                 "resource"
-              ],
-              "flatPath": "v1/organizations/{organizationsId}/contacts:sendTestMessage"
+              ]
             },
-            "get": {
+            "create": {
+              "parameterOrder": [
+                "parent"
+              ],
+              "httpMethod": "POST",
+              "parameters": {
+                "parent": {
+                  "location": "path",
+                  "type": "string",
+                  "pattern": "^organizations/[^/]+$",
+                  "required": true,
+                  "description": "Required. The resource to save this contact for. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}"
+                }
+              },
+              "description": "Adds a new contact for a resource.",
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
+              ],
+              "request": {
+                "$ref": "GoogleCloudEssentialcontactsV1Contact"
+              },
               "response": {
                 "$ref": "GoogleCloudEssentialcontactsV1Contact"
               },
-              "path": "v1/{+name}",
-              "parameters": {
-                "name": {
-                  "description": "Required. The name of the contact to retrieve. Format: organizations/{organization_id}/contacts/{contact_id}, folders/{folder_id}/contacts/{contact_id} or projects/{project_id}/contacts/{contact_id}",
-                  "pattern": "^organizations/[^/]+/contacts/[^/]+$",
-                  "type": "string",
-                  "required": true,
-                  "location": "path"
-                }
-              },
-              "parameterOrder": [
-                "name"
-              ],
-              "id": "essentialcontacts.organizations.contacts.get",
-              "httpMethod": "GET",
-              "flatPath": "v1/organizations/{organizationsId}/contacts/{contactsId}",
-              "description": "Gets a single contact."
+              "id": "essentialcontacts.organizations.contacts.create",
+              "flatPath": "v1/organizations/{organizationsId}/contacts",
+              "path": "v1/{+parent}/contacts"
             },
-            "compute": {
+            "list": {
+              "httpMethod": "GET",
+              "path": "v1/{+parent}/contacts",
+              "id": "essentialcontacts.organizations.contacts.list",
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
+              ],
               "parameters": {
+                "pageSize": {
+                  "format": "int32",
+                  "location": "query",
+                  "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of `next_page_token` in the response indicates that more results might be available. If not specified, the default page_size is 100.",
+                  "type": "integer"
+                },
                 "pageToken": {
                   "location": "query",
                   "description": "Optional. If present, retrieves the next batch of results from the preceding call to this method. `page_token` must be the value of `next_page_token` from the previous response. The values of other method parameters should be identical to those in the previous call.",
                   "type": "string"
                 },
+                "parent": {
+                  "pattern": "^organizations/[^/]+$",
+                  "location": "path",
+                  "type": "string",
+                  "required": true,
+                  "description": "Required. The parent resource name. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}"
+                }
+              },
+              "description": "Lists the contacts that have been set on a resource.",
+              "parameterOrder": [
+                "parent"
+              ],
+              "flatPath": "v1/organizations/{organizationsId}/contacts",
+              "response": {
+                "$ref": "GoogleCloudEssentialcontactsV1ListContactsResponse"
+              }
+            },
+            "patch": {
+              "path": "v1/{+name}",
+              "parameters": {
+                "updateMask": {
+                  "description": "Optional. The update mask applied to the resource. For the `FieldMask` definition, see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#fieldmask",
+                  "type": "string",
+                  "location": "query",
+                  "format": "google-fieldmask"
+                },
+                "name": {
+                  "pattern": "^organizations/[^/]+/contacts/[^/]+$",
+                  "required": true,
+                  "type": "string",
+                  "description": "Output only. The identifier for the contact. Format: {resource_type}/{resource_id}/contacts/{contact_id}",
+                  "location": "path"
+                }
+              },
+              "httpMethod": "PATCH",
+              "response": {
+                "$ref": "GoogleCloudEssentialcontactsV1Contact"
+              },
+              "id": "essentialcontacts.organizations.contacts.patch",
+              "flatPath": "v1/organizations/{organizationsId}/contacts/{contactsId}",
+              "request": {
+                "$ref": "GoogleCloudEssentialcontactsV1Contact"
+              },
+              "parameterOrder": [
+                "name"
+              ],
+              "description": "Updates a contact. Note: A contact's email address cannot be changed.",
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
+              ]
+            },
+            "get": {
+              "id": "essentialcontacts.organizations.contacts.get",
+              "flatPath": "v1/organizations/{organizationsId}/contacts/{contactsId}",
+              "description": "Gets a single contact.",
+              "response": {
+                "$ref": "GoogleCloudEssentialcontactsV1Contact"
+              },
+              "httpMethod": "GET",
+              "parameters": {
+                "name": {
+                  "location": "path",
+                  "description": "Required. The name of the contact to retrieve. Format: organizations/{organization_id}/contacts/{contact_id}, folders/{folder_id}/contacts/{contact_id} or projects/{project_id}/contacts/{contact_id}",
+                  "required": true,
+                  "pattern": "^organizations/[^/]+/contacts/[^/]+$",
+                  "type": "string"
+                }
+              },
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
+              ],
+              "parameterOrder": [
+                "name"
+              ],
+              "path": "v1/{+name}"
+            },
+            "compute": {
+              "flatPath": "v1/organizations/{organizationsId}/contacts:compute",
+              "parameters": {
+                "pageSize": {
+                  "type": "integer",
+                  "format": "int32",
+                  "location": "query",
+                  "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of `next_page_token` in the response indicates that more results might be available. If not specified, the default page_size is 100."
+                },
+                "pageToken": {
+                  "location": "query",
+                  "description": "Optional. If present, retrieves the next batch of results from the preceding call to this method. `page_token` must be the value of `next_page_token` from the previous response. The values of other method parameters should be identical to those in the previous call.",
+                  "type": "string"
+                },
+                "parent": {
+                  "location": "path",
+                  "required": true,
+                  "pattern": "^organizations/[^/]+$",
+                  "description": "Required. The name of the resource to compute contacts for. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}",
+                  "type": "string"
+                },
                 "notificationCategories": {
-                  "repeated": true,
-                  "description": "The categories of notifications to compute contacts for. If ALL is included in this list, contacts subscribed to any notification category will be returned.",
+                  "location": "query",
+                  "type": "string",
                   "enumDescriptions": [
                     "Notification category is unrecognized or unspecified.",
                     "All notifications related to the resource, including notifications pertaining to categories added in the future.",
@@ -304,6 +370,7 @@
                     "Notifications related to new versions, product terms updates, or deprecations.",
                     "Child category of TECHNICAL. If assigned, technical incident notifications will go to these contacts instead of TECHNICAL."
                   ],
+                  "description": "The categories of notifications to compute contacts for. If ALL is included in this list, contacts subscribed to any notification category will be returned.",
                   "enum": [
                     "NOTIFICATION_CATEGORY_UNSPECIFIED",
                     "ALL",
@@ -315,64 +382,21 @@
                     "PRODUCT_UPDATES",
                     "TECHNICAL_INCIDENTS"
                   ],
-                  "type": "string",
-                  "location": "query"
-                },
-                "parent": {
-                  "pattern": "^organizations/[^/]+$",
-                  "type": "string",
-                  "location": "path",
-                  "required": true,
-                  "description": "Required. The name of the resource to compute contacts for. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}"
-                },
-                "pageSize": {
-                  "format": "int32",
-                  "location": "query",
-                  "type": "integer",
-                  "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of `next_page_token` in the response indicates that more results might be available. If not specified, the default page_size is 100."
+                  "repeated": true
                 }
               },
-              "path": "v1/{+parent}/contacts:compute",
-              "response": {
-                "$ref": "GoogleCloudEssentialcontactsV1ComputeContactsResponse"
-              },
-              "httpMethod": "GET",
-              "flatPath": "v1/organizations/{organizationsId}/contacts:compute",
               "parameterOrder": [
                 "parent"
               ],
+              "id": "essentialcontacts.organizations.contacts.compute",
+              "path": "v1/{+parent}/contacts:compute",
+              "httpMethod": "GET",
               "description": "Lists all contacts for the resource that are subscribed to the specified notification categories, including contacts inherited from any parent resources.",
-              "id": "essentialcontacts.organizations.contacts.compute"
-            },
-            "patch": {
-              "id": "essentialcontacts.organizations.contacts.patch",
-              "response": {
-                "$ref": "GoogleCloudEssentialcontactsV1Contact"
-              },
-              "description": "Updates a contact. Note: A contact's email address cannot be changed.",
-              "path": "v1/{+name}",
-              "parameterOrder": [
-                "name"
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
               ],
-              "request": {
-                "$ref": "GoogleCloudEssentialcontactsV1Contact"
-              },
-              "httpMethod": "PATCH",
-              "flatPath": "v1/organizations/{organizationsId}/contacts/{contactsId}",
-              "parameters": {
-                "updateMask": {
-                  "location": "query",
-                  "description": "Optional. The update mask applied to the resource. For the `FieldMask` definition, see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#fieldmask",
-                  "format": "google-fieldmask",
-                  "type": "string"
-                },
-                "name": {
-                  "type": "string",
-                  "pattern": "^organizations/[^/]+/contacts/[^/]+$",
-                  "required": true,
-                  "description": "Output only. The identifier for the contact. Format: {resource_type}/{resource_id}/contacts/{contact_id}",
-                  "location": "path"
-                }
+              "response": {
+                "$ref": "GoogleCloudEssentialcontactsV1ComputeContactsResponse"
               }
             }
           }
@@ -383,19 +407,198 @@
       "resources": {
         "contacts": {
           "methods": {
-            "compute": {
+            "create": {
+              "description": "Adds a new contact for a resource.",
+              "id": "essentialcontacts.projects.contacts.create",
+              "httpMethod": "POST",
+              "request": {
+                "$ref": "GoogleCloudEssentialcontactsV1Contact"
+              },
               "parameterOrder": [
                 "parent"
               ],
               "response": {
-                "$ref": "GoogleCloudEssentialcontactsV1ComputeContactsResponse"
+                "$ref": "GoogleCloudEssentialcontactsV1Contact"
               },
-              "id": "essentialcontacts.projects.contacts.compute",
-              "flatPath": "v1/projects/{projectsId}/contacts:compute",
-              "httpMethod": "GET",
-              "path": "v1/{+parent}/contacts:compute",
-              "description": "Lists all contacts for the resource that are subscribed to the specified notification categories, including contacts inherited from any parent resources.",
               "parameters": {
+                "parent": {
+                  "type": "string",
+                  "pattern": "^projects/[^/]+$",
+                  "description": "Required. The resource to save this contact for. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}",
+                  "location": "path",
+                  "required": true
+                }
+              },
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
+              ],
+              "flatPath": "v1/projects/{projectsId}/contacts",
+              "path": "v1/{+parent}/contacts"
+            },
+            "list": {
+              "id": "essentialcontacts.projects.contacts.list",
+              "path": "v1/{+parent}/contacts",
+              "parameters": {
+                "pageSize": {
+                  "format": "int32",
+                  "location": "query",
+                  "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of `next_page_token` in the response indicates that more results might be available. If not specified, the default page_size is 100.",
+                  "type": "integer"
+                },
+                "parent": {
+                  "required": true,
+                  "description": "Required. The parent resource name. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}",
+                  "pattern": "^projects/[^/]+$",
+                  "type": "string",
+                  "location": "path"
+                },
+                "pageToken": {
+                  "description": "Optional. If present, retrieves the next batch of results from the preceding call to this method. `page_token` must be the value of `next_page_token` from the previous response. The values of other method parameters should be identical to those in the previous call.",
+                  "type": "string",
+                  "location": "query"
+                }
+              },
+              "flatPath": "v1/projects/{projectsId}/contacts",
+              "description": "Lists the contacts that have been set on a resource.",
+              "parameterOrder": [
+                "parent"
+              ],
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
+              ],
+              "httpMethod": "GET",
+              "response": {
+                "$ref": "GoogleCloudEssentialcontactsV1ListContactsResponse"
+              }
+            },
+            "sendTestMessage": {
+              "parameters": {
+                "resource": {
+                  "pattern": "^projects/[^/]+$",
+                  "description": "Required. The name of the resource to send the test message for. All contacts must either be set directly on this resource or inherited from another resource that is an ancestor of this one. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}",
+                  "required": true,
+                  "type": "string",
+                  "location": "path"
+                }
+              },
+              "id": "essentialcontacts.projects.contacts.sendTestMessage",
+              "flatPath": "v1/projects/{projectsId}/contacts:sendTestMessage",
+              "description": "Allows a contact admin to send a test message to contact to verify that it has been configured correctly.",
+              "request": {
+                "$ref": "GoogleCloudEssentialcontactsV1SendTestMessageRequest"
+              },
+              "httpMethod": "POST",
+              "response": {
+                "$ref": "GoogleProtobufEmpty"
+              },
+              "path": "v1/{+resource}/contacts:sendTestMessage",
+              "parameterOrder": [
+                "resource"
+              ],
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
+              ]
+            },
+            "get": {
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
+              ],
+              "parameters": {
+                "name": {
+                  "description": "Required. The name of the contact to retrieve. Format: organizations/{organization_id}/contacts/{contact_id}, folders/{folder_id}/contacts/{contact_id} or projects/{project_id}/contacts/{contact_id}",
+                  "type": "string",
+                  "location": "path",
+                  "required": true,
+                  "pattern": "^projects/[^/]+/contacts/[^/]+$"
+                }
+              },
+              "path": "v1/{+name}",
+              "parameterOrder": [
+                "name"
+              ],
+              "description": "Gets a single contact.",
+              "httpMethod": "GET",
+              "flatPath": "v1/projects/{projectsId}/contacts/{contactsId}",
+              "response": {
+                "$ref": "GoogleCloudEssentialcontactsV1Contact"
+              },
+              "id": "essentialcontacts.projects.contacts.get"
+            },
+            "delete": {
+              "parameterOrder": [
+                "name"
+              ],
+              "description": "Deletes a contact.",
+              "flatPath": "v1/projects/{projectsId}/contacts/{contactsId}",
+              "path": "v1/{+name}",
+              "httpMethod": "DELETE",
+              "response": {
+                "$ref": "GoogleProtobufEmpty"
+              },
+              "parameters": {
+                "name": {
+                  "type": "string",
+                  "description": "Required. The name of the contact to delete. Format: organizations/{organization_id}/contacts/{contact_id}, folders/{folder_id}/contacts/{contact_id} or projects/{project_id}/contacts/{contact_id}",
+                  "required": true,
+                  "location": "path",
+                  "pattern": "^projects/[^/]+/contacts/[^/]+$"
+                }
+              },
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
+              ],
+              "id": "essentialcontacts.projects.contacts.delete"
+            },
+            "patch": {
+              "parameters": {
+                "name": {
+                  "description": "Output only. The identifier for the contact. Format: {resource_type}/{resource_id}/contacts/{contact_id}",
+                  "required": true,
+                  "type": "string",
+                  "location": "path",
+                  "pattern": "^projects/[^/]+/contacts/[^/]+$"
+                },
+                "updateMask": {
+                  "type": "string",
+                  "location": "query",
+                  "format": "google-fieldmask",
+                  "description": "Optional. The update mask applied to the resource. For the `FieldMask` definition, see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#fieldmask"
+                }
+              },
+              "request": {
+                "$ref": "GoogleCloudEssentialcontactsV1Contact"
+              },
+              "parameterOrder": [
+                "name"
+              ],
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
+              ],
+              "response": {
+                "$ref": "GoogleCloudEssentialcontactsV1Contact"
+              },
+              "flatPath": "v1/projects/{projectsId}/contacts/{contactsId}",
+              "id": "essentialcontacts.projects.contacts.patch",
+              "description": "Updates a contact. Note: A contact's email address cannot be changed.",
+              "path": "v1/{+name}",
+              "httpMethod": "PATCH"
+            },
+            "compute": {
+              "path": "v1/{+parent}/contacts:compute",
+              "parameters": {
+                "pageSize": {
+                  "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of `next_page_token` in the response indicates that more results might be available. If not specified, the default page_size is 100.",
+                  "format": "int32",
+                  "location": "query",
+                  "type": "integer"
+                },
+                "parent": {
+                  "type": "string",
+                  "required": true,
+                  "location": "path",
+                  "description": "Required. The name of the resource to compute contacts for. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}",
+                  "pattern": "^projects/[^/]+$"
+                },
                 "notificationCategories": {
                   "enum": [
                     "NOTIFICATION_CATEGORY_UNSPECIFIED",
@@ -408,10 +611,10 @@
                     "PRODUCT_UPDATES",
                     "TECHNICAL_INCIDENTS"
                   ],
-                  "type": "string",
                   "description": "The categories of notifications to compute contacts for. If ALL is included in this list, contacts subscribed to any notification category will be returned.",
-                  "repeated": true,
                   "location": "query",
+                  "type": "string",
+                  "repeated": true,
                   "enumDescriptions": [
                     "Notification category is unrecognized or unspecified.",
                     "All notifications related to the resource, including notifications pertaining to categories added in the future.",
@@ -424,183 +627,25 @@
                     "Child category of TECHNICAL. If assigned, technical incident notifications will go to these contacts instead of TECHNICAL."
                   ]
                 },
-                "pageSize": {
-                  "location": "query",
-                  "format": "int32",
-                  "type": "integer",
-                  "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of `next_page_token` in the response indicates that more results might be available. If not specified, the default page_size is 100."
-                },
-                "pageToken": {
-                  "description": "Optional. If present, retrieves the next batch of results from the preceding call to this method. `page_token` must be the value of `next_page_token` from the previous response. The values of other method parameters should be identical to those in the previous call.",
-                  "location": "query",
-                  "type": "string"
-                },
-                "parent": {
-                  "location": "path",
-                  "type": "string",
-                  "description": "Required. The name of the resource to compute contacts for. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}",
-                  "pattern": "^projects/[^/]+$",
-                  "required": true
-                }
-              }
-            },
-            "delete": {
-              "response": {
-                "$ref": "GoogleProtobufEmpty"
-              },
-              "description": "Deletes a contact.",
-              "parameters": {
-                "name": {
-                  "description": "Required. The name of the contact to delete. Format: organizations/{organization_id}/contacts/{contact_id}, folders/{folder_id}/contacts/{contact_id} or projects/{project_id}/contacts/{contact_id}",
-                  "type": "string",
-                  "location": "path",
-                  "pattern": "^projects/[^/]+/contacts/[^/]+$",
-                  "required": true
-                }
-              },
-              "flatPath": "v1/projects/{projectsId}/contacts/{contactsId}",
-              "parameterOrder": [
-                "name"
-              ],
-              "httpMethod": "DELETE",
-              "path": "v1/{+name}",
-              "id": "essentialcontacts.projects.contacts.delete"
-            },
-            "get": {
-              "parameterOrder": [
-                "name"
-              ],
-              "description": "Gets a single contact.",
-              "flatPath": "v1/projects/{projectsId}/contacts/{contactsId}",
-              "response": {
-                "$ref": "GoogleCloudEssentialcontactsV1Contact"
-              },
-              "path": "v1/{+name}",
-              "parameters": {
-                "name": {
-                  "pattern": "^projects/[^/]+/contacts/[^/]+$",
-                  "type": "string",
-                  "location": "path",
-                  "description": "Required. The name of the contact to retrieve. Format: organizations/{organization_id}/contacts/{contact_id}, folders/{folder_id}/contacts/{contact_id} or projects/{project_id}/contacts/{contact_id}",
-                  "required": true
-                }
-              },
-              "httpMethod": "GET",
-              "id": "essentialcontacts.projects.contacts.get"
-            },
-            "patch": {
-              "httpMethod": "PATCH",
-              "parameterOrder": [
-                "name"
-              ],
-              "flatPath": "v1/projects/{projectsId}/contacts/{contactsId}",
-              "request": {
-                "$ref": "GoogleCloudEssentialcontactsV1Contact"
-              },
-              "response": {
-                "$ref": "GoogleCloudEssentialcontactsV1Contact"
-              },
-              "description": "Updates a contact. Note: A contact's email address cannot be changed.",
-              "id": "essentialcontacts.projects.contacts.patch",
-              "path": "v1/{+name}",
-              "parameters": {
-                "updateMask": {
-                  "location": "query",
-                  "type": "string",
-                  "format": "google-fieldmask",
-                  "description": "Optional. The update mask applied to the resource. For the `FieldMask` definition, see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#fieldmask"
-                },
-                "name": {
-                  "location": "path",
-                  "pattern": "^projects/[^/]+/contacts/[^/]+$",
-                  "required": true,
-                  "type": "string",
-                  "description": "Output only. The identifier for the contact. Format: {resource_type}/{resource_id}/contacts/{contact_id}"
-                }
-              }
-            },
-            "sendTestMessage": {
-              "parameterOrder": [
-                "resource"
-              ],
-              "id": "essentialcontacts.projects.contacts.sendTestMessage",
-              "flatPath": "v1/projects/{projectsId}/contacts:sendTestMessage",
-              "httpMethod": "POST",
-              "path": "v1/{+resource}/contacts:sendTestMessage",
-              "description": "Allows a contact admin to send a test message to contact to verify that it has been configured correctly.",
-              "response": {
-                "$ref": "GoogleProtobufEmpty"
-              },
-              "parameters": {
-                "resource": {
-                  "description": "Required. The name of the resource to send the test message for. All contacts must either be set directly on this resource or inherited from another resource that is an ancestor of this one. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}",
-                  "pattern": "^projects/[^/]+$",
-                  "type": "string",
-                  "required": true,
-                  "location": "path"
-                }
-              },
-              "request": {
-                "$ref": "GoogleCloudEssentialcontactsV1SendTestMessageRequest"
-              }
-            },
-            "list": {
-              "parameterOrder": [
-                "parent"
-              ],
-              "description": "Lists the contacts that have been set on a resource.",
-              "flatPath": "v1/projects/{projectsId}/contacts",
-              "httpMethod": "GET",
-              "parameters": {
-                "parent": {
-                  "description": "Required. The parent resource name. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}",
-                  "pattern": "^projects/[^/]+$",
-                  "type": "string",
-                  "location": "path",
-                  "required": true
-                },
-                "pageSize": {
-                  "format": "int32",
-                  "location": "query",
-                  "type": "integer",
-                  "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of `next_page_token` in the response indicates that more results might be available. If not specified, the default page_size is 100."
-                },
                 "pageToken": {
                   "location": "query",
                   "type": "string",
                   "description": "Optional. If present, retrieves the next batch of results from the preceding call to this method. `page_token` must be the value of `next_page_token` from the previous response. The values of other method parameters should be identical to those in the previous call."
                 }
               },
-              "path": "v1/{+parent}/contacts",
+              "id": "essentialcontacts.projects.contacts.compute",
               "response": {
-                "$ref": "GoogleCloudEssentialcontactsV1ListContactsResponse"
+                "$ref": "GoogleCloudEssentialcontactsV1ComputeContactsResponse"
               },
-              "id": "essentialcontacts.projects.contacts.list"
-            },
-            "create": {
-              "id": "essentialcontacts.projects.contacts.create",
-              "description": "Adds a new contact for a resource.",
-              "path": "v1/{+parent}/contacts",
-              "request": {
-                "$ref": "GoogleCloudEssentialcontactsV1Contact"
-              },
-              "httpMethod": "POST",
-              "parameters": {
-                "parent": {
-                  "location": "path",
-                  "type": "string",
-                  "pattern": "^projects/[^/]+$",
-                  "required": true,
-                  "description": "Required. The resource to save this contact for. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}"
-                }
-              },
-              "flatPath": "v1/projects/{projectsId}/contacts",
+              "description": "Lists all contacts for the resource that are subscribed to the specified notification categories, including contacts inherited from any parent resources.",
+              "httpMethod": "GET",
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
+              ],
+              "flatPath": "v1/projects/{projectsId}/contacts:compute",
               "parameterOrder": [
                 "parent"
-              ],
-              "response": {
-                "$ref": "GoogleCloudEssentialcontactsV1Contact"
-              }
+              ]
             }
           }
         }
@@ -610,143 +655,101 @@
       "resources": {
         "contacts": {
           "methods": {
-            "patch": {
-              "request": {
+            "get": {
+              "id": "essentialcontacts.folders.contacts.get",
+              "flatPath": "v1/folders/{foldersId}/contacts/{contactsId}",
+              "response": {
                 "$ref": "GoogleCloudEssentialcontactsV1Contact"
               },
-              "description": "Updates a contact. Note: A contact's email address cannot be changed.",
+              "parameters": {
+                "name": {
+                  "type": "string",
+                  "description": "Required. The name of the contact to retrieve. Format: organizations/{organization_id}/contacts/{contact_id}, folders/{folder_id}/contacts/{contact_id} or projects/{project_id}/contacts/{contact_id}",
+                  "required": true,
+                  "location": "path",
+                  "pattern": "^folders/[^/]+/contacts/[^/]+$"
+                }
+              },
+              "httpMethod": "GET",
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
+              ],
               "parameterOrder": [
                 "name"
               ],
-              "flatPath": "v1/folders/{foldersId}/contacts/{contactsId}",
-              "httpMethod": "PATCH",
-              "parameters": {
-                "name": {
-                  "description": "Output only. The identifier for the contact. Format: {resource_type}/{resource_id}/contacts/{contact_id}",
-                  "type": "string",
-                  "required": true,
-                  "pattern": "^folders/[^/]+/contacts/[^/]+$",
-                  "location": "path"
-                },
-                "updateMask": {
-                  "description": "Optional. The update mask applied to the resource. For the `FieldMask` definition, see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#fieldmask",
-                  "format": "google-fieldmask",
-                  "location": "query",
-                  "type": "string"
-                }
-              },
-              "id": "essentialcontacts.folders.contacts.patch",
-              "response": {
-                "$ref": "GoogleCloudEssentialcontactsV1Contact"
-              },
+              "description": "Gets a single contact.",
               "path": "v1/{+name}"
             },
-            "create": {
-              "request": {
-                "$ref": "GoogleCloudEssentialcontactsV1Contact"
-              },
-              "id": "essentialcontacts.folders.contacts.create",
-              "parameters": {
-                "parent": {
-                  "location": "path",
-                  "description": "Required. The resource to save this contact for. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}",
-                  "required": true,
-                  "pattern": "^folders/[^/]+$",
-                  "type": "string"
-                }
-              },
-              "path": "v1/{+parent}/contacts",
-              "description": "Adds a new contact for a resource.",
-              "parameterOrder": [
-                "parent"
-              ],
-              "flatPath": "v1/folders/{foldersId}/contacts",
-              "response": {
-                "$ref": "GoogleCloudEssentialcontactsV1Contact"
-              },
-              "httpMethod": "POST"
-            },
-            "sendTestMessage": {
-              "parameterOrder": [
-                "resource"
-              ],
-              "httpMethod": "POST",
-              "flatPath": "v1/folders/{foldersId}/contacts:sendTestMessage",
-              "description": "Allows a contact admin to send a test message to contact to verify that it has been configured correctly.",
-              "path": "v1/{+resource}/contacts:sendTestMessage",
-              "response": {
-                "$ref": "GoogleProtobufEmpty"
-              },
-              "parameters": {
-                "resource": {
-                  "pattern": "^folders/[^/]+$",
-                  "required": true,
-                  "location": "path",
-                  "type": "string",
-                  "description": "Required. The name of the resource to send the test message for. All contacts must either be set directly on this resource or inherited from another resource that is an ancestor of this one. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}"
-                }
-              },
-              "request": {
-                "$ref": "GoogleCloudEssentialcontactsV1SendTestMessageRequest"
-              },
-              "id": "essentialcontacts.folders.contacts.sendTestMessage"
-            },
             "list": {
-              "flatPath": "v1/folders/{foldersId}/contacts",
-              "id": "essentialcontacts.folders.contacts.list",
-              "httpMethod": "GET",
-              "parameterOrder": [
-                "parent"
-              ],
-              "parameters": {
-                "pageSize": {
-                  "format": "int32",
-                  "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of `next_page_token` in the response indicates that more results might be available. If not specified, the default page_size is 100.",
-                  "location": "query",
-                  "type": "integer"
-                },
-                "parent": {
-                  "type": "string",
-                  "description": "Required. The parent resource name. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}",
-                  "location": "path",
-                  "pattern": "^folders/[^/]+$",
-                  "required": true
-                },
-                "pageToken": {
-                  "location": "query",
-                  "description": "Optional. If present, retrieves the next batch of results from the preceding call to this method. `page_token` must be the value of `next_page_token` from the previous response. The values of other method parameters should be identical to those in the previous call.",
-                  "type": "string"
-                }
-              },
-              "path": "v1/{+parent}/contacts",
               "response": {
                 "$ref": "GoogleCloudEssentialcontactsV1ListContactsResponse"
               },
+              "parameters": {
+                "parent": {
+                  "type": "string",
+                  "pattern": "^folders/[^/]+$",
+                  "location": "path",
+                  "required": true,
+                  "description": "Required. The parent resource name. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}"
+                },
+                "pageSize": {
+                  "format": "int32",
+                  "type": "integer",
+                  "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of `next_page_token` in the response indicates that more results might be available. If not specified, the default page_size is 100.",
+                  "location": "query"
+                },
+                "pageToken": {
+                  "description": "Optional. If present, retrieves the next batch of results from the preceding call to this method. `page_token` must be the value of `next_page_token` from the previous response. The values of other method parameters should be identical to those in the previous call.",
+                  "type": "string",
+                  "location": "query"
+                }
+              },
+              "httpMethod": "GET",
+              "path": "v1/{+parent}/contacts",
+              "id": "essentialcontacts.folders.contacts.list",
+              "parameterOrder": [
+                "parent"
+              ],
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
+              ],
+              "flatPath": "v1/folders/{foldersId}/contacts",
               "description": "Lists the contacts that have been set on a resource."
             },
             "compute": {
+              "parameterOrder": [
+                "parent"
+              ],
+              "response": {
+                "$ref": "GoogleCloudEssentialcontactsV1ComputeContactsResponse"
+              },
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
+              ],
+              "path": "v1/{+parent}/contacts:compute",
+              "httpMethod": "GET",
+              "id": "essentialcontacts.folders.contacts.compute",
               "parameters": {
                 "pageToken": {
+                  "description": "Optional. If present, retrieves the next batch of results from the preceding call to this method. `page_token` must be the value of `next_page_token` from the previous response. The values of other method parameters should be identical to those in the previous call.",
                   "location": "query",
-                  "type": "string",
-                  "description": "Optional. If present, retrieves the next batch of results from the preceding call to this method. `page_token` must be the value of `next_page_token` from the previous response. The values of other method parameters should be identical to those in the previous call."
-                },
-                "parent": {
-                  "location": "path",
-                  "required": true,
-                  "pattern": "^folders/[^/]+$",
-                  "description": "Required. The name of the resource to compute contacts for. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}",
                   "type": "string"
                 },
-                "pageSize": {
-                  "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of `next_page_token` in the response indicates that more results might be available. If not specified, the default page_size is 100.",
-                  "location": "query",
-                  "type": "integer",
-                  "format": "int32"
-                },
                 "notificationCategories": {
+                  "enum": [
+                    "NOTIFICATION_CATEGORY_UNSPECIFIED",
+                    "ALL",
+                    "SUSPENSION",
+                    "SECURITY",
+                    "TECHNICAL",
+                    "BILLING",
+                    "LEGAL",
+                    "PRODUCT_UPDATES",
+                    "TECHNICAL_INCIDENTS"
+                  ],
                   "location": "query",
                   "type": "string",
+                  "repeated": true,
                   "description": "The categories of notifications to compute contacts for. If ALL is included in this list, contacts subscribed to any notification category will be returned.",
                   "enumDescriptions": [
                     "Notification category is unrecognized or unspecified.",
@@ -758,125 +761,187 @@
                     "Notifications related to enforcement actions, regulatory compliance, or government notices.",
                     "Notifications related to new versions, product terms updates, or deprecations.",
                     "Child category of TECHNICAL. If assigned, technical incident notifications will go to these contacts instead of TECHNICAL."
-                  ],
-                  "repeated": true,
-                  "enum": [
-                    "NOTIFICATION_CATEGORY_UNSPECIFIED",
-                    "ALL",
-                    "SUSPENSION",
-                    "SECURITY",
-                    "TECHNICAL",
-                    "BILLING",
-                    "LEGAL",
-                    "PRODUCT_UPDATES",
-                    "TECHNICAL_INCIDENTS"
                   ]
-                }
-              },
-              "response": {
-                "$ref": "GoogleCloudEssentialcontactsV1ComputeContactsResponse"
-              },
-              "httpMethod": "GET",
-              "description": "Lists all contacts for the resource that are subscribed to the specified notification categories, including contacts inherited from any parent resources.",
-              "flatPath": "v1/folders/{foldersId}/contacts:compute",
-              "path": "v1/{+parent}/contacts:compute",
-              "id": "essentialcontacts.folders.contacts.compute",
-              "parameterOrder": [
-                "parent"
-              ]
-            },
-            "delete": {
-              "parameters": {
-                "name": {
-                  "pattern": "^folders/[^/]+/contacts/[^/]+$",
+                },
+                "pageSize": {
+                  "format": "int32",
+                  "description": "Optional. The maximum number of results to return from this request. Non-positive values are ignored. The presence of `next_page_token` in the response indicates that more results might be available. If not specified, the default page_size is 100.",
+                  "location": "query",
+                  "type": "integer"
+                },
+                "parent": {
+                  "required": true,
                   "location": "path",
                   "type": "string",
-                  "description": "Required. The name of the contact to delete. Format: organizations/{organization_id}/contacts/{contact_id}, folders/{folder_id}/contacts/{contact_id} or projects/{project_id}/contacts/{contact_id}",
+                  "pattern": "^folders/[^/]+$",
+                  "description": "Required. The name of the resource to compute contacts for. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}"
+                }
+              },
+              "flatPath": "v1/folders/{foldersId}/contacts:compute",
+              "description": "Lists all contacts for the resource that are subscribed to the specified notification categories, including contacts inherited from any parent resources."
+            },
+            "sendTestMessage": {
+              "httpMethod": "POST",
+              "description": "Allows a contact admin to send a test message to contact to verify that it has been configured correctly.",
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
+              ],
+              "path": "v1/{+resource}/contacts:sendTestMessage",
+              "parameters": {
+                "resource": {
+                  "description": "Required. The name of the resource to send the test message for. All contacts must either be set directly on this resource or inherited from another resource that is an ancestor of this one. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}",
+                  "required": true,
+                  "type": "string",
+                  "pattern": "^folders/[^/]+$",
+                  "location": "path"
+                }
+              },
+              "flatPath": "v1/folders/{foldersId}/contacts:sendTestMessage",
+              "request": {
+                "$ref": "GoogleCloudEssentialcontactsV1SendTestMessageRequest"
+              },
+              "parameterOrder": [
+                "resource"
+              ],
+              "id": "essentialcontacts.folders.contacts.sendTestMessage",
+              "response": {
+                "$ref": "GoogleProtobufEmpty"
+              }
+            },
+            "patch": {
+              "id": "essentialcontacts.folders.contacts.patch",
+              "parameters": {
+                "updateMask": {
+                  "description": "Optional. The update mask applied to the resource. For the `FieldMask` definition, see https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#fieldmask",
+                  "location": "query",
+                  "format": "google-fieldmask",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Output only. The identifier for the contact. Format: {resource_type}/{resource_id}/contacts/{contact_id}",
+                  "type": "string",
+                  "pattern": "^folders/[^/]+/contacts/[^/]+$",
+                  "location": "path",
                   "required": true
                 }
               },
-              "parameterOrder": [
-                "name"
+              "description": "Updates a contact. Note: A contact's email address cannot be changed.",
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
               ],
-              "httpMethod": "DELETE",
-              "response": {
-                "$ref": "GoogleProtobufEmpty"
-              },
-              "id": "essentialcontacts.folders.contacts.delete",
-              "path": "v1/{+name}",
-              "description": "Deletes a contact.",
-              "flatPath": "v1/folders/{foldersId}/contacts/{contactsId}"
-            },
-            "get": {
-              "httpMethod": "GET",
-              "parameterOrder": [
-                "name"
-              ],
-              "description": "Gets a single contact.",
               "flatPath": "v1/folders/{foldersId}/contacts/{contactsId}",
-              "id": "essentialcontacts.folders.contacts.get",
+              "response": {
+                "$ref": "GoogleCloudEssentialcontactsV1Contact"
+              },
+              "httpMethod": "PATCH",
+              "request": {
+                "$ref": "GoogleCloudEssentialcontactsV1Contact"
+              },
+              "parameterOrder": [
+                "name"
+              ],
+              "path": "v1/{+name}"
+            },
+            "create": {
+              "description": "Adds a new contact for a resource.",
+              "request": {
+                "$ref": "GoogleCloudEssentialcontactsV1Contact"
+              },
+              "path": "v1/{+parent}/contacts",
+              "flatPath": "v1/folders/{foldersId}/contacts",
+              "parameterOrder": [
+                "parent"
+              ],
+              "response": {
+                "$ref": "GoogleCloudEssentialcontactsV1Contact"
+              },
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
+              ],
+              "httpMethod": "POST",
+              "parameters": {
+                "parent": {
+                  "location": "path",
+                  "required": true,
+                  "type": "string",
+                  "description": "Required. The resource to save this contact for. Format: organizations/{organization_id}, folders/{folder_id} or projects/{project_id}",
+                  "pattern": "^folders/[^/]+$"
+                }
+              },
+              "id": "essentialcontacts.folders.contacts.create"
+            },
+            "delete": {
+              "scopes": [
+                "https://www.googleapis.com/auth/cloud-platform"
+              ],
+              "id": "essentialcontacts.folders.contacts.delete",
+              "flatPath": "v1/folders/{foldersId}/contacts/{contactsId}",
+              "path": "v1/{+name}",
+              "parameterOrder": [
+                "name"
+              ],
               "parameters": {
                 "name": {
-                  "type": "string",
-                  "description": "Required. The name of the contact to retrieve. Format: organizations/{organization_id}/contacts/{contact_id}, folders/{folder_id}/contacts/{contact_id} or projects/{project_id}/contacts/{contact_id}",
+                  "description": "Required. The name of the contact to delete. Format: organizations/{organization_id}/contacts/{contact_id}, folders/{folder_id}/contacts/{contact_id} or projects/{project_id}/contacts/{contact_id}",
                   "required": true,
+                  "type": "string",
                   "pattern": "^folders/[^/]+/contacts/[^/]+$",
                   "location": "path"
                 }
               },
+              "description": "Deletes a contact.",
               "response": {
-                "$ref": "GoogleCloudEssentialcontactsV1Contact"
+                "$ref": "GoogleProtobufEmpty"
               },
-              "path": "v1/{+name}"
+              "httpMethod": "DELETE"
             }
           }
         }
       }
     }
   },
-  "servicePath": "",
-  "basePath": "",
-  "fullyEncodeReservedExpansion": true,
-  "id": "essentialcontacts:v1",
-  "baseUrl": "https://essentialcontacts.googleapis.com/",
-  "mtlsRootUrl": "https://essentialcontacts.mtls.googleapis.com/",
+  "discoveryVersion": "v1",
+  "kind": "discovery#restDescription",
   "title": "Essential Contacts API",
+  "baseUrl": "https://essentialcontacts.googleapis.com/",
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
+  "documentationLink": "https://cloud.google.com/essentialcontacts/docs/",
+  "mtlsRootUrl": "https://essentialcontacts.mtls.googleapis.com/",
+  "id": "essentialcontacts:v1",
+  "rootUrl": "https://essentialcontacts.googleapis.com/",
+  "version_module": true,
+  "protocol": "rest",
+  "description": "",
+  "servicePath": "",
+  "name": "essentialcontacts",
+  "canonicalName": "Essentialcontacts",
+  "ownerDomain": "google.com",
   "parameters": {
-    "callback": {
-      "description": "JSONP",
+    "quotaUser": {
+      "location": "query",
+      "type": "string",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters."
+    },
+    "key": {
+      "type": "string",
+      "location": "query",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token."
+    },
+    "access_token": {
+      "description": "OAuth access token.",
+      "type": "string",
+      "location": "query"
+    },
+    "fields": {
+      "description": "Selector specifying which fields to include in a partial response.",
       "location": "query",
       "type": "string"
     },
-    "$.xgafv": {
-      "description": "V1 error format.",
-      "location": "query",
-      "type": "string",
-      "enum": [
-        "1",
-        "2"
-      ],
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ]
-    },
-    "key": {
-      "location": "query",
-      "type": "string",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token."
-    },
-    "upload_protocol": {
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
-      "location": "query"
-    },
-    "oauth_token": {
-      "type": "string",
-      "description": "OAuth 2.0 token for the current user.",
-      "location": "query"
-    },
     "alt": {
-      "type": "string",
+      "description": "Data format for response.",
       "enum": [
         "json",
         "media",
@@ -888,52 +953,59 @@
         "Media download with context-dependent Content-Type",
         "Responses with Content-Type of application/x-protobuf"
       ],
-      "description": "Data format for response.",
+      "type": "string",
       "default": "json"
     },
-    "fields": {
-      "description": "Selector specifying which fields to include in a partial response.",
-      "type": "string",
-      "location": "query"
-    },
-    "uploadType": {
-      "type": "string",
+    "oauth_token": {
+      "description": "OAuth 2.0 token for the current user.",
       "location": "query",
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\")."
+      "type": "string"
+    },
+    "upload_protocol": {
+      "location": "query",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
+      "type": "string"
     },
     "prettyPrint": {
-      "default": "true",
       "location": "query",
+      "default": "true",
       "type": "boolean",
       "description": "Returns response with indentations and line breaks."
     },
-    "access_token": {
+    "callback": {
       "type": "string",
-      "description": "OAuth access token.",
+      "description": "JSONP",
       "location": "query"
     },
-    "quotaUser": {
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
+    "uploadType": {
+      "location": "query",
       "type": "string",
-      "location": "query"
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\")."
+    },
+    "$.xgafv": {
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "type": "string",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "location": "query",
+      "description": "V1 error format."
     }
   },
-  "discoveryVersion": "v1",
-  "name": "essentialcontacts",
-  "kind": "discovery#restDescription",
-  "icons": {
-    "x32": "http://www.google.com/images/icons/product/search-32.gif",
-    "x16": "http://www.google.com/images/icons/product/search-16.gif"
+  "revision": "20230622",
+  "basePath": "",
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        }
+      }
+    }
   },
-  "ownerName": "Google",
-  "version": "v1",
-  "version_module": true,
-  "documentationLink": "https://cloud.google.com/essentialcontacts/docs/",
-  "protocol": "rest",
-  "revision": "20230618",
-  "rootUrl": "https://essentialcontacts.googleapis.com/",
-  "description": "",
-  "canonicalName": "Essentialcontacts",
-  "ownerDomain": "google.com",
-  "batchPath": "batch"
+  "fullyEncodeReservedExpansion": true
 }
