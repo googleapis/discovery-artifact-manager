@@ -738,6 +738,86 @@
     }
    }
   },
+  "GoogleLongrunningOperation": {
+   "description": "This resource represents a long-running operation that is the result of a network API call.",
+   "id": "GoogleLongrunningOperation",
+   "properties": {
+    "done": {
+     "description": "If the value is \"false\", it means the operation is still in progress. If \"true\", the operation is completed, and either \"error\" or \"response\" is available.",
+     "type": "boolean"
+    },
+    "error": {
+     "$ref": "GoogleRpcStatus",
+     "description": "The error result of the operation in case of failure or cancellation."
+    },
+    "metadata": {
+     "additionalProperties": {
+      "description": "Properties of the object. Contains field @type with type URL.",
+      "type": "any"
+     },
+     "description": "Service-specific metadata associated with the operation. It typically contains progress information and common metadata such as create time. Some services might not provide such metadata. Any method that returns a long-running operation should document the metadata type, if any.",
+     "type": "object"
+    },
+    "name": {
+     "description": "The server-assigned name, which is only unique within the same service that originally returns it. If you use the default HTTP mapping, the \"name\" should be a resource name ending with \"operations/{operationId}\".",
+     "type": "string"
+    },
+    "response": {
+     "additionalProperties": {
+      "description": "Properties of the object. Contains field @type with type URL.",
+      "type": "any"
+     },
+     "description": "The normal response of the operation in case of success. If the original method returns no data on success, such as \"Delete\", the response is google.protobuf.Empty. If the original method is standard Get/Create/Update, the response should be the resource. For other methods, the response should have the type \"XxxResponse\", where \"Xxx\" is the original method name. For example, if the original method name is \"TakeSnapshot()\", the inferred response type is \"TakeSnapshotResponse\".",
+     "type": "object"
+    }
+   },
+   "type": "object"
+  },
+  "GoogleLongrunningListOperationsResponse": {
+   "description": "The response message for storage.buckets.operations.list.",
+   "id": "GoogleLongrunningListOperationsResponse",
+   "properties": {
+    "nextPageToken": {
+     "type": "string",
+     "description": "The continuation token, used to page through large result sets. Provide this value in a subsequent request to return the next page of results."
+    },
+    "operations": {
+     "description": "A list of operations that matches the specified filter in the request.",
+     "items": {
+      "$ref": "GoogleLongrunningOperation"
+     },
+     "type": "array"
+    }
+   },
+   "type": "object"
+  },
+  "GoogleRpcStatus": {
+   "description": "The \"Status\" type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by [gRPC](https://github.com/grpc). Each \"Status\" message contains three pieces of data: error code, error message, and error details. You can find out more about this error model and how to work with it in the [API Design Guide](https://cloud.google.com/apis/design/errors).",
+   "id": "GoogleRpcStatus",
+   "properties": {
+    "code": {
+     "description": "The status code, which should be an enum value of google.rpc.Code.",
+     "format": "int32",
+     "type": "integer"
+    },
+    "details": {
+     "description": "A list of messages that carry the error details. There is a common set of message types for APIs to use.",
+     "items": {
+      "additionalProperties": {
+       "description": "Properties of the object. Contains field @type with type URL.",
+       "type": "any"
+      },
+      "type": "object"
+     },
+     "type": "array"
+    },
+    "message": {
+     "description": "A developer-facing error message, which should be in English.",
+     "type": "string"
+    }
+   },
+   "type": "object"
+  },
   "HmacKey": {
    "id": "HmacKey",
    "type": "object",
@@ -1355,6 +1435,38 @@
      "items": {
       "type": "string"
      }
+    }
+   }
+  },
+  "BulkRestoreObjectsRequest": {
+   "id": "BulkRestoreObjectsRequest",
+   "type": "object",
+   "description": "A bulk restore objects request.",
+   "properties": {
+    "allowOverwrite": {
+     "type": "boolean",
+     "description": "If false (default), the restore will not overwrite live objects with the same name at the destination. This means some deleted objects may be skipped. If true, live objects will be overwritten resulting in a noncurrent object (if versioning is enabled). If versioning is not enabled, overwriting the object will result in a soft-deleted object. In either case, if a noncurrent object already exists with the same name, a live version can be written without issue."
+    },
+    "softDeletedAfterTime": {
+     "type": "string",
+     "description": "Restores only the objects that were soft-deleted after this time.",
+     "format": "date-time"
+    },
+    "softDeletedBeforeTime": {
+     "type": "string",
+     "description": "Restores only the objects that were soft-deleted before this time.",
+     "format": "date-time"
+    },
+    "matchGlobs": {
+     "type": "array",
+     "description": "Restores only the objects matching any of the specified glob(s). If this parameter is not specified, all objects will be restored within the specified time range.",
+     "items": {
+      "type": "string"
+     }
+    },
+    "copySourceAcl": {
+     "type": "boolean",
+     "description": "If true, copies the source object's ACL; otherwise, uses the bucket's default object ACL. The default is false."
     }
    }
   }
@@ -2157,6 +2269,117 @@
      "scopes": [
       "https://www.googleapis.com/auth/cloud-platform",
       "https://www.googleapis.com/auth/devstorage.full_control"
+     ]
+    }
+   }
+  },
+  "operations": {
+   "methods": {
+    "cancel": {
+     "description": "Starts asynchronous cancellation on a long-running operation. The server makes a best effort to cancel the operation, but success is not guaranteed.",
+     "path": "b/{bucket}/operations/{operationId}/cancel",
+     "httpMethod": "POST",
+     "id": "storage.buckets.operations.cancel",
+     "parameterOrder": [
+      "bucket",
+      "operationId"
+     ],
+     "parameters": {
+      "bucket": {
+       "description": "The parent bucket of the operation resource.",
+       "location": "path",
+       "required": true,
+       "type": "string"
+      },
+      "operationId": {
+       "description": "The ID of the operation resource.",
+       "location": "path",
+       "required": true,
+       "type": "string"
+      }
+     },
+     "scopes": [
+      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/devstorage.full_control",
+      "https://www.googleapis.com/auth/devstorage.read_write"
+     ]
+    },
+    "get": {
+     "description": "Gets the latest state of a long-running operation.",
+     "path": "b/{bucket}/operations/{operationId}",
+     "httpMethod": "GET",
+     "id": "storage.buckets.operations.get",
+     "parameterOrder": [
+      "bucket",
+      "operationId"
+     ],
+     "parameters": {
+      "bucket": {
+       "description": "The parent bucket of the operation resource.",
+       "location": "path",
+       "required": true,
+       "type": "string"
+      },
+      "operationId": {
+       "description": "The ID of the operation resource.",
+       "location": "path",
+       "required": true,
+       "type": "string"
+      }
+     },
+     "response": {
+      "$ref": "GoogleLongrunningOperation"
+     },
+     "scopes": [
+      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/cloud-platform.read-only",
+      "https://www.googleapis.com/auth/devstorage.full_control",
+      "https://www.googleapis.com/auth/devstorage.read_only",
+      "https://www.googleapis.com/auth/devstorage.read_write"
+     ]
+    },
+    "list": {
+     "description": "Lists operations that match the specified filter in the request.",
+     "path": "b/{bucket}/operations",
+     "httpMethod": "GET",
+     "id": "storage.buckets.operations.list",
+     "parameterOrder": [
+      "bucket"
+     ],
+     "parameters": {
+      "filter": {
+       "description": "A filter to narrow down results to a preferred subset. The filtering language is documented in more detail in [AIP-160](https://google.aip.dev/160).",
+       "location": "query",
+       "type": "string"
+      },
+      "bucket": {
+       "description": "Name of the bucket in which to look for operations.",
+       "location": "path",
+       "required": true,
+       "type": "string"
+      },
+      "pageSize": {
+       "description": "Maximum number of items to return in a single page of responses. Fewer total results may be returned than requested. The service uses this parameter or 100 items, whichever is smaller.",
+       "minimum": "0",
+       "format": "int32",
+       "location": "query",
+       "type": "integer"
+      },
+      "pageToken": {
+       "description": "A previously-returned page token representing part of the larger set of results to view.",
+       "location": "query",
+       "type": "string"
+      }
+     },
+     "response": {
+      "$ref": "GoogleLongrunningListOperationsResponse"
+     },
+     "scopes": [
+      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/cloud-platform.read-only",
+      "https://www.googleapis.com/auth/devstorage.full_control",
+      "https://www.googleapis.com/auth/devstorage.read_only",
+      "https://www.googleapis.com/auth/devstorage.read_write"
      ]
     }
    }
@@ -3194,6 +3417,11 @@
        "type": "string",
        "description": "The project to be billed for this request. Required for Requester Pays buckets.",
        "location": "query"
+      },
+      "softDeleted": {
+       "type": "boolean",
+       "description": "If true, only soft-deleted object versions will be listed. The default is false. For more information, see Soft Delete.",
+       "location": "query"
       }
      },
      "parameterOrder": [
@@ -3456,6 +3684,11 @@
       "matchGlob": {
        "type": "string",
        "description": "Filter results to objects and prefixes that match this glob pattern.",
+       "location": "query"
+      },
+      "softDeleted": {
+       "type": "boolean",
+       "description": "If true, only soft-deleted object versions will be listed. The default is false. For more information, see Soft Delete.",
        "location": "query"
       }
      },
@@ -4029,6 +4262,117 @@
       "https://www.googleapis.com/auth/devstorage.read_write"
      ],
      "supportsSubscription": true
+    },
+    "restore": {
+     "id": "storage.objects.restore",
+     "path": "b/{bucket}/o/{object}/restore",
+     "httpMethod": "POST",
+     "description": "Restores a soft-deleted object.",
+     "parameters": {
+      "bucket": {
+       "type": "string",
+       "description": "Name of the bucket in which the object resides.",
+       "required": true,
+       "location": "path"
+      },
+      "generation": {
+       "type": "string",
+       "description": "Selects a specific revision of this object.",
+       "required": true,
+       "format": "int64",
+       "location": "query"
+      },
+      "object": {
+       "type": "string",
+       "description": "Name of the object. For information about how to URL encode object names to be path safe, see Encoding URI Path Parts.",
+       "required": true,
+       "location": "path"
+      },
+      "ifGenerationMatch": {
+       "type": "string",
+       "description": "Makes the operation conditional on whether the object's one live generation matches the given value. Setting to 0 makes the operation succeed only if there are no live versions of the object.",
+       "format": "int64",
+       "location": "query"
+      },
+      "ifGenerationNotMatch": {
+       "type": "string",
+       "description": "Makes the operation conditional on whether none of the object's live generations match the given value. If no live object exists, the precondition fails. Setting to 0 makes the operation succeed only if there is a live version of the object.",
+       "format": "int64",
+       "location": "query"
+      },
+      "ifMetagenerationMatch": {
+       "type": "string",
+       "description": "Makes the operation conditional on whether the object's one live metageneration matches the given value.",
+       "format": "int64",
+       "location": "query"
+      },
+      "ifMetagenerationNotMatch": {
+       "type": "string",
+       "description": "Makes the operation conditional on whether none of the object's live metagenerations match the given value.",
+       "format": "int64",
+       "location": "query"
+      },
+      "projection": {
+       "type": "string",
+       "description": "Set of properties to return. Defaults to full.",
+       "enum": [
+        "full",
+        "noAcl"
+       ],
+       "enumDescriptions": [
+        "Include all properties.",
+        "Omit the owner, acl property."
+       ],
+       "location": "query"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
+      }
+     },
+     "parameterOrder": [
+      "bucket",
+      "object"
+     ],
+     "request": {
+      "$ref": "Object"
+     },
+     "response": {
+      "$ref": "Object"
+     },
+     "scopes": [
+      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/devstorage.full_control"
+     ]
+    },
+    "bulkRestore": {
+     "id": "storage.objects.bulkRestore",
+     "path": "b/{bucket}/o/bulkRestore",
+     "httpMethod": "POST",
+     "description": "Initiates a long-running bulk restore operation on the specified bucket.",
+     "parameters": {
+      "bucket": {
+       "type": "string",
+       "description": "Name of the bucket in which the object resides.",
+       "required": true,
+       "location": "path"
+      }
+     },
+     "parameterOrder": [
+      "bucket"
+     ],
+     "request": {
+      "$ref": "BulkRestoreObjectsRequest"
+     },
+     "response": {
+      "$ref": "GoogleLongrunningOperation"
+     },
+     "scopes": [
+      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/devstorage.full_control",
+      "https://www.googleapis.com/auth/devstorage.read_write"
+     ]
     }
    }
   },
@@ -4278,6 +4622,6 @@
    }
   }
  },
- "revision": "20230710",
- "etag": "\"39353535313838393033333032363632303533\""
+ "revision": "20230907",
+ "etag": "\"3137393534363837313035303430333138303233\""
 }
