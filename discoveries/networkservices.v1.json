@@ -1,16 +1,7 @@
 {
-  "ownerName": "Google",
+  "protocol": "rest",
+  "revision": "20231211",
   "basePath": "",
-  "version_module": true,
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
-        }
-      }
-    }
-  },
   "resources": {
     "projects": {
       "resources": {
@@ -2055,10 +2046,6 @@
       }
     }
   },
-  "discoveryVersion": "v1",
-  "fullyEncodeReservedExpansion": true,
-  "canonicalName": "NetworkServices",
-  "kind": "discovery#restDescription",
   "schemas": {
     "ListOperationsResponse": {
       "id": "ListOperationsResponse",
@@ -2437,6 +2424,20 @@
             "IPV4",
             "IPV6"
           ]
+        },
+        "envoyHeaders": {
+          "description": "Optional. Determines if envoy will insert internal debug headers into upstream requests. Other Envoy headers may still be injected. By default, envoy will not insert any debug headers.",
+          "type": "string",
+          "enumDescriptions": [
+            "Defaults to NONE.",
+            "Suppress envoy debug headers.",
+            "Envoy will insert default internal debug headers into upstream requests: x-envoy-attempt-count x-envoy-is-timeout-retry x-envoy-expected-rq-timeout-ms x-envoy-original-path x-envoy-upstream-stream-duration-ms"
+          ],
+          "enum": [
+            "ENVOY_HEADERS_UNSPECIFIED",
+            "NONE",
+            "DEBUG_HEADERS"
+          ]
         }
       }
     },
@@ -2651,6 +2652,11 @@
         "statefulSessionAffinity": {
           "description": "Optional. Specifies cookie-based stateful session affinity.",
           "$ref": "GrpcRouteStatefulSessionAffinityPolicy"
+        },
+        "idleTimeout": {
+          "description": "Optional. Specifies the idle timeout for the selected route. The idle timeout is defined as the period in which there are no bytes sent or received on either the upstream or downstream connection. If not set, the default idle timeout is 1 hour. If set to 0s, the timeout will be disabled.",
+          "type": "string",
+          "format": "google-duration"
         }
       }
     },
@@ -3021,6 +3027,15 @@
         "statefulSessionAffinity": {
           "description": "Optional. Specifies cookie-based stateful session affinity.",
           "$ref": "HttpRouteStatefulSessionAffinityPolicy"
+        },
+        "directResponse": {
+          "description": "Optional. Static HTTP Response object to be returned regardless of the request.",
+          "$ref": "HttpRouteHttpDirectResponse"
+        },
+        "idleTimeout": {
+          "description": "Optional. Specifies the idle timeout for the selected route. The idle timeout is defined as the period in which there are no bytes sent or received on either the upstream or downstream connection. If not set, the default idle timeout is 1 hour. If set to 0s, the timeout will be disabled.",
+          "type": "string",
+          "format": "google-duration"
         }
       }
     },
@@ -3037,6 +3052,42 @@
           "description": "Specifies the proportion of requests forwarded to the backend referenced by the serviceName field. This is computed as: - weight/Sum(weights in this destination list). For non-zero values, there may be some epsilon from the exact proportion defined here depending on the precision an implementation supports. If only one serviceName is specified and it has a weight greater than 0, 100% of the traffic is forwarded to that backend. If weights are specified for any one service name, they need to be specified for all of them. If weights are unspecified for all services, then, traffic is distributed in equal proportions to all of them.",
           "type": "integer",
           "format": "int32"
+        },
+        "requestHeaderModifier": {
+          "description": "Optional. The specification for modifying the headers of a matching request prior to delivery of the request to the destination. If HeaderModifiers are set on both the Destination and the RouteAction, they will be merged. Conflicts between the two will not be resolved on the configuration.",
+          "$ref": "HttpRouteHeaderModifier"
+        },
+        "responseHeaderModifier": {
+          "description": "Optional. The specification for modifying the headers of a response prior to sending the response back to the client. If HeaderModifiers are set on both the Destination and the RouteAction, they will be merged. Conflicts between the two will not be resolved on the configuration.",
+          "$ref": "HttpRouteHeaderModifier"
+        }
+      }
+    },
+    "HttpRouteHeaderModifier": {
+      "id": "HttpRouteHeaderModifier",
+      "description": "The specification for modifying HTTP header in HTTP request and HTTP response.",
+      "type": "object",
+      "properties": {
+        "set": {
+          "description": "Completely overwrite/replace the headers with given map where key is the name of the header, value is the value of the header.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "add": {
+          "description": "Add the headers with given map where key is the name of the header, value is the value of the header.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "remove": {
+          "description": "Remove headers (matching by header names) specified in the list.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -3141,34 +3192,6 @@
         }
       }
     },
-    "HttpRouteHeaderModifier": {
-      "id": "HttpRouteHeaderModifier",
-      "description": "The specification for modifying HTTP header in HTTP request and HTTP response.",
-      "type": "object",
-      "properties": {
-        "set": {
-          "description": "Completely overwrite/replace the headers with given map where key is the name of the header, value is the value of the header.",
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "add": {
-          "description": "Add the headers with given map where key is the name of the header, value is the value of the header.",
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "remove": {
-          "description": "Remove headers (matching by header names) specified in the list.",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "HttpRouteURLRewrite": {
       "id": "HttpRouteURLRewrite",
       "description": "The specification for modifying the URL of the request, prior to forwarding the request to the destination.",
@@ -3216,6 +3239,11 @@
         "destination": {
           "description": "The destination the requests will be mirrored to. The weight of the destination will be ignored.",
           "$ref": "HttpRouteDestination"
+        },
+        "mirrorPercent": {
+          "description": "Optional. The percentage of requests to get mirrored to the desired destination.",
+          "type": "number",
+          "format": "float"
         }
       }
     },
@@ -3282,6 +3310,27 @@
           "description": "Required. The cookie TTL value for the Set-Cookie header generated by the data plane. The lifetime of the cookie may be set to a value from 1 to 86400 seconds (24 hours) inclusive.",
           "type": "string",
           "format": "google-duration"
+        }
+      }
+    },
+    "HttpRouteHttpDirectResponse": {
+      "id": "HttpRouteHttpDirectResponse",
+      "description": "Static HTTP response object to be returned.",
+      "type": "object",
+      "properties": {
+        "stringBody": {
+          "description": "Optional. Response body as a string. Maximum body length is 1024 characters.",
+          "type": "string"
+        },
+        "bytesBody": {
+          "description": "Optional. Response body as bytes. Maximum body size is 4096B.",
+          "type": "string",
+          "format": "byte"
+        },
+        "status": {
+          "description": "Required. Status to return as part of HTTP Response. Must be a positive integer.",
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -3411,6 +3460,11 @@
         "originalDestination": {
           "description": "Optional. If true, Router will use the destination IP and port of the original connection as the destination of the request. Default is false. Only one of route destinations or original destination can be set.",
           "type": "boolean"
+        },
+        "idleTimeout": {
+          "description": "Optional. Specifies the idle timeout for the selected route. The idle timeout is defined as the period in which there are no bytes sent or received on either the upstream or downstream connection. If not set, the default idle timeout is 30 seconds. If set to 0s, the timeout will be disabled.",
+          "type": "string",
+          "format": "google-duration"
         }
       }
     },
@@ -3558,6 +3612,11 @@
           "items": {
             "$ref": "TlsRouteRouteDestination"
           }
+        },
+        "idleTimeout": {
+          "description": "Optional. Specifies the idle timeout for the selected route. The idle timeout is defined as the period in which there are no bytes sent or received on either the upstream or downstream connection. If not set, the default idle timeout is 1 hour. If set to 0s, the timeout will be disabled.",
+          "type": "string",
+          "format": "google-duration"
         }
       }
     },
@@ -3697,6 +3756,20 @@
           "description": "Optional. If set to a valid TCP port (1-65535), instructs the SIDECAR proxy to listen on the specified port of localhost (127.0.0.1) address. The SIDECAR proxy will expect all traffic to be redirected to this port regardless of its actual ip:port destination. If unset, a port '15001' is used as the interception port. This is applicable only for sidecar proxy deployments.",
           "type": "integer",
           "format": "int32"
+        },
+        "envoyHeaders": {
+          "description": "Optional. Determines if envoy will insert internal debug headers into upstream requests. Other Envoy headers may still be injected. By default, envoy will not insert any debug headers.",
+          "type": "string",
+          "enumDescriptions": [
+            "Defaults to NONE.",
+            "Suppress envoy debug headers.",
+            "Envoy will insert default internal debug headers into upstream requests: x-envoy-attempt-count x-envoy-is-timeout-retry x-envoy-expected-rq-timeout-ms x-envoy-original-path x-envoy-upstream-stream-duration-ms"
+          ],
+          "enum": [
+            "ENVOY_HEADERS_UNSPECIFIED",
+            "NONE",
+            "DEBUG_HEADERS"
+          ]
         }
       }
     },
@@ -3965,18 +4038,23 @@
       }
     }
   },
-  "rootUrl": "https://networkservices.googleapis.com/",
-  "mtlsRootUrl": "https://networkservices.mtls.googleapis.com/",
-  "batchPath": "batch",
-  "version": "v1",
-  "title": "Network Services API",
-  "description": "",
   "id": "networkservices:v1",
+  "description": "",
+  "kind": "discovery#restDescription",
+  "version_module": true,
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        }
+      }
+    }
+  },
   "servicePath": "",
-  "baseUrl": "https://networkservices.googleapis.com/",
-  "documentationLink": "https://cloud.google.com/networking",
+  "canonicalName": "NetworkServices",
+  "name": "networkservices",
   "ownerDomain": "google.com",
-  "protocol": "rest",
   "parameters": {
     "access_token": {
       "type": "string",
@@ -4054,10 +4132,18 @@
       "location": "query"
     }
   },
-  "revision": "20231129",
+  "mtlsRootUrl": "https://networkservices.mtls.googleapis.com/",
+  "rootUrl": "https://networkservices.googleapis.com/",
   "icons": {
     "x16": "http://www.google.com/images/icons/product/search-16.gif",
     "x32": "http://www.google.com/images/icons/product/search-32.gif"
   },
-  "name": "networkservices"
+  "ownerName": "Google",
+  "baseUrl": "https://networkservices.googleapis.com/",
+  "documentationLink": "https://cloud.google.com/networking",
+  "discoveryVersion": "v1",
+  "version": "v1",
+  "title": "Network Services API",
+  "batchPath": "batch",
+  "fullyEncodeReservedExpansion": true
 }
