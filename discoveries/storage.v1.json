@@ -202,6 +202,16 @@
      "type": "string",
      "description": "HTTP 1.1 Entity tag for the bucket."
     },
+    "hierarchicalNamespace": {
+     "type": "object",
+     "description": "The bucket's hierarchical namespace configuration.",
+     "properties": {
+      "enabled": {
+       "type": "boolean",
+       "description": "When set to true, hierarchical namespace is enabled for this bucket."
+      }
+     }
+    },
     "iamConfiguration": {
      "type": "object",
      "description": "The bucket's IAM configuration.",
@@ -836,6 +846,90 @@
        "storage.objects.compose"
       ]
      }
+    }
+   }
+  },
+  "Folder": {
+   "id": "Folder",
+   "type": "object",
+   "description": "A folder. Only available in buckets with hierarchical namespace enabled.",
+   "properties": {
+    "bucket": {
+     "type": "string",
+     "description": "The name of the bucket containing this folder."
+    },
+    "id": {
+     "type": "string",
+     "description": "The ID of the folder, including the bucket name, folder name."
+    },
+    "kind": {
+     "type": "string",
+     "description": "The kind of item this is. For folders, this is always storage#folder.",
+     "default": "storage#folder"
+    },
+    "metageneration": {
+     "type": "string",
+     "description": "The version of the metadata for this folder. Used for preconditions and for detecting changes in metadata.",
+     "format": "int64"
+    },
+    "name": {
+     "type": "string",
+     "description": "The name of the folder. Required if not specified by URL parameter."
+    },
+    "selfLink": {
+     "type": "string",
+     "description": "The link to this folder."
+    },
+    "timeCreated": {
+     "type": "string",
+     "description": "The creation time of the folder in RFC 3339 format.",
+     "format": "date-time"
+    },
+    "updated": {
+     "type": "string",
+     "description": "The modification time of the folder metadata in RFC 3339 format.",
+     "format": "date-time"
+    },
+    "metadata": {
+     "type": "object",
+     "description": "User-provided metadata, in key/value pairs.",
+     "additionalProperties": {
+      "type": "string",
+      "description": "An individual metadata entry."
+     }
+    },
+    "pendingRenameInfo": {
+     "type": "object",
+     "description": "Only present if the folder is part of an ongoing rename folder operation. Contains information which can be used to query the operation status.",
+     "properties": {
+      "operationId": {
+       "type": "string",
+       "description": "The ID of the rename folder operation."
+      }
+     }
+    }
+   }
+  },
+  "Folders": {
+   "id": "Folders",
+   "type": "object",
+   "description": "A list of folders.",
+   "properties": {
+    "items": {
+     "type": "array",
+     "description": "The list of items.",
+     "items": {
+      "$ref": "Folder"
+     }
+    },
+    "kind": {
+     "type": "string",
+     "description": "The kind of item this is. For lists of folders, this is always storage#folders.",
+     "default": "storage#folders"
+    },
+    "nextPageToken": {
+     "type": "string",
+     "description": "The continuation token, used to page through large result sets. Provide this value in a subsequent request to return the next page of results."
     }
    }
   },
@@ -1690,7 +1784,7 @@
   }
  },
  "resources": {
-  "anywhereCache": {
+  "anywhereCaches": {
    "methods": {
     "insert": {
      "id": "storage.anywhereCaches.insert",
@@ -1803,7 +1897,7 @@
       },
       "pageSize": {
        "type": "integer",
-       "description": "Maximum number of items return in a single page of responses. Maximum 1000.",
+       "description": "Maximum number of items to return in a single page of responses. Maximum 1000.",
        "format": "int32",
        "minimum": "0",
        "location": "query"
@@ -3089,6 +3183,240 @@
     }
    }
   },
+  "folders": {
+   "methods": {
+    "delete": {
+     "id": "storage.folders.delete",
+     "path": "b/{bucket}/folders/{folder}",
+     "httpMethod": "DELETE",
+     "description": "Permanently deletes a folder. Only applicable to buckets with hierarchical namespace enabled.",
+     "parameters": {
+      "bucket": {
+       "type": "string",
+       "description": "Name of the bucket in which the folder resides.",
+       "required": true,
+       "location": "path"
+      },
+      "folder": {
+       "type": "string",
+       "description": "Name of a folder.",
+       "required": true,
+       "location": "path"
+      },
+      "ifMetagenerationMatch": {
+       "type": "string",
+       "description": "If set, only deletes the folder if its metageneration matches this value.",
+       "format": "int64",
+       "location": "query"
+      },
+      "ifMetagenerationNotMatch": {
+       "type": "string",
+       "description": "If set, only deletes the folder if its metageneration does not match this value.",
+       "format": "int64",
+       "location": "query"
+      }
+     },
+     "parameterOrder": [
+      "bucket",
+      "folder"
+     ],
+     "scopes": [
+      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/devstorage.full_control",
+      "https://www.googleapis.com/auth/devstorage.read_write"
+     ]
+    },
+    "get": {
+     "id": "storage.folders.get",
+     "path": "b/{bucket}/folders/{folder}",
+     "httpMethod": "GET",
+     "description": "Returns metadata for the specified folder. Only applicable to buckets with hierarchical namespace enabled.",
+     "parameters": {
+      "bucket": {
+       "type": "string",
+       "description": "Name of the bucket in which the folder resides.",
+       "required": true,
+       "location": "path"
+      },
+      "folder": {
+       "type": "string",
+       "description": "Name of a folder.",
+       "required": true,
+       "location": "path"
+      },
+      "ifMetagenerationMatch": {
+       "type": "string",
+       "description": "Makes the return of the folder metadata conditional on whether the folder's current metageneration matches the given value.",
+       "format": "int64",
+       "location": "query"
+      },
+      "ifMetagenerationNotMatch": {
+       "type": "string",
+       "description": "Makes the return of the folder metadata conditional on whether the folder's current metageneration does not match the given value.",
+       "format": "int64",
+       "location": "query"
+      }
+     },
+     "parameterOrder": [
+      "bucket",
+      "folder"
+     ],
+     "response": {
+      "$ref": "Folder"
+     },
+     "scopes": [
+      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/cloud-platform.read-only",
+      "https://www.googleapis.com/auth/devstorage.full_control",
+      "https://www.googleapis.com/auth/devstorage.read_only",
+      "https://www.googleapis.com/auth/devstorage.read_write"
+     ]
+    },
+    "insert": {
+     "id": "storage.folders.insert",
+     "path": "b/{bucket}/folders",
+     "httpMethod": "POST",
+     "description": "Creates a new folder. Only applicable to buckets with hierarchical namespace enabled.",
+     "parameters": {
+      "bucket": {
+       "type": "string",
+       "description": "Name of the bucket in which the folder resides.",
+       "required": true,
+       "location": "path"
+      },
+      "recursive": {
+       "type": "boolean",
+       "description": "If true, any parent folder which doesn\u2019t exist will be created automatically.",
+       "location": "query"
+      }
+     },
+     "parameterOrder": [
+      "bucket"
+     ],
+     "request": {
+      "$ref": "Folder"
+     },
+     "response": {
+      "$ref": "Folder"
+     },
+     "scopes": [
+      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/devstorage.full_control",
+      "https://www.googleapis.com/auth/devstorage.read_write"
+     ]
+    },
+    "list": {
+     "id": "storage.folders.list",
+     "path": "b/{bucket}/folders",
+     "httpMethod": "GET",
+     "description": "Retrieves a list of folders matching the criteria. Only applicable to buckets with hierarchical namespace enabled.",
+     "parameters": {
+      "bucket": {
+       "type": "string",
+       "description": "Name of the bucket in which to look for folders.",
+       "required": true,
+       "location": "path"
+      },
+      "delimiter": {
+       "type": "string",
+       "description": "Returns results in a directory-like mode. The only supported value is '/'. If set, items will only contain folders that either exactly match the prefix, or are one level below the prefix.",
+       "location": "query"
+      },
+      "endOffset": {
+       "type": "string",
+       "description": "Filter results to folders whose names are lexicographically before endOffset. If startOffset is also set, the folders listed will have names between startOffset (inclusive) and endOffset (exclusive).",
+       "location": "query"
+      },
+      "pageSize": {
+       "type": "integer",
+       "description": "Maximum number of items to return in a single page of responses.",
+       "format": "int32",
+       "minimum": "0",
+       "location": "query"
+      },
+      "pageToken": {
+       "type": "string",
+       "description": "A previously-returned page token representing part of the larger set of results to view.",
+       "location": "query"
+      },
+      "prefix": {
+       "type": "string",
+       "description": "Filter results to folders whose paths begin with this prefix. If set, the value must either be an empty string or end with a '/'.",
+       "location": "query"
+      },
+      "startOffset": {
+       "type": "string",
+       "description": "Filter results to folders whose names are lexicographically equal to or after startOffset. If endOffset is also set, the folders listed will have names between startOffset (inclusive) and endOffset (exclusive).",
+       "location": "query"
+      }
+     },
+     "parameterOrder": [
+      "bucket"
+     ],
+     "response": {
+      "$ref": "Folders"
+     },
+     "scopes": [
+      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/cloud-platform.read-only",
+      "https://www.googleapis.com/auth/devstorage.full_control",
+      "https://www.googleapis.com/auth/devstorage.read_only",
+      "https://www.googleapis.com/auth/devstorage.read_write"
+     ]
+    },
+    "rename": {
+     "id": "storage.folders.rename",
+     "path": "b/{bucket}/folders/{sourceFolder}/renameTo/folders/{destinationFolder}",
+     "httpMethod": "POST",
+     "description": "Renames a source folder to a destination folder. Only applicable to buckets with hierarchical namespace enabled.",
+     "parameters": {
+      "bucket": {
+       "type": "string",
+       "description": "Name of the bucket in which the folders are in.",
+       "required": true,
+       "location": "path"
+      },
+      "destinationFolder": {
+       "type": "string",
+       "description": "Name of the destination folder.",
+       "required": true,
+       "location": "path"
+      },
+      "ifSourceMetagenerationMatch": {
+       "type": "string",
+       "description": "Makes the operation conditional on whether the source object's current metageneration matches the given value.",
+       "format": "int64",
+       "location": "query"
+      },
+      "ifSourceMetagenerationNotMatch": {
+       "type": "string",
+       "description": "Makes the operation conditional on whether the source object's current metageneration does not match the given value.",
+       "format": "int64",
+       "location": "query"
+      },
+      "sourceFolder": {
+       "type": "string",
+       "description": "Name of the source folder.",
+       "required": true,
+       "location": "path"
+      }
+     },
+     "parameterOrder": [
+      "bucket",
+      "sourceFolder",
+      "destinationFolder"
+     ],
+     "response": {
+      "$ref": "GoogleLongrunningOperation"
+     },
+     "scopes": [
+      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/devstorage.full_control",
+      "https://www.googleapis.com/auth/devstorage.read_write"
+     ]
+    }
+   }
+  },
   "managedFolders": {
    "methods": {
     "delete": {
@@ -3266,7 +3594,7 @@
       },
       "pageSize": {
        "type": "integer",
-       "description": "Maximum number of items return in a single page of responses.",
+       "description": "Maximum number of items to return in a single page of responses.",
        "format": "int32",
        "minimum": "0",
        "location": "query"
@@ -5397,6 +5725,6 @@
    }
   }
  },
- "revision": "20231218",
- "etag": "\"313336383533393738303431363735393830\""
+ "revision": "20240105",
+ "etag": "\"3136323232353032373039383637313835303036\""
 }
