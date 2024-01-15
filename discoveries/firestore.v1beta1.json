@@ -1,8 +1,33 @@
 {
-  "revision": "20231214",
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        },
+        "https://www.googleapis.com/auth/datastore": {
+          "description": "View and manage your Google Cloud Datastore data"
+        }
+      }
+    }
+  },
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
+  "ownerDomain": "google.com",
+  "basePath": "",
+  "version": "v1beta1",
+  "mtlsRootUrl": "https://firestore.mtls.googleapis.com/",
   "name": "firestore",
+  "revision": "20240109",
+  "baseUrl": "https://firestore.googleapis.com/",
+  "protocol": "rest",
   "rootUrl": "https://firestore.googleapis.com/",
   "fullyEncodeReservedExpansion": true,
+  "title": "Cloud Firestore API",
+  "canonicalName": "Firestore",
+  "documentationLink": "https://cloud.google.com/firestore",
   "schemas": {
     "GoogleFirestoreAdminV1beta1Index": {
       "id": "GoogleFirestoreAdminV1beta1Index",
@@ -677,6 +702,20 @@
           "description": "Reads documents as they were at the given time. This must be a microsecond precision timestamp within the past one hour, or if Point-in-Time Recovery is enabled, can additionally be a whole minute timestamp within the past 7 days.",
           "type": "string",
           "format": "google-datetime"
+        },
+        "mode": {
+          "description": "Optional. The mode in which the query request is processed. This field is optional, and when not provided, it defaults to `NORMAL` mode where no additional statistics will be returned with the query results.",
+          "type": "string",
+          "enumDescriptions": [
+            "The default mode. Only the query results are returned.",
+            "This mode returns only the query plan, without any results or execution statistics information.",
+            "This mode returns both the query plan and the execution statistics along with the results."
+          ],
+          "enum": [
+            "NORMAL",
+            "PLAN",
+            "PROFILE"
+          ]
         }
       }
     },
@@ -894,7 +933,7 @@
       "type": "object",
       "properties": {
         "field": {
-          "description": "Order based on the value referenced by this field.",
+          "description": "The field to order by.",
           "$ref": "FieldReference"
         },
         "direction": {
@@ -958,6 +997,44 @@
         "done": {
           "description": "If present, Firestore has completely finished the request and no more documents will be returned.",
           "type": "boolean"
+        },
+        "stats": {
+          "description": "Query plan and execution statistics. Note that the returned stats are subject to change as Firestore evolves. This is only present when the request specifies a mode other than `NORMAL` and is sent only once with the last response in the stream.",
+          "$ref": "ResultSetStats"
+        }
+      }
+    },
+    "ResultSetStats": {
+      "id": "ResultSetStats",
+      "description": "Planning and execution statistics for the query.",
+      "type": "object",
+      "properties": {
+        "queryPlan": {
+          "description": "Plan for the query.",
+          "$ref": "QueryPlan"
+        },
+        "queryStats": {
+          "description": "Aggregated statistics from the execution of the query. This will only be present when the request specifies `PROFILE` mode. For example, a query will return the statistics including: { \"results_returned\": \"20\", \"documents_scanned\": \"20\", \"indexes_entries_scanned\": \"10050\", \"total_execution_time\": \"100.7 msecs\" }",
+          "type": "object",
+          "additionalProperties": {
+            "type": "any",
+            "description": "Properties of the object."
+          }
+        }
+      }
+    },
+    "QueryPlan": {
+      "id": "QueryPlan",
+      "description": "Plan for the query.",
+      "type": "object",
+      "properties": {
+        "planInfo": {
+          "description": "Planning phase information for the query. It will include: { \"indexes_used\": [ {\"query_scope\": \"Collection\", \"properties\": \"(foo ASC, __name__ ASC)\"}, {\"query_scope\": \"Collection\", \"properties\": \"(bar ASC, __name__ ASC)\"} ] }",
+          "type": "object",
+          "additionalProperties": {
+            "type": "any",
+            "description": "Properties of the object."
+          }
         }
       }
     },
@@ -983,6 +1060,20 @@
           "description": "Executes the query at the given timestamp. This must be a microsecond precision timestamp within the past one hour, or if Point-in-Time Recovery is enabled, can additionally be a whole minute timestamp within the past 7 days.",
           "type": "string",
           "format": "google-datetime"
+        },
+        "mode": {
+          "description": "Optional. The mode in which the query request is processed. This field is optional, and when not provided, it defaults to `NORMAL` mode where no additional statistics will be returned with the query results.",
+          "type": "string",
+          "enumDescriptions": [
+            "The default mode. Only the query results are returned.",
+            "This mode returns only the query plan, without any results or execution statistics information.",
+            "This mode returns both the query plan and the execution statistics along with the results."
+          ],
+          "enum": [
+            "NORMAL",
+            "PLAN",
+            "PROFILE"
+          ]
         }
       }
     },
@@ -1079,6 +1170,10 @@
           "description": "The time at which the aggregate result was computed. This is always monotonically increasing; in this case, the previous AggregationResult in the result stream are guaranteed not to have changed between their `read_time` and this one. If the query returns no results, a response with `read_time` and no `result` will be sent, and this represents the time at which the query was run.",
           "type": "string",
           "format": "google-datetime"
+        },
+        "stats": {
+          "description": "Query plan and execution statistics. Note that the returned stats are subject to change as Firestore evolves. This is only present when the request specifies a mode other than `NORMAL` and is sent only once with the last response in the stream.",
+          "$ref": "ResultSetStats"
         }
       }
     },
@@ -1861,110 +1956,10 @@
       }
     }
   },
+  "batchPath": "batch",
+  "description": "Accesses the NoSQL document database built for automatic scaling, high performance, and ease of application development. ",
+  "servicePath": "",
   "id": "firestore:v1beta1",
-  "parameters": {
-    "access_token": {
-      "type": "string",
-      "description": "OAuth access token.",
-      "location": "query"
-    },
-    "alt": {
-      "type": "string",
-      "description": "Data format for response.",
-      "default": "json",
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ],
-      "location": "query"
-    },
-    "callback": {
-      "type": "string",
-      "description": "JSONP",
-      "location": "query"
-    },
-    "fields": {
-      "type": "string",
-      "description": "Selector specifying which fields to include in a partial response.",
-      "location": "query"
-    },
-    "key": {
-      "type": "string",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
-      "location": "query"
-    },
-    "oauth_token": {
-      "type": "string",
-      "description": "OAuth 2.0 token for the current user.",
-      "location": "query"
-    },
-    "prettyPrint": {
-      "type": "boolean",
-      "description": "Returns response with indentations and line breaks.",
-      "default": "true",
-      "location": "query"
-    },
-    "quotaUser": {
-      "type": "string",
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
-      "location": "query"
-    },
-    "upload_protocol": {
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
-      "location": "query"
-    },
-    "uploadType": {
-      "type": "string",
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
-      "location": "query"
-    },
-    "$.xgafv": {
-      "type": "string",
-      "description": "V1 error format.",
-      "enum": [
-        "1",
-        "2"
-      ],
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ],
-      "location": "query"
-    }
-  },
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
-        },
-        "https://www.googleapis.com/auth/datastore": {
-          "description": "View and manage your Google Cloud Datastore data"
-        }
-      }
-    }
-  },
-  "ownerDomain": "google.com",
-  "baseUrl": "https://firestore.googleapis.com/",
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "protocol": "rest",
-  "kind": "discovery#restDescription",
-  "discoveryVersion": "v1",
-  "mtlsRootUrl": "https://firestore.mtls.googleapis.com/",
-  "basePath": "",
-  "title": "Cloud Firestore API",
-  "version_module": true,
-  "documentationLink": "https://cloud.google.com/firestore",
   "resources": {
     "projects": {
       "resources": {
@@ -2808,10 +2803,85 @@
       }
     }
   },
+  "parameters": {
+    "access_token": {
+      "type": "string",
+      "description": "OAuth access token.",
+      "location": "query"
+    },
+    "alt": {
+      "type": "string",
+      "description": "Data format for response.",
+      "default": "json",
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "location": "query"
+    },
+    "callback": {
+      "type": "string",
+      "description": "JSONP",
+      "location": "query"
+    },
+    "fields": {
+      "type": "string",
+      "description": "Selector specifying which fields to include in a partial response.",
+      "location": "query"
+    },
+    "key": {
+      "type": "string",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+      "location": "query"
+    },
+    "oauth_token": {
+      "type": "string",
+      "description": "OAuth 2.0 token for the current user.",
+      "location": "query"
+    },
+    "prettyPrint": {
+      "type": "boolean",
+      "description": "Returns response with indentations and line breaks.",
+      "default": "true",
+      "location": "query"
+    },
+    "quotaUser": {
+      "type": "string",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
+      "location": "query"
+    },
+    "upload_protocol": {
+      "type": "string",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
+      "location": "query"
+    },
+    "uploadType": {
+      "type": "string",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
+      "location": "query"
+    },
+    "$.xgafv": {
+      "type": "string",
+      "description": "V1 error format.",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "location": "query"
+    }
+  },
+  "kind": "discovery#restDescription",
   "ownerName": "Google",
-  "batchPath": "batch",
-  "version": "v1beta1",
-  "servicePath": "",
-  "canonicalName": "Firestore",
-  "description": "Accesses the NoSQL document database built for automatic scaling, high performance, and ease of application development. "
+  "discoveryVersion": "v1",
+  "version_module": true
 }
