@@ -1,11 +1,18 @@
 {
-  "revision": "20240106",
-  "description": "Manages Apache Airflow environments on Google Cloud Platform.",
-  "rootUrl": "https://composer.googleapis.com/",
-  "ownerName": "Google",
-  "canonicalName": "Cloud Composer",
-  "fullyEncodeReservedExpansion": true,
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        }
+      }
+    }
+  },
+  "version": "v1",
+  "version_module": true,
   "mtlsRootUrl": "https://composer.mtls.googleapis.com/",
+  "documentationLink": "https://cloud.google.com/composer/",
+  "baseUrl": "https://composer.googleapis.com/",
   "schemas": {
     "ListOperationsResponse": {
       "id": "ListOperationsResponse",
@@ -305,6 +312,20 @@
         "cloudDataLineageIntegration": {
           "description": "Optional. The configuration for Cloud Data Lineage integration.",
           "$ref": "CloudDataLineageIntegration"
+        },
+        "webServerPluginsMode": {
+          "description": "Optional. Whether or not the web server uses custom plugins. If unspecified, the field defaults to `PLUGINS_ENABLED`. This field is supported for Cloud Composer environments in versions composer-3.*.*-airflow-*.*.* and newer.",
+          "type": "string",
+          "enumDescriptions": [
+            "Default mode.",
+            "Web server plugins are not supported.",
+            "Web server plugins are supported."
+          ],
+          "enum": [
+            "WEB_SERVER_PLUGINS_MODE_UNSPECIFIED",
+            "PLUGINS_DISABLED",
+            "PLUGINS_ENABLED"
+          ]
         }
       }
     },
@@ -370,6 +391,14 @@
         "enableIpMasqAgent": {
           "description": "Optional. Deploys 'ip-masq-agent' daemon set in the GKE cluster and defines nonMasqueradeCIDRs equals to pod IP range so IP masquerading is used for all destination addresses, except between pods traffic. See: https://cloud.google.com/kubernetes-engine/docs/how-to/ip-masquerade-agent",
           "type": "boolean"
+        },
+        "composerNetworkAttachment": {
+          "description": "Optional. Network Attachment that Cloud Composer environment is connected to, which provides connectivity with a user's VPC network. Takes precedence over network and subnetwork settings. If not provided, but network and subnetwork are defined during environment, it will be provisioned. If not provided and network and subnetwork are also empty, then connectivity to user's VPC network is disabled. Network attachment must be provided in format projects/{project}/regions/{region}/networkAttachments/{networkAttachment}. This field is supported for Cloud Composer environments in versions composer-3.*.*-airflow-*.*.* and newer.",
+          "type": "string"
+        },
+        "composerInternalIpv4CidrBlock": {
+          "description": "Optional. The IP range in CIDR notation to use internally by Cloud Composer. IP addresses are not reserved - and the same range can be used by multiple Cloud Composer environments. In case of overlap, IPs from this range will not be accessible in the user's VPC network. Cannot be updated. If not specified, the default value of '100.64.128.0/20' is used. This field is supported for Cloud Composer environments in versions composer-3.*.*-airflow-*.*.* and newer.",
+          "type": "string"
         }
       }
     },
@@ -407,6 +436,10 @@
       "properties": {
         "enablePrivateEnvironment": {
           "description": "Optional. If `true`, a Private IP Cloud Composer environment is created. If this field is set to true, `IPAllocationPolicy.use_ip_aliases` must be set to true for Cloud Composer environments in versions composer-1.*.*-airflow-*.*.*.",
+          "type": "boolean"
+        },
+        "enablePrivateBuildsOnly": {
+          "description": "Optional. If `true`, builds performed during operations that install Python packages have only private connectivity to Google services (including Artifact Registry) and VPC network (if either `NodeConfig.network` and `NodeConfig.subnetwork` fields or `NodeConfig.composer_network_attachment` field are specified). If `false`, the builds also have access to the internet. This field is supported for Cloud Composer environments in versions composer-3.*.*-airflow-*.*.* and newer.",
           "type": "boolean"
         },
         "privateClusterConfig": {
@@ -597,6 +630,10 @@
         "triggerer": {
           "description": "Optional. Resources used by Airflow triggerers.",
           "$ref": "TriggererResource"
+        },
+        "dagProcessor": {
+          "description": "Optional. Resources used by Airflow DAG processors. This field is supported for Cloud Composer environments in versions composer-3.*.*-airflow-*.*.* and newer.",
+          "$ref": "DagProcessorResource"
         }
       }
     },
@@ -700,6 +737,33 @@
           "description": "Optional. Memory (GB) request and limit for a single Airflow triggerer replica.",
           "type": "number",
           "format": "float"
+        }
+      }
+    },
+    "DagProcessorResource": {
+      "id": "DagProcessorResource",
+      "description": "Configuration for resources used by Airflow DAG processors.",
+      "type": "object",
+      "properties": {
+        "cpu": {
+          "description": "Optional. CPU request and limit for a single Airflow DAG processor replica.",
+          "type": "number",
+          "format": "float"
+        },
+        "memoryGb": {
+          "description": "Optional. Memory (GB) request and limit for a single Airflow DAG processor replica.",
+          "type": "number",
+          "format": "float"
+        },
+        "storageGb": {
+          "description": "Optional. Storage (GB) request and limit for a single Airflow DAG processor replica.",
+          "type": "number",
+          "format": "float"
+        },
+        "count": {
+          "description": "Optional. The number of DAG processors. If not provided or set to 0, a single DAG processor instance will be created.",
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -995,6 +1059,106 @@
         }
       }
     },
+    "ListWorkloadsResponse": {
+      "id": "ListWorkloadsResponse",
+      "description": "Response to ListWorkloadsRequest.",
+      "type": "object",
+      "properties": {
+        "workloads": {
+          "description": "The list of environment workloads.",
+          "type": "array",
+          "items": {
+            "$ref": "ComposerWorkload"
+          }
+        },
+        "nextPageToken": {
+          "description": "The page token used to query for the next page if one exists.",
+          "type": "string"
+        }
+      }
+    },
+    "ComposerWorkload": {
+      "id": "ComposerWorkload",
+      "description": "Information about a single workload.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Name of a workload.",
+          "type": "string"
+        },
+        "type": {
+          "description": "Type of a workload.",
+          "type": "string",
+          "enumDescriptions": [
+            "Not able to determine the type of the workload.",
+            "Celery worker.",
+            "Kubernetes worker.",
+            "Workload created by Kubernetes Pod Operator.",
+            "Airflow scheduler.",
+            "Airflow Dag processor.",
+            "Airflow triggerer.",
+            "Airflow web server UI.",
+            "Redis."
+          ],
+          "enum": [
+            "COMPOSER_WORKLOAD_TYPE_UNSPECIFIED",
+            "CELERY_WORKER",
+            "KUBERNETES_WORKER",
+            "KUBERNETES_OPERATOR_POD",
+            "SCHEDULER",
+            "DAG_PROCESSOR",
+            "TRIGGERER",
+            "WEB_SERVER",
+            "REDIS"
+          ]
+        },
+        "status": {
+          "description": "Output only. Status of a workload.",
+          "readOnly": true,
+          "$ref": "ComposerWorkloadStatus"
+        }
+      }
+    },
+    "ComposerWorkloadStatus": {
+      "id": "ComposerWorkloadStatus",
+      "description": "Workload status.",
+      "type": "object",
+      "properties": {
+        "state": {
+          "description": "Output only. Workload state.",
+          "readOnly": true,
+          "type": "string",
+          "enumDescriptions": [
+            "Not able to determine the status of the workload.",
+            "Workload is in pending state and has not yet started.",
+            "Workload is running fine.",
+            "Workload is running but there are some non-critical problems.",
+            "Workload is not running due to an error.",
+            "Workload has finished execution with success.",
+            "Workload has finished execution with failure."
+          ],
+          "enum": [
+            "COMPOSER_WORKLOAD_STATE_UNSPECIFIED",
+            "PENDING",
+            "OK",
+            "WARNING",
+            "ERROR",
+            "SUCCEEDED",
+            "FAILED"
+          ]
+        },
+        "statusMessage": {
+          "description": "Output only. Text to provide more descriptive status.",
+          "readOnly": true,
+          "type": "string"
+        },
+        "detailedStatusMessage": {
+          "description": "Output only. Detailed message of the status.",
+          "readOnly": true,
+          "type": "string"
+        }
+      }
+    },
     "SaveSnapshotRequest": {
       "id": "SaveSnapshotRequest",
       "description": "Request to create a snapshot of a Cloud Composer environment.",
@@ -1268,89 +1432,12 @@
       "properties": {}
     }
   },
-  "basePath": "",
-  "baseUrl": "https://composer.googleapis.com/",
-  "servicePath": "",
-  "title": "Cloud Composer API",
-  "ownerDomain": "google.com",
-  "name": "composer",
-  "parameters": {
-    "access_token": {
-      "type": "string",
-      "description": "OAuth access token.",
-      "location": "query"
-    },
-    "alt": {
-      "type": "string",
-      "description": "Data format for response.",
-      "default": "json",
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ],
-      "location": "query"
-    },
-    "callback": {
-      "type": "string",
-      "description": "JSONP",
-      "location": "query"
-    },
-    "fields": {
-      "type": "string",
-      "description": "Selector specifying which fields to include in a partial response.",
-      "location": "query"
-    },
-    "key": {
-      "type": "string",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
-      "location": "query"
-    },
-    "oauth_token": {
-      "type": "string",
-      "description": "OAuth 2.0 token for the current user.",
-      "location": "query"
-    },
-    "prettyPrint": {
-      "type": "boolean",
-      "description": "Returns response with indentations and line breaks.",
-      "default": "true",
-      "location": "query"
-    },
-    "quotaUser": {
-      "type": "string",
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
-      "location": "query"
-    },
-    "upload_protocol": {
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
-      "location": "query"
-    },
-    "uploadType": {
-      "type": "string",
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
-      "location": "query"
-    },
-    "$.xgafv": {
-      "type": "string",
-      "description": "V1 error format.",
-      "enum": [
-        "1",
-        "2"
-      ],
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ],
-      "location": "query"
-    }
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
   },
+  "basePath": "",
+  "description": "Manages Apache Airflow environments on Google Cloud Platform.",
   "resources": {
     "projects": {
       "resources": {
@@ -1794,6 +1881,53 @@
                   ],
                   "description": "Fetches database properties."
                 }
+              },
+              "resources": {
+                "workloads": {
+                  "methods": {
+                    "list": {
+                      "id": "composer.projects.locations.environments.workloads.list",
+                      "path": "v1/{+parent}/workloads",
+                      "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/environments/{environmentsId}/workloads",
+                      "httpMethod": "GET",
+                      "parameters": {
+                        "parent": {
+                          "description": "Required. The environment name to get workloads for, in the form: \"projects/{projectId}/locations/{locationId}/environments/{environmentId}\"",
+                          "pattern": "^projects/[^/]+/locations/[^/]+/environments/[^/]+$",
+                          "location": "path",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "pageSize": {
+                          "description": "Optional. The maximum number of environments to return.",
+                          "location": "query",
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        "pageToken": {
+                          "description": "Optional. The next_page_token value returned from a previous List request, if any.",
+                          "location": "query",
+                          "type": "string"
+                        },
+                        "filter": {
+                          "description": "Optional. The list filter. Currently only supports equality on the type field. The value of a field specified in the filter expression must be one ComposerWorkloadType enum option. It's possible to get multiple types using \"OR\" operator, e.g.: \"type=SCHEDULER OR type=CELERY_WORKER\". If not specified, all items are returned.",
+                          "location": "query",
+                          "type": "string"
+                        }
+                      },
+                      "parameterOrder": [
+                        "parent"
+                      ],
+                      "response": {
+                        "$ref": "ListWorkloadsResponse"
+                      },
+                      "scopes": [
+                        "https://www.googleapis.com/auth/cloud-platform"
+                      ],
+                      "description": "Lists workloads in a Cloud Composer environment. Workload is a unit that runs a single Composer component. This method is supported for Cloud Composer environments in versions composer-3.*.*-airflow-*.*.* and newer."
+                    }
+                  }
+                }
               }
             },
             "imageVersions": {
@@ -1846,25 +1980,95 @@
       }
     }
   },
+  "id": "composer:v1",
+  "ownerName": "Google",
   "kind": "discovery#restDescription",
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "documentationLink": "https://cloud.google.com/composer/",
+  "revision": "20240123",
   "protocol": "rest",
-  "version": "v1",
+  "title": "Cloud Composer API",
+  "rootUrl": "https://composer.googleapis.com/",
   "batchPath": "batch",
-  "version_module": true,
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
-        }
-      }
+  "discoveryVersion": "v1",
+  "parameters": {
+    "access_token": {
+      "type": "string",
+      "description": "OAuth access token.",
+      "location": "query"
+    },
+    "alt": {
+      "type": "string",
+      "description": "Data format for response.",
+      "default": "json",
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "location": "query"
+    },
+    "callback": {
+      "type": "string",
+      "description": "JSONP",
+      "location": "query"
+    },
+    "fields": {
+      "type": "string",
+      "description": "Selector specifying which fields to include in a partial response.",
+      "location": "query"
+    },
+    "key": {
+      "type": "string",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+      "location": "query"
+    },
+    "oauth_token": {
+      "type": "string",
+      "description": "OAuth 2.0 token for the current user.",
+      "location": "query"
+    },
+    "prettyPrint": {
+      "type": "boolean",
+      "description": "Returns response with indentations and line breaks.",
+      "default": "true",
+      "location": "query"
+    },
+    "quotaUser": {
+      "type": "string",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
+      "location": "query"
+    },
+    "upload_protocol": {
+      "type": "string",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
+      "location": "query"
+    },
+    "uploadType": {
+      "type": "string",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
+      "location": "query"
+    },
+    "$.xgafv": {
+      "type": "string",
+      "description": "V1 error format.",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "location": "query"
     }
   },
-  "discoveryVersion": "v1",
-  "id": "composer:v1"
+  "servicePath": "",
+  "ownerDomain": "google.com",
+  "name": "composer",
+  "canonicalName": "Cloud Composer",
+  "fullyEncodeReservedExpansion": true
 }
