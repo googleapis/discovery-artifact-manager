@@ -1,6 +1,9 @@
 {
-  "canonicalName": "Pubsub",
-  "rootUrl": "https://pubsub.googleapis.com/",
+  "baseUrl": "https://pubsub.googleapis.com/",
+  "ownerDomain": "google.com",
+  "id": "pubsub:v1",
+  "ownerName": "Google",
+  "version": "v1",
   "schemas": {
     "SetIamPolicyRequest": {
       "id": "SetIamPolicyRequest",
@@ -43,7 +46,7 @@
       "type": "object",
       "properties": {
         "role": {
-          "description": "Role that is assigned to the list of `members`, or principals. For example, `roles/viewer`, `roles/editor`, or `roles/owner`.",
+          "description": "Role that is assigned to the list of `members`, or principals. For example, `roles/viewer`, `roles/editor`, or `roles/owner`. For an overview of the IAM roles and permissions, see the [IAM documentation](https://cloud.google.com/iam/docs/roles-overview). For a list of the available pre-defined roles, see [here](https://cloud.google.com/iam/docs/understanding-roles).",
           "type": "string"
         },
         "members": {
@@ -307,6 +310,25 @@
           "description": "Optional. Indicates the minimum duration to retain a message after it is published to the topic. If this field is set, messages published to the topic in the last `message_retention_duration` are always available to subscribers. For instance, it allows any attached subscription to [seek to a timestamp](https://cloud.google.com/pubsub/docs/replay-overview#seek_to_a_time) that is up to `message_retention_duration` in the past. If this field is not set, message retention is controlled by settings on individual subscriptions. Cannot be more than 31 days or less than 10 minutes.",
           "type": "string",
           "format": "google-duration"
+        },
+        "state": {
+          "description": "Output only. An output-only field indicating the state of the topic.",
+          "readOnly": true,
+          "type": "string",
+          "enumDescriptions": [
+            "Default value. This value is unused.",
+            "The topic does not have any persistent errors.",
+            "Ingestion from the data source has encountered a permanent error. See the more detailed error state in the corresponding ingestion source configuration."
+          ],
+          "enum": [
+            "STATE_UNSPECIFIED",
+            "ACTIVE",
+            "INGESTION_RESOURCE_ERROR"
+          ]
+        },
+        "ingestionDataSourceSettings": {
+          "description": "Optional. Settings for managed ingestion from a data source into this topic.",
+          "$ref": "IngestionDataSourceSettings"
         }
       }
     },
@@ -361,6 +383,61 @@
         }
       }
     },
+    "IngestionDataSourceSettings": {
+      "id": "IngestionDataSourceSettings",
+      "description": "Settings for an ingestion data source on a topic.",
+      "type": "object",
+      "properties": {
+        "awsKinesis": {
+          "description": "Optional. Amazon Kinesis Data Streams.",
+          "$ref": "AwsKinesis"
+        }
+      }
+    },
+    "AwsKinesis": {
+      "id": "AwsKinesis",
+      "description": "Ingestion settings for Amazon Kinesis Data Streams.",
+      "type": "object",
+      "properties": {
+        "state": {
+          "description": "Output only. An output-only field that indicates the state of the Kinesis ingestion source.",
+          "readOnly": true,
+          "type": "string",
+          "enumDescriptions": [
+            "Default value. This value is unused.",
+            "Ingestion is active.",
+            "Permission denied encountered while consuming data from Kinesis. This can happen if: - The provided `aws_role_arn` does not exist or does not have the appropriate permissions attached. - The provided `aws_role_arn` is not set up properly for Identity Federation using `gcp_service_account`. - The Pub/Sub SA is not granted the `iam.serviceAccounts.getOpenIdToken` permission on `gcp_service_account`.",
+            "Permission denied encountered while publishing to the topic. This can happen due to Pub/Sub SA has not been granted the [appropriate publish permissions](https://cloud.google.com/pubsub/docs/access-control#pubsub.publisher)",
+            "The Kinesis stream does not exist.",
+            "The Kinesis consumer does not exist."
+          ],
+          "enum": [
+            "STATE_UNSPECIFIED",
+            "ACTIVE",
+            "KINESIS_PERMISSION_DENIED",
+            "PUBLISH_PERMISSION_DENIED",
+            "STREAM_NOT_FOUND",
+            "CONSUMER_NOT_FOUND"
+          ]
+        },
+        "streamArn": {
+          "description": "Required. The Kinesis stream ARN to ingest data from.",
+          "type": "string"
+        },
+        "consumerArn": {
+          "description": "Required. The Kinesis consumer ARN to used for ingestion in Enhanced Fan-Out mode. The consumer must be already created and ready to be used.",
+          "type": "string"
+        },
+        "awsRoleArn": {
+          "description": "Required. AWS role ARN to be used for Federated Identity authentication with Kinesis. Check the Pub/Sub docs for how to set up this role and the required permissions that need to be attached to it.",
+          "type": "string"
+        },
+        "gcpServiceAccount": {
+          "description": "Required. The GCP service account to be used for Federated Identity authentication with Kinesis (via a `AssumeRoleWithWebIdentity` call for the provided role). The `aws_role_arn` must be set up with `accounts.google.com:sub` equals to this service account number.",
+          "type": "string"
+        }
+      }
+    },
     "UpdateTopicRequest": {
       "id": "UpdateTopicRequest",
       "description": "Request for the UpdateTopic method.",
@@ -409,11 +486,11 @@
           }
         },
         "messageId": {
-          "description": "Optional. ID of this message, assigned by the server when the message is published. Guaranteed to be unique within the topic. This value may be read by a subscriber that receives a `PubsubMessage` via a `Pull` call or a push delivery. It must not be populated by the publisher in a `Publish` call.",
+          "description": "ID of this message, assigned by the server when the message is published. Guaranteed to be unique within the topic. This value may be read by a subscriber that receives a `PubsubMessage` via a `Pull` call or a push delivery. It must not be populated by the publisher in a `Publish` call.",
           "type": "string"
         },
         "publishTime": {
-          "description": "Optional. The time at which the message was published, populated by the server when it receives the `Publish` call. It must not be populated by the publisher in a `Publish` call.",
+          "description": "The time at which the message was published, populated by the server when it receives the `Publish` call. It must not be populated by the publisher in a `Publish` call.",
           "type": "string",
           "format": "google-datetime"
         },
@@ -869,7 +946,7 @@
           }
         },
         "ackDeadlineSeconds": {
-          "description": "Required. The new ack deadline with respect to the time this request was sent to the Pub/Sub system. For example, if the value is 10, the new ack deadline will expire 10 seconds after the `ModifyAckDeadline` call was made. Specifying zero might immediately make the message available for delivery to another subscriber client. This typically results in an increase in the rate of message redeliveries (that is, duplicates). The minimum deadline you can specify is 0 seconds. The maximum deadline you can specify is 600 seconds (10 minutes).",
+          "description": "Required. The new ack deadline with respect to the time this request was sent to the Pub/Sub system. For example, if the value is 10, the new ack deadline will expire 10 seconds after the `ModifyAckDeadline` call was made. Specifying zero might immediately make the message available for delivery to another subscriber client. This typically results in an increase in the rate of message redeliveries (that is, duplicates). The minimum deadline you can specify is 0 seconds. The maximum deadline you can specify in a single request is 600 seconds (10 minutes).",
           "type": "integer",
           "format": "int32"
         }
@@ -1053,30 +1130,15 @@
       "properties": {}
     }
   },
-  "title": "Cloud Pub/Sub API",
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "baseUrl": "https://pubsub.googleapis.com/",
-  "name": "pubsub",
-  "servicePath": "",
+  "protocol": "rest",
+  "kind": "discovery#restDescription",
+  "batchPath": "batch",
+  "mtlsRootUrl": "https://pubsub.mtls.googleapis.com/",
   "description": "Provides reliable, many-to-many, asynchronous messaging between applications. ",
   "basePath": "",
-  "documentationLink": "https://cloud.google.com/pubsub/docs",
-  "version": "v1",
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
-        },
-        "https://www.googleapis.com/auth/pubsub": {
-          "description": "View and manage Pub/Sub topics and subscriptions"
-        }
-      }
-    }
-  },
+  "title": "Cloud Pub/Sub API",
+  "servicePath": "",
+  "discoveryVersion": "v1",
   "parameters": {
     "access_token": {
       "type": "string",
@@ -1154,6 +1216,8 @@
       "location": "query"
     }
   },
+  "documentationLink": "https://cloud.google.com/pubsub/docs",
+  "canonicalName": "Pubsub",
   "endpoints": [
     {
       "endpointUrl": "https://pubsub.me-central2.rep.googleapis.com/",
@@ -1161,7 +1225,25 @@
       "description": "Regional Endpoint"
     }
   ],
-  "kind": "discovery#restDescription",
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        },
+        "https://www.googleapis.com/auth/pubsub": {
+          "description": "View and manage Pub/Sub topics and subscriptions"
+        }
+      }
+    }
+  },
+  "revision": "20240126",
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
+  "rootUrl": "https://pubsub.googleapis.com/",
+  "name": "pubsub",
   "resources": {
     "projects": {
       "resources": {
@@ -1313,7 +1395,7 @@
                 "https://www.googleapis.com/auth/cloud-platform",
                 "https://www.googleapis.com/auth/pubsub"
               ],
-              "description": "Updates an existing topic. Note that certain properties of a topic are not modifiable."
+              "description": "Updates an existing topic by updating the fields specified in the update mask. Note that certain properties of a topic are not modifiable."
             },
             "publish": {
               "id": "pubsub.projects.topics.publish",
@@ -1719,7 +1801,7 @@
                 "https://www.googleapis.com/auth/cloud-platform",
                 "https://www.googleapis.com/auth/pubsub"
               ],
-              "description": "Updates an existing subscription. Note that certain properties of a subscription, such as its topic, are not modifiable."
+              "description": "Updates an existing subscription by updating the fields specified in the update mask. Note that certain properties of a subscription, such as its topic, are not modifiable."
             },
             "list": {
               "id": "pubsub.projects.subscriptions.list",
@@ -2142,7 +2224,7 @@
                 "https://www.googleapis.com/auth/cloud-platform",
                 "https://www.googleapis.com/auth/pubsub"
               ],
-              "description": "Updates an existing snapshot. Snapshots are used in [Seek](https://cloud.google.com/pubsub/docs/replay-overview) operations, which allow you to manage message acknowledgments in bulk. That is, you can set the acknowledgment state of messages in an existing subscription to the state captured by a snapshot."
+              "description": "Updates an existing snapshot by updating the fields specified in the update mask. Snapshots are used in [Seek](https://cloud.google.com/pubsub/docs/replay-overview) operations, which allow you to manage message acknowledgments in bulk. That is, you can set the acknowledgment state of messages in an existing subscription to the state captured by a snapshot."
             },
             "delete": {
               "id": "pubsub.projects.snapshots.delete",
@@ -2621,13 +2703,5 @@
         }
       }
     }
-  },
-  "ownerDomain": "google.com",
-  "id": "pubsub:v1",
-  "protocol": "rest",
-  "ownerName": "Google",
-  "revision": "20231212",
-  "discoveryVersion": "v1",
-  "mtlsRootUrl": "https://pubsub.mtls.googleapis.com/",
-  "batchPath": "batch"
+  }
 }
