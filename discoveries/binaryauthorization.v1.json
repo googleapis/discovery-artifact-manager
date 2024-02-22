@@ -1,9 +1,13 @@
 {
+  "id": "binaryauthorization:v1",
+  "ownerDomain": "google.com",
+  "documentationLink": "https://cloud.google.com/binary-authorization/",
+  "revision": "20240220",
   "icons": {
     "x16": "http://www.google.com/images/icons/product/search-16.gif",
     "x32": "http://www.google.com/images/icons/product/search-32.gif"
   },
-  "fullyEncodeReservedExpansion": true,
+  "version_module": true,
   "parameters": {
     "access_token": {
       "type": "string",
@@ -81,12 +85,271 @@
       "location": "query"
     }
   },
-  "basePath": "",
-  "batchPath": "batch",
-  "id": "binaryauthorization:v1",
-  "baseUrl": "https://binaryauthorization.googleapis.com/",
-  "version": "v1",
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        }
+      }
+    }
+  },
+  "name": "binaryauthorization",
+  "fullyEncodeReservedExpansion": true,
   "schemas": {
+    "EvaluateGkePolicyRequest": {
+      "id": "EvaluateGkePolicyRequest",
+      "description": "Request message for PlatformPolicyEvaluationService.EvaluateGkePolicy.",
+      "type": "object",
+      "properties": {
+        "resource": {
+          "description": "Required. JSON or YAML blob representing a Kubernetes resource.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "any",
+            "description": "Properties of the object."
+          }
+        }
+      }
+    },
+    "EvaluateGkePolicyResponse": {
+      "id": "EvaluateGkePolicyResponse",
+      "description": "Response message for PlatformPolicyEvaluationService.EvaluateGkePolicy.",
+      "type": "object",
+      "properties": {
+        "verdict": {
+          "description": "The result of evaluating all Pods in the request.",
+          "type": "string",
+          "enumDescriptions": [
+            "Not specified. This should never be used.",
+            "All Pods in the request conform to the policy.",
+            "At least one Pod does not conform to the policy.",
+            "Encountered at least one error evaluating a Pod and all other Pods conform to the policy. Non-conformance has precedence over errors."
+          ],
+          "enum": [
+            "VERDICT_UNSPECIFIED",
+            "CONFORMANT",
+            "NON_CONFORMANT",
+            "ERROR"
+          ]
+        },
+        "results": {
+          "description": "Evaluation result for each Pod contained in the request.",
+          "type": "array",
+          "items": {
+            "$ref": "PodResult"
+          }
+        }
+      }
+    },
+    "PodResult": {
+      "id": "PodResult",
+      "description": "Result of evaluating the whole GKE policy for one Pod.",
+      "type": "object",
+      "properties": {
+        "podName": {
+          "description": "The name of the Pod.",
+          "type": "string"
+        },
+        "kubernetesNamespace": {
+          "description": "The Kubernetes namespace of the Pod.",
+          "type": "string"
+        },
+        "kubernetesServiceAccount": {
+          "description": "The Kubernetes service account of the Pod.",
+          "type": "string"
+        },
+        "verdict": {
+          "description": "The result of evaluating this Pod.",
+          "type": "string",
+          "enumDescriptions": [
+            "Not specified. This should never be used.",
+            "All images conform to the policy.",
+            "At least one image does not conform to the policy.",
+            "Encountered at least one error evaluating an image and all other images with non-error verdicts conform to the policy. Non-conformance has precedence over errors."
+          ],
+          "enum": [
+            "POD_VERDICT_UNSPECIFIED",
+            "CONFORMANT",
+            "NON_CONFORMANT",
+            "ERROR"
+          ]
+        },
+        "imageResults": {
+          "description": "Per-image details.",
+          "type": "array",
+          "items": {
+            "$ref": "ImageResult"
+          }
+        }
+      }
+    },
+    "ImageResult": {
+      "id": "ImageResult",
+      "description": "Result of evaluating one image.",
+      "type": "object",
+      "properties": {
+        "imageUri": {
+          "description": "Image URI from the request.",
+          "type": "string"
+        },
+        "verdict": {
+          "description": "The result of evaluating this image.",
+          "type": "string",
+          "enumDescriptions": [
+            "Not specified. This should never be used.",
+            "Image conforms to the policy.",
+            "Image does not conform to the policy.",
+            "Error evaluating the image. Non-conformance has precedence over errors."
+          ],
+          "enum": [
+            "IMAGE_VERDICT_UNSPECIFIED",
+            "CONFORMANT",
+            "NON_CONFORMANT",
+            "ERROR"
+          ]
+        },
+        "allowlistResult": {
+          "description": "If the image was exempted by a top-level allow_pattern, contains the allowlist pattern that the image name matched.",
+          "$ref": "AllowlistResult"
+        },
+        "checkSetResult": {
+          "description": "If a check set was evaluated, contains the result of the check set. Empty if there were no check sets.",
+          "$ref": "CheckSetResult"
+        },
+        "explanation": {
+          "description": "Explanation of this image result. Only populated if no check sets were evaluated.",
+          "type": "string"
+        }
+      }
+    },
+    "AllowlistResult": {
+      "id": "AllowlistResult",
+      "description": "Result of evaluating an image name allowlist.",
+      "type": "object",
+      "properties": {
+        "matchedPattern": {
+          "description": "The allowlist pattern that the image matched.",
+          "type": "string"
+        }
+      }
+    },
+    "CheckSetResult": {
+      "id": "CheckSetResult",
+      "description": "Result of evaluating one check set.",
+      "type": "object",
+      "properties": {
+        "index": {
+          "description": "The index of the check set.",
+          "type": "string",
+          "format": "int64"
+        },
+        "displayName": {
+          "description": "The name of the check set.",
+          "type": "string"
+        },
+        "scope": {
+          "description": "The scope of the check set.",
+          "$ref": "Scope"
+        },
+        "allowlistResult": {
+          "description": "If the image was exempted by an allow_pattern in the check set, contains the pattern that the image name matched.",
+          "$ref": "AllowlistResult"
+        },
+        "checkResults": {
+          "description": "If checks were evaluated, contains the results of evaluating each check.",
+          "$ref": "CheckResults"
+        },
+        "explanation": {
+          "description": "Explanation of this check set result. Only populated if no checks were evaluated.",
+          "type": "string"
+        }
+      }
+    },
+    "Scope": {
+      "id": "Scope",
+      "description": "A scope specifier for `CheckSet` objects.",
+      "type": "object",
+      "properties": {
+        "kubernetesServiceAccount": {
+          "description": "Optional. Matches a single Kubernetes service account, e.g. `my-namespace:my-service-account`. `kubernetes_service_account` scope is always more specific than `kubernetes_namespace` scope for the same namespace.",
+          "type": "string"
+        },
+        "kubernetesNamespace": {
+          "description": "Optional. Matches all Kubernetes service accounts in the provided namespace, unless a more specific `kubernetes_service_account` scope already matched.",
+          "type": "string"
+        }
+      }
+    },
+    "CheckResults": {
+      "id": "CheckResults",
+      "description": "Result of evaluating one or more checks.",
+      "type": "object",
+      "properties": {
+        "results": {
+          "description": "Per-check details.",
+          "type": "array",
+          "items": {
+            "$ref": "CheckResult"
+          }
+        }
+      }
+    },
+    "CheckResult": {
+      "id": "CheckResult",
+      "description": "Result of evaluating one check.",
+      "type": "object",
+      "properties": {
+        "index": {
+          "description": "The index of the check.",
+          "type": "string",
+          "format": "int64"
+        },
+        "displayName": {
+          "description": "The name of the check.",
+          "type": "string"
+        },
+        "type": {
+          "description": "The type of the check.",
+          "type": "string"
+        },
+        "allowlistResult": {
+          "description": "If the image was exempted by an allow_pattern in the check, contains the pattern that the image name matched.",
+          "$ref": "AllowlistResult"
+        },
+        "evaluationResult": {
+          "description": "If a check was evaluated, contains the result of the check.",
+          "$ref": "EvaluationResult"
+        },
+        "explanation": {
+          "description": "Explanation of this check result.",
+          "type": "string"
+        }
+      }
+    },
+    "EvaluationResult": {
+      "id": "EvaluationResult",
+      "description": "Result of evaluating one check.",
+      "type": "object",
+      "properties": {
+        "verdict": {
+          "description": "The result of evaluating this check.",
+          "type": "string",
+          "enumDescriptions": [
+            "Not specified. This should never be used.",
+            "The check was successfully evaluated and the image satisfied the check.",
+            "The check was successfully evaluated and the image did not satisfy the check.",
+            "The check was not successfully evaluated."
+          ],
+          "enum": [
+            "CHECK_VERDICT_UNSPECIFIED",
+            "CONFORMANT",
+            "NON_CONFORMANT",
+            "ERROR"
+          ]
+        }
+      }
+    },
     "PlatformPolicy": {
       "id": "PlatformPolicy",
       "description": "A Binary Authorization platform policy for deployments on various platforms.",
@@ -168,21 +431,6 @@
           "items": {
             "$ref": "Check"
           }
-        }
-      }
-    },
-    "Scope": {
-      "id": "Scope",
-      "description": "A scope specifier for `CheckSet` objects.",
-      "type": "object",
-      "properties": {
-        "kubernetesServiceAccount": {
-          "description": "Optional. Matches a single Kubernetes service account, e.g. `my-namespace:my-service-account`. `kubernetes_service_account` scope is always more specific than `kubernetes_namespace` scope for the same namespace.",
-          "type": "string"
-        },
-        "kubernetesNamespace": {
-          "description": "Optional. Matches all Kubernetes service accounts in the provided namespace, unless a more specific `kubernetes_service_account` scope already matched.",
-          "type": "string"
         }
       }
     },
@@ -1014,28 +1262,7 @@
       }
     }
   },
-  "name": "binaryauthorization",
-  "ownerDomain": "google.com",
-  "servicePath": "",
-  "mtlsRootUrl": "https://binaryauthorization.mtls.googleapis.com/",
-  "version_module": true,
-  "description": "The management interface for Binary Authorization, a service that provides policy-based deployment validation and control for images deployed to Google Kubernetes Engine (GKE), Anthos Service Mesh, Anthos Clusters, and Cloud Run. ",
-  "rootUrl": "https://binaryauthorization.googleapis.com/",
   "title": "Binary Authorization API",
-  "discoveryVersion": "v1",
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
-        }
-      }
-    }
-  },
-  "documentationLink": "https://cloud.google.com/binary-authorization/",
-  "revision": "20240209",
-  "protocol": "rest",
-  "kind": "discovery#restDescription",
   "resources": {
     "projects": {
       "methods": {
@@ -1096,6 +1323,42 @@
       "resources": {
         "platforms": {
           "resources": {
+            "gke": {
+              "resources": {
+                "policies": {
+                  "methods": {
+                    "evaluate": {
+                      "id": "binaryauthorization.projects.platforms.gke.policies.evaluate",
+                      "path": "v1/{+name}:evaluate",
+                      "flatPath": "v1/projects/{projectsId}/platforms/gke/policies/{policiesId}:evaluate",
+                      "httpMethod": "POST",
+                      "parameters": {
+                        "name": {
+                          "description": "Required. The name of the platform policy to evaluate in the format `projects/*/platforms/*/policies/*`.",
+                          "pattern": "^projects/[^/]+/platforms/gke/policies/[^/]+$",
+                          "location": "path",
+                          "required": true,
+                          "type": "string"
+                        }
+                      },
+                      "parameterOrder": [
+                        "name"
+                      ],
+                      "request": {
+                        "$ref": "EvaluateGkePolicyRequest"
+                      },
+                      "response": {
+                        "$ref": "EvaluateGkePolicyResponse"
+                      },
+                      "scopes": [
+                        "https://www.googleapis.com/auth/cloud-platform"
+                      ],
+                      "description": "Evaluates a Kubernetes object versus a GKE platform policy. Returns `NOT_FOUND` if the policy doesn't exist, `INVALID_ARGUMENT` if the policy or request is malformed and `PERMISSION_DENIED` if the client does not have sufficient permissions."
+                    }
+                  }
+                }
+              }
+            },
             "policies": {
               "methods": {
                 "create": {
@@ -1638,6 +1901,17 @@
       }
     }
   },
+  "servicePath": "",
+  "basePath": "",
   "ownerName": "Google",
-  "canonicalName": "Binary Authorization"
+  "baseUrl": "https://binaryauthorization.googleapis.com/",
+  "protocol": "rest",
+  "version": "v1",
+  "description": "The management interface for Binary Authorization, a service that provides policy-based deployment validation and control for images deployed to Google Kubernetes Engine (GKE), Anthos Service Mesh, Anthos Clusters, and Cloud Run. ",
+  "canonicalName": "Binary Authorization",
+  "discoveryVersion": "v1",
+  "kind": "discovery#restDescription",
+  "batchPath": "batch",
+  "mtlsRootUrl": "https://binaryauthorization.mtls.googleapis.com/",
+  "rootUrl": "https://binaryauthorization.googleapis.com/"
 }
