@@ -1,9 +1,84 @@
 {
-  "servicePath": "",
-  "basePath": "",
-  "version_module": true,
-  "canonicalName": "Discovery Engine",
-  "revision": "20240213",
+  "parameters": {
+    "access_token": {
+      "type": "string",
+      "description": "OAuth access token.",
+      "location": "query"
+    },
+    "alt": {
+      "type": "string",
+      "description": "Data format for response.",
+      "default": "json",
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "location": "query"
+    },
+    "callback": {
+      "type": "string",
+      "description": "JSONP",
+      "location": "query"
+    },
+    "fields": {
+      "type": "string",
+      "description": "Selector specifying which fields to include in a partial response.",
+      "location": "query"
+    },
+    "key": {
+      "type": "string",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+      "location": "query"
+    },
+    "oauth_token": {
+      "type": "string",
+      "description": "OAuth 2.0 token for the current user.",
+      "location": "query"
+    },
+    "prettyPrint": {
+      "type": "boolean",
+      "description": "Returns response with indentations and line breaks.",
+      "default": "true",
+      "location": "query"
+    },
+    "quotaUser": {
+      "type": "string",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
+      "location": "query"
+    },
+    "upload_protocol": {
+      "type": "string",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
+      "location": "query"
+    },
+    "uploadType": {
+      "type": "string",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
+      "location": "query"
+    },
+    "$.xgafv": {
+      "type": "string",
+      "description": "V1 error format.",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "location": "query"
+    }
+  },
+  "batchPath": "batch",
+  "ownerName": "Google",
+  "kind": "discovery#restDescription",
   "schemas": {
     "GoogleLongrunningListOperationsResponse": {
       "id": "GoogleLongrunningListOperationsResponse",
@@ -302,6 +377,10 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "customFineTuningSpec": {
+          "description": "Custom fine tuning configs.",
+          "$ref": "GoogleCloudDiscoveryengineV1alphaCustomFineTuningSpec"
         }
       }
     },
@@ -452,7 +531,7 @@
       "type": "object",
       "properties": {
         "condition": {
-          "description": "An expression which specifies a boost condition. The syntax and supported fields are the same as a filter expression. See SearchRequest.filter for detail syntax and limitations. Examples: * To boost documents with document ID \"doc_1\" or \"doc_2\", and color \"Red\" or \"Blue\": * (id: ANY(\"doc_1\", \"doc_2\")) AND (color: ANY(\"Red\",\"Blue\"))",
+          "description": "An expression which specifies a boost condition. The syntax and supported fields are the same as a filter expression. See SearchRequest.filter for detail syntax and limitations. Examples: * To boost documents with document ID \"doc_1\" or \"doc_2\", and color \"Red\" or \"Blue\": * (document_id: ANY(\"doc_1\", \"doc_2\")) AND (color: ANY(\"Red\", \"Blue\"))",
           "type": "string"
         },
         "boost": {
@@ -667,6 +746,17 @@
         }
       }
     },
+    "GoogleCloudDiscoveryengineV1alphaCustomFineTuningSpec": {
+      "id": "GoogleCloudDiscoveryengineV1alphaCustomFineTuningSpec",
+      "description": "Defines custom fine tuning spec.",
+      "type": "object",
+      "properties": {
+        "enableSearchAdaptor": {
+          "description": "Whether or not to enable and include custom fine tuned search adaptor model.",
+          "type": "boolean"
+        }
+      }
+    },
     "GoogleCloudDiscoveryengineV1alphaSearchResponse": {
       "id": "GoogleCloudDiscoveryengineV1alphaSearchResponse",
       "description": "Response message for SearchService.Search method.",
@@ -801,6 +891,12 @@
             "type": "any",
             "description": "Properties of the object."
           }
+        },
+        "indexTime": {
+          "description": "Output only. The last time the document was indexed. If this field is set, the document could be returned in search results. This field is OUTPUT_ONLY. If this field is not populated, it means the document has never been indexed.",
+          "readOnly": true,
+          "type": "string",
+          "format": "google-datetime"
         }
       }
     },
@@ -1142,6 +1238,10 @@
         "filter": {
           "description": "The filter syntax consists of an expression language for constructing a predicate from one or more fields of the documents being filtered. Filter expression is case-sensitive. This will be used to filter search results which may affect the summary response. If this field is unrecognizable, an `INVALID_ARGUMENT` is returned. Filtering in Vertex AI Search is done by mapping the LHS filter key to a key property defined in the Vertex AI Search backend -- this mapping is defined by the customer in their schema. For example a media customer might have a field 'name' in their schema. In this case the filter would look like this: filter --\u003e name:'ANY(\"king kong\")' For more information about filtering including syntax and filter operators, see [Filter](https://cloud.google.com/generative-ai-app-builder/docs/filter-search-metadata)",
           "type": "string"
+        },
+        "boostSpec": {
+          "description": "Boost specification to boost certain documents in search results which may affect the converse response. For more information on boosting, see [Boosting](https://cloud.google.com/retail/docs/boosting#boost)",
+          "$ref": "GoogleCloudDiscoveryengineV1alphaSearchRequestBoostSpec"
         }
       }
     },
@@ -1422,24 +1522,14 @@
           "readOnly": true,
           "type": "string",
           "format": "google-datetime"
-        }
-      }
-    },
-    "GoogleCloudDiscoveryengineV1alphaListDataStoresResponse": {
-      "id": "GoogleCloudDiscoveryengineV1alphaListDataStoresResponse",
-      "description": "Response message for DataStoreService.ListDataStores method.",
-      "type": "object",
-      "properties": {
-        "dataStores": {
-          "description": "All the customer's DataStores.",
-          "type": "array",
-          "items": {
-            "$ref": "GoogleCloudDiscoveryengineV1alphaDataStore"
-          }
         },
-        "nextPageToken": {
-          "description": "A token that can be sent as ListDataStoresRequest.page_token to retrieve the next page. If this field is omitted, there are no subsequent pages.",
-          "type": "string"
+        "documentProcessingConfig": {
+          "description": "Configuration for Document understanding and enrichment.",
+          "$ref": "GoogleCloudDiscoveryengineV1alphaDocumentProcessingConfig"
+        },
+        "startingSchema": {
+          "description": "The start schema to use for this DataStore when provisioning it. If unset, a default vertical specialized schema will be used. This field is only used by CreateDataStore API, and will be ignored if used in other APIs. This field will be omitted from all API responses including CreateDataStore API. To retrieve a schema of a DataStore, use SchemaService.GetSchema API instead. The provided schema will be validated against certain rules on schema. Learn more from [this doc](https://cloud.google.com/generative-ai-app-builder/docs/provide-schema).",
+          "$ref": "GoogleCloudDiscoveryengineV1alphaSchema"
         }
       }
     },
@@ -1462,7 +1552,7 @@
           "$ref": "GoogleCloudDiscoveryengineV1alphaDocumentProcessingConfigParsingConfig"
         },
         "parsingConfigOverrides": {
-          "description": "Map from file type to override the default parsing configuration based on the file type. Supported keys: * `pdf`: Override parsing config for PDF files, either digital parsing, ocr parsing or layout parsing is supported. * `html`: Override parsing config for HTML files, only digital parsing and or layout parsing are supported.",
+          "description": "Map from file type to override the default parsing configuration based on the file type. Supported keys: * `pdf`: Override parsing config for PDF files, either digital parsing, ocr parsing or layout parsing is supported. * `html`: Override parsing config for HTML files, only digital parsing and or layout parsing are supported. * `docx`: Override parsing config for DOCX files, only digital parsing and or layout parsing are supported.",
           "type": "object",
           "additionalProperties": {
             "$ref": "GoogleCloudDiscoveryengineV1alphaDocumentProcessingConfigParsingConfig"
@@ -1541,6 +1631,180 @@
       "description": "The layout parsing configurations for documents.",
       "type": "object",
       "properties": {}
+    },
+    "GoogleCloudDiscoveryengineV1alphaSchema": {
+      "id": "GoogleCloudDiscoveryengineV1alphaSchema",
+      "description": "Defines the structure and layout of a type of document data.",
+      "type": "object",
+      "properties": {
+        "structSchema": {
+          "description": "The structured representation of the schema.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "any",
+            "description": "Properties of the object."
+          }
+        },
+        "jsonSchema": {
+          "description": "The JSON representation of the schema.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Immutable. The full resource name of the schema, in the format of `projects/{project}/locations/{location}/collections/{collection}/dataStores/{data_store}/schemas/{schema}`. This field must be a UTF-8 encoded string with a length limit of 1024 characters.",
+          "type": "string"
+        },
+        "fieldConfigs": {
+          "description": "Output only. Configurations for fields of the schema.",
+          "readOnly": true,
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1alphaFieldConfig"
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaFieldConfig": {
+      "id": "GoogleCloudDiscoveryengineV1alphaFieldConfig",
+      "description": "Configurations for fields of a schema. For example, configuring a field is indexable, or searchable.",
+      "type": "object",
+      "properties": {
+        "fieldPath": {
+          "description": "Required. Field path of the schema field. For example: `title`, `description`, `release_info.release_year`.",
+          "type": "string"
+        },
+        "fieldType": {
+          "description": "Output only. Raw type of the field.",
+          "readOnly": true,
+          "type": "string",
+          "enumDescriptions": [
+            "Field type is unspecified.",
+            "Field value type is Object.",
+            "Field value type is String.",
+            "Field value type is Number.",
+            "Field value type is Integer.",
+            "Field value type is Boolean.",
+            "Field value type is Geolocation.",
+            "Field value type is Datetime."
+          ],
+          "enum": [
+            "FIELD_TYPE_UNSPECIFIED",
+            "OBJECT",
+            "STRING",
+            "NUMBER",
+            "INTEGER",
+            "BOOLEAN",
+            "GEOLOCATION",
+            "DATETIME"
+          ]
+        },
+        "indexableOption": {
+          "description": "If indexable_option is INDEXABLE_ENABLED, field values are indexed so that it can be filtered or faceted in SearchService.Search. If indexable_option is unset, the server behavior defaults to INDEXABLE_DISABLED for fields that support setting indexable options. For those fields that do not support setting indexable options, such as `object` and `boolean` and key properties, the server will skip indexable_option setting, and setting indexable_option for those fields will throw `INVALID_ARGUMENT` error.",
+          "type": "string",
+          "enumDescriptions": [
+            "Value used when unset.",
+            "Indexable option enabled for a schema field.",
+            "Indexable option disabled for a schema field."
+          ],
+          "enum": [
+            "INDEXABLE_OPTION_UNSPECIFIED",
+            "INDEXABLE_ENABLED",
+            "INDEXABLE_DISABLED"
+          ]
+        },
+        "dynamicFacetableOption": {
+          "description": "If dynamic_facetable_option is DYNAMIC_FACETABLE_ENABLED, field values are available for dynamic facet. Could only be DYNAMIC_FACETABLE_DISABLED if FieldConfig.indexable_option is INDEXABLE_DISABLED. Otherwise, an `INVALID_ARGUMENT` error will be returned. If dynamic_facetable_option is unset, the server behavior defaults to DYNAMIC_FACETABLE_DISABLED for fields that support setting dynamic facetable options. For those fields that do not support setting dynamic facetable options, such as `object` and `boolean`, the server will skip dynamic facetable option setting, and setting dynamic_facetable_option for those fields will throw `INVALID_ARGUMENT` error.",
+          "type": "string",
+          "enumDescriptions": [
+            "Value used when unset.",
+            "Dynamic facetable option enabled for a schema field.",
+            "Dynamic facetable option disabled for a schema field."
+          ],
+          "enum": [
+            "DYNAMIC_FACETABLE_OPTION_UNSPECIFIED",
+            "DYNAMIC_FACETABLE_ENABLED",
+            "DYNAMIC_FACETABLE_DISABLED"
+          ]
+        },
+        "searchableOption": {
+          "description": "If searchable_option is SEARCHABLE_ENABLED, field values are searchable by text queries in SearchService.Search. If SEARCHABLE_ENABLED but field type is numerical, field values will not be searchable by text queries in SearchService.Search, as there are no text values associated to numerical fields. If searchable_option is unset, the server behavior defaults to SEARCHABLE_DISABLED for fields that support setting searchable options. Only `string` fields that have no key property mapping support setting searchable_option. For those fields that do not support setting searchable options, the server will skip searchable option setting, and setting searchable_option for those fields will throw `INVALID_ARGUMENT` error.",
+          "type": "string",
+          "enumDescriptions": [
+            "Value used when unset.",
+            "Searchable option enabled for a schema field.",
+            "Searchable option disabled for a schema field."
+          ],
+          "enum": [
+            "SEARCHABLE_OPTION_UNSPECIFIED",
+            "SEARCHABLE_ENABLED",
+            "SEARCHABLE_DISABLED"
+          ]
+        },
+        "retrievableOption": {
+          "description": "If retrievable_option is RETRIEVABLE_ENABLED, field values are included in the search results. If retrievable_option is unset, the server behavior defaults to RETRIEVABLE_DISABLED for fields that support setting retrievable options. For those fields that do not support setting retrievable options, such as `object` and `boolean`, the server will skip retrievable option setting, and setting retrievable_option for those fields will throw `INVALID_ARGUMENT` error.",
+          "type": "string",
+          "enumDescriptions": [
+            "Value used when unset.",
+            "Retrievable option enabled for a schema field.",
+            "Retrievable option disabled for a schema field."
+          ],
+          "enum": [
+            "RETRIEVABLE_OPTION_UNSPECIFIED",
+            "RETRIEVABLE_ENABLED",
+            "RETRIEVABLE_DISABLED"
+          ]
+        },
+        "completableOption": {
+          "description": "If completable_option is COMPLETABLE_ENABLED, field values are directly used and returned as suggestions for Autocomplete in CompletionService.CompleteQuery. If completable_option is unset, the server behavior defaults to COMPLETABLE_DISABLED for fields that support setting completable options, which are just `string` fields. For those fields that do not support setting completable options, the server will skip completable option setting, and setting completable_option for those fields will throw `INVALID_ARGUMENT` error.",
+          "type": "string",
+          "enumDescriptions": [
+            "Value used when unset.",
+            "Completable option enabled for a schema field.",
+            "Completable option disabled for a schema field."
+          ],
+          "enum": [
+            "COMPLETABLE_OPTION_UNSPECIFIED",
+            "COMPLETABLE_ENABLED",
+            "COMPLETABLE_DISABLED"
+          ]
+        },
+        "recsFilterableOption": {
+          "description": "If recs_filterable_option is FILTERABLE_ENABLED, field values are filterable by filter expression in RecommendationService.Recommend. If FILTERABLE_ENABLED but the field type is numerical, field values are not filterable by text queries in RecommendationService.Recommend. Only textual fields are supported. If recs_filterable_option is unset, the default setting is FILTERABLE_DISABLED for fields that support setting filterable options. When a field set to [FILTERABLE_DISABLED] is filtered, a warning is generated and an empty result is returned.",
+          "type": "string",
+          "enumDescriptions": [
+            "Value used when unset.",
+            "Filterable option enabled for a schema field.",
+            "Filterable option disabled for a schema field."
+          ],
+          "enum": [
+            "FILTERABLE_OPTION_UNSPECIFIED",
+            "FILTERABLE_ENABLED",
+            "FILTERABLE_DISABLED"
+          ]
+        },
+        "keyPropertyType": {
+          "description": "Output only. Type of the key property that this field is mapped to. Empty string if this is not annotated as mapped to a key property. Example types are `title`, `description`. Full list is defined by `keyPropertyMapping` in the schema field annotation. If the schema field has a `KeyPropertyMapping` annotation, `indexable_option` and `searchable_option` of this field cannot be modified.",
+          "readOnly": true,
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaListDataStoresResponse": {
+      "id": "GoogleCloudDiscoveryengineV1alphaListDataStoresResponse",
+      "description": "Response message for DataStoreService.ListDataStores method.",
+      "type": "object",
+      "properties": {
+        "dataStores": {
+          "description": "All the customer's DataStores.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1alphaDataStore"
+          }
+        },
+        "nextPageToken": {
+          "description": "A token that can be sent as ListDataStoresRequest.page_token to retrieve the next page. If this field is omitted, there are no subsequent pages.",
+          "type": "string"
+        }
+      }
     },
     "GoogleCloudDiscoveryengineV1alphaListDocumentsResponse": {
       "id": "GoogleCloudDiscoveryengineV1alphaListDocumentsResponse",
@@ -2462,162 +2726,6 @@
         }
       }
     },
-    "GoogleCloudDiscoveryengineV1alphaSchema": {
-      "id": "GoogleCloudDiscoveryengineV1alphaSchema",
-      "description": "Defines the structure and layout of a type of document data.",
-      "type": "object",
-      "properties": {
-        "structSchema": {
-          "description": "The structured representation of the schema.",
-          "type": "object",
-          "additionalProperties": {
-            "type": "any",
-            "description": "Properties of the object."
-          }
-        },
-        "jsonSchema": {
-          "description": "The JSON representation of the schema.",
-          "type": "string"
-        },
-        "name": {
-          "description": "Immutable. The full resource name of the schema, in the format of `projects/{project}/locations/{location}/collections/{collection}/dataStores/{data_store}/schemas/{schema}`. This field must be a UTF-8 encoded string with a length limit of 1024 characters.",
-          "type": "string"
-        },
-        "fieldConfigs": {
-          "description": "Output only. Configurations for fields of the schema.",
-          "readOnly": true,
-          "type": "array",
-          "items": {
-            "$ref": "GoogleCloudDiscoveryengineV1alphaFieldConfig"
-          }
-        }
-      }
-    },
-    "GoogleCloudDiscoveryengineV1alphaFieldConfig": {
-      "id": "GoogleCloudDiscoveryengineV1alphaFieldConfig",
-      "description": "Configurations for fields of a schema. For example, configuring a field is indexable, or searchable.",
-      "type": "object",
-      "properties": {
-        "fieldPath": {
-          "description": "Required. Field path of the schema field. For example: `title`, `description`, `release_info.release_year`.",
-          "type": "string"
-        },
-        "fieldType": {
-          "description": "Output only. Raw type of the field.",
-          "readOnly": true,
-          "type": "string",
-          "enumDescriptions": [
-            "Field type is unspecified.",
-            "Field value type is Object.",
-            "Field value type is String.",
-            "Field value type is Number.",
-            "Field value type is Integer.",
-            "Field value type is Boolean.",
-            "Field value type is Geolocation.",
-            "Field value type is Datetime."
-          ],
-          "enum": [
-            "FIELD_TYPE_UNSPECIFIED",
-            "OBJECT",
-            "STRING",
-            "NUMBER",
-            "INTEGER",
-            "BOOLEAN",
-            "GEOLOCATION",
-            "DATETIME"
-          ]
-        },
-        "indexableOption": {
-          "description": "If indexable_option is INDEXABLE_ENABLED, field values are indexed so that it can be filtered or faceted in SearchService.Search. If indexable_option is unset, the server behavior defaults to INDEXABLE_DISABLED for fields that support setting indexable options. For those fields that do not support setting indexable options, such as `object` and `boolean` and key properties, the server will skip indexable_option setting, and setting indexable_option for those fields will throw `INVALID_ARGUMENT` error.",
-          "type": "string",
-          "enumDescriptions": [
-            "Value used when unset.",
-            "Indexable option enabled for a schema field.",
-            "Indexable option disabled for a schema field."
-          ],
-          "enum": [
-            "INDEXABLE_OPTION_UNSPECIFIED",
-            "INDEXABLE_ENABLED",
-            "INDEXABLE_DISABLED"
-          ]
-        },
-        "dynamicFacetableOption": {
-          "description": "If dynamic_facetable_option is DYNAMIC_FACETABLE_ENABLED, field values are available for dynamic facet. Could only be DYNAMIC_FACETABLE_DISABLED if FieldConfig.indexable_option is INDEXABLE_DISABLED. Otherwise, an `INVALID_ARGUMENT` error will be returned. If dynamic_facetable_option is unset, the server behavior defaults to DYNAMIC_FACETABLE_DISABLED for fields that support setting dynamic facetable options. For those fields that do not support setting dynamic facetable options, such as `object` and `boolean`, the server will skip dynamic facetable option setting, and setting dynamic_facetable_option for those fields will throw `INVALID_ARGUMENT` error.",
-          "type": "string",
-          "enumDescriptions": [
-            "Value used when unset.",
-            "Dynamic facetable option enabled for a schema field.",
-            "Dynamic facetable option disabled for a schema field."
-          ],
-          "enum": [
-            "DYNAMIC_FACETABLE_OPTION_UNSPECIFIED",
-            "DYNAMIC_FACETABLE_ENABLED",
-            "DYNAMIC_FACETABLE_DISABLED"
-          ]
-        },
-        "searchableOption": {
-          "description": "If searchable_option is SEARCHABLE_ENABLED, field values are searchable by text queries in SearchService.Search. If SEARCHABLE_ENABLED but field type is numerical, field values will not be searchable by text queries in SearchService.Search, as there are no text values associated to numerical fields. If searchable_option is unset, the server behavior defaults to SEARCHABLE_DISABLED for fields that support setting searchable options. Only `string` fields that have no key property mapping support setting searchable_option. For those fields that do not support setting searchable options, the server will skip searchable option setting, and setting searchable_option for those fields will throw `INVALID_ARGUMENT` error.",
-          "type": "string",
-          "enumDescriptions": [
-            "Value used when unset.",
-            "Searchable option enabled for a schema field.",
-            "Searchable option disabled for a schema field."
-          ],
-          "enum": [
-            "SEARCHABLE_OPTION_UNSPECIFIED",
-            "SEARCHABLE_ENABLED",
-            "SEARCHABLE_DISABLED"
-          ]
-        },
-        "retrievableOption": {
-          "description": "If retrievable_option is RETRIEVABLE_ENABLED, field values are included in the search results. If retrievable_option is unset, the server behavior defaults to RETRIEVABLE_DISABLED for fields that support setting retrievable options. For those fields that do not support setting retrievable options, such as `object` and `boolean`, the server will skip retrievable option setting, and setting retrievable_option for those fields will throw `INVALID_ARGUMENT` error.",
-          "type": "string",
-          "enumDescriptions": [
-            "Value used when unset.",
-            "Retrievable option enabled for a schema field.",
-            "Retrievable option disabled for a schema field."
-          ],
-          "enum": [
-            "RETRIEVABLE_OPTION_UNSPECIFIED",
-            "RETRIEVABLE_ENABLED",
-            "RETRIEVABLE_DISABLED"
-          ]
-        },
-        "completableOption": {
-          "description": "If completable_option is COMPLETABLE_ENABLED, field values are directly used and returned as suggestions for Autocomplete in CompletionService.CompleteQuery. If completable_option is unset, the server behavior defaults to COMPLETABLE_DISABLED for fields that support setting completable options, which are just `string` fields. For those fields that do not support setting completable options, the server will skip completable option setting, and setting completable_option for those fields will throw `INVALID_ARGUMENT` error.",
-          "type": "string",
-          "enumDescriptions": [
-            "Value used when unset.",
-            "Completable option enabled for a schema field.",
-            "Completable option disabled for a schema field."
-          ],
-          "enum": [
-            "COMPLETABLE_OPTION_UNSPECIFIED",
-            "COMPLETABLE_ENABLED",
-            "COMPLETABLE_DISABLED"
-          ]
-        },
-        "recsFilterableOption": {
-          "description": "If recs_filterable_option is FILTERABLE_ENABLED, field values are filterable by filter expression in RecommendationService.Recommend. If FILTERABLE_ENABLED but the field type is numerical, field values are not filterable by text queries in RecommendationService.Recommend. Only textual fields are supported. If recs_filterable_option is unset, the default setting is FILTERABLE_DISABLED for fields that support setting filterable options. When a field set to [FILTERABLE_DISABLED] is filtered, a warning is generated and an empty result is returned.",
-          "type": "string",
-          "enumDescriptions": [
-            "Value used when unset.",
-            "Filterable option enabled for a schema field.",
-            "Filterable option disabled for a schema field."
-          ],
-          "enum": [
-            "FILTERABLE_OPTION_UNSPECIFIED",
-            "FILTERABLE_ENABLED",
-            "FILTERABLE_DISABLED"
-          ]
-        },
-        "keyPropertyType": {
-          "description": "Output only. Type of the key property that this field is mapped to. Empty string if this is not annotated as mapped to a key property. Example types are `title`, `description`. Full list is defined by `keyPropertyMapping` in the schema field annotation. If the schema field has a `KeyPropertyMapping` annotation, `indexable_option` and `searchable_option` of this field cannot be modified.",
-          "readOnly": true,
-          "type": "string"
-        }
-      }
-    },
     "GoogleCloudDiscoveryengineV1alphaListSchemasResponse": {
       "id": "GoogleCloudDiscoveryengineV1alphaListSchemasResponse",
       "description": "Response message for SchemaService.ListSchemas method.",
@@ -2880,17 +2988,6 @@
           "description": "Max number of related questions to be returned. The valid range is [1, 5]. If enable_related_questions is true, the default value is 3.",
           "type": "integer",
           "format": "int32"
-        }
-      }
-    },
-    "GoogleCloudDiscoveryengineV1alphaCustomFineTuningSpec": {
-      "id": "GoogleCloudDiscoveryengineV1alphaCustomFineTuningSpec",
-      "description": "Defines custom fine tuning spec.",
-      "type": "object",
-      "properties": {
-        "enableSearchAdaptor": {
-          "description": "Whether or not to enable and include custom fine tuned search adaptor model.",
-          "type": "boolean"
         }
       }
     },
@@ -3578,6 +3675,10 @@
           "description": "Output only. Whether the customer accepted data use terms.",
           "readOnly": true,
           "type": "boolean"
+        },
+        "enableWebApp": {
+          "description": "Whether to enable standalone web app.",
+          "type": "boolean"
         }
       }
     },
@@ -4043,6 +4144,98 @@
           "readOnly": true,
           "type": "string",
           "format": "google-datetime"
+        },
+        "documentProcessingConfig": {
+          "description": "Configuration for Document understanding and enrichment.",
+          "$ref": "GoogleCloudDiscoveryengineV1DocumentProcessingConfig"
+        },
+        "startingSchema": {
+          "description": "The start schema to use for this DataStore when provisioning it. If unset, a default vertical specialized schema will be used. This field is only used by CreateDataStore API, and will be ignored if used in other APIs. This field will be omitted from all API responses including CreateDataStore API. To retrieve a schema of a DataStore, use SchemaService.GetSchema API instead. The provided schema will be validated against certain rules on schema. Learn more from [this doc](https://cloud.google.com/generative-ai-app-builder/docs/provide-schema).",
+          "$ref": "GoogleCloudDiscoveryengineV1Schema"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1DocumentProcessingConfig": {
+      "id": "GoogleCloudDiscoveryengineV1DocumentProcessingConfig",
+      "description": "A singleton resource of DataStore. It's empty when DataStore is created, which defaults to digital parser. The first call to DataStoreService.UpdateDocumentProcessingConfig method will initialize the config.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "The full resource name of the Document Processing Config. Format: `projects/*/locations/*/collections/*/dataStores/*/documentProcessingConfig`.",
+          "type": "string"
+        },
+        "defaultParsingConfig": {
+          "description": "Configurations for default Document parser. If not specified, we will configure it as default DigitalParsingConfig, and the default parsing config will be applied to all file types for Document parsing.",
+          "$ref": "GoogleCloudDiscoveryengineV1DocumentProcessingConfigParsingConfig"
+        },
+        "parsingConfigOverrides": {
+          "description": "Map from file type to override the default parsing configuration based on the file type. Supported keys: * `pdf`: Override parsing config for PDF files, either digital parsing, ocr parsing or layout parsing is supported. * `html`: Override parsing config for HTML files, only digital parsing and or layout parsing are supported. * `docx`: Override parsing config for DOCX files, only digital parsing and or layout parsing are supported.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "GoogleCloudDiscoveryengineV1DocumentProcessingConfigParsingConfig"
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1DocumentProcessingConfigParsingConfig": {
+      "id": "GoogleCloudDiscoveryengineV1DocumentProcessingConfigParsingConfig",
+      "description": "Related configurations applied to a specific type of document parser.",
+      "type": "object",
+      "properties": {
+        "digitalParsingConfig": {
+          "description": "Configurations applied to digital parser.",
+          "$ref": "GoogleCloudDiscoveryengineV1DigitalParsingConfig"
+        },
+        "ocrParsingConfig": {
+          "description": "Configurations applied to OCR parser. Currently it only applies to PDFs.",
+          "$ref": "GoogleCloudDiscoveryengineV1OcrParsingConfig"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1DigitalParsingConfig": {
+      "id": "GoogleCloudDiscoveryengineV1DigitalParsingConfig",
+      "description": "The digital parsing configurations for documents.",
+      "type": "object",
+      "properties": {}
+    },
+    "GoogleCloudDiscoveryengineV1OcrParsingConfig": {
+      "id": "GoogleCloudDiscoveryengineV1OcrParsingConfig",
+      "description": "The OCR parsing configurations for documents.",
+      "type": "object",
+      "properties": {
+        "enhancedDocumentElements": {
+          "description": "Apply additional enhanced OCR processing to a list of document elements. Supported values: * `table`: advanced table parsing model.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "useNativeText": {
+          "description": "If true, will use native text instead of OCR text on pages containing native text.",
+          "type": "boolean"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1Schema": {
+      "id": "GoogleCloudDiscoveryengineV1Schema",
+      "description": "Defines the structure and layout of a type of document data.",
+      "type": "object",
+      "properties": {
+        "structSchema": {
+          "description": "The structured representation of the schema.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "any",
+            "description": "Properties of the object."
+          }
+        },
+        "jsonSchema": {
+          "description": "The JSON representation of the schema.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Immutable. The full resource name of the schema, in the format of `projects/{project}/locations/{location}/collections/{collection}/dataStores/{data_store}/schemas/{schema}`. This field must be a UTF-8 encoded string with a length limit of 1024 characters.",
+          "type": "string"
         }
       }
     },
@@ -4513,6 +4706,11 @@
           "description": "Count of entries that encountered errors while processing.",
           "type": "string",
           "format": "int64"
+        },
+        "ignoredCount": {
+          "description": "Count of entries that were ignored as entries were not found.",
+          "type": "string",
+          "format": "int64"
         }
       }
     },
@@ -4568,29 +4766,6 @@
           "items": {
             "$ref": "GoogleRpcStatus"
           }
-        }
-      }
-    },
-    "GoogleCloudDiscoveryengineV1Schema": {
-      "id": "GoogleCloudDiscoveryengineV1Schema",
-      "description": "Defines the structure and layout of a type of document data.",
-      "type": "object",
-      "properties": {
-        "structSchema": {
-          "description": "The structured representation of the schema.",
-          "type": "object",
-          "additionalProperties": {
-            "type": "any",
-            "description": "Properties of the object."
-          }
-        },
-        "jsonSchema": {
-          "description": "The JSON representation of the schema.",
-          "type": "string"
-        },
-        "name": {
-          "description": "Immutable. The full resource name of the schema, in the format of `projects/{project}/locations/{location}/collections/{collection}/dataStores/{data_store}/schemas/{schema}`. This field must be a UTF-8 encoded string with a length limit of 1024 characters.",
-          "type": "string"
         }
       }
     },
@@ -5033,6 +5208,11 @@
         },
         "failureCount": {
           "description": "Count of entries that encountered errors while processing.",
+          "type": "string",
+          "format": "int64"
+        },
+        "ignoredCount": {
+          "description": "Count of entries that were ignored as entries were not found.",
           "type": "string",
           "format": "int64"
         }
@@ -5626,6 +5806,98 @@
           "readOnly": true,
           "type": "string",
           "format": "google-datetime"
+        },
+        "documentProcessingConfig": {
+          "description": "Configuration for Document understanding and enrichment.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaDocumentProcessingConfig"
+        },
+        "startingSchema": {
+          "description": "The start schema to use for this DataStore when provisioning it. If unset, a default vertical specialized schema will be used. This field is only used by CreateDataStore API, and will be ignored if used in other APIs. This field will be omitted from all API responses including CreateDataStore API. To retrieve a schema of a DataStore, use SchemaService.GetSchema API instead. The provided schema will be validated against certain rules on schema. Learn more from [this doc](https://cloud.google.com/generative-ai-app-builder/docs/provide-schema).",
+          "$ref": "GoogleCloudDiscoveryengineV1betaSchema"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaDocumentProcessingConfig": {
+      "id": "GoogleCloudDiscoveryengineV1betaDocumentProcessingConfig",
+      "description": "A singleton resource of DataStore. It's empty when DataStore is created, which defaults to digital parser. The first call to DataStoreService.UpdateDocumentProcessingConfig method will initialize the config.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "The full resource name of the Document Processing Config. Format: `projects/*/locations/*/collections/*/dataStores/*/documentProcessingConfig`.",
+          "type": "string"
+        },
+        "defaultParsingConfig": {
+          "description": "Configurations for default Document parser. If not specified, we will configure it as default DigitalParsingConfig, and the default parsing config will be applied to all file types for Document parsing.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaDocumentProcessingConfigParsingConfig"
+        },
+        "parsingConfigOverrides": {
+          "description": "Map from file type to override the default parsing configuration based on the file type. Supported keys: * `pdf`: Override parsing config for PDF files, either digital parsing, ocr parsing or layout parsing is supported. * `html`: Override parsing config for HTML files, only digital parsing and or layout parsing are supported. * `docx`: Override parsing config for DOCX files, only digital parsing and or layout parsing are supported.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "GoogleCloudDiscoveryengineV1betaDocumentProcessingConfigParsingConfig"
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaDocumentProcessingConfigParsingConfig": {
+      "id": "GoogleCloudDiscoveryengineV1betaDocumentProcessingConfigParsingConfig",
+      "description": "Related configurations applied to a specific type of document parser.",
+      "type": "object",
+      "properties": {
+        "digitalParsingConfig": {
+          "description": "Configurations applied to digital parser.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaDigitalParsingConfig"
+        },
+        "ocrParsingConfig": {
+          "description": "Configurations applied to OCR parser. Currently it only applies to PDFs.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaOcrParsingConfig"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaDigitalParsingConfig": {
+      "id": "GoogleCloudDiscoveryengineV1betaDigitalParsingConfig",
+      "description": "The digital parsing configurations for documents.",
+      "type": "object",
+      "properties": {}
+    },
+    "GoogleCloudDiscoveryengineV1betaOcrParsingConfig": {
+      "id": "GoogleCloudDiscoveryengineV1betaOcrParsingConfig",
+      "description": "The OCR parsing configurations for documents.",
+      "type": "object",
+      "properties": {
+        "enhancedDocumentElements": {
+          "description": "Apply additional enhanced OCR processing to a list of document elements. Supported values: * `table`: advanced table parsing model.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "useNativeText": {
+          "description": "If true, will use native text instead of OCR text on pages containing native text.",
+          "type": "boolean"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaSchema": {
+      "id": "GoogleCloudDiscoveryengineV1betaSchema",
+      "description": "Defines the structure and layout of a type of document data.",
+      "type": "object",
+      "properties": {
+        "structSchema": {
+          "description": "The structured representation of the schema.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "any",
+            "description": "Properties of the object."
+          }
+        },
+        "jsonSchema": {
+          "description": "The JSON representation of the schema.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Immutable. The full resource name of the schema, in the format of `projects/{project}/locations/{location}/collections/{collection}/dataStores/{data_store}/schemas/{schema}`. This field must be a UTF-8 encoded string with a length limit of 1024 characters.",
+          "type": "string"
         }
       }
     },
@@ -6096,6 +6368,11 @@
           "description": "Count of entries that encountered errors while processing.",
           "type": "string",
           "format": "int64"
+        },
+        "ignoredCount": {
+          "description": "Count of entries that were ignored as entries were not found.",
+          "type": "string",
+          "format": "int64"
         }
       }
     },
@@ -6154,29 +6431,6 @@
         }
       }
     },
-    "GoogleCloudDiscoveryengineV1betaSchema": {
-      "id": "GoogleCloudDiscoveryengineV1betaSchema",
-      "description": "Defines the structure and layout of a type of document data.",
-      "type": "object",
-      "properties": {
-        "structSchema": {
-          "description": "The structured representation of the schema.",
-          "type": "object",
-          "additionalProperties": {
-            "type": "any",
-            "description": "Properties of the object."
-          }
-        },
-        "jsonSchema": {
-          "description": "The JSON representation of the schema.",
-          "type": "string"
-        },
-        "name": {
-          "description": "Immutable. The full resource name of the schema, in the format of `projects/{project}/locations/{location}/collections/{collection}/dataStores/{data_store}/schemas/{schema}`. This field must be a UTF-8 encoded string with a length limit of 1024 characters.",
-          "type": "string"
-        }
-      }
-    },
     "GoogleCloudDiscoveryengineV1betaUpdateSchemaMetadata": {
       "id": "GoogleCloudDiscoveryengineV1betaUpdateSchemaMetadata",
       "description": "Metadata for UpdateSchema LRO.",
@@ -6212,7 +6466,8 @@
       }
     }
   },
-  "title": "Discovery Engine API",
+  "baseUrl": "https://discoveryengine.googleapis.com/",
+  "fullyEncodeReservedExpansion": true,
   "resources": {
     "projects": {
       "resources": {
@@ -10990,9 +11245,18 @@
       }
     }
   },
-  "kind": "discovery#restDescription",
-  "rootUrl": "https://discoveryengine.googleapis.com/",
-  "mtlsRootUrl": "https://discoveryengine.mtls.googleapis.com/",
+  "ownerDomain": "google.com",
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
+  "id": "discoveryengine:v1alpha",
+  "canonicalName": "Discovery Engine",
+  "discoveryVersion": "v1",
+  "documentationLink": "https://cloud.google.com/discovery-engine/docs",
+  "version_module": true,
+  "version": "v1alpha",
+  "revision": "20240224",
   "auth": {
     "oauth2": {
       "scopes": {
@@ -11002,97 +11266,12 @@
       }
     }
   },
-  "version": "v1alpha",
-  "baseUrl": "https://discoveryengine.googleapis.com/",
-  "batchPath": "batch",
-  "id": "discoveryengine:v1alpha",
-  "discoveryVersion": "v1",
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "ownerDomain": "google.com",
-  "description": "Discovery Engine API.",
-  "documentationLink": "https://cloud.google.com/discovery-engine/docs",
-  "ownerName": "Google",
+  "title": "Discovery Engine API",
+  "mtlsRootUrl": "https://discoveryengine.mtls.googleapis.com/",
   "protocol": "rest",
-  "fullyEncodeReservedExpansion": true,
+  "description": "Discovery Engine API.",
+  "basePath": "",
+  "servicePath": "",
   "name": "discoveryengine",
-  "parameters": {
-    "access_token": {
-      "type": "string",
-      "description": "OAuth access token.",
-      "location": "query"
-    },
-    "alt": {
-      "type": "string",
-      "description": "Data format for response.",
-      "default": "json",
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ],
-      "location": "query"
-    },
-    "callback": {
-      "type": "string",
-      "description": "JSONP",
-      "location": "query"
-    },
-    "fields": {
-      "type": "string",
-      "description": "Selector specifying which fields to include in a partial response.",
-      "location": "query"
-    },
-    "key": {
-      "type": "string",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
-      "location": "query"
-    },
-    "oauth_token": {
-      "type": "string",
-      "description": "OAuth 2.0 token for the current user.",
-      "location": "query"
-    },
-    "prettyPrint": {
-      "type": "boolean",
-      "description": "Returns response with indentations and line breaks.",
-      "default": "true",
-      "location": "query"
-    },
-    "quotaUser": {
-      "type": "string",
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
-      "location": "query"
-    },
-    "upload_protocol": {
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
-      "location": "query"
-    },
-    "uploadType": {
-      "type": "string",
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
-      "location": "query"
-    },
-    "$.xgafv": {
-      "type": "string",
-      "description": "V1 error format.",
-      "enum": [
-        "1",
-        "2"
-      ],
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ],
-      "location": "query"
-    }
-  }
+  "rootUrl": "https://discoveryengine.googleapis.com/"
 }
