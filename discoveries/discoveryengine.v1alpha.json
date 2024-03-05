@@ -1,15 +1,25 @@
 {
-  "basePath": "",
-  "servicePath": "",
-  "documentationLink": "https://cloud.google.com/discovery-engine/docs",
-  "canonicalName": "Discovery Engine",
-  "rootUrl": "https://discoveryengine.googleapis.com/",
-  "name": "discoveryengine",
-  "revision": "20240227",
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        }
+      }
+    }
   },
+  "documentationLink": "https://cloud.google.com/discovery-engine/docs",
+  "protocol": "rest",
+  "mtlsRootUrl": "https://discoveryengine.mtls.googleapis.com/",
+  "fullyEncodeReservedExpansion": true,
+  "version": "v1alpha",
+  "version_module": true,
+  "revision": "20240229",
+  "title": "Discovery Engine API",
+  "servicePath": "",
+  "id": "discoveryengine:v1alpha",
+  "canonicalName": "Discovery Engine",
+  "ownerDomain": "google.com",
   "schemas": {
     "GoogleCloudDiscoveryengineV1alphaAclConfig": {
       "id": "GoogleCloudDiscoveryengineV1alphaAclConfig",
@@ -585,6 +595,20 @@
         "extractiveContentSpec": {
           "description": "If there is no extractive_content_spec provided, there will be no extractive answer in the search response.",
           "$ref": "GoogleCloudDiscoveryengineV1alphaSearchRequestContentSearchSpecExtractiveContentSpec"
+        },
+        "searchResultMode": {
+          "description": "Specifies the search result mode. If unspecified, the search result mode is based on DataStore.DocumentProcessingConfig.chunking_config: * If DataStore.DocumentProcessingConfig.chunking_config is specified, it defaults to `CHUNKS`. * Otherwise, it defaults to `DOCUMENTS`.",
+          "type": "string",
+          "enumDescriptions": [
+            "Default value.",
+            "Returns documents in the search result.",
+            "Returns chunks in the search result. Only available if the DataStore.DocumentProcessingConfig.chunking_config is specified."
+          ],
+          "enum": [
+            "SEARCH_RESULT_MODE_UNSPECIFIED",
+            "DOCUMENTS",
+            "CHUNKS"
+          ]
         }
       }
     },
@@ -819,6 +843,10 @@
           "description": "The document data snippet in the search response. Only fields that are marked as retrievable are populated.",
           "$ref": "GoogleCloudDiscoveryengineV1alphaDocument"
         },
+        "chunk": {
+          "description": "The chunk data in the search response if the SearchRequest.ContentSearchSpec.search_result_mode is set to CHUNKS.",
+          "$ref": "GoogleCloudDiscoveryengineV1alphaChunk"
+        },
         "modelScores": {
           "description": "Google provided available scores.",
           "type": "object",
@@ -944,6 +972,53 @@
         },
         "groupId": {
           "description": "Group identifier. For Google Workspace user account, group_id should be the google workspace group email. For non-google identity provider user account, group_id is the mapped group identifier configured during the workforcepool config.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaChunk": {
+      "id": "GoogleCloudDiscoveryengineV1alphaChunk",
+      "description": "Chunk captures all raw metadata information of items to be recommended or searched in the chunk mode.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "The full resource name of the chunk. Format: `projects/{project}/locations/{location}/collections/{collection}/dataStores/{data_store}/branches/{branch}/documents/{document_id}/chunks/{chunk_id}`. This field must be a UTF-8 encoded string with a length limit of 1024 characters.",
+          "type": "string"
+        },
+        "id": {
+          "description": "Unique chunk id of the current chunk.",
+          "type": "string"
+        },
+        "content": {
+          "description": "Content is a string from a document (parsed content).",
+          "type": "string"
+        },
+        "documentMetadata": {
+          "description": "Metadata of the document from the current chunk.",
+          "$ref": "GoogleCloudDiscoveryengineV1alphaChunkDocumentMetadata"
+        },
+        "derivedStructData": {
+          "description": "Output only. This field is OUTPUT_ONLY. It contains derived data that are not in the original input document.",
+          "readOnly": true,
+          "type": "object",
+          "additionalProperties": {
+            "type": "any",
+            "description": "Properties of the object."
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaChunkDocumentMetadata": {
+      "id": "GoogleCloudDiscoveryengineV1alphaChunkDocumentMetadata",
+      "description": "Document metadata contains the information of the document of the current chunk.",
+      "type": "object",
+      "properties": {
+        "uri": {
+          "description": "Uri of the document.",
+          "type": "string"
+        },
+        "title": {
+          "description": "Title of the document.",
           "type": "string"
         }
       }
@@ -1584,6 +1659,10 @@
           "deprecated": true,
           "$ref": "GoogleCloudDiscoveryengineV1alphaOcrConfig"
         },
+        "chunkingConfig": {
+          "description": "Whether chunking mode is enabled.",
+          "$ref": "GoogleCloudDiscoveryengineV1alphaDocumentProcessingConfigChunkingConfig"
+        },
         "defaultParsingConfig": {
           "description": "Configurations for default Document parser. If not specified, we will configure it as default DigitalParsingConfig, and the default parsing config will be applied to all file types for Document parsing.",
           "$ref": "GoogleCloudDiscoveryengineV1alphaDocumentProcessingConfigParsingConfig"
@@ -1616,6 +1695,33 @@
         },
         "useNativeText": {
           "description": "If true, will use native text instead of OCR text on pages containing native text.",
+          "type": "boolean"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaDocumentProcessingConfigChunkingConfig": {
+      "id": "GoogleCloudDiscoveryengineV1alphaDocumentProcessingConfigChunkingConfig",
+      "description": "Configuration for chunking config.",
+      "type": "object",
+      "properties": {
+        "layoutBasedChunkingConfig": {
+          "description": "Configuration for the layout based chunking.",
+          "$ref": "GoogleCloudDiscoveryengineV1alphaDocumentProcessingConfigChunkingConfigLayoutBasedChunkingConfig"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaDocumentProcessingConfigChunkingConfigLayoutBasedChunkingConfig": {
+      "id": "GoogleCloudDiscoveryengineV1alphaDocumentProcessingConfigChunkingConfigLayoutBasedChunkingConfig",
+      "description": "Configuration for the layout based chunking.",
+      "type": "object",
+      "properties": {
+        "chunkSize": {
+          "description": "The token size limit for each chunk. Supported values: 100-500 (inclusive). Default value: 500.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "includeAncestorHeadings": {
+          "description": "Whether to include appending different levels of headings to chunks from the middle of the document to prevent context loss. Default value: False.",
           "type": "boolean"
         }
       }
@@ -3469,7 +3575,7 @@
           "type": "string"
         },
         "queryModel": {
-          "description": "Specifies the autocomplete data model. This overrides any model specified in the Configuration \u003e Autocomplete section of the Cloud console. Currently supported values: * `document` - Using suggestions generated from user-imported documents. * `search-history` - Using suggestions generated from the past history of SearchService.Search API calls. Do not use it when there is no traffic for Search API. * `user-event` - Using suggestions generated from user-imported search events. * `document-completable` - Using suggestions taken directly from user-imported document fields marked as completable. Default values: * `document` is the default model for regular dataStores. * `search-history` is the default model for site search dataStores.",
+          "description": "Specifies the autocomplete data model. This overrides any model specified in the Configuration \u003e Autocomplete section of the Cloud console. Currently supported values: * `document` - Using suggestions generated from user-imported documents. * `search-history` - Using suggestions generated from the past history of SearchService.Search API calls. Do not use it when there is no traffic for Search API. * `user-event` - Using suggestions generated from user-imported search events. * `document-completable` - Using suggestions taken directly from user-imported document fields marked as completable. Default values: * `document` is the default model for regular dataStores. * `search-history` is the default model for site search dataStores. *",
           "type": "string"
         },
         "userPseudoId": {
@@ -6526,6 +6632,92 @@
       }
     }
   },
+  "batchPath": "batch",
+  "discoveryVersion": "v1",
+  "kind": "discovery#restDescription",
+  "ownerName": "Google",
+  "baseUrl": "https://discoveryengine.googleapis.com/",
+  "name": "discoveryengine",
+  "basePath": "",
+  "description": "Discovery Engine API.",
+  "parameters": {
+    "access_token": {
+      "type": "string",
+      "description": "OAuth access token.",
+      "location": "query"
+    },
+    "alt": {
+      "type": "string",
+      "description": "Data format for response.",
+      "default": "json",
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "location": "query"
+    },
+    "callback": {
+      "type": "string",
+      "description": "JSONP",
+      "location": "query"
+    },
+    "fields": {
+      "type": "string",
+      "description": "Selector specifying which fields to include in a partial response.",
+      "location": "query"
+    },
+    "key": {
+      "type": "string",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+      "location": "query"
+    },
+    "oauth_token": {
+      "type": "string",
+      "description": "OAuth 2.0 token for the current user.",
+      "location": "query"
+    },
+    "prettyPrint": {
+      "type": "boolean",
+      "description": "Returns response with indentations and line breaks.",
+      "default": "true",
+      "location": "query"
+    },
+    "quotaUser": {
+      "type": "string",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
+      "location": "query"
+    },
+    "upload_protocol": {
+      "type": "string",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
+      "location": "query"
+    },
+    "uploadType": {
+      "type": "string",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
+      "location": "query"
+    },
+    "$.xgafv": {
+      "type": "string",
+      "description": "V1 error format.",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "location": "query"
+    }
+  },
+  "rootUrl": "https://discoveryengine.googleapis.com/",
   "resources": {
     "projects": {
       "resources": {
@@ -6781,7 +6973,7 @@
                           "type": "string"
                         },
                         "queryModel": {
-                          "description": "Specifies the autocomplete data model. This overrides any model specified in the Configuration \u003e Autocomplete section of the Cloud console. Currently supported values: * `document` - Using suggestions generated from user-imported documents. * `search-history` - Using suggestions generated from the past history of SearchService.Search API calls. Do not use it when there is no traffic for Search API. * `user-event` - Using suggestions generated from user-imported search events. * `document-completable` - Using suggestions taken directly from user-imported document fields marked as completable. Default values: * `document` is the default model for regular dataStores. * `search-history` is the default model for site search dataStores.",
+                          "description": "Specifies the autocomplete data model. This overrides any model specified in the Configuration \u003e Autocomplete section of the Cloud console. Currently supported values: * `document` - Using suggestions generated from user-imported documents. * `search-history` - Using suggestions generated from the past history of SearchService.Search API calls. Do not use it when there is no traffic for Search API. * `user-event` - Using suggestions generated from user-imported search events. * `document-completable` - Using suggestions taken directly from user-imported document fields marked as completable. Default values: * `document` is the default model for regular dataStores. * `search-history` is the default model for site search dataStores. *",
                           "location": "query",
                           "type": "string"
                         },
@@ -9510,7 +9702,7 @@
                       "type": "string"
                     },
                     "queryModel": {
-                      "description": "Specifies the autocomplete data model. This overrides any model specified in the Configuration \u003e Autocomplete section of the Cloud console. Currently supported values: * `document` - Using suggestions generated from user-imported documents. * `search-history` - Using suggestions generated from the past history of SearchService.Search API calls. Do not use it when there is no traffic for Search API. * `user-event` - Using suggestions generated from user-imported search events. * `document-completable` - Using suggestions taken directly from user-imported document fields marked as completable. Default values: * `document` is the default model for regular dataStores. * `search-history` is the default model for site search dataStores.",
+                      "description": "Specifies the autocomplete data model. This overrides any model specified in the Configuration \u003e Autocomplete section of the Cloud console. Currently supported values: * `document` - Using suggestions generated from user-imported documents. * `search-history` - Using suggestions generated from the past history of SearchService.Search API calls. Do not use it when there is no traffic for Search API. * `user-event` - Using suggestions generated from user-imported search events. * `document-completable` - Using suggestions taken directly from user-imported document fields marked as completable. Default values: * `document` is the default model for regular dataStores. * `search-history` is the default model for site search dataStores. *",
                       "location": "query",
                       "type": "string"
                     },
@@ -11368,104 +11560,8 @@
       }
     }
   },
-  "fullyEncodeReservedExpansion": true,
-  "title": "Discovery Engine API",
-  "version": "v1alpha",
-  "description": "Discovery Engine API.",
-  "batchPath": "batch",
-  "id": "discoveryengine:v1alpha",
-  "mtlsRootUrl": "https://discoveryengine.mtls.googleapis.com/",
-  "ownerDomain": "google.com",
-  "discoveryVersion": "v1",
-  "baseUrl": "https://discoveryengine.googleapis.com/",
-  "kind": "discovery#restDescription",
-  "ownerName": "Google",
-  "version_module": true,
-  "protocol": "rest",
-  "parameters": {
-    "access_token": {
-      "type": "string",
-      "description": "OAuth access token.",
-      "location": "query"
-    },
-    "alt": {
-      "type": "string",
-      "description": "Data format for response.",
-      "default": "json",
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ],
-      "location": "query"
-    },
-    "callback": {
-      "type": "string",
-      "description": "JSONP",
-      "location": "query"
-    },
-    "fields": {
-      "type": "string",
-      "description": "Selector specifying which fields to include in a partial response.",
-      "location": "query"
-    },
-    "key": {
-      "type": "string",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
-      "location": "query"
-    },
-    "oauth_token": {
-      "type": "string",
-      "description": "OAuth 2.0 token for the current user.",
-      "location": "query"
-    },
-    "prettyPrint": {
-      "type": "boolean",
-      "description": "Returns response with indentations and line breaks.",
-      "default": "true",
-      "location": "query"
-    },
-    "quotaUser": {
-      "type": "string",
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
-      "location": "query"
-    },
-    "upload_protocol": {
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
-      "location": "query"
-    },
-    "uploadType": {
-      "type": "string",
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
-      "location": "query"
-    },
-    "$.xgafv": {
-      "type": "string",
-      "description": "V1 error format.",
-      "enum": [
-        "1",
-        "2"
-      ],
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ],
-      "location": "query"
-    }
-  },
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
-        }
-      }
-    }
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
   }
 }
