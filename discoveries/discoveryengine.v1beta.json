@@ -1,7 +1,7 @@
 {
-  "description": "Discovery Engine API.",
-  "rootUrl": "https://discoveryengine.googleapis.com/",
-  "documentationLink": "https://cloud.google.com/discovery-engine/docs",
+  "fullyEncodeReservedExpansion": true,
+  "discoveryVersion": "v1",
+  "name": "discoveryengine",
   "schemas": {
     "GoogleLongrunningListOperationsResponse": {
       "id": "GoogleLongrunningListOperationsResponse",
@@ -228,6 +228,13 @@
           "type": "integer",
           "format": "int32"
         },
+        "dataStoreSpecs": {
+          "description": "A list of data store specs to apply on a search call.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1betaSearchRequestDataStoreSpec"
+          }
+        },
         "filter": {
           "description": "The filter syntax consists of an expression language for constructing a predicate from one or more fields of the documents being filtered. Filter expression is case-sensitive. If this field is unrecognizable, an `INVALID_ARGUMENT` is returned. Filtering in Vertex AI Search is done by mapping the LHS filter key to a key property defined in the Vertex AI Search backend -- this mapping is defined by the customer in their schema. For example a media customer might have a field 'name' in their schema. In this case the filter would look like this: filter --\u003e name:'ANY(\"king kong\")' For more information about filtering including syntax and filter operators, see [Filter](https://cloud.google.com/generative-ai-app-builder/docs/filter-search-metadata)",
           "type": "string"
@@ -306,6 +313,17 @@
       "properties": {
         "imageBytes": {
           "description": "Base64 encoded image bytes. Supported image formats: JPEG, PNG, and BMP.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaSearchRequestDataStoreSpec": {
+      "id": "GoogleCloudDiscoveryengineV1betaSearchRequestDataStoreSpec",
+      "description": "A struct to define data stores to filter on in a search call.",
+      "type": "object",
+      "properties": {
+        "dataStore": {
+          "description": "Required. Full resource name of DataStore, such as `projects/{project}/locations/{location}/collections/{collection_id}/dataStores/{data_store_id}`.",
           "type": "string"
         }
       }
@@ -549,7 +567,7 @@
       "type": "object",
       "properties": {
         "summaryResultCount": {
-          "description": "The number of top results to generate the summary from. If the number of results returned is less than `summaryResultCount`, the summary is generated from all of the results. At most five results can be used to generate a summary.",
+          "description": "The number of top results to generate the summary from. If the number of results returned is less than `summaryResultCount`, the summary is generated from all of the results. At most 10 results can be used to generate a summary.",
           "type": "integer",
           "format": "int32"
         },
@@ -2288,7 +2306,7 @@
           "$ref": "GoogleCloudDiscoveryengineV1betaServingConfigGenericConfig"
         },
         "name": {
-          "description": "Immutable. Fully qualified name `projects/{project}/locations/{location}/collections/{collection_id}/dataStores/{data_store_id}/servingConfigs/{serving_config_id}`",
+          "description": "Immutable. Fully qualified name `projects/{project}/locations/{location}/collections/{collection_id}/engines/{engine_id}/servingConfigs/{serving_config_id}`",
           "type": "string"
         },
         "displayName": {
@@ -4226,11 +4244,6 @@
           "description": "The full resource name of the Document Processing Config. Format: `projects/*/locations/*/collections/*/dataStores/*/documentProcessingConfig`.",
           "type": "string"
         },
-        "ocrConfig": {
-          "description": "[DEPRECATED] This field is deprecated. To specify OCR parsing config, please specify `ocr_parsing_config` in `default_parsing_config` field The OCR config. Currently it only applies to PDFs.",
-          "deprecated": true,
-          "$ref": "GoogleCloudDiscoveryengineV1alphaOcrConfig"
-        },
         "chunkingConfig": {
           "description": "Whether chunking mode is enabled.",
           "$ref": "GoogleCloudDiscoveryengineV1alphaDocumentProcessingConfigChunkingConfig"
@@ -4245,29 +4258,6 @@
           "additionalProperties": {
             "$ref": "GoogleCloudDiscoveryengineV1alphaDocumentProcessingConfigParsingConfig"
           }
-        }
-      }
-    },
-    "GoogleCloudDiscoveryengineV1alphaOcrConfig": {
-      "id": "GoogleCloudDiscoveryengineV1alphaOcrConfig",
-      "deprecated": true,
-      "description": "The OCR options for parsing documents.",
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "description": "Required. If OCR is enabled or not. OCR must be enabled for other OcrConfig options to apply. We will only perform OCR on the first 80 pages of the PDF files.",
-          "type": "boolean"
-        },
-        "enhancedDocumentElements": {
-          "description": "Apply additional enhanced OCR processing to a list of document elements. Supported values: * `table`: advanced table parsing model.",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "useNativeText": {
-          "description": "If true, will use native text instead of OCR text on pages containing native text.",
-          "type": "boolean"
         }
       }
     },
@@ -4708,10 +4698,6 @@
         "commonConfig": {
           "description": "Common config spec that specifies the metadata of the engine.",
           "$ref": "GoogleCloudDiscoveryengineV1alphaEngineCommonConfig"
-        },
-        "allowMultipleDataStoresSearchEngine": {
-          "description": "Whether the search engine can associate with multiple data stores. If true, the generic search engine can associate with one or more data stores. This is an input-only field.",
-          "type": "boolean"
         }
       }
     },
@@ -5862,6 +5848,45 @@
         }
       }
     },
+    "GoogleCloudDiscoveryengineV1betaTrainCustomModelMetadata": {
+      "id": "GoogleCloudDiscoveryengineV1betaTrainCustomModelMetadata",
+      "description": "Metadata related to the progress of the TrainCustomModel operation. This is returned by the google.longrunning.Operation.metadata field.",
+      "type": "object",
+      "properties": {
+        "createTime": {
+          "description": "Operation create time.",
+          "type": "string",
+          "format": "google-datetime"
+        },
+        "updateTime": {
+          "description": "Operation last update time. If the operation is done, this is also the finish time.",
+          "type": "string",
+          "format": "google-datetime"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaTrainCustomModelResponse": {
+      "id": "GoogleCloudDiscoveryengineV1betaTrainCustomModelResponse",
+      "description": "Response of the TrainCustomModelRequest. This message is returned by the google.longrunning.Operations.response field.",
+      "type": "object",
+      "properties": {
+        "errorSamples": {
+          "description": "A sample of errors encountered while processing the data.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleRpcStatus"
+          }
+        },
+        "errorConfig": {
+          "description": "Echoes the destination for the complete errors in the request if set.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaImportErrorConfig"
+        },
+        "modelStatus": {
+          "description": "The trained model status. Possible values are: * **bad-data**: The training data quality is bad. * **no-improvement**: Tuning didn't improve performance. Won't deploy. * **in-progress**: Model training is in progress. * **ready**: The model is ready for serving.",
+          "type": "string"
+        }
+      }
+    },
     "GoogleCloudDiscoveryengineV1betaUpdateSchemaMetadata": {
       "id": "GoogleCloudDiscoveryengineV1betaUpdateSchemaMetadata",
       "description": "Metadata for UpdateSchema LRO.",
@@ -5897,11 +5922,9 @@
       }
     }
   },
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "basePath": "",
+  "rootUrl": "https://discoveryengine.googleapis.com/",
+  "title": "Discovery Engine API",
+  "mtlsRootUrl": "https://discoveryengine.mtls.googleapis.com/",
   "parameters": {
     "access_token": {
       "type": "string",
@@ -5979,27 +6002,12 @@
       "location": "query"
     }
   },
-  "mtlsRootUrl": "https://discoveryengine.mtls.googleapis.com/",
-  "fullyEncodeReservedExpansion": true,
   "version": "v1beta",
   "kind": "discovery#restDescription",
-  "ownerDomain": "google.com",
-  "baseUrl": "https://discoveryengine.googleapis.com/",
-  "version_module": true,
+  "basePath": "",
   "canonicalName": "Discovery Engine",
-  "title": "Discovery Engine API",
-  "batchPath": "batch",
-  "name": "discoveryengine",
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
-        }
-      }
-    }
-  },
-  "ownerName": "Google",
+  "description": "Discovery Engine API.",
+  "id": "discoveryengine:v1beta",
   "resources": {
     "projects": {
       "resources": {
@@ -6172,7 +6180,7 @@
                           "type": "string"
                         },
                         "queryModel": {
-                          "description": "Specifies the autocomplete data model. This overrides any model specified in the Configuration \u003e Autocomplete section of the Cloud console. Currently supported values: * `document` - Using suggestions generated from user-imported documents. * `search-history` - Using suggestions generated from the past history of SearchService.Search API calls. Do not use it when there is no traffic for Search API. * `user-event` - Using suggestions generated from user-imported search events. * `document-completable` - Using suggestions taken directly from user-imported document fields marked as completable. Default values: * `document` is the default model for regular dataStores. * `search-history` is the default model for site search dataStores. *",
+                          "description": "Specifies the autocomplete data model. This overrides any model specified in the Configuration \u003e Autocomplete section of the Cloud console. Currently supported values: * `document` - Using suggestions generated from user-imported documents. * `search-history` - Using suggestions generated from the past history of SearchService.Search API calls. Do not use it when there is no traffic for Search API. * `user-event` - Using suggestions generated from user-imported search events. * `document-completable` - Using suggestions taken directly from user-imported document fields marked as completable. Default values: * `document` is the default model for regular dataStores. * `search-history` is the default model for site search dataStores.",
                           "location": "query",
                           "type": "string"
                         },
@@ -6943,7 +6951,7 @@
                           "httpMethod": "PATCH",
                           "parameters": {
                             "name": {
-                              "description": "Immutable. Fully qualified name `projects/{project}/locations/{location}/collections/{collection_id}/dataStores/{data_store_id}/servingConfigs/{serving_config_id}`",
+                              "description": "Immutable. Fully qualified name `projects/{project}/locations/{location}/collections/{collection_id}/engines/{engine_id}/servingConfigs/{serving_config_id}`",
                               "pattern": "^projects/[^/]+/locations/[^/]+/collections/[^/]+/dataStores/[^/]+/servingConfigs/[^/]+$",
                               "location": "path",
                               "required": true,
@@ -6977,7 +6985,7 @@
                           "httpMethod": "GET",
                           "parameters": {
                             "name": {
-                              "description": "Required. The resource name of the ServingConfig to get. Format: `projects/{project_number}/locations/{location}/collections/{collection}/dataStores/{data_store}/servingConfigs/{serving_config_id}`",
+                              "description": "Required. The resource name of the ServingConfig to get. Format: `projects/{project_number}/locations/{location}/collections/{collection}/engines/{engine}/servingConfigs/{serving_config_id}`",
                               "pattern": "^projects/[^/]+/locations/[^/]+/collections/[^/]+/dataStores/[^/]+/servingConfigs/[^/]+$",
                               "location": "path",
                               "required": true,
@@ -7002,7 +7010,7 @@
                           "httpMethod": "GET",
                           "parameters": {
                             "parent": {
-                              "description": "Required. The dataStore resource name. Format: `projects/{project_number}/locations/{location}/collections/{collection}/dataStores/{data_store}`",
+                              "description": "Required. Full resource name of the parent resource. Format: `projects/{project_number}/locations/{location}/collections/{collection}/engines/{engine}`",
                               "pattern": "^projects/[^/]+/locations/[^/]+/collections/[^/]+/dataStores/[^/]+$",
                               "location": "path",
                               "required": true,
@@ -8321,7 +8329,7 @@
                           "httpMethod": "PATCH",
                           "parameters": {
                             "name": {
-                              "description": "Immutable. Fully qualified name `projects/{project}/locations/{location}/collections/{collection_id}/dataStores/{data_store_id}/servingConfigs/{serving_config_id}`",
+                              "description": "Immutable. Fully qualified name `projects/{project}/locations/{location}/collections/{collection_id}/engines/{engine_id}/servingConfigs/{serving_config_id}`",
                               "pattern": "^projects/[^/]+/locations/[^/]+/collections/[^/]+/engines/[^/]+/servingConfigs/[^/]+$",
                               "location": "path",
                               "required": true,
@@ -8355,7 +8363,7 @@
                           "httpMethod": "GET",
                           "parameters": {
                             "name": {
-                              "description": "Required. The resource name of the ServingConfig to get. Format: `projects/{project_number}/locations/{location}/collections/{collection}/dataStores/{data_store}/servingConfigs/{serving_config_id}`",
+                              "description": "Required. The resource name of the ServingConfig to get. Format: `projects/{project_number}/locations/{location}/collections/{collection}/engines/{engine}/servingConfigs/{serving_config_id}`",
                               "pattern": "^projects/[^/]+/locations/[^/]+/collections/[^/]+/engines/[^/]+/servingConfigs/[^/]+$",
                               "location": "path",
                               "required": true,
@@ -8380,7 +8388,7 @@
                           "httpMethod": "GET",
                           "parameters": {
                             "parent": {
-                              "description": "Required. The dataStore resource name. Format: `projects/{project_number}/locations/{location}/collections/{collection}/dataStores/{data_store}`",
+                              "description": "Required. Full resource name of the parent resource. Format: `projects/{project_number}/locations/{location}/collections/{collection}/engines/{engine}`",
                               "pattern": "^projects/[^/]+/locations/[^/]+/collections/[^/]+/engines/[^/]+$",
                               "location": "path",
                               "required": true,
@@ -8696,7 +8704,7 @@
                       "type": "string"
                     },
                     "queryModel": {
-                      "description": "Specifies the autocomplete data model. This overrides any model specified in the Configuration \u003e Autocomplete section of the Cloud console. Currently supported values: * `document` - Using suggestions generated from user-imported documents. * `search-history` - Using suggestions generated from the past history of SearchService.Search API calls. Do not use it when there is no traffic for Search API. * `user-event` - Using suggestions generated from user-imported search events. * `document-completable` - Using suggestions taken directly from user-imported document fields marked as completable. Default values: * `document` is the default model for regular dataStores. * `search-history` is the default model for site search dataStores. *",
+                      "description": "Specifies the autocomplete data model. This overrides any model specified in the Configuration \u003e Autocomplete section of the Cloud console. Currently supported values: * `document` - Using suggestions generated from user-imported documents. * `search-history` - Using suggestions generated from the past history of SearchService.Search API calls. Do not use it when there is no traffic for Search API. * `user-event` - Using suggestions generated from user-imported search events. * `document-completable` - Using suggestions taken directly from user-imported document fields marked as completable. Default values: * `document` is the default model for regular dataStores. * `search-history` is the default model for site search dataStores.",
                       "location": "query",
                       "type": "string"
                     },
@@ -9467,7 +9475,7 @@
                       "httpMethod": "PATCH",
                       "parameters": {
                         "name": {
-                          "description": "Immutable. Fully qualified name `projects/{project}/locations/{location}/collections/{collection_id}/dataStores/{data_store_id}/servingConfigs/{serving_config_id}`",
+                          "description": "Immutable. Fully qualified name `projects/{project}/locations/{location}/collections/{collection_id}/engines/{engine_id}/servingConfigs/{serving_config_id}`",
                           "pattern": "^projects/[^/]+/locations/[^/]+/dataStores/[^/]+/servingConfigs/[^/]+$",
                           "location": "path",
                           "required": true,
@@ -9501,7 +9509,7 @@
                       "httpMethod": "GET",
                       "parameters": {
                         "name": {
-                          "description": "Required. The resource name of the ServingConfig to get. Format: `projects/{project_number}/locations/{location}/collections/{collection}/dataStores/{data_store}/servingConfigs/{serving_config_id}`",
+                          "description": "Required. The resource name of the ServingConfig to get. Format: `projects/{project_number}/locations/{location}/collections/{collection}/engines/{engine}/servingConfigs/{serving_config_id}`",
                           "pattern": "^projects/[^/]+/locations/[^/]+/dataStores/[^/]+/servingConfigs/[^/]+$",
                           "location": "path",
                           "required": true,
@@ -9526,7 +9534,7 @@
                       "httpMethod": "GET",
                       "parameters": {
                         "parent": {
-                          "description": "Required. The dataStore resource name. Format: `projects/{project_number}/locations/{location}/collections/{collection}/dataStores/{data_store}`",
+                          "description": "Required. Full resource name of the parent resource. Format: `projects/{project_number}/locations/{location}/collections/{collection}/engines/{engine}`",
                           "pattern": "^projects/[^/]+/locations/[^/]+/dataStores/[^/]+$",
                           "location": "path",
                           "required": true,
@@ -10345,9 +10353,26 @@
       }
     }
   },
-  "discoveryVersion": "v1",
-  "id": "discoveryengine:v1beta",
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        }
+      }
+    }
+  },
+  "ownerDomain": "google.com",
+  "revision": "20240307",
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
   "servicePath": "",
-  "revision": "20240229",
-  "protocol": "rest"
+  "version_module": true,
+  "batchPath": "batch",
+  "protocol": "rest",
+  "baseUrl": "https://discoveryengine.googleapis.com/",
+  "documentationLink": "https://cloud.google.com/discovery-engine/docs",
+  "ownerName": "Google"
 }
