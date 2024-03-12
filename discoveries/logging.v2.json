@@ -1,5 +1,8 @@
 {
-  "discoveryVersion": "v1",
+  "id": "logging:v2",
+  "description": "Writes log entries and manages your Cloud Logging configuration.",
+  "version_module": true,
+  "protocol": "rest",
   "auth": {
     "oauth2": {
       "scopes": {
@@ -21,88 +24,11 @@
       }
     }
   },
-  "baseUrl": "https://logging.googleapis.com/",
+  "canonicalName": "Logging",
   "documentationLink": "https://cloud.google.com/logging/docs/",
-  "version": "v2",
-  "rootUrl": "https://logging.googleapis.com/",
-  "fullyEncodeReservedExpansion": true,
-  "parameters": {
-    "access_token": {
-      "type": "string",
-      "description": "OAuth access token.",
-      "location": "query"
-    },
-    "alt": {
-      "type": "string",
-      "description": "Data format for response.",
-      "default": "json",
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ],
-      "location": "query"
-    },
-    "callback": {
-      "type": "string",
-      "description": "JSONP",
-      "location": "query"
-    },
-    "fields": {
-      "type": "string",
-      "description": "Selector specifying which fields to include in a partial response.",
-      "location": "query"
-    },
-    "key": {
-      "type": "string",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
-      "location": "query"
-    },
-    "oauth_token": {
-      "type": "string",
-      "description": "OAuth 2.0 token for the current user.",
-      "location": "query"
-    },
-    "prettyPrint": {
-      "type": "boolean",
-      "description": "Returns response with indentations and line breaks.",
-      "default": "true",
-      "location": "query"
-    },
-    "quotaUser": {
-      "type": "string",
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
-      "location": "query"
-    },
-    "upload_protocol": {
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
-      "location": "query"
-    },
-    "uploadType": {
-      "type": "string",
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
-      "location": "query"
-    },
-    "$.xgafv": {
-      "type": "string",
-      "description": "V1 error format.",
-      "enum": [
-        "1",
-        "2"
-      ],
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ],
-      "location": "query"
-    }
-  },
+  "ownerDomain": "google.com",
+  "ownerName": "Google",
+  "title": "Cloud Logging API",
   "schemas": {
     "ListOperationsResponse": {
       "id": "ListOperationsResponse",
@@ -541,6 +467,11 @@
           "readOnly": true,
           "type": "string"
         },
+        "resourceName": {
+          "description": "Output only. The resource name of the sink. \"projects/[PROJECT_ID]/sinks/[SINK_NAME] \"organizations/[ORGANIZATION_ID]/sinks/[SINK_NAME] \"billingAccounts/[BILLING_ACCOUNT_ID]/sinks/[SINK_NAME] \"folders/[FOLDER_ID]/sinks/[SINK_NAME] For example: projects/my_project/sinks/SINK_NAME",
+          "readOnly": true,
+          "type": "string"
+        },
         "destination": {
           "description": "Required. The export destination: \"storage.googleapis.com/[GCS_BUCKET]\" \"bigquery.googleapis.com/projects/[PROJECT_ID]/datasets/[DATASET]\" \"pubsub.googleapis.com/projects/[PROJECT_ID]/topics/[TOPIC_ID]\" \"logging.googleapis.com/projects/[PROJECT_ID]\" \"logging.googleapis.com/projects/[PROJECT_ID]/locations/[LOCATION_ID]/buckets/[BUCKET_ID]\" The sink's writer_identity, set when the sink is created, must have permission to write to the destination or else the log entries are not exported. For more information, see Exporting Logs with Sinks (https://cloud.google.com/logging/docs/api/tasks/exporting-logs).",
           "type": "string"
@@ -586,6 +517,10 @@
         },
         "includeChildren": {
           "description": "Optional. This field applies only to sinks owned by organizations and folders. If the field is false, the default, only the logs owned by the sink's parent resource are available for export. If the field is true, then log entries from all the projects, folders, and billing accounts contained in the sink's parent resource are also available for export. Whether a particular log entry from the children is exported depends on the sink's filter expression.For example, if this field is true, then the filter resource.type=gce_instance would export all Compute Engine VM instance log entries from all projects in the sink's parent.To only export entries from certain child projects, filter on the project part of the log name:logName:(\"projects/test-project1/\" OR \"projects/test-project2/\") AND resource.type=gce_instance",
+          "type": "boolean"
+        },
+        "interceptChildren": {
+          "description": "Optional. This field applies only to sinks owned by organizations and folders.When the value of 'intercept_children' is true, the following restrictions apply: The sink must have the include_children flag set to true. The sink destination must be a Cloud project.Also, the following behaviors apply: Any logs matched by the sink won't be included by non-_Required sinks owned by child resources. The sink appears in the results of a ListSinks call from a child resource if the value of the filter field in its request is either 'in_scope(\"ALL\")' or 'in_scope(\"ANCESTOR\")'.",
           "type": "boolean"
         },
         "bigqueryOptions": {
@@ -2389,9 +2324,8 @@
       }
     }
   },
-  "canonicalName": "Logging",
-  "revision": "20240301",
-  "title": "Cloud Logging API",
+  "revision": "20240311",
+  "batchPath": "batch",
   "resources": {
     "locations": {
       "methods": {
@@ -3325,6 +3259,11 @@
               "location": "query",
               "type": "integer",
               "format": "int32"
+            },
+            "filter": {
+              "description": "Optional. A filter expression to constrain the sinks returned. Today, this only supports the following strings: '' 'in_scope(\"ALL\")', 'in_scope(\"ANCESTOR\")', 'in_scope(\"DEFAULT\")'.Description of scopes below. ALL: Includes all of the sinks which can be returned in any other scope. ANCESTOR: Includes intercepting sinks owned by ancestor resources. DEFAULT: Includes sinks owned by parent.When the empty string is provided, then the filter 'in_scope(\"DEFAULT\")' is applied.",
+              "location": "query",
+              "type": "string"
             }
           },
           "parameterOrder": [
@@ -4800,6 +4739,11 @@
                   "location": "query",
                   "type": "integer",
                   "format": "int32"
+                },
+                "filter": {
+                  "description": "Optional. A filter expression to constrain the sinks returned. Today, this only supports the following strings: '' 'in_scope(\"ALL\")', 'in_scope(\"ANCESTOR\")', 'in_scope(\"DEFAULT\")'.Description of scopes below. ALL: Includes all of the sinks which can be returned in any other scope. ANCESTOR: Includes intercepting sinks owned by ancestor resources. DEFAULT: Includes sinks owned by parent.When the empty string is provided, then the filter 'in_scope(\"DEFAULT\")' is applied.",
+                  "location": "query",
+                  "type": "string"
                 }
               },
               "parameterOrder": [
@@ -6495,6 +6439,11 @@
                   "location": "query",
                   "type": "integer",
                   "format": "int32"
+                },
+                "filter": {
+                  "description": "Optional. A filter expression to constrain the sinks returned. Today, this only supports the following strings: '' 'in_scope(\"ALL\")', 'in_scope(\"ANCESTOR\")', 'in_scope(\"DEFAULT\")'.Description of scopes below. ALL: Includes all of the sinks which can be returned in any other scope. ANCESTOR: Includes intercepting sinks owned by ancestor resources. DEFAULT: Includes sinks owned by parent.When the empty string is provided, then the filter 'in_scope(\"DEFAULT\")' is applied.",
+                  "location": "query",
+                  "type": "string"
                 }
               },
               "parameterOrder": [
@@ -7997,6 +7946,11 @@
                   "location": "query",
                   "type": "integer",
                   "format": "int32"
+                },
+                "filter": {
+                  "description": "Optional. A filter expression to constrain the sinks returned. Today, this only supports the following strings: '' 'in_scope(\"ALL\")', 'in_scope(\"ANCESTOR\")', 'in_scope(\"DEFAULT\")'.Description of scopes below. ALL: Includes all of the sinks which can be returned in any other scope. ANCESTOR: Includes intercepting sinks owned by ancestor resources. DEFAULT: Includes sinks owned by parent.When the empty string is provided, then the filter 'in_scope(\"DEFAULT\")' is applied.",
+                  "location": "query",
+                  "type": "string"
                 }
               },
               "parameterOrder": [
@@ -9464,6 +9418,11 @@
                   "location": "query",
                   "type": "integer",
                   "format": "int32"
+                },
+                "filter": {
+                  "description": "Optional. A filter expression to constrain the sinks returned. Today, this only supports the following strings: '' 'in_scope(\"ALL\")', 'in_scope(\"ANCESTOR\")', 'in_scope(\"DEFAULT\")'.Description of scopes below. ALL: Includes all of the sinks which can be returned in any other scope. ANCESTOR: Includes intercepting sinks owned by ancestor resources. DEFAULT: Includes sinks owned by parent.When the empty string is provided, then the filter 'in_scope(\"DEFAULT\")' is applied.",
+                  "location": "query",
+                  "type": "string"
                 }
               },
               "parameterOrder": [
@@ -9937,10 +9896,101 @@
       }
     }
   },
+  "baseUrl": "https://logging.googleapis.com/",
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
+  "mtlsRootUrl": "https://logging.mtls.googleapis.com/",
+  "fullyEncodeReservedExpansion": true,
   "kind": "discovery#restDescription",
+  "basePath": "",
   "servicePath": "",
-  "protocol": "rest",
+  "version": "v2",
+  "parameters": {
+    "access_token": {
+      "type": "string",
+      "description": "OAuth access token.",
+      "location": "query"
+    },
+    "alt": {
+      "type": "string",
+      "description": "Data format for response.",
+      "default": "json",
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "location": "query"
+    },
+    "callback": {
+      "type": "string",
+      "description": "JSONP",
+      "location": "query"
+    },
+    "fields": {
+      "type": "string",
+      "description": "Selector specifying which fields to include in a partial response.",
+      "location": "query"
+    },
+    "key": {
+      "type": "string",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+      "location": "query"
+    },
+    "oauth_token": {
+      "type": "string",
+      "description": "OAuth 2.0 token for the current user.",
+      "location": "query"
+    },
+    "prettyPrint": {
+      "type": "boolean",
+      "description": "Returns response with indentations and line breaks.",
+      "default": "true",
+      "location": "query"
+    },
+    "quotaUser": {
+      "type": "string",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
+      "location": "query"
+    },
+    "upload_protocol": {
+      "type": "string",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
+      "location": "query"
+    },
+    "uploadType": {
+      "type": "string",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
+      "location": "query"
+    },
+    "$.xgafv": {
+      "type": "string",
+      "description": "V1 error format.",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "location": "query"
+    }
+  },
+  "name": "logging",
   "endpoints": [
+    {
+      "endpointUrl": "https://logging.me-central2.rep.googleapis.com/",
+      "location": "me-central2",
+      "description": "Regional Endpoint"
+    },
     {
       "endpointUrl": "https://logging.europe-west3.rep.googleapis.com/",
       "location": "europe-west3",
@@ -9954,11 +10004,6 @@
     {
       "endpointUrl": "https://logging.europe-west9.rep.googleapis.com/",
       "location": "europe-west9",
-      "description": "Regional Endpoint"
-    },
-    {
-      "endpointUrl": "https://logging.me-central2.rep.googleapis.com/",
-      "location": "me-central2",
       "description": "Regional Endpoint"
     },
     {
@@ -10022,17 +10067,6 @@
       "description": "Regional Endpoint"
     }
   ],
-  "basePath": "",
-  "ownerDomain": "google.com",
-  "id": "logging:v2",
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "name": "logging",
-  "description": "Writes log entries and manages your Cloud Logging configuration.",
-  "ownerName": "Google",
-  "mtlsRootUrl": "https://logging.mtls.googleapis.com/",
-  "batchPath": "batch",
-  "version_module": true
+  "discoveryVersion": "v1",
+  "rootUrl": "https://logging.googleapis.com/"
 }
