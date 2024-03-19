@@ -1,44 +1,7 @@
 {
   "title": "Cloud Bigtable Admin API",
-  "revision": "20240306",
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/bigtable.admin": {
-          "description": "Administer your Cloud Bigtable tables and clusters"
-        },
-        "https://www.googleapis.com/auth/bigtable.admin.cluster": {
-          "description": "Administer your Cloud Bigtable clusters"
-        },
-        "https://www.googleapis.com/auth/bigtable.admin.instance": {
-          "description": "Administer your Cloud Bigtable clusters"
-        },
-        "https://www.googleapis.com/auth/bigtable.admin.table": {
-          "description": "Administer your Cloud Bigtable tables"
-        },
-        "https://www.googleapis.com/auth/cloud-bigtable.admin": {
-          "description": "Administer your Cloud Bigtable tables and clusters"
-        },
-        "https://www.googleapis.com/auth/cloud-bigtable.admin.cluster": {
-          "description": "Administer your Cloud Bigtable clusters"
-        },
-        "https://www.googleapis.com/auth/cloud-bigtable.admin.table": {
-          "description": "Administer your Cloud Bigtable tables"
-        },
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
-        },
-        "https://www.googleapis.com/auth/cloud-platform.read-only": {
-          "description": "View your data across Google Cloud services and see the email address of your Google Account"
-        }
-      }
-    }
-  },
-  "rootUrl": "https://bigtableadmin.googleapis.com/",
-  "canonicalName": "Bigtable Admin",
-  "batchPath": "batch",
+  "discoveryVersion": "v1",
   "version": "v2",
-  "fullyEncodeReservedExpansion": true,
   "resources": {
     "operations": {
       "methods": {
@@ -2009,12 +1972,14 @@
       }
     }
   },
-  "ownerDomain": "google.com",
+  "baseUrl": "https://bigtableadmin.googleapis.com/",
+  "description": "Administer your Cloud Bigtable tables and instances.",
+  "batchPath": "batch",
   "kind": "discovery#restDescription",
-  "discoveryVersion": "v1",
+  "ownerDomain": "google.com",
+  "fullyEncodeReservedExpansion": true,
+  "servicePath": "",
   "documentationLink": "https://cloud.google.com/bigtable/",
-  "protocol": "rest",
-  "mtlsRootUrl": "https://bigtableadmin.mtls.googleapis.com/",
   "parameters": {
     "access_token": {
       "type": "string",
@@ -2092,10 +2057,8 @@
       "location": "query"
     }
   },
-  "servicePath": "",
-  "name": "bigtableadmin",
-  "ownerName": "Google",
-  "baseUrl": "https://bigtableadmin.googleapis.com/",
+  "id": "bigtableadmin:v2",
+  "canonicalName": "Bigtable Admin",
   "schemas": {
     "ListOperationsResponse": {
       "id": "ListOperationsResponse",
@@ -2498,6 +2461,10 @@
         "standardIsolation": {
           "description": "The standard options used for isolating this app profile's traffic from other use cases.",
           "$ref": "StandardIsolation"
+        },
+        "dataBoostIsolationReadOnly": {
+          "description": "Specifies that this app profile is intended for read-only usage via the Data Boost feature.",
+          "$ref": "DataBoostIsolationReadOnly"
         }
       }
     },
@@ -2549,6 +2516,25 @@
             "PRIORITY_LOW",
             "PRIORITY_MEDIUM",
             "PRIORITY_HIGH"
+          ]
+        }
+      }
+    },
+    "DataBoostIsolationReadOnly": {
+      "id": "DataBoostIsolationReadOnly",
+      "description": "Data Boost is a serverless compute capability that lets you run high-throughput read jobs on your Bigtable data, without impacting the performance of the clusters that handle your application traffic. Currently, Data Boost exclusively supports read-only use-cases with single-cluster routing. Data Boost reads are only guaranteed to see the results of writes that were written at least 30 minutes ago. This means newly written values may not become visible for up to 30m, and also means that old values may remain visible for up to 30m after being deleted or overwritten. To mitigate the staleness of the data, users may either wait 30m, or use CheckConsistency.",
+      "type": "object",
+      "properties": {
+        "computeBillingOwner": {
+          "description": "The Compute Billing Owner for this Data Boost App Profile.",
+          "type": "string",
+          "enumDescriptions": [
+            "Unspecified value.",
+            "The host Cloud Project containing the targeted Bigtable Instance / Table pays for compute."
+          ],
+          "enum": [
+            "COMPUTE_BILLING_OWNER_UNSPECIFIED",
+            "HOST_PAYS"
           ]
         }
       }
@@ -2991,6 +2977,10 @@
           "description": "Output only. Only available with STATS_VIEW, this includes summary statistics about column family contents. For statistics over an entire table, see TableStats above.",
           "readOnly": true,
           "$ref": "ColumnFamilyStats"
+        },
+        "valueType": {
+          "description": "The type of data stored in each of this family's cell values, including its full encoding. If omitted, the family only serves raw untyped bytes. For now, only the `Aggregate` type is supported. `Aggregate` can only be set at family creation and is immutable afterwards. If `value_type` is `Aggregate`, written data must be compatible with: * `value_type.input_type` for `AddInput` mutations",
+          "$ref": "Type"
         }
       }
     },
@@ -3068,6 +3058,112 @@
           "format": "int64"
         }
       }
+    },
+    "Type": {
+      "id": "Type",
+      "description": "`Type` represents the type of data that is written to, read from, or stored in Bigtable. It is heavily based on the GoogleSQL standard to help maintain familiarity and consistency across products and features. For compatibility with Bigtable's existing untyped APIs, each `Type` includes an `Encoding` which describes how to convert to/from the underlying data. This might involve composing a series of steps into an \"encoding chain,\" for example to convert from INT64 -\u003e STRING -\u003e raw bytes. In most cases, a \"link\" in the encoding chain will be based an on existing GoogleSQL conversion function like `CAST`. Each link in the encoding chain also defines the following properties: * Natural sort: Does the encoded value sort consistently with the original typed value? Note that Bigtable will always sort data based on the raw encoded value, *not* the decoded type. - Example: STRING values sort in the same order as their UTF-8 encodings. - Counterexample: Encoding INT64 to a fixed-width STRING does *not* preserve sort order when dealing with negative numbers. INT64(1) \u003e INT64(-1), but STRING(\"-00001\") \u003e STRING(\"00001). - The overall encoding chain sorts naturally if *every* link does. * Self-delimiting: If we concatenate two encoded values, can we always tell where the first one ends and the second one begins? - Example: If we encode INT64s to fixed-width STRINGs, the first value will always contain exactly N digits, possibly preceded by a sign. - Counterexample: If we concatenate two UTF-8 encoded STRINGs, we have no way to tell where the first one ends. - The overall encoding chain is self-delimiting if *any* link is. * Compatibility: Which other systems have matching encoding schemes? For example, does this encoding have a GoogleSQL equivalent? HBase? Java?",
+      "type": "object",
+      "properties": {
+        "bytesType": {
+          "description": "Bytes",
+          "$ref": "GoogleBigtableAdminV2TypeBytes"
+        },
+        "int64Type": {
+          "description": "Int64",
+          "$ref": "GoogleBigtableAdminV2TypeInt64"
+        },
+        "aggregateType": {
+          "description": "Aggregate",
+          "$ref": "GoogleBigtableAdminV2TypeAggregate"
+        }
+      }
+    },
+    "GoogleBigtableAdminV2TypeBytes": {
+      "id": "GoogleBigtableAdminV2TypeBytes",
+      "description": "Bytes Values of type `Bytes` are stored in `Value.bytes_value`.",
+      "type": "object",
+      "properties": {
+        "encoding": {
+          "description": "The encoding to use when converting to/from lower level types.",
+          "$ref": "GoogleBigtableAdminV2TypeBytesEncoding"
+        }
+      }
+    },
+    "GoogleBigtableAdminV2TypeBytesEncoding": {
+      "id": "GoogleBigtableAdminV2TypeBytesEncoding",
+      "description": "Rules used to convert to/from lower level types.",
+      "type": "object",
+      "properties": {
+        "raw": {
+          "description": "Use `Raw` encoding.",
+          "$ref": "GoogleBigtableAdminV2TypeBytesEncodingRaw"
+        }
+      }
+    },
+    "GoogleBigtableAdminV2TypeBytesEncodingRaw": {
+      "id": "GoogleBigtableAdminV2TypeBytesEncodingRaw",
+      "description": "Leaves the value \"as-is\" * Natural sort? Yes * Self-delimiting? No * Compatibility? N/A",
+      "type": "object",
+      "properties": {}
+    },
+    "GoogleBigtableAdminV2TypeInt64": {
+      "id": "GoogleBigtableAdminV2TypeInt64",
+      "description": "Int64 Values of type `Int64` are stored in `Value.int_value`.",
+      "type": "object",
+      "properties": {
+        "encoding": {
+          "description": "The encoding to use when converting to/from lower level types.",
+          "$ref": "GoogleBigtableAdminV2TypeInt64Encoding"
+        }
+      }
+    },
+    "GoogleBigtableAdminV2TypeInt64Encoding": {
+      "id": "GoogleBigtableAdminV2TypeInt64Encoding",
+      "description": "Rules used to convert to/from lower level types.",
+      "type": "object",
+      "properties": {
+        "bigEndianBytes": {
+          "description": "Use `BigEndianBytes` encoding.",
+          "$ref": "GoogleBigtableAdminV2TypeInt64EncodingBigEndianBytes"
+        }
+      }
+    },
+    "GoogleBigtableAdminV2TypeInt64EncodingBigEndianBytes": {
+      "id": "GoogleBigtableAdminV2TypeInt64EncodingBigEndianBytes",
+      "description": "Encodes the value as an 8-byte big endian twos complement `Bytes` value. * Natural sort? No (positive values only) * Self-delimiting? Yes * Compatibility? - BigQuery Federation `BINARY` encoding - HBase `Bytes.toBytes` - Java `ByteBuffer.putLong()` with `ByteOrder.BIG_ENDIAN`",
+      "type": "object",
+      "properties": {
+        "bytesType": {
+          "description": "The underlying `Bytes` type, which may be able to encode further.",
+          "$ref": "GoogleBigtableAdminV2TypeBytes"
+        }
+      }
+    },
+    "GoogleBigtableAdminV2TypeAggregate": {
+      "id": "GoogleBigtableAdminV2TypeAggregate",
+      "description": "A value that combines incremental updates into a summarized value. Data is never directly written or read using type `Aggregate`. Writes will provide either the `input_type` or `state_type`, and reads will always return the `state_type` .",
+      "type": "object",
+      "properties": {
+        "inputType": {
+          "description": "Type of the inputs that are accumulated by this `Aggregate`, which must specify a full encoding. Use `AddInput` mutations to accumulate new inputs.",
+          "$ref": "Type"
+        },
+        "stateType": {
+          "description": "Output only. Type that holds the internal accumulator state for the `Aggregate`. This is a function of the `input_type` and `aggregator` chosen, and will always specify a full encoding.",
+          "readOnly": true,
+          "$ref": "Type"
+        },
+        "sum": {
+          "description": "Sum aggregator.",
+          "$ref": "GoogleBigtableAdminV2TypeAggregateSum"
+        }
+      }
+    },
+    "GoogleBigtableAdminV2TypeAggregateSum": {
+      "id": "GoogleBigtableAdminV2TypeAggregateSum",
+      "description": "Computes the sum of the input values. Allowed input: `Int64` State: same as input",
+      "type": "object",
+      "properties": {}
     },
     "RestoreInfo": {
       "id": "RestoreInfo",
@@ -3391,8 +3487,28 @@
         "consistencyToken": {
           "description": "Required. The token created using GenerateConsistencyToken for the Table.",
           "type": "string"
+        },
+        "standardReadRemoteWrites": {
+          "description": "Checks that reads using an app profile with `StandardIsolation` can see all writes committed before the token was created, even if the read and write target different clusters.",
+          "$ref": "StandardReadRemoteWrites"
+        },
+        "dataBoostReadLocalWrites": {
+          "description": "Checks that reads using an app profile with `DataBoostIsolationReadOnly` can see all writes committed before the token was created, but only if the read and write target the same cluster.",
+          "$ref": "DataBoostReadLocalWrites"
         }
       }
+    },
+    "StandardReadRemoteWrites": {
+      "id": "StandardReadRemoteWrites",
+      "description": "Checks that all writes before the consistency token was generated are replicated in every cluster and readable.",
+      "type": "object",
+      "properties": {}
+    },
+    "DataBoostReadLocalWrites": {
+      "id": "DataBoostReadLocalWrites",
+      "description": "Checks that all writes before the consistency token was generated in the same cluster are readable by Databoost.",
+      "type": "object",
+      "properties": {}
     },
     "CheckConsistencyResponse": {
       "id": "CheckConsistencyResponse",
@@ -4015,12 +4131,49 @@
       }
     }
   },
-  "basePath": "",
+  "protocol": "rest",
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/bigtable.admin": {
+          "description": "Administer your Cloud Bigtable tables and clusters"
+        },
+        "https://www.googleapis.com/auth/bigtable.admin.cluster": {
+          "description": "Administer your Cloud Bigtable clusters"
+        },
+        "https://www.googleapis.com/auth/bigtable.admin.instance": {
+          "description": "Administer your Cloud Bigtable clusters"
+        },
+        "https://www.googleapis.com/auth/bigtable.admin.table": {
+          "description": "Administer your Cloud Bigtable tables"
+        },
+        "https://www.googleapis.com/auth/cloud-bigtable.admin": {
+          "description": "Administer your Cloud Bigtable tables and clusters"
+        },
+        "https://www.googleapis.com/auth/cloud-bigtable.admin.cluster": {
+          "description": "Administer your Cloud Bigtable clusters"
+        },
+        "https://www.googleapis.com/auth/cloud-bigtable.admin.table": {
+          "description": "Administer your Cloud Bigtable tables"
+        },
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        },
+        "https://www.googleapis.com/auth/cloud-platform.read-only": {
+          "description": "View your data across Google Cloud services and see the email address of your Google Account"
+        }
+      }
+    }
+  },
+  "ownerName": "Google",
+  "revision": "20240318",
   "icons": {
     "x16": "http://www.google.com/images/icons/product/search-16.gif",
     "x32": "http://www.google.com/images/icons/product/search-32.gif"
   },
-  "id": "bigtableadmin:v2",
-  "description": "Administer your Cloud Bigtable tables and instances.",
+  "mtlsRootUrl": "https://bigtableadmin.mtls.googleapis.com/",
+  "basePath": "",
+  "rootUrl": "https://bigtableadmin.googleapis.com/",
+  "name": "bigtableadmin",
   "version_module": true
 }
