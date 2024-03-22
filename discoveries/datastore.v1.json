@@ -1,11 +1,28 @@
 {
+  "fullyEncodeReservedExpansion": true,
+  "name": "datastore",
+  "revision": "20240317",
   "basePath": "",
-  "description": "Accesses the schemaless NoSQL database to provide fully managed, robust, scalable storage for your application. ",
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
   "kind": "discovery#restDescription",
-  "id": "datastore:v1",
-  "discoveryVersion": "v1",
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        },
+        "https://www.googleapis.com/auth/datastore": {
+          "description": "View and manage your Google Cloud Datastore data"
+        }
+      }
+    }
+  },
+  "title": "Cloud Datastore API",
+  "protocol": "rest",
   "version_module": true,
-  "ownerDomain": "google.com",
   "schemas": {
     "GoogleLongrunningListOperationsResponse": {
       "id": "GoogleLongrunningListOperationsResponse",
@@ -281,6 +298,10 @@
           "items": {
             "$ref": "Key"
           }
+        },
+        "propertyMask": {
+          "description": "The properties to return. Defaults to returning all properties. If this field is set and an entity has a property not referenced in the mask, it will be absent from LookupResponse.found.entity.properties. The entity's key is always returned.",
+          "$ref": "PropertyMask"
         }
       }
     },
@@ -412,6 +433,20 @@
         "name": {
           "description": "The name of the entity. A name matching regex `__.*__` is reserved/read-only. A name must not be more than 1500 bytes when UTF-8 encoded. Cannot be `\"\"`. Must be valid UTF-8 bytes. Legacy values that are not valid UTF-8 are encoded as `__bytes__` where `` is the base-64 encoding of the bytes.",
           "type": "string"
+        }
+      }
+    },
+    "PropertyMask": {
+      "id": "PropertyMask",
+      "description": "The set of arbitrarily nested property paths used to restrict an operation to only a subset of properties in an entity.",
+      "type": "object",
+      "properties": {
+        "paths": {
+          "description": "The paths to the properties covered by this mask. A path is a list of property names separated by dots (`.`), for example `foo.bar` means the property `bar` inside the entity property `foo` inside the entity associated with this path. If a property name contains a dot `.` or a backslash `\\`, then that name must be escaped. A path must not be empty, and may not reference a value inside an array value.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -627,6 +662,14 @@
         "gqlQuery": {
           "description": "The GQL query to run. This query must be a non-aggregation query.",
           "$ref": "GqlQuery"
+        },
+        "propertyMask": {
+          "description": "The properties to return. This field must not be set for a projection query. See LookupRequest.property_mask.",
+          "$ref": "PropertyMask"
+        },
+        "explainOptions": {
+          "description": "Optional. Explain options for the query. If set, additional query statistics will be returned. If not, only query results will be returned.",
+          "$ref": "ExplainOptions"
         }
       }
     },
@@ -878,6 +921,17 @@
         }
       }
     },
+    "ExplainOptions": {
+      "id": "ExplainOptions",
+      "description": "Explain options for the query.",
+      "type": "object",
+      "properties": {
+        "analyze": {
+          "description": "Optional. Whether to execute this query. When false (the default), the query will be planned, returning only metrics from the planning stages. When true, the query will be planned and executed, returning the full query results along with both planning and execution stage metrics.",
+          "type": "boolean"
+        }
+      }
+    },
     "RunQueryResponse": {
       "id": "RunQueryResponse",
       "description": "The response for Datastore.RunQuery.",
@@ -895,6 +949,10 @@
           "description": "The identifier of the transaction that was started as part of this RunQuery request. Set only when ReadOptions.new_transaction was set in RunQueryRequest.read_options.",
           "type": "string",
           "format": "byte"
+        },
+        "explainMetrics": {
+          "description": "Query explain metrics. This is only present when the RunQueryRequest.explain_options is provided, and it is sent only once with the last response in the stream.",
+          "$ref": "ExplainMetrics"
         }
       }
     },
@@ -971,6 +1029,69 @@
         }
       }
     },
+    "ExplainMetrics": {
+      "id": "ExplainMetrics",
+      "description": "Explain metrics for the query.",
+      "type": "object",
+      "properties": {
+        "planSummary": {
+          "description": "Planning phase information for the query.",
+          "$ref": "PlanSummary"
+        },
+        "executionStats": {
+          "description": "Aggregated stats from the execution of the query. Only present when ExplainOptions.analyze is set to true.",
+          "$ref": "ExecutionStats"
+        }
+      }
+    },
+    "PlanSummary": {
+      "id": "PlanSummary",
+      "description": "Planning phase information for the query.",
+      "type": "object",
+      "properties": {
+        "indexesUsed": {
+          "description": "The indexes selected for the query. For example: [ {\"query_scope\": \"Collection\", \"properties\": \"(foo ASC, __name__ ASC)\"}, {\"query_scope\": \"Collection\", \"properties\": \"(bar ASC, __name__ ASC)\"} ]",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "any",
+              "description": "Properties of the object."
+            }
+          }
+        }
+      }
+    },
+    "ExecutionStats": {
+      "id": "ExecutionStats",
+      "description": "Execution statistics for the query.",
+      "type": "object",
+      "properties": {
+        "resultsReturned": {
+          "description": "Total number of results returned, including documents, projections, aggregation results, keys.",
+          "type": "string",
+          "format": "int64"
+        },
+        "executionDuration": {
+          "description": "Total time to execute the query in the backend.",
+          "type": "string",
+          "format": "google-duration"
+        },
+        "readOperations": {
+          "description": "Total billable read operations.",
+          "type": "string",
+          "format": "int64"
+        },
+        "debugStats": {
+          "description": "Debugging statistics from the execution of the query. Note that the debugging stats are subject to change as Firestore evolves. It could include: { \"indexes_entries_scanned\": \"1000\", \"documents_scanned\": \"20\", \"billing_details\" : { \"documents_billable\": \"20\", \"index_entries_billable\": \"1000\", \"min_query_cost\": \"0\" } }",
+          "type": "object",
+          "additionalProperties": {
+            "type": "any",
+            "description": "Properties of the object."
+          }
+        }
+      }
+    },
     "RunAggregationQueryRequest": {
       "id": "RunAggregationQueryRequest",
       "description": "The request for Datastore.RunAggregationQuery.",
@@ -995,6 +1116,10 @@
         "gqlQuery": {
           "description": "The GQL query to run. This query must be an aggregation query.",
           "$ref": "GqlQuery"
+        },
+        "explainOptions": {
+          "description": "Optional. Explain options for the query. If set, additional query statistics will be returned. If not, only query results will be returned.",
+          "$ref": "ExplainOptions"
         }
       }
     },
@@ -1090,6 +1215,10 @@
           "description": "The identifier of the transaction that was started as part of this RunAggregationQuery request. Set only when ReadOptions.new_transaction was set in RunAggregationQueryRequest.read_options.",
           "type": "string",
           "format": "byte"
+        },
+        "explainMetrics": {
+          "description": "Query explain metrics. This is only present when the RunAggregationQueryRequest.explain_options is provided, and it is sent only once with the last response in the stream.",
+          "$ref": "ExplainMetrics"
         }
       }
     },
@@ -1242,6 +1371,10 @@
           "description": "The update time of the entity that this mutation is being applied to. If this does not match the current update time on the server, the mutation conflicts.",
           "type": "string",
           "format": "google-datetime"
+        },
+        "propertyMask": {
+          "description": "The properties to write in this mutation. None of the properties in the mask may have a reserved name, except for `__key__`. This field is ignored for `delete`. If the entity already exists, only properties referenced in the mask are updated, others are left untouched. Properties referenced in the mask but not in the entity are deleted.",
+          "$ref": "PropertyMask"
         }
       }
     },
@@ -1865,111 +1998,8 @@
       }
     }
   },
-  "protocol": "rest",
-  "mtlsRootUrl": "https://datastore.mtls.googleapis.com/",
-  "batchPath": "batch",
-  "parameters": {
-    "access_token": {
-      "type": "string",
-      "description": "OAuth access token.",
-      "location": "query"
-    },
-    "alt": {
-      "type": "string",
-      "description": "Data format for response.",
-      "default": "json",
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ],
-      "location": "query"
-    },
-    "callback": {
-      "type": "string",
-      "description": "JSONP",
-      "location": "query"
-    },
-    "fields": {
-      "type": "string",
-      "description": "Selector specifying which fields to include in a partial response.",
-      "location": "query"
-    },
-    "key": {
-      "type": "string",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
-      "location": "query"
-    },
-    "oauth_token": {
-      "type": "string",
-      "description": "OAuth 2.0 token for the current user.",
-      "location": "query"
-    },
-    "prettyPrint": {
-      "type": "boolean",
-      "description": "Returns response with indentations and line breaks.",
-      "default": "true",
-      "location": "query"
-    },
-    "quotaUser": {
-      "type": "string",
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
-      "location": "query"
-    },
-    "upload_protocol": {
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
-      "location": "query"
-    },
-    "uploadType": {
-      "type": "string",
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
-      "location": "query"
-    },
-    "$.xgafv": {
-      "type": "string",
-      "description": "V1 error format.",
-      "enum": [
-        "1",
-        "2"
-      ],
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ],
-      "location": "query"
-    }
-  },
-  "fullyEncodeReservedExpansion": true,
-  "baseUrl": "https://datastore.googleapis.com/",
-  "ownerName": "Google",
-  "version": "v1",
-  "revision": "20240215",
-  "name": "datastore",
-  "rootUrl": "https://datastore.googleapis.com/",
-  "title": "Cloud Datastore API",
-  "documentationLink": "https://cloud.google.com/datastore/",
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
-        },
-        "https://www.googleapis.com/auth/datastore": {
-          "description": "View and manage your Google Cloud Datastore data"
-        }
-      }
-    }
-  },
+  "description": "Accesses the schemaless NoSQL database to provide fully managed, robust, scalable storage for your application. ",
+  "id": "datastore:v1",
   "resources": {
     "projects": {
       "methods": {
@@ -2518,5 +2548,91 @@
       }
     }
   },
+  "documentationLink": "https://cloud.google.com/datastore/",
+  "discoveryVersion": "v1",
+  "rootUrl": "https://datastore.googleapis.com/",
+  "mtlsRootUrl": "https://datastore.mtls.googleapis.com/",
+  "ownerName": "Google",
+  "parameters": {
+    "access_token": {
+      "type": "string",
+      "description": "OAuth access token.",
+      "location": "query"
+    },
+    "alt": {
+      "type": "string",
+      "description": "Data format for response.",
+      "default": "json",
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "location": "query"
+    },
+    "callback": {
+      "type": "string",
+      "description": "JSONP",
+      "location": "query"
+    },
+    "fields": {
+      "type": "string",
+      "description": "Selector specifying which fields to include in a partial response.",
+      "location": "query"
+    },
+    "key": {
+      "type": "string",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+      "location": "query"
+    },
+    "oauth_token": {
+      "type": "string",
+      "description": "OAuth 2.0 token for the current user.",
+      "location": "query"
+    },
+    "prettyPrint": {
+      "type": "boolean",
+      "description": "Returns response with indentations and line breaks.",
+      "default": "true",
+      "location": "query"
+    },
+    "quotaUser": {
+      "type": "string",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
+      "location": "query"
+    },
+    "upload_protocol": {
+      "type": "string",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
+      "location": "query"
+    },
+    "uploadType": {
+      "type": "string",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
+      "location": "query"
+    },
+    "$.xgafv": {
+      "type": "string",
+      "description": "V1 error format.",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "location": "query"
+    }
+  },
+  "baseUrl": "https://datastore.googleapis.com/",
+  "ownerDomain": "google.com",
+  "batchPath": "batch",
+  "version": "v1",
   "servicePath": ""
 }
