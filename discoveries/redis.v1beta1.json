@@ -1,13 +1,18 @@
 {
-  "documentationLink": "https://cloud.google.com/memorystore/docs/redis/",
-  "rootUrl": "https://redis.googleapis.com/",
-  "title": "Google Cloud Memorystore for Redis API",
-  "mtlsRootUrl": "https://redis.mtls.googleapis.com/",
-  "ownerName": "Google",
-  "basePath": "",
-  "id": "redis:v1beta1",
-  "protocol": "rest",
-  "servicePath": "",
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        }
+      }
+    }
+  },
+  "kind": "discovery#restDescription",
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
   "resources": {
     "projects": {
       "resources": {
@@ -725,26 +730,12 @@
       }
     }
   },
-  "name": "redis",
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "discoveryVersion": "v1",
-  "version": "v1beta1",
-  "batchPath": "batch",
-  "ownerDomain": "google.com",
-  "canonicalName": "Cloud Redis",
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
-        }
-      }
-    }
-  },
-  "fullyEncodeReservedExpansion": true,
+  "mtlsRootUrl": "https://redis.mtls.googleapis.com/",
+  "rootUrl": "https://redis.googleapis.com/",
+  "title": "Google Cloud Memorystore for Redis API",
+  "protocol": "rest",
+  "version_module": true,
+  "ownerName": "Google",
   "schemas": {
     "ListOperationsResponse": {
       "id": "ListOperationsResponse",
@@ -1019,6 +1010,17 @@
           "description": "Output only. Additional information about the current state of the cluster.",
           "readOnly": true,
           "$ref": "StateInfo"
+        },
+        "persistenceConfig": {
+          "description": "Optional. Persistence config (RDB, AOF) for the cluster.",
+          "$ref": "ClusterPersistenceConfig"
+        },
+        "redisConfigs": {
+          "description": "Optional. Key/Value pairs of customer overrides for mutable Redis Configs",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       }
     },
@@ -1111,6 +1113,90 @@
           "description": "Target number of replica nodes per shard.",
           "type": "integer",
           "format": "int32"
+        }
+      }
+    },
+    "ClusterPersistenceConfig": {
+      "id": "ClusterPersistenceConfig",
+      "description": "Configuration of the persistence functionality.",
+      "type": "object",
+      "properties": {
+        "mode": {
+          "description": "Optional. The mode of persistence.",
+          "type": "string",
+          "enumDescriptions": [
+            "Not set.",
+            "Persistence is disabled, and any snapshot data is deleted.",
+            "RDB based persistence is enabled.",
+            "AOF based persistence is enabled."
+          ],
+          "enum": [
+            "PERSISTENCE_MODE_UNSPECIFIED",
+            "DISABLED",
+            "RDB",
+            "AOF"
+          ]
+        },
+        "rdbConfig": {
+          "description": "Optional. RDB configuration. This field will be ignored if mode is not RDB.",
+          "$ref": "RDBConfig"
+        },
+        "aofConfig": {
+          "description": "Optional. AOF configuration. This field will be ignored if mode is not AOF.",
+          "$ref": "AOFConfig"
+        }
+      }
+    },
+    "RDBConfig": {
+      "id": "RDBConfig",
+      "description": "Configuration of the RDB based persistence.",
+      "type": "object",
+      "properties": {
+        "rdbSnapshotPeriod": {
+          "description": "Optional. Period between RDB snapshots.",
+          "type": "string",
+          "enumDescriptions": [
+            "Not set.",
+            "One hour.",
+            "Six hours.",
+            "Twelve hours.",
+            "Twenty four hours."
+          ],
+          "enum": [
+            "SNAPSHOT_PERIOD_UNSPECIFIED",
+            "ONE_HOUR",
+            "SIX_HOURS",
+            "TWELVE_HOURS",
+            "TWENTY_FOUR_HOURS"
+          ]
+        },
+        "rdbSnapshotStartTime": {
+          "description": "Optional. The time that the first snapshot was/will be attempted, and to which future snapshots will be aligned. If not provided, the current time will be used.",
+          "type": "string",
+          "format": "google-datetime"
+        }
+      }
+    },
+    "AOFConfig": {
+      "id": "AOFConfig",
+      "description": "Configuration of the AOF based persistence.",
+      "type": "object",
+      "properties": {
+        "appendFsync": {
+          "description": "Optional. fsync configuration.",
+          "type": "string",
+          "enumDescriptions": [
+            "Not set. Default: EVERYSEC",
+            "Never fsync. Normally Linux will flush data every 30 seconds with this configuration, but it's up to the kernel's exact tuning.",
+            "fsync every second. Fast enough, and you may lose 1 second of data if there is a disaster",
+            "fsync every time new commands are appended to the AOF. It has the best data loss protection at the cost of performance"
+          ],
+          "enum": [
+            "APPEND_FSYNC_UNSPECIFIED",
+            "NO",
+            "EVERYSEC",
+            "ALWAYS"
+          ]
         }
       }
     },
@@ -2775,7 +2861,7 @@
             "SIGNAL_TYPE_DATABASE_AUDITING_DISABLED",
             "SIGNAL_TYPE_RESTRICT_AUTHORIZED_NETWORKS",
             "SIGNAL_TYPE_VIOLATE_POLICY_RESTRICT_PUBLIC_IP",
-            "SIGNAL_TYPE_CLUSTER_QUOTA_LIMIT",
+            "SIGNAL_TYPE_QUOTA_LIMIT",
             "SIGNAL_TYPE_NO_PASSWORD_POLICY",
             "SIGNAL_TYPE_CONNECTIONS_PERFORMANCE_IMPACT",
             "SIGNAL_TYPE_TMP_TABLES_PERFORMANCE_IMPACT",
@@ -3012,7 +3098,7 @@
             "SIGNAL_TYPE_DATABASE_AUDITING_DISABLED",
             "SIGNAL_TYPE_RESTRICT_AUTHORIZED_NETWORKS",
             "SIGNAL_TYPE_VIOLATE_POLICY_RESTRICT_PUBLIC_IP",
-            "SIGNAL_TYPE_CLUSTER_QUOTA_LIMIT",
+            "SIGNAL_TYPE_QUOTA_LIMIT",
             "SIGNAL_TYPE_NO_PASSWORD_POLICY",
             "SIGNAL_TYPE_CONNECTIONS_PERFORMANCE_IMPACT",
             "SIGNAL_TYPE_TMP_TABLES_PERFORMANCE_IMPACT",
@@ -3133,9 +3219,10 @@
       "properties": {}
     }
   },
-  "description": "Creates and manages Redis instances on the Google Cloud Platform.",
-  "revision": "20240307",
-  "kind": "discovery#restDescription",
+  "ownerDomain": "google.com",
+  "version": "v1beta1",
+  "id": "redis:v1beta1",
+  "batchPath": "batch",
   "parameters": {
     "access_token": {
       "type": "string",
@@ -3213,6 +3300,14 @@
       "location": "query"
     }
   },
-  "version_module": true,
-  "baseUrl": "https://redis.googleapis.com/"
+  "revision": "20240319",
+  "baseUrl": "https://redis.googleapis.com/",
+  "name": "redis",
+  "canonicalName": "Cloud Redis",
+  "servicePath": "",
+  "documentationLink": "https://cloud.google.com/memorystore/docs/redis/",
+  "basePath": "",
+  "fullyEncodeReservedExpansion": true,
+  "description": "Creates and manages Redis instances on the Google Cloud Platform.",
+  "discoveryVersion": "v1"
 }
