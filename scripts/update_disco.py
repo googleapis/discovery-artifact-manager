@@ -51,6 +51,7 @@ class DocumentInfo:
         revision {str} -- The document revision, or None if this is an index
         json_without_revision {object} -- The parsed JSON object with revision
             and etag fields removed, for semantic comparisons
+        json_string {str} -- The JSON object serialised to string, with keys sorted
     """
 
     filename: str
@@ -58,6 +59,7 @@ class DocumentInfo:
     json: Any
     revision: Optional[str]
     json_without_revision: Any
+    json_string: str
 
     def __init__(self, content: bytes, filename: Optional[str] = None) -> None:
         """Analyzes document content
@@ -72,6 +74,7 @@ class DocumentInfo:
             self.json = json.loads(content)
             self.revision = self.json.get("revision")
             self.json_without_revision = self.json.copy()
+            self.json_string = json.dumps(self.json, indent=2, sort_keys=True)
             if "revision" in self.json_without_revision:
                 del self.json_without_revision["revision"]
             if "etag" in self.json_without_revision:
@@ -80,6 +83,7 @@ class DocumentInfo:
             self.json = None
             self.json_without_revision = None
             self.revision = None
+            self.json_string = ""
 
 
 def load_index() -> DocumentInfo:
@@ -196,11 +200,11 @@ def update_files(service_documents: list[DocumentInfo]) -> None:
                 )
                 f.seek(0)
                 f.truncate()
-                f.write(document.content)
+                f.write(document.json_string.encode())
         else:
             print(f"WRITING new file {filename} at revision {document_revision}")
             with open(filename, "wb") as f:
-                f.write(document.content)
+                f.write(document.json_string.encode())
 
 
 def update_index(index_document: DocumentInfo) -> None:
@@ -218,7 +222,7 @@ def update_index(index_document: DocumentInfo) -> None:
             print(f"UPDATING index file {filename}")
             f.seek(0)
             f.truncate()
-            f.write(index_document.content)
+            f.write(index_document.json_string.encode())
 
 
 if __name__ == "__main__":
