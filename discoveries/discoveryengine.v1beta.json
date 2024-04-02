@@ -1,5 +1,7 @@
 {
-  "description": "Discovery Engine API.",
+  "protocol": "rest",
+  "id": "discoveryengine:v1beta",
+  "revision": "20240401",
   "parameters": {
     "access_token": {
       "type": "string",
@@ -77,12 +79,24 @@
       "location": "query"
     }
   },
-  "version_module": true,
-  "discoveryVersion": "v1",
-  "name": "discoveryengine",
-  "baseUrl": "https://discoveryengine.googleapis.com/",
-  "rootUrl": "https://discoveryengine.googleapis.com/",
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        }
+      }
+    }
+  },
   "title": "Discovery Engine API",
+  "servicePath": "",
+  "version": "v1beta",
+  "canonicalName": "Discovery Engine",
+  "ownerDomain": "google.com",
+  "mtlsRootUrl": "https://discoveryengine.mtls.googleapis.com/",
+  "version_module": true,
+  "basePath": "",
+  "name": "discoveryengine",
   "schemas": {
     "GoogleLongrunningListOperationsResponse": {
       "id": "GoogleLongrunningListOperationsResponse",
@@ -267,7 +281,7 @@
           }
         },
         "dataSchema": {
-          "description": "The schema to use when parsing the data from the source. Supported values for document imports: * `document` (default): One JSON Document per line. Each document must have a valid Document.id. * `content`: Unstructured data (e.g. PDF, HTML). Each file matched by `input_uris` becomes a document, with the ID set to the first 128 bits of SHA256(URI) encoded as a hex string. * `custom`: One custom data JSON per row in arbitrary format that conforms to the defined Schema of the data store. This can only be used by Gen App Builder. * `csv`: A CSV file with header conforming to the defined Schema of the data store. Each entry after the header is imported as a Document. This can only be used by Gen App Builder. Supported values for user even imports: * `user_event` (default): One JSON UserEvent per line.",
+          "description": "The schema to use when parsing the data from the source. Supported values for document imports: * `document` (default): One JSON Document per line. Each document must have a valid Document.id. * `content`: Unstructured data (e.g. PDF, HTML). Each file matched by `input_uris` becomes a document, with the ID set to the first 128 bits of SHA256(URI) encoded as a hex string. * `custom`: One custom data JSON per row in arbitrary format that conforms to the defined Schema of the data store. This can only be used by the GENERIC Data Store vertical. * `csv`: A CSV file with header conforming to the defined Schema of the data store. Each entry after the header is imported as a Document. This can only be used by the GENERIC Data Store vertical. Supported values for user even imports: * `user_event` (default): One JSON UserEvent per line.",
           "type": "string"
         }
       }
@@ -296,7 +310,7 @@
           "$ref": "GoogleCloudDiscoveryengineV1betaSearchRequestImageQuery"
         },
         "pageSize": {
-          "description": "Maximum number of Documents to return. If unspecified, defaults to a reasonable value. The maximum allowed value is 100. Values above 100 are coerced to 100. If this field is negative, an `INVALID_ARGUMENT` is returned.",
+          "description": "Maximum number of Documents to return. The maximum allowed value depends on the data type. Values above the maximum value are coerced to the maximum value. * Websites with basic indexing: Default `10`, Maximum `25`. * Websites with advanced indexing: Default `25`, Maximum `50`. * Other: Default `50`, Maximum `100`. If this field is negative, an `INVALID_ARGUMENT` is returned.",
           "type": "integer",
           "format": "int32"
         },
@@ -550,6 +564,70 @@
         },
         "boost": {
           "description": "Strength of the condition boost, which should be in [-1, 1]. Negative boost means demotion. Default is 0.0. Setting to 1.0 gives the document a big promotion. However, it does not necessarily mean that the boosted document will be the top result at all times, nor that other documents will be excluded. Results could still be shown even when none of them matches the condition. And results that are significantly more relevant to the search query can still trump your heavily favored but irrelevant documents. Setting to -1.0 gives the document a big demotion. However, results that are deeply relevant might still be shown. The document will have an upstream battle to get a fairly high ranking, but it is not blocked out completely. Setting to 0.0 means no boost applied. The boosting condition is ignored. Only one of the (condition, boost) combination or the boost_control_spec below are set. If both are set then the global boost is ignored and the more fine-grained boost_control_spec is applied.",
+          "type": "number",
+          "format": "float"
+        },
+        "boostControlSpec": {
+          "description": "Complex specification for custom ranking based on customer defined attribute value.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaSearchRequestBoostSpecConditionBoostSpecBoostControlSpec"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaSearchRequestBoostSpecConditionBoostSpecBoostControlSpec": {
+      "id": "GoogleCloudDiscoveryengineV1betaSearchRequestBoostSpecConditionBoostSpecBoostControlSpec",
+      "description": "Specification for custom ranking based on customer specified attribute value. It provides more controls for customized ranking than the simple (condition, boost) combination above.",
+      "type": "object",
+      "properties": {
+        "fieldName": {
+          "description": "The name of the field whose value will be used to determine the boost amount.",
+          "type": "string"
+        },
+        "attributeType": {
+          "description": "The attribute type to be used to determine the boost amount. The attribute value can be derived from the field value of the specified field_name. In the case of numerical it is straightforward i.e. attribute_value = numerical_field_value. In the case of freshness however, attribute_value = (time.now() - datetime_field_value).",
+          "type": "string",
+          "enumDescriptions": [
+            "Unspecified AttributeType.",
+            "The value of the numerical field will be used to dynamically update the boost amount. In this case, the attribute_value (the x value) of the control point will be the actual value of the numerical field for which the boost_amount is specified.",
+            "For the freshness use case the attribute value will be the duration between the current time and the date in the datetime field specified. The value must be formatted as an XSD `dayTimeDuration` value (a restricted subset of an ISO 8601 duration value). The pattern for this is: `nDnM]`. E.g. `5D`, `3DT12H30M`, `T24H`."
+          ],
+          "enum": [
+            "ATTRIBUTE_TYPE_UNSPECIFIED",
+            "NUMERICAL",
+            "FRESHNESS"
+          ]
+        },
+        "interpolationType": {
+          "description": "The interpolation type to be applied to connect the control points listed below.",
+          "type": "string",
+          "enumDescriptions": [
+            "Interpolation type is unspecified. In this case, it defaults to Linear.",
+            "Piecewise linear interpolation will be applied."
+          ],
+          "enum": [
+            "INTERPOLATION_TYPE_UNSPECIFIED",
+            "LINEAR"
+          ]
+        },
+        "controlPoints": {
+          "description": "The control points used to define the curve. The monotonic function (defined through the interpolation_type above) passes through the control points listed here.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1betaSearchRequestBoostSpecConditionBoostSpecBoostControlSpecControlPoint"
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaSearchRequestBoostSpecConditionBoostSpecBoostControlSpecControlPoint": {
+      "id": "GoogleCloudDiscoveryengineV1betaSearchRequestBoostSpecConditionBoostSpecBoostControlSpecControlPoint",
+      "description": "The control points used to define the curve. The curve defined through these control points can only be monotonically increasing or decreasing(constant values are acceptable).",
+      "type": "object",
+      "properties": {
+        "attributeValue": {
+          "description": "Can be one of: 1. The numerical field value. 2. The duration spec for freshness: The value must be formatted as an XSD `dayTimeDuration` value (a restricted subset of an ISO 8601 duration value). The pattern for this is: `nDnM]`.",
+          "type": "string"
+        },
+        "boostAmount": {
+          "description": "The value between -1 to 1 by which to boost the score if the attribute_value evaluates to the value specified above.",
           "type": "number",
           "format": "float"
         }
@@ -1479,6 +1557,874 @@
         }
       }
     },
+    "GoogleCloudDiscoveryengineV1betaAnswerQueryRequest": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequest",
+      "description": "Request message for ConversationalSearchService.AnswerQuery method.",
+      "type": "object",
+      "properties": {
+        "query": {
+          "description": "Required. Current user query.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaQuery"
+        },
+        "session": {
+          "description": "The session resource name. Not required. When session field is not set, the API is in sessionless mode. We support auto session mode: users can use the wildcard symbol “-” as session id. A new id will be automatically generated and assigned.",
+          "type": "string"
+        },
+        "safetySpec": {
+          "description": "Model specification.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSafetySpec"
+        },
+        "relatedQuestionsSpec": {
+          "description": "Related questions specification.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestRelatedQuestionsSpec"
+        },
+        "answerGenerationSpec": {
+          "description": "Answer generation specification.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestAnswerGenerationSpec"
+        },
+        "searchSpec": {
+          "description": "Search specification.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpec"
+        },
+        "queryUnderstandingSpec": {
+          "description": "Query understanding specification.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestQueryUnderstandingSpec"
+        },
+        "asynchronousMode": {
+          "description": "Asynchronous mode control. If enabled, the response will be returned with answer/session resource name without final answer. The API users need to do the polling to get the latest status of answer/session by calling ConversationalSearchService.GetAnswer or ConversationalSearchService.GetSession method.",
+          "type": "boolean"
+        },
+        "userPseudoId": {
+          "description": "A unique identifier for tracking visitors. For example, this could be implemented with an HTTP cookie, which should be able to uniquely identify a visitor on a single device. This unique identifier should not change if the visitor logs in or out of the website. This field should NOT have a fixed value such as `unknown_visitor`. The field must be a UTF-8 encoded string with a length limit of 128 characters. Otherwise, an `INVALID_ARGUMENT` error is returned.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaQuery": {
+      "id": "GoogleCloudDiscoveryengineV1betaQuery",
+      "description": "Defines a user inputed query.",
+      "type": "object",
+      "properties": {
+        "text": {
+          "description": "Plain text.",
+          "type": "string"
+        },
+        "queryId": {
+          "description": "Unique Id for the query.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSafetySpec": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSafetySpec",
+      "description": "Safety specification.",
+      "type": "object",
+      "properties": {
+        "enable": {
+          "description": "Enable the safety filtering on the answer response. It is false by default.",
+          "type": "boolean"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestRelatedQuestionsSpec": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestRelatedQuestionsSpec",
+      "description": "Related questions specification.",
+      "type": "object",
+      "properties": {
+        "enable": {
+          "description": "Enable related questions feature if true.",
+          "type": "boolean"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestAnswerGenerationSpec": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestAnswerGenerationSpec",
+      "description": "Answer generation specification.",
+      "type": "object",
+      "properties": {
+        "modelSpec": {
+          "description": "Answer generation model specification.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestAnswerGenerationSpecModelSpec"
+        },
+        "promptSpec": {
+          "description": "Answer generation prompt specification.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestAnswerGenerationSpecPromptSpec"
+        },
+        "includeCitations": {
+          "description": "Specifies whether to include citation metadata in the answer. The default value is `false`.",
+          "type": "boolean"
+        },
+        "answerLanguageCode": {
+          "description": "Language code for Answer. Use language tags defined by [BCP47](https://www.rfc-editor.org/rfc/bcp/bcp47.txt). Note: This is an experimental feature.",
+          "type": "string"
+        },
+        "ignoreAdversarialQuery": {
+          "description": "Specifies whether to filter out adversarial queries. The default value is `false`. Google employs search-query classification to detect adversarial queries. No answer is returned if the search query is classified as an adversarial query. For example, a user might ask a question regarding negative comments about the company or submit a query designed to generate unsafe, policy-violating output. If this field is set to `true`, we skip generating answers for adversarial queries and return fallback messages instead.",
+          "type": "boolean"
+        },
+        "ignoreNonAnswerSeekingQuery": {
+          "description": "Specifies whether to filter out queries that are not answer-seeking. The default value is `false`. Google employs search-query classification to detect answer-seeking queries. No answer is returned if the search query is classified as a non-answer seeking query. If this field is set to `true`, we skip generating answers for non-answer seeking queries and return fallback messages instead.",
+          "type": "boolean"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestAnswerGenerationSpecModelSpec": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestAnswerGenerationSpecModelSpec",
+      "description": "Answer Generation Model specification.",
+      "type": "object",
+      "properties": {
+        "modelVersion": {
+          "description": "Model version. If not set, it will use the default stable model. Allowed values are: stable, preview.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestAnswerGenerationSpecPromptSpec": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestAnswerGenerationSpecPromptSpec",
+      "description": "Answer generation prompt specification.",
+      "type": "object",
+      "properties": {
+        "preamble": {
+          "description": "Customized preamble.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpec": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpec",
+      "description": "Search specification.",
+      "type": "object",
+      "properties": {
+        "searchParams": {
+          "description": "Search parameters.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchParams"
+        },
+        "searchResultList": {
+          "description": "Search result list.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchResultList"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchParams": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchParams",
+      "description": "Search parameters.",
+      "type": "object",
+      "properties": {
+        "maxReturnResults": {
+          "description": "Number of search results to return. The default value is 10.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "filter": {
+          "description": "The filter syntax consists of an expression language for constructing a predicate from one or more fields of the documents being filtered. Filter expression is case-sensitive. This will be used to filter search results which may affect the Answer response. If this field is unrecognizable, an `INVALID_ARGUMENT` is returned. Filtering in Vertex AI Search is done by mapping the LHS filter key to a key property defined in the Vertex AI Search backend -- this mapping is defined by the customer in their schema. For example a media customers might have a field 'name' in their schema. In this case the filter would look like this: filter --\u003e name:'ANY(\"king kong\")' For more information about filtering including syntax and filter operators, see [Filter](https://cloud.google.com/generative-ai-app-builder/docs/filter-search-metadata)",
+          "type": "string"
+        },
+        "boostSpec": {
+          "description": "Boost specification to boost certain documents in search results which may affect the answer query response. For more information on boosting, see [Boosting](https://cloud.google.com/retail/docs/boosting#boost)",
+          "$ref": "GoogleCloudDiscoveryengineV1betaSearchRequestBoostSpec"
+        },
+        "orderBy": {
+          "description": "The order in which documents are returned. Documents can be ordered by a field in an Document object. Leave it unset if ordered by relevance. `order_by` expression is case-sensitive. For more information on ordering, see [Ordering](https://cloud.google.com/retail/docs/filter-and-order#order) If this field is unrecognizable, an `INVALID_ARGUMENT` is returned.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchResultList": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchResultList",
+      "description": "Search result list.",
+      "type": "object",
+      "properties": {
+        "searchResults": {
+          "description": "Search results.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchResultListSearchResult"
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchResultListSearchResult": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchResultListSearchResult",
+      "description": "Search result.",
+      "type": "object",
+      "properties": {
+        "unstructuredDocumentInfo": {
+          "description": "Unstructured document information.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchResultListSearchResultUnstructuredDocumentInfo"
+        },
+        "chunkInfo": {
+          "description": "Chunk information.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchResultListSearchResultChunkInfo"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchResultListSearchResultUnstructuredDocumentInfo": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchResultListSearchResultUnstructuredDocumentInfo",
+      "description": "Unstructured document information.",
+      "type": "object",
+      "properties": {
+        "document": {
+          "description": "Document resource name.",
+          "type": "string"
+        },
+        "uri": {
+          "description": "URI for the document.",
+          "type": "string"
+        },
+        "title": {
+          "description": "Title.",
+          "type": "string"
+        },
+        "documentContexts": {
+          "description": "List of document contexts.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchResultListSearchResultUnstructuredDocumentInfoDocumentContext"
+          }
+        },
+        "extractiveSegments": {
+          "description": "List of extractive segments.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchResultListSearchResultUnstructuredDocumentInfoExtractiveSegment"
+          }
+        },
+        "extractiveAnswers": {
+          "description": "List of extractive answers.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchResultListSearchResultUnstructuredDocumentInfoExtractiveAnswer"
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchResultListSearchResultUnstructuredDocumentInfoDocumentContext": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchResultListSearchResultUnstructuredDocumentInfoDocumentContext",
+      "description": "Document context.",
+      "type": "object",
+      "properties": {
+        "pageIdentifier": {
+          "description": "Page identifier.",
+          "type": "string"
+        },
+        "content": {
+          "description": "Document content.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchResultListSearchResultUnstructuredDocumentInfoExtractiveSegment": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchResultListSearchResultUnstructuredDocumentInfoExtractiveSegment",
+      "description": "Extractive segment. [Guide](https://cloud.google.com/generative-ai-app-builder/docs/snippets#extractive-segments)",
+      "type": "object",
+      "properties": {
+        "pageIdentifier": {
+          "description": "Page identifier.",
+          "type": "string"
+        },
+        "content": {
+          "description": "Extractive segment content.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchResultListSearchResultUnstructuredDocumentInfoExtractiveAnswer": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchResultListSearchResultUnstructuredDocumentInfoExtractiveAnswer",
+      "description": "Extractive answer. [Guide](https://cloud.google.com/generative-ai-app-builder/docs/snippets#get-answers)",
+      "type": "object",
+      "properties": {
+        "pageIdentifier": {
+          "description": "Page identifier.",
+          "type": "string"
+        },
+        "content": {
+          "description": "Extractive answer content.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchResultListSearchResultChunkInfo": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestSearchSpecSearchResultListSearchResultChunkInfo",
+      "description": "Chunk information.",
+      "type": "object",
+      "properties": {
+        "chunk": {
+          "description": "Chunk resource name.",
+          "type": "string"
+        },
+        "content": {
+          "description": "Chunk textual content.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestQueryUnderstandingSpec": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestQueryUnderstandingSpec",
+      "description": "Query understanding specification.",
+      "type": "object",
+      "properties": {
+        "queryClassificationSpec": {
+          "description": "Query classification specification.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestQueryUnderstandingSpecQueryClassificationSpec"
+        },
+        "queryRephraserSpec": {
+          "description": "Query rephraser specification.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestQueryUnderstandingSpecQueryRephraserSpec"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestQueryUnderstandingSpecQueryClassificationSpec": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestQueryUnderstandingSpecQueryClassificationSpec",
+      "description": "Query classification specification.",
+      "type": "object",
+      "properties": {
+        "types": {
+          "description": "Enabled query classification types.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enumDescriptions": [
+              "Unspecified query classification type.",
+              "Adversarial query classification type.",
+              "Non-answer-seeking query classification type."
+            ],
+            "enum": [
+              "TYPE_UNSPECIFIED",
+              "ADVERSARIAL_QUERY",
+              "NON_ANSWER_SEEKING_QUERY"
+            ]
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestQueryUnderstandingSpecQueryRephraserSpec": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequestQueryUnderstandingSpecQueryRephraserSpec",
+      "description": "Query rephraser specification.",
+      "type": "object",
+      "properties": {
+        "disable": {
+          "description": "Disable query rephraser.",
+          "type": "boolean"
+        },
+        "maxRephraseSteps": {
+          "description": "Max rephrase steps. The max number is 10 steps. If not set or set to \u003c 1, it will be set to 1 by default.",
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerQueryResponse": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerQueryResponse",
+      "description": "Response message for ConversationalSearchService.AnswerQuery method.",
+      "type": "object",
+      "properties": {
+        "answer": {
+          "description": "Answer resource object. If AnswerQueryRequest.StepSpec.max_step_count is greater than 1, use Answer.name to fetch answer information using ConversationalSearchService.GetAnswer API.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaAnswer"
+        },
+        "session": {
+          "description": "Session resource object. It will be only available when session field is set and valid in the AnswerQueryRequest request.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaSession"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswer": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswer",
+      "description": "Defines an answer.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Immutable. Fully qualified name `project/*/locations/global/collections/{collection}/engines/{engine}/sessions/*/answers/*`",
+          "type": "string"
+        },
+        "state": {
+          "description": "The state of the answer generation.",
+          "type": "string",
+          "enumDescriptions": [
+            "Unknown.",
+            "Answer generation is currently in progress.",
+            "Answer generation currently failed.",
+            "Answer generation has succeeded."
+          ],
+          "enum": [
+            "STATE_UNSPECIFIED",
+            "IN_PROGRESS",
+            "FAILED",
+            "SUCCEEDED"
+          ]
+        },
+        "answerText": {
+          "description": "The textual answer.",
+          "type": "string"
+        },
+        "citations": {
+          "description": "Citations.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1betaAnswerCitation"
+          }
+        },
+        "references": {
+          "description": "References.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1betaAnswerReference"
+          }
+        },
+        "relatedQuestions": {
+          "description": "Suggested related questions.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "steps": {
+          "description": "Answer generation steps.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1betaAnswerStep"
+          }
+        },
+        "queryUnderstandingInfo": {
+          "description": "Query understanding information.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryUnderstandingInfo"
+        },
+        "answerSkippedReasons": {
+          "description": "Additional answer-skipped reasons. This provides the reason for ignored cases. If nothing is skipped, this field is not set.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enumDescriptions": [
+              "Default value. The answer skipped reason is not specified.",
+              "The adversarial query ignored case.",
+              "The non-answer seeking query ignored case.",
+              "The out-of-domain query ignored case. Google skips the answer if there are no high-relevance search results.",
+              "The potential policy violation case. Google skips the answer if there is a potential policy violation detected. This includes content that may be violent or toxic."
+            ],
+            "enum": [
+              "ANSWER_SKIPPED_REASON_UNSPECIFIED",
+              "ADVERSARIAL_QUERY_IGNORED",
+              "NON_ANSWER_SEEKING_QUERY_IGNORED",
+              "OUT_OF_DOMAIN_QUERY_IGNORED",
+              "POTENTIAL_POLICY_VIOLATION"
+            ]
+          }
+        },
+        "createTime": {
+          "description": "Output only. Answer creation timestamp.",
+          "readOnly": true,
+          "type": "string",
+          "format": "google-datetime"
+        },
+        "completeTime": {
+          "description": "Output only. Answer completed timestamp.",
+          "readOnly": true,
+          "type": "string",
+          "format": "google-datetime"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerCitation": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerCitation",
+      "description": "Citation info for a segment.",
+      "type": "object",
+      "properties": {
+        "startIndex": {
+          "description": "Index indicates the start of the segment, measured in bytes (UTF-8 unicode).",
+          "type": "string",
+          "format": "int64"
+        },
+        "endIndex": {
+          "description": "End of the attributed segment, exclusive.",
+          "type": "string",
+          "format": "int64"
+        },
+        "sources": {
+          "description": "Citation sources for the attributed segment.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1betaAnswerCitationSource"
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerCitationSource": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerCitationSource",
+      "description": "Citation source.",
+      "type": "object",
+      "properties": {
+        "referenceId": {
+          "description": "ID of the citation source.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerReference": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerReference",
+      "description": "Reference.",
+      "type": "object",
+      "properties": {
+        "unstructuredDocumentInfo": {
+          "description": "Unstructured document information.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaAnswerReferenceUnstructuredDocumentInfo"
+        },
+        "chunkInfo": {
+          "description": "Chunk information.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaAnswerReferenceChunkInfo"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerReferenceUnstructuredDocumentInfo": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerReferenceUnstructuredDocumentInfo",
+      "description": "Unstructured document information.",
+      "type": "object",
+      "properties": {
+        "document": {
+          "description": "Document resource name.",
+          "type": "string"
+        },
+        "uri": {
+          "description": "URI for the document.",
+          "type": "string"
+        },
+        "title": {
+          "description": "Title.",
+          "type": "string"
+        },
+        "chunkContents": {
+          "description": "List of cited chunk contents derived from document content.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1betaAnswerReferenceUnstructuredDocumentInfoChunkContent"
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerReferenceUnstructuredDocumentInfoChunkContent": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerReferenceUnstructuredDocumentInfoChunkContent",
+      "description": "Chunk content.",
+      "type": "object",
+      "properties": {
+        "content": {
+          "description": "Chunk textual content.",
+          "type": "string"
+        },
+        "pageIdentifier": {
+          "description": "Page identifier.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerReferenceChunkInfo": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerReferenceChunkInfo",
+      "description": "Chunk information.",
+      "type": "object",
+      "properties": {
+        "chunk": {
+          "description": "Chunk resource name.",
+          "type": "string"
+        },
+        "content": {
+          "description": "Chunk textual content.",
+          "type": "string"
+        },
+        "relevanceScore": {
+          "description": "Relevance score.",
+          "type": "number",
+          "format": "float"
+        },
+        "documentMetadata": {
+          "description": "Document metadata.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaAnswerReferenceChunkInfoDocumentMetadata"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerReferenceChunkInfoDocumentMetadata": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerReferenceChunkInfoDocumentMetadata",
+      "description": "Document metadata.",
+      "type": "object",
+      "properties": {
+        "document": {
+          "description": "Document resource name.",
+          "type": "string"
+        },
+        "uri": {
+          "description": "URI for the document.",
+          "type": "string"
+        },
+        "title": {
+          "description": "Title.",
+          "type": "string"
+        },
+        "pageIdentifier": {
+          "description": "Page identifier.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerStep": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerStep",
+      "description": "Step information.",
+      "type": "object",
+      "properties": {
+        "state": {
+          "description": "The state of the step.",
+          "type": "string",
+          "enumDescriptions": [
+            "Unknown.",
+            "Step is currently in progress.",
+            "Step currently failed.",
+            "Step has succeeded."
+          ],
+          "enum": [
+            "STATE_UNSPECIFIED",
+            "IN_PROGRESS",
+            "FAILED",
+            "SUCCEEDED"
+          ]
+        },
+        "description": {
+          "description": "The description of the step.",
+          "type": "string"
+        },
+        "thought": {
+          "description": "The thought of the step.",
+          "type": "string"
+        },
+        "actions": {
+          "description": "Actions.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1betaAnswerStepAction"
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerStepAction": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerStepAction",
+      "description": "Action.",
+      "type": "object",
+      "properties": {
+        "searchAction": {
+          "description": "Search action.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaAnswerStepActionSearchAction"
+        },
+        "observation": {
+          "description": "Observation.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaAnswerStepActionObservation"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerStepActionSearchAction": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerStepActionSearchAction",
+      "description": "Search action.",
+      "type": "object",
+      "properties": {
+        "query": {
+          "description": "The query to search.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerStepActionObservation": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerStepActionObservation",
+      "description": "Observation.",
+      "type": "object",
+      "properties": {
+        "searchResults": {
+          "description": "Search results observed by the search action, it can be snippets info or chunk info, depending on the citation type set by the user.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1betaAnswerStepActionObservationSearchResult"
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerStepActionObservationSearchResult": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerStepActionObservationSearchResult",
+      "type": "object",
+      "properties": {
+        "document": {
+          "description": "Document resource name.",
+          "type": "string"
+        },
+        "uri": {
+          "description": "URI for the document.",
+          "type": "string"
+        },
+        "title": {
+          "description": "Title.",
+          "type": "string"
+        },
+        "snippetInfo": {
+          "description": "If citation_type is DOCUMENT_LEVEL_CITATION, populate document level snippets.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1betaAnswerStepActionObservationSearchResultSnippetInfo"
+          }
+        },
+        "chunkInfo": {
+          "description": "If citation_type is CHUNK_LEVEL_CITATION and chunk mode is on, populate chunk info.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1betaAnswerStepActionObservationSearchResultChunkInfo"
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerStepActionObservationSearchResultSnippetInfo": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerStepActionObservationSearchResultSnippetInfo",
+      "description": "Snippet information.",
+      "type": "object",
+      "properties": {
+        "snippet": {
+          "description": "Snippet content.",
+          "type": "string"
+        },
+        "snippetStatus": {
+          "description": "Status of the snippet defined by the search team.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerStepActionObservationSearchResultChunkInfo": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerStepActionObservationSearchResultChunkInfo",
+      "description": "Chunk information.",
+      "type": "object",
+      "properties": {
+        "chunk": {
+          "description": "Chunk resource name.",
+          "type": "string"
+        },
+        "content": {
+          "description": "Chunk textual content.",
+          "type": "string"
+        },
+        "relevanceScore": {
+          "description": "Relevance score.",
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerQueryUnderstandingInfo": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerQueryUnderstandingInfo",
+      "description": "Query understanding information.",
+      "type": "object",
+      "properties": {
+        "queryClassificationInfo": {
+          "description": "Query classification information.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryUnderstandingInfoQueryClassificationInfo"
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaAnswerQueryUnderstandingInfoQueryClassificationInfo": {
+      "id": "GoogleCloudDiscoveryengineV1betaAnswerQueryUnderstandingInfoQueryClassificationInfo",
+      "description": "Query classification information.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "description": "Query classification type.",
+          "type": "string",
+          "enumDescriptions": [
+            "Unspecified query classification type.",
+            "Adversarial query classification type.",
+            "Non-answer-seeking query classification type."
+          ],
+          "enum": [
+            "TYPE_UNSPECIFIED",
+            "ADVERSARIAL_QUERY",
+            "NON_ANSWER_SEEKING_QUERY"
+          ]
+        },
+        "positive": {
+          "description": "Classification output.",
+          "type": "boolean"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaSession": {
+      "id": "GoogleCloudDiscoveryengineV1betaSession",
+      "description": "External session proto definition.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Immutable. Fully qualified name `project/*/locations/global/collections/{collection}/engines/{engine}/sessions/*`",
+          "type": "string"
+        },
+        "state": {
+          "description": "The state of the session.",
+          "type": "string",
+          "enumDescriptions": [
+            "State is unspecified.",
+            "The session is currently open."
+          ],
+          "enum": [
+            "STATE_UNSPECIFIED",
+            "IN_PROGRESS"
+          ]
+        },
+        "userPseudoId": {
+          "description": "A unique identifier for tracking users.",
+          "type": "string"
+        },
+        "turns": {
+          "description": "Turns.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1betaSessionTurn"
+          }
+        },
+        "startTime": {
+          "description": "Output only. The time the session started.",
+          "readOnly": true,
+          "type": "string",
+          "format": "google-datetime"
+        },
+        "endTime": {
+          "description": "Output only. The time the session finished.",
+          "readOnly": true,
+          "type": "string",
+          "format": "google-datetime"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaSessionTurn": {
+      "id": "GoogleCloudDiscoveryengineV1betaSessionTurn",
+      "description": "Represents a turn, including a query from the user and a answer from service.",
+      "type": "object",
+      "properties": {
+        "query": {
+          "description": "The user query.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaQuery"
+        },
+        "answer": {
+          "description": "The resource name of the answer to the user query.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaListSessionsResponse": {
+      "id": "GoogleCloudDiscoveryengineV1betaListSessionsResponse",
+      "description": "Response for ListSessions method.",
+      "type": "object",
+      "properties": {
+        "sessions": {
+          "description": "All the Sessions for a given data store.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1betaSession"
+          }
+        },
+        "nextPageToken": {
+          "description": "Pagination token, if not returned indicates the last page.",
+          "type": "string"
+        }
+      }
+    },
     "GoogleCloudDiscoveryengineV1betaDataStore": {
       "id": "GoogleCloudDiscoveryengineV1betaDataStore",
       "description": "DataStore captures global settings and configs at the DataStore level.",
@@ -1741,12 +2687,17 @@
             "FULL"
           ]
         },
+        "updateMask": {
+          "description": "Indicates which fields in the provided imported documents to update. If not set, the default is to update all fields.",
+          "type": "string",
+          "format": "google-fieldmask"
+        },
         "autoGenerateIds": {
-          "description": "Whether to automatically generate IDs for the documents if absent. If set to `true`, Document.ids are automatically generated based on the hash of the payload, where IDs may not be consistent during multiple imports. In which case ReconciliationMode.FULL is highly recommended to avoid duplicate contents. If unset or set to `false`, Document.ids have to be specified using id_field, otherwise, documents without IDs fail to be imported. Supported data sources: * GcsSource. GcsSource.data_schema must be `custom` or `csv`. Otherwise, an INVALID_ARGUMENT error is thrown. * BigQuerySource. BigQuerySource.data_schema must be `custom` or `csv`. Otherwise, an INVALID_ARGUMENT error is thrown. * SpannerSource * CloudSqlSource * FirestoreSource * BigtableSource",
+          "description": "Whether to automatically generate IDs for the documents if absent. If set to `true`, Document.ids are automatically generated based on the hash of the payload, where IDs may not be consistent during multiple imports. In which case ReconciliationMode.FULL is highly recommended to avoid duplicate contents. If unset or set to `false`, Document.ids have to be specified using id_field, otherwise, documents without IDs fail to be imported. Supported data sources: * GcsSource. GcsSource.data_schema must be `custom` or `csv`. Otherwise, an INVALID_ARGUMENT error is thrown. * BigQuerySource. BigQuerySource.data_schema must be `custom` or `csv`. Otherwise, an INVALID_ARGUMENT error is thrown. * SpannerSource. * CloudSqlSource. * FirestoreSource. * BigtableSource.",
           "type": "boolean"
         },
         "idField": {
-          "description": "The field indicates the ID field or column to be used as unique IDs of the documents. For GcsSource it is the key of the JSON field. For instance, `my_id` for JSON `{\"my_id\": \"some_uuid\"}`. For others, it may be the column name of the table where the unique ids are stored. The values of the JSON field or the table column are used as the Document.ids. The JSON field or the table column must be of string type, and the values must be set as valid strings conform to [RFC-1034](https://tools.ietf.org/html/rfc1034) with 1-63 characters. Otherwise, documents without valid IDs fail to be imported. Only set this field when auto_generate_ids is unset or set as `false`. Otherwise, an INVALID_ARGUMENT error is thrown. If it is unset, a default value `_id` is used when importing from the allowed data sources. Supported data sources: * GcsSource. GcsSource.data_schema must be `custom` or `csv`. Otherwise, an INVALID_ARGUMENT error is thrown. * BigQuerySource. BigQuerySource.data_schema must be `custom` or `csv`. Otherwise, an INVALID_ARGUMENT error is thrown. * SpannerSource * CloudSqlSource * FirestoreSource * BigtableSource",
+          "description": "The field indicates the ID field or column to be used as unique IDs of the documents. For GcsSource it is the key of the JSON field. For instance, `my_id` for JSON `{\"my_id\": \"some_uuid\"}`. For others, it may be the column name of the table where the unique ids are stored. The values of the JSON field or the table column are used as the Document.ids. The JSON field or the table column must be of string type, and the values must be set as valid strings conform to [RFC-1034](https://tools.ietf.org/html/rfc1034) with 1-63 characters. Otherwise, documents without valid IDs fail to be imported. Only set this field when auto_generate_ids is unset or set as `false`. Otherwise, an INVALID_ARGUMENT error is thrown. If it is unset, a default value `_id` is used when importing from the allowed data sources. Supported data sources: * GcsSource. GcsSource.data_schema must be `custom` or `csv`. Otherwise, an INVALID_ARGUMENT error is thrown. * BigQuerySource. BigQuerySource.data_schema must be `custom` or `csv`. Otherwise, an INVALID_ARGUMENT error is thrown. * SpannerSource. * CloudSqlSource. * FirestoreSource. * BigtableSource.",
           "type": "string"
         }
       }
@@ -1791,7 +2742,7 @@
           "type": "string"
         },
         "dataSchema": {
-          "description": "The schema to use when parsing the data from the source. Supported values for user event imports: * `user_event` (default): One UserEvent per row. Supported values for document imports: * `document` (default): One Document format per row. Each document must have a valid Document.id and one of Document.json_data or Document.struct_data. * `custom`: One custom data per row in arbitrary format that conforms to the defined Schema of the data store. This can only be used by Gen App Builder.",
+          "description": "The schema to use when parsing the data from the source. Supported values for user event imports: * `user_event` (default): One UserEvent per row. Supported values for document imports: * `document` (default): One Document format per row. Each document must have a valid Document.id and one of Document.json_data or Document.struct_data. * `custom`: One custom data per row in arbitrary format that conforms to the defined Schema of the data store. This can only be used by the GENERIC Data Store vertical.",
           "type": "string"
         }
       }
@@ -1855,7 +2806,7 @@
           "type": "string"
         },
         "enableDataBoost": {
-          "description": "Optional. Whether to apply data boost on Spanner export. Enabling this option will incur additional cost. More info: https://cloud.google.com/spanner/docs/databoost/databoost-overview#billing_and_quotas",
+          "description": "Whether to apply data boost on Spanner export. Enabling this option will incur additional cost. More info can be found [here](https://cloud.google.com/spanner/docs/databoost/databoost-overview#billing_and_quotas).",
           "type": "boolean"
         }
       }
@@ -1866,7 +2817,7 @@
       "type": "object",
       "properties": {
         "projectId": {
-          "description": "Optional. The project ID (can be project # or ID) that the Cloud SQL source is in with a length limit of 128 characters. If not specified, inherits the project ID from the parent request.",
+          "description": "The project ID that the Cloud SQL source is in with a length limit of 128 characters. If not specified, inherits the project ID from the parent request.",
           "type": "string"
         },
         "instanceId": {
@@ -1882,11 +2833,11 @@
           "type": "string"
         },
         "gcsStagingDir": {
-          "description": "Optional. Intermediate Cloud Storage directory used for the import with a length limit of 2,000 characters. Can be specified if one wants to have the Cloud SQL export to a specific Cloud Storage directory. Please ensure that the Cloud SQL service account has the necessary GCS Storage Admin permissions to access the specified GCS directory.",
+          "description": "Intermediate Cloud Storage directory used for the import with a length limit of 2,000 characters. Can be specified if one wants to have the Cloud SQL export to a specific Cloud Storage directory. Please ensure that the Cloud SQL service account has the necessary Cloud Storage Admin permissions to access the specified Cloud Storage directory.",
           "type": "string"
         },
         "offload": {
-          "description": "Optional. Option for serverless export. Enabling this option will incur additional cost. More info: https://cloud.google.com/sql/pricing#serverless",
+          "description": "Option for serverless export. Enabling this option will incur additional cost. More info can be found [here](https://cloud.google.com/sql/pricing#serverless).",
           "type": "boolean"
         }
       }
@@ -1897,7 +2848,7 @@
       "type": "object",
       "properties": {
         "projectId": {
-          "description": "Optional. The project ID (can be project # or ID) that the Cloud SQL source is in with a length limit of 128 characters. If not specified, inherits the project ID from the parent request.",
+          "description": "The project ID that the Cloud SQL source is in with a length limit of 128 characters. If not specified, inherits the project ID from the parent request.",
           "type": "string"
         },
         "databaseId": {
@@ -1905,30 +2856,30 @@
           "type": "string"
         },
         "collectionId": {
-          "description": "Required. The Firestore collection to copy the data from with a length limit of 1500 characters.",
+          "description": "Required. The Firestore collection to copy the data from with a length limit of 1,500 characters.",
           "type": "string"
         },
         "gcsStagingDir": {
-          "description": "Optional. Intermediate Cloud Storage directory used for the import with a length limit of 2,000 characters. Can be specified if one wants to have the Firestore export to a specific Cloud Storage directory. Please ensure that the Firestore service account has the necessary GCS Storage Admin permissions to access the specified GCS directory.",
+          "description": "Intermediate Cloud Storage directory used for the import with a length limit of 2,000 characters. Can be specified if one wants to have the Firestore export to a specific Cloud Storage directory. Please ensure that the Firestore service account has the necessary Cloud Storage Admin permissions to access the specified Cloud Storage directory.",
           "type": "string"
         }
       }
     },
     "GoogleCloudDiscoveryengineV1betaBigtableSource": {
       "id": "GoogleCloudDiscoveryengineV1betaBigtableSource",
-      "description": "The Cloud Bigtable source for importing data",
+      "description": "The Cloud Bigtable source for importing data.",
       "type": "object",
       "properties": {
         "projectId": {
-          "description": "The project ID (can be project # or ID) that the Bigtable source is in with a length limit of 128 characters. If not specified, inherits the project ID from the parent request.",
+          "description": "The project ID that the Bigtable source is in with a length limit of 128 characters. If not specified, inherits the project ID from the parent request.",
           "type": "string"
         },
         "instanceId": {
-          "description": "Required. The instance ID of the Cloud Bigtable that needs to be exported.",
+          "description": "Required. The instance ID of the Cloud Bigtable that needs to be imported.",
           "type": "string"
         },
         "tableId": {
-          "description": "Required. The table ID of the Cloud Bigtable that needs to be exported.",
+          "description": "Required. The table ID of the Cloud Bigtable that needs to be imported.",
           "type": "string"
         },
         "bigtableOptions": {
@@ -1943,7 +2894,7 @@
       "type": "object",
       "properties": {
         "keyFieldName": {
-          "description": "The field name used for saving row key value in the UCS document. The name has to match a-zA-Z0-9*",
+          "description": "The field name used for saving row key value in the document. The name has to match the pattern `a-zA-Z0-9*`.",
           "type": "string"
         },
         "families": {
@@ -1957,19 +2908,20 @@
     },
     "GoogleCloudDiscoveryengineV1betaBigtableOptionsBigtableColumnFamily": {
       "id": "GoogleCloudDiscoveryengineV1betaBigtableOptionsBigtableColumnFamily",
+      "description": "The column family of the Bigtable.",
       "type": "object",
       "properties": {
         "fieldName": {
-          "description": "The field name to use for this column family in the UCS document. The name has to match a-zA-Z0-9* If not set, we will parse it from the family name with best effort. However, due to difference naming pattern, there could be field name collisions, where parsing behavior is undefined.",
+          "description": "The field name to use for this column family in the document. The name has to match the pattern `a-zA-Z0-9*`. If not set, it is parsed from the family name with best effort. However, due to different naming patterns, field name collisions could happen, where parsing behavior is undefined.",
           "type": "string"
         },
         "encoding": {
-          "description": "Optional. The encoding mode of the values when the type is not STRING. Acceptable encoding values are: TEXT - indicates values are alphanumeric text strings. BINARY - indicates values are encoded using HBase Bytes.toBytes family of functions. This can be overridden for a specific column by listing that column in 'columns' and specifying an encoding for it.",
+          "description": "The encoding mode of the values when the type is not STRING. Acceptable encoding values are: * `TEXT`: indicates values are alphanumeric text strings. * `BINARY`: indicates values are encoded using `HBase Bytes.toBytes` family of functions. This can be overridden for a specific column by listing that column in `columns` and specifying an encoding for it.",
           "type": "string",
           "enumDescriptions": [
-            "",
-            "",
-            ""
+            "The encoding is unspecified.",
+            "Text encoding.",
+            "Binary encoding."
           ],
           "enum": [
             "ENCODING_UNSPECIFIED",
@@ -1978,17 +2930,17 @@
           ]
         },
         "type": {
-          "description": "Optional. The type of values in this column family. The values are expected to be encoded using HBase Bytes.toBytes function when the encoding value is set to BINARY.",
+          "description": "The type of values in this column family. The values are expected to be encoded using `HBase Bytes.toBytes` function when the encoding value is set to `BINARY`.",
           "type": "string",
           "enumDescriptions": [
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            ""
+            "The type is unspecified.",
+            "String type.",
+            "Numerical type.",
+            "Integer type.",
+            "Variable length integer type.",
+            "BigDecimal type.",
+            "Boolean type.",
+            "JSON type."
           ],
           "enum": [
             "TYPE_UNSPECIFIED",
@@ -2012,24 +2964,25 @@
     },
     "GoogleCloudDiscoveryengineV1betaBigtableOptionsBigtableColumn": {
       "id": "GoogleCloudDiscoveryengineV1betaBigtableOptionsBigtableColumn",
+      "description": "The column of the Bigtable.",
       "type": "object",
       "properties": {
         "qualifier": {
-          "description": "Required. Qualifier of the column. If cannot decode with utf-8, store a base-64 encoded string.",
+          "description": "Required. Qualifier of the column. If it cannot be decoded with utf-8, use a base-64 encoded string instead.",
           "type": "string",
           "format": "byte"
         },
         "fieldName": {
-          "description": "The field name to use for this column in the UCS document. The name has to match a-zA-Z0-9* If not set, we will parse it from the qualifier bytes with best effort. However, field name collisions could happen, where parsing behavior is undefined.",
+          "description": "The field name to use for this column in the document. The name has to match the pattern `a-zA-Z0-9*`. If not set, it is parsed from the qualifier bytes with best effort. However, due to different naming patterns, field name collisions could happen, where parsing behavior is undefined.",
           "type": "string"
         },
         "encoding": {
-          "description": "Optional. The encoding mode of the values when the type is not STRING. Acceptable encoding values are: TEXT - indicates values are alphanumeric text strings. BINARY - indicates values are encoded using HBase Bytes.toBytes family of functions. This can be overridden for a specific column by listing that column in 'columns' and specifying an encoding for it.",
+          "description": "The encoding mode of the values when the type is not `STRING`. Acceptable encoding values are: * `TEXT`: indicates values are alphanumeric text strings. * `BINARY`: indicates values are encoded using `HBase Bytes.toBytes` family of functions. This can be overridden for a specific column by listing that column in `columns` and specifying an encoding for it.",
           "type": "string",
           "enumDescriptions": [
-            "",
-            "",
-            ""
+            "The encoding is unspecified.",
+            "Text encoding.",
+            "Binary encoding."
           ],
           "enum": [
             "ENCODING_UNSPECIFIED",
@@ -2038,17 +2991,17 @@
           ]
         },
         "type": {
-          "description": "Optional. The type of values in this column family. The values are expected to be encoded using HBase Bytes.toBytes function when the encoding value is set to BINARY.",
+          "description": "The type of values in this column family. The values are expected to be encoded using `HBase Bytes.toBytes` function when the encoding value is set to `BINARY`.",
           "type": "string",
           "enumDescriptions": [
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            ""
+            "The type is unspecified.",
+            "String type.",
+            "Numerical type.",
+            "Integer type.",
+            "Variable length integer type.",
+            "BigDecimal type.",
+            "Boolean type.",
+            "JSON type."
           ],
           "enum": [
             "TYPE_UNSPECIFIED",
@@ -2306,6 +3259,135 @@
       "type": "object",
       "properties": {}
     },
+    "GoogleCloudDiscoveryengineV1betaCheckGroundingRequest": {
+      "id": "GoogleCloudDiscoveryengineV1betaCheckGroundingRequest",
+      "description": "Request message for GroundedGenerationService.CheckGrounding method.",
+      "type": "object",
+      "properties": {
+        "answerCandidate": {
+          "description": "Answer candidate to check.",
+          "type": "string"
+        },
+        "facts": {
+          "description": "List of facts for the grounding check. We support up to 200 facts.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1betaGroundingFact"
+          }
+        },
+        "groundingSpec": {
+          "description": "Configuration of the grounding check.",
+          "$ref": "GoogleCloudDiscoveryengineV1betaCheckGroundingSpec"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaGroundingFact": {
+      "id": "GoogleCloudDiscoveryengineV1betaGroundingFact",
+      "description": "Grounding Fact.",
+      "type": "object",
+      "properties": {
+        "factText": {
+          "description": "Text content of the fact. Can be at most 10K characters long.",
+          "type": "string"
+        },
+        "attributes": {
+          "description": "Attributes associated with the fact. Common attributes include `source` (indicating where the fact was sourced from), `author` (indicating the author of the fact), and so on.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaCheckGroundingSpec": {
+      "id": "GoogleCloudDiscoveryengineV1betaCheckGroundingSpec",
+      "description": "Specification for the grounding check.",
+      "type": "object",
+      "properties": {
+        "citationThreshold": {
+          "description": "The threshold (in [0,1]) used for determining whether a fact must be cited for a claim in the answer candidate. Choosing a higher threshold will lead to fewer but very strong citations, while choosing a lower threshold may lead to more but somewhat weaker citations. If unset, the threshold will default to 0.6.",
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaCheckGroundingResponse": {
+      "id": "GoogleCloudDiscoveryengineV1betaCheckGroundingResponse",
+      "description": "Response message for the GroundedGenerationService.CheckGrounding method.",
+      "type": "object",
+      "properties": {
+        "supportScore": {
+          "description": "The support score for the input answer candidate. Higher the score, higher is the fraction of claims that are supported by the provided facts. This is always set when a response is returned.",
+          "type": "number",
+          "format": "float"
+        },
+        "citedChunks": {
+          "description": "List of facts cited across all claims in the answer candidate. These are derived from the facts supplied in the request.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1betaFactChunk"
+          }
+        },
+        "claims": {
+          "description": "Claim texts and citation info across all claims in the answer candidate.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1betaCheckGroundingResponseClaim"
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaFactChunk": {
+      "id": "GoogleCloudDiscoveryengineV1betaFactChunk",
+      "description": "Fact Chunk.",
+      "type": "object",
+      "properties": {
+        "chunkText": {
+          "description": "Text content of the fact chunk. Can be at most 10K characters long.",
+          "type": "string"
+        },
+        "source": {
+          "description": "Source from which this fact chunk was retrieved. If it was retrieved from the GroundingFacts provided in the request then this field will contain the index of the specific fact from which this chunk was retrieved.",
+          "type": "string"
+        },
+        "sourceMetadata": {
+          "description": "More fine-grained information for the source reference.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1betaCheckGroundingResponseClaim": {
+      "id": "GoogleCloudDiscoveryengineV1betaCheckGroundingResponseClaim",
+      "description": "Text and citation info for a claim in the answer candidate.",
+      "type": "object",
+      "properties": {
+        "startPos": {
+          "description": "Position indicating the start of the claim in the answer candidate, measured in bytes/unicode.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "endPos": {
+          "description": "Position indicating the end of the claim in the answer candidate, exclusive.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "claimText": {
+          "description": "Text for the claim in the answer candidate. Always provided regardless of whether citations or anti-citations are found.",
+          "type": "string"
+        },
+        "citationIndices": {
+          "description": "A list of indices (into 'cited_chunks') specifying the citations associated with the claim. For instance [1,3,4] means that cited_chunks[1], cited_chunks[3], cited_chunks[4] are the facts cited supporting for the claim. A citation to a fact indicates that the claim is supported by the fact.",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      }
+    },
     "GoogleCloudDiscoveryengineV1betaRankRequest": {
       "id": "GoogleCloudDiscoveryengineV1betaRankRequest",
       "description": "Request message for RankService.Rank method.",
@@ -2325,7 +3407,7 @@
           "type": "string"
         },
         "records": {
-          "description": "Required. A list of records to rank.",
+          "description": "Required. A list of records to rank. At most 100 records to rank.",
           "type": "array",
           "items": {
             "$ref": "GoogleCloudDiscoveryengineV1betaRankingRecord"
@@ -4136,6 +5218,11 @@
           "description": "Count of entries that encountered errors while processing.",
           "type": "string",
           "format": "int64"
+        },
+        "totalCount": {
+          "description": "Total count of entries that were processed.",
+          "type": "string",
+          "format": "int64"
         }
       }
     },
@@ -4433,6 +5520,424 @@
         "workforcePoolName": {
           "description": "Workforce pool name. Example: \"locations/global/workforcePools/pool_id\"",
           "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaAnswer": {
+      "id": "GoogleCloudDiscoveryengineV1alphaAnswer",
+      "description": "Defines an answer.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Immutable. Fully qualified name `project/*/locations/global/collections/{collection}/engines/{engine}/sessions/*/answers/*`",
+          "type": "string"
+        },
+        "state": {
+          "description": "The state of the answer generation.",
+          "type": "string",
+          "enumDescriptions": [
+            "Unknown.",
+            "Answer generation is currently in progress.",
+            "Answer generation currently failed.",
+            "Answer generation has succeeded."
+          ],
+          "enum": [
+            "STATE_UNSPECIFIED",
+            "IN_PROGRESS",
+            "FAILED",
+            "SUCCEEDED"
+          ]
+        },
+        "answerText": {
+          "description": "The textual answer.",
+          "type": "string"
+        },
+        "citations": {
+          "description": "Citations.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1alphaAnswerCitation"
+          }
+        },
+        "references": {
+          "description": "References.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1alphaAnswerReference"
+          }
+        },
+        "relatedQuestions": {
+          "description": "Suggested related questions.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "steps": {
+          "description": "Answer generation steps.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1alphaAnswerStep"
+          }
+        },
+        "queryUnderstandingInfo": {
+          "description": "Query understanding information.",
+          "$ref": "GoogleCloudDiscoveryengineV1alphaAnswerQueryUnderstandingInfo"
+        },
+        "answerSkippedReasons": {
+          "description": "Additional answer-skipped reasons. This provides the reason for ignored cases. If nothing is skipped, this field is not set.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enumDescriptions": [
+              "Default value. The answer skipped reason is not specified.",
+              "The adversarial query ignored case.",
+              "The non-answer seeking query ignored case.",
+              "The out-of-domain query ignored case. Google skips the answer if there are no high-relevance search results.",
+              "The potential policy violation case. Google skips the answer if there is a potential policy violation detected. This includes content that may be violent or toxic."
+            ],
+            "enum": [
+              "ANSWER_SKIPPED_REASON_UNSPECIFIED",
+              "ADVERSARIAL_QUERY_IGNORED",
+              "NON_ANSWER_SEEKING_QUERY_IGNORED",
+              "OUT_OF_DOMAIN_QUERY_IGNORED",
+              "POTENTIAL_POLICY_VIOLATION"
+            ]
+          }
+        },
+        "createTime": {
+          "description": "Output only. Answer creation timestamp.",
+          "readOnly": true,
+          "type": "string",
+          "format": "google-datetime"
+        },
+        "completeTime": {
+          "description": "Output only. Answer completed timestamp.",
+          "readOnly": true,
+          "type": "string",
+          "format": "google-datetime"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaAnswerCitation": {
+      "id": "GoogleCloudDiscoveryengineV1alphaAnswerCitation",
+      "description": "Citation info for a segment.",
+      "type": "object",
+      "properties": {
+        "startIndex": {
+          "description": "Index indicates the start of the segment, measured in bytes (UTF-8 unicode).",
+          "type": "string",
+          "format": "int64"
+        },
+        "endIndex": {
+          "description": "End of the attributed segment, exclusive.",
+          "type": "string",
+          "format": "int64"
+        },
+        "sources": {
+          "description": "Citation sources for the attributed segment.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1alphaAnswerCitationSource"
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaAnswerCitationSource": {
+      "id": "GoogleCloudDiscoveryengineV1alphaAnswerCitationSource",
+      "description": "Citation source.",
+      "type": "object",
+      "properties": {
+        "referenceId": {
+          "description": "ID of the citation source.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaAnswerReference": {
+      "id": "GoogleCloudDiscoveryengineV1alphaAnswerReference",
+      "description": "Reference.",
+      "type": "object",
+      "properties": {
+        "unstructuredDocumentInfo": {
+          "description": "Unstructured document information.",
+          "$ref": "GoogleCloudDiscoveryengineV1alphaAnswerReferenceUnstructuredDocumentInfo"
+        },
+        "chunkInfo": {
+          "description": "Chunk information.",
+          "$ref": "GoogleCloudDiscoveryengineV1alphaAnswerReferenceChunkInfo"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaAnswerReferenceUnstructuredDocumentInfo": {
+      "id": "GoogleCloudDiscoveryengineV1alphaAnswerReferenceUnstructuredDocumentInfo",
+      "description": "Unstructured document information.",
+      "type": "object",
+      "properties": {
+        "document": {
+          "description": "Document resource name.",
+          "type": "string"
+        },
+        "uri": {
+          "description": "URI for the document.",
+          "type": "string"
+        },
+        "title": {
+          "description": "Title.",
+          "type": "string"
+        },
+        "chunkContents": {
+          "description": "List of cited chunk contents derived from document content.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1alphaAnswerReferenceUnstructuredDocumentInfoChunkContent"
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaAnswerReferenceUnstructuredDocumentInfoChunkContent": {
+      "id": "GoogleCloudDiscoveryengineV1alphaAnswerReferenceUnstructuredDocumentInfoChunkContent",
+      "description": "Chunk content.",
+      "type": "object",
+      "properties": {
+        "content": {
+          "description": "Chunk textual content.",
+          "type": "string"
+        },
+        "pageIdentifier": {
+          "description": "Page identifier.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaAnswerReferenceChunkInfo": {
+      "id": "GoogleCloudDiscoveryengineV1alphaAnswerReferenceChunkInfo",
+      "description": "Chunk information.",
+      "type": "object",
+      "properties": {
+        "chunk": {
+          "description": "Chunk resource name.",
+          "type": "string"
+        },
+        "content": {
+          "description": "Chunk textual content.",
+          "type": "string"
+        },
+        "relevanceScore": {
+          "description": "Relevance score.",
+          "type": "number",
+          "format": "float"
+        },
+        "documentMetadata": {
+          "description": "Document metadata.",
+          "$ref": "GoogleCloudDiscoveryengineV1alphaAnswerReferenceChunkInfoDocumentMetadata"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaAnswerReferenceChunkInfoDocumentMetadata": {
+      "id": "GoogleCloudDiscoveryengineV1alphaAnswerReferenceChunkInfoDocumentMetadata",
+      "description": "Document metadata.",
+      "type": "object",
+      "properties": {
+        "document": {
+          "description": "Document resource name.",
+          "type": "string"
+        },
+        "uri": {
+          "description": "URI for the document.",
+          "type": "string"
+        },
+        "title": {
+          "description": "Title.",
+          "type": "string"
+        },
+        "pageIdentifier": {
+          "description": "Page identifier.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaAnswerStep": {
+      "id": "GoogleCloudDiscoveryengineV1alphaAnswerStep",
+      "description": "Step information.",
+      "type": "object",
+      "properties": {
+        "state": {
+          "description": "The state of the step.",
+          "type": "string",
+          "enumDescriptions": [
+            "Unknown.",
+            "Step is currently in progress.",
+            "Step currently failed.",
+            "Step has succeeded."
+          ],
+          "enum": [
+            "STATE_UNSPECIFIED",
+            "IN_PROGRESS",
+            "FAILED",
+            "SUCCEEDED"
+          ]
+        },
+        "description": {
+          "description": "The description of the step.",
+          "type": "string"
+        },
+        "thought": {
+          "description": "The thought of the step.",
+          "type": "string"
+        },
+        "actions": {
+          "description": "Actions.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1alphaAnswerStepAction"
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaAnswerStepAction": {
+      "id": "GoogleCloudDiscoveryengineV1alphaAnswerStepAction",
+      "description": "Action.",
+      "type": "object",
+      "properties": {
+        "searchAction": {
+          "description": "Search action.",
+          "$ref": "GoogleCloudDiscoveryengineV1alphaAnswerStepActionSearchAction"
+        },
+        "observation": {
+          "description": "Observation.",
+          "$ref": "GoogleCloudDiscoveryengineV1alphaAnswerStepActionObservation"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaAnswerStepActionSearchAction": {
+      "id": "GoogleCloudDiscoveryengineV1alphaAnswerStepActionSearchAction",
+      "description": "Search action.",
+      "type": "object",
+      "properties": {
+        "query": {
+          "description": "The query to search.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaAnswerStepActionObservation": {
+      "id": "GoogleCloudDiscoveryengineV1alphaAnswerStepActionObservation",
+      "description": "Observation.",
+      "type": "object",
+      "properties": {
+        "searchResults": {
+          "description": "Search results observed by the search action, it can be snippets info or chunk info, depending on the citation type set by the user.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1alphaAnswerStepActionObservationSearchResult"
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaAnswerStepActionObservationSearchResult": {
+      "id": "GoogleCloudDiscoveryengineV1alphaAnswerStepActionObservationSearchResult",
+      "type": "object",
+      "properties": {
+        "document": {
+          "description": "Document resource name.",
+          "type": "string"
+        },
+        "uri": {
+          "description": "URI for the document.",
+          "type": "string"
+        },
+        "title": {
+          "description": "Title.",
+          "type": "string"
+        },
+        "snippetInfo": {
+          "description": "If citation_type is DOCUMENT_LEVEL_CITATION, populate document level snippets.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1alphaAnswerStepActionObservationSearchResultSnippetInfo"
+          }
+        },
+        "chunkInfo": {
+          "description": "If citation_type is CHUNK_LEVEL_CITATION and chunk mode is on, populate chunk info.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1alphaAnswerStepActionObservationSearchResultChunkInfo"
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaAnswerStepActionObservationSearchResultSnippetInfo": {
+      "id": "GoogleCloudDiscoveryengineV1alphaAnswerStepActionObservationSearchResultSnippetInfo",
+      "description": "Snippet information.",
+      "type": "object",
+      "properties": {
+        "snippet": {
+          "description": "Snippet content.",
+          "type": "string"
+        },
+        "snippetStatus": {
+          "description": "Status of the snippet defined by the search team.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaAnswerStepActionObservationSearchResultChunkInfo": {
+      "id": "GoogleCloudDiscoveryengineV1alphaAnswerStepActionObservationSearchResultChunkInfo",
+      "description": "Chunk information.",
+      "type": "object",
+      "properties": {
+        "chunk": {
+          "description": "Chunk resource name.",
+          "type": "string"
+        },
+        "content": {
+          "description": "Chunk textual content.",
+          "type": "string"
+        },
+        "relevanceScore": {
+          "description": "Relevance score.",
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaAnswerQueryUnderstandingInfo": {
+      "id": "GoogleCloudDiscoveryengineV1alphaAnswerQueryUnderstandingInfo",
+      "description": "Query understanding information.",
+      "type": "object",
+      "properties": {
+        "queryClassificationInfo": {
+          "description": "Query classification information.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1alphaAnswerQueryUnderstandingInfoQueryClassificationInfo"
+          }
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaAnswerQueryUnderstandingInfoQueryClassificationInfo": {
+      "id": "GoogleCloudDiscoveryengineV1alphaAnswerQueryUnderstandingInfoQueryClassificationInfo",
+      "description": "Query classification information.",
+      "type": "object",
+      "properties": {
+        "type": {
+          "description": "Query classification type.",
+          "type": "string",
+          "enumDescriptions": [
+            "Unspecified query classification type.",
+            "Adversarial query classification type.",
+            "Non-answer-seeking query classification type."
+          ],
+          "enum": [
+            "TYPE_UNSPECIFIED",
+            "ADVERSARIAL_QUERY",
+            "NON_ANSWER_SEEKING_QUERY"
+          ]
+        },
+        "positive": {
+          "description": "Classification output.",
+          "type": "boolean"
         }
       }
     },
@@ -5456,17 +6961,6 @@
         }
       }
     },
-    "GoogleCloudDiscoveryengineV1alphaGroundingConfig": {
-      "id": "GoogleCloudDiscoveryengineV1alphaGroundingConfig",
-      "description": "Grounding configuration.",
-      "type": "object",
-      "properties": {
-        "name": {
-          "description": "Required. Name of the GroundingConfig, of the form `projects/{project}/locations/{location}/groundingConfig`.",
-          "type": "string"
-        }
-      }
-    },
     "GoogleCloudDiscoveryengineV1alphaImportCompletionSuggestionsMetadata": {
       "id": "GoogleCloudDiscoveryengineV1alphaImportCompletionSuggestionsMetadata",
       "description": "Metadata related to the progress of the ImportCompletionSuggestions operation. This will be returned by the google.longrunning.Operation.metadata field.",
@@ -5530,6 +7024,11 @@
         },
         "failureCount": {
           "description": "Count of entries that encountered errors while processing.",
+          "type": "string",
+          "format": "int64"
+        },
+        "totalCount": {
+          "description": "Total count of entries that were processed.",
           "type": "string",
           "format": "int64"
         }
@@ -5894,6 +7393,82 @@
         }
       }
     },
+    "GoogleCloudDiscoveryengineV1alphaSession": {
+      "id": "GoogleCloudDiscoveryengineV1alphaSession",
+      "description": "External session proto definition.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Immutable. Fully qualified name `project/*/locations/global/collections/{collection}/engines/{engine}/sessions/*`",
+          "type": "string"
+        },
+        "state": {
+          "description": "The state of the session.",
+          "type": "string",
+          "enumDescriptions": [
+            "State is unspecified.",
+            "The session is currently open."
+          ],
+          "enum": [
+            "STATE_UNSPECIFIED",
+            "IN_PROGRESS"
+          ]
+        },
+        "userPseudoId": {
+          "description": "A unique identifier for tracking users.",
+          "type": "string"
+        },
+        "turns": {
+          "description": "Turns.",
+          "type": "array",
+          "items": {
+            "$ref": "GoogleCloudDiscoveryengineV1alphaSessionTurn"
+          }
+        },
+        "startTime": {
+          "description": "Output only. The time the session started.",
+          "readOnly": true,
+          "type": "string",
+          "format": "google-datetime"
+        },
+        "endTime": {
+          "description": "Output only. The time the session finished.",
+          "readOnly": true,
+          "type": "string",
+          "format": "google-datetime"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaSessionTurn": {
+      "id": "GoogleCloudDiscoveryengineV1alphaSessionTurn",
+      "description": "Represents a turn, including a query from the user and a answer from service.",
+      "type": "object",
+      "properties": {
+        "query": {
+          "description": "The user query.",
+          "$ref": "GoogleCloudDiscoveryengineV1alphaQuery"
+        },
+        "answer": {
+          "description": "The resource name of the answer to the user query.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDiscoveryengineV1alphaQuery": {
+      "id": "GoogleCloudDiscoveryengineV1alphaQuery",
+      "description": "Defines a user inputed query.",
+      "type": "object",
+      "properties": {
+        "text": {
+          "description": "Plain text.",
+          "type": "string"
+        },
+        "queryId": {
+          "description": "Unique Id for the query.",
+          "type": "string"
+        }
+      }
+    },
     "GoogleCloudDiscoveryengineV1alphaTrainCustomModelMetadata": {
       "id": "GoogleCloudDiscoveryengineV1alphaTrainCustomModelMetadata",
       "description": "Metadata related to the progress of the TrainCustomModel operation. This is returned by the google.longrunning.Operation.metadata field.",
@@ -5928,7 +7503,7 @@
           "$ref": "GoogleCloudDiscoveryengineV1alphaImportErrorConfig"
         },
         "modelStatus": {
-          "description": "The trained model status. Possible values are: * **bad-data**: The training data quality is bad. * **no-improvement**: Tuning didn't improve performance. Won't deploy. * **in-progress**: Model training is in progress. * **ready**: The model is ready for serving.",
+          "description": "The trained model status. Possible values are: * **bad-data**: The training data quality is bad. * **no-improvement**: Tuning didn't improve performance. Won't deploy. * **in-progress**: Model training job creation is in progress. * **training**: Model is actively training. * **evaluating**: The model is evaluating trained metrics. * **indexing**: The model trained metrics are indexing. * **ready**: The model is ready for serving.",
           "type": "string"
         },
         "metrics": {
@@ -6205,17 +7780,6 @@
       "type": "object",
       "properties": {}
     },
-    "GoogleCloudDiscoveryengineV1betaGroundingConfig": {
-      "id": "GoogleCloudDiscoveryengineV1betaGroundingConfig",
-      "description": "Grounding configuration.",
-      "type": "object",
-      "properties": {
-        "name": {
-          "description": "Required. Name of the GroundingConfig, of the form `projects/{project}/locations/{location}/groundingConfig`.",
-          "type": "string"
-        }
-      }
-    },
     "GoogleCloudDiscoveryengineV1betaImportDocumentsMetadata": {
       "id": "GoogleCloudDiscoveryengineV1betaImportDocumentsMetadata",
       "description": "Metadata related to the progress of the ImportDocuments operation. This is returned by the google.longrunning.Operation.metadata field.",
@@ -6238,6 +7802,11 @@
         },
         "failureCount": {
           "description": "Count of entries that encountered errors while processing.",
+          "type": "string",
+          "format": "int64"
+        },
+        "totalCount": {
+          "description": "Total count of entries that were processed.",
           "type": "string",
           "format": "int64"
         }
@@ -6478,7 +8047,7 @@
           "$ref": "GoogleCloudDiscoveryengineV1betaImportErrorConfig"
         },
         "modelStatus": {
-          "description": "The trained model status. Possible values are: * **bad-data**: The training data quality is bad. * **no-improvement**: Tuning didn't improve performance. Won't deploy. * **in-progress**: Model training is in progress. * **ready**: The model is ready for serving.",
+          "description": "The trained model status. Possible values are: * **bad-data**: The training data quality is bad. * **no-improvement**: Tuning didn't improve performance. Won't deploy. * **in-progress**: Model training job creation is in progress. * **training**: Model is actively training. * **evaluating**: The model is evaluating trained metrics. * **indexing**: The model trained metrics are indexing. * **ready**: The model is ready for serving.",
           "type": "string"
         },
         "metrics": {
@@ -6537,27 +8106,16 @@
       }
     }
   },
-  "documentationLink": "https://cloud.google.com/discovery-engine/docs",
-  "protocol": "rest",
-  "canonicalName": "Discovery Engine",
   "icons": {
     "x16": "http://www.google.com/images/icons/product/search-16.gif",
     "x32": "http://www.google.com/images/icons/product/search-32.gif"
   },
-  "revision": "20240329",
-  "id": "discoveryengine:v1beta",
-  "mtlsRootUrl": "https://discoveryengine.mtls.googleapis.com/",
-  "ownerDomain": "google.com",
   "batchPath": "batch",
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
-        }
-      }
-    }
-  },
+  "description": "Discovery Engine API.",
+  "discoveryVersion": "v1",
+  "rootUrl": "https://discoveryengine.googleapis.com/",
+  "fullyEncodeReservedExpansion": true,
+  "kind": "discovery#restDescription",
   "resources": {
     "projects": {
       "resources": {
@@ -7494,6 +9052,34 @@
                           ],
                           "description": "Performs a search."
                         },
+                        "answer": {
+                          "id": "discoveryengine.projects.locations.collections.dataStores.servingConfigs.answer",
+                          "path": "v1beta/{+servingConfig}:answer",
+                          "flatPath": "v1beta/projects/{projectsId}/locations/{locationsId}/collections/{collectionsId}/dataStores/{dataStoresId}/servingConfigs/{servingConfigsId}:answer",
+                          "httpMethod": "POST",
+                          "parameters": {
+                            "servingConfig": {
+                              "description": "Required. The resource name of the Search serving config, such as `projects/*/locations/global/collections/default_collection/engines/*/servingConfigs/default_serving_config`, or `projects/*/locations/global/collections/default_collection/dataStores/*/servingConfigs/default_serving_config`. This field is used to identify the serving configuration name, set of models used to make the search.",
+                              "pattern": "^projects/[^/]+/locations/[^/]+/collections/[^/]+/dataStores/[^/]+/servingConfigs/[^/]+$",
+                              "location": "path",
+                              "required": true,
+                              "type": "string"
+                            }
+                          },
+                          "parameterOrder": [
+                            "servingConfig"
+                          ],
+                          "request": {
+                            "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequest"
+                          },
+                          "response": {
+                            "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryResponse"
+                          },
+                          "scopes": [
+                            "https://www.googleapis.com/auth/cloud-platform"
+                          ],
+                          "description": "Answer query method."
+                        },
                         "recommend": {
                           "id": "discoveryengine.projects.locations.collections.dataStores.servingConfigs.recommend",
                           "path": "v1beta/{+servingConfig}:recommend",
@@ -7806,6 +9392,199 @@
                             "https://www.googleapis.com/auth/cloud-platform"
                           ],
                           "description": "Lists all Conversations by their parent DataStore."
+                        }
+                      }
+                    },
+                    "sessions": {
+                      "methods": {
+                        "create": {
+                          "id": "discoveryengine.projects.locations.collections.dataStores.sessions.create",
+                          "path": "v1beta/{+parent}/sessions",
+                          "flatPath": "v1beta/projects/{projectsId}/locations/{locationsId}/collections/{collectionsId}/dataStores/{dataStoresId}/sessions",
+                          "httpMethod": "POST",
+                          "parameters": {
+                            "parent": {
+                              "description": "Required. Full resource name of parent data store. Format: `projects/{project_number}/locations/{location_id}/collections/{collection}/dataStores/{data_store_id}`",
+                              "pattern": "^projects/[^/]+/locations/[^/]+/collections/[^/]+/dataStores/[^/]+$",
+                              "location": "path",
+                              "required": true,
+                              "type": "string"
+                            }
+                          },
+                          "parameterOrder": [
+                            "parent"
+                          ],
+                          "request": {
+                            "$ref": "GoogleCloudDiscoveryengineV1betaSession"
+                          },
+                          "response": {
+                            "$ref": "GoogleCloudDiscoveryengineV1betaSession"
+                          },
+                          "scopes": [
+                            "https://www.googleapis.com/auth/cloud-platform"
+                          ],
+                          "description": "Creates a Session. If the Session to create already exists, an ALREADY_EXISTS error is returned."
+                        },
+                        "delete": {
+                          "id": "discoveryengine.projects.locations.collections.dataStores.sessions.delete",
+                          "path": "v1beta/{+name}",
+                          "flatPath": "v1beta/projects/{projectsId}/locations/{locationsId}/collections/{collectionsId}/dataStores/{dataStoresId}/sessions/{sessionsId}",
+                          "httpMethod": "DELETE",
+                          "parameters": {
+                            "name": {
+                              "description": "Required. The resource name of the Session to delete. Format: `projects/{project_number}/locations/{location_id}/collections/{collection}/dataStores/{data_store_id}/sessions/{session_id}`",
+                              "pattern": "^projects/[^/]+/locations/[^/]+/collections/[^/]+/dataStores/[^/]+/sessions/[^/]+$",
+                              "location": "path",
+                              "required": true,
+                              "type": "string"
+                            }
+                          },
+                          "parameterOrder": [
+                            "name"
+                          ],
+                          "response": {
+                            "$ref": "GoogleProtobufEmpty"
+                          },
+                          "scopes": [
+                            "https://www.googleapis.com/auth/cloud-platform"
+                          ],
+                          "description": "Deletes a Session. If the Session to delete does not exist, a NOT_FOUND error is returned."
+                        },
+                        "patch": {
+                          "id": "discoveryengine.projects.locations.collections.dataStores.sessions.patch",
+                          "path": "v1beta/{+name}",
+                          "flatPath": "v1beta/projects/{projectsId}/locations/{locationsId}/collections/{collectionsId}/dataStores/{dataStoresId}/sessions/{sessionsId}",
+                          "httpMethod": "PATCH",
+                          "parameters": {
+                            "name": {
+                              "description": "Immutable. Fully qualified name `project/*/locations/global/collections/{collection}/engines/{engine}/sessions/*`",
+                              "pattern": "^projects/[^/]+/locations/[^/]+/collections/[^/]+/dataStores/[^/]+/sessions/[^/]+$",
+                              "location": "path",
+                              "required": true,
+                              "type": "string"
+                            },
+                            "updateMask": {
+                              "description": "Indicates which fields in the provided Session to update. The following are NOT supported: * Session.name If not set or empty, all supported fields are updated.",
+                              "location": "query",
+                              "type": "string",
+                              "format": "google-fieldmask"
+                            }
+                          },
+                          "parameterOrder": [
+                            "name"
+                          ],
+                          "request": {
+                            "$ref": "GoogleCloudDiscoveryengineV1betaSession"
+                          },
+                          "response": {
+                            "$ref": "GoogleCloudDiscoveryengineV1betaSession"
+                          },
+                          "scopes": [
+                            "https://www.googleapis.com/auth/cloud-platform"
+                          ],
+                          "description": "Updates a Session. Session action type cannot be changed. If the Session to update does not exist, a NOT_FOUND error is returned."
+                        },
+                        "get": {
+                          "id": "discoveryengine.projects.locations.collections.dataStores.sessions.get",
+                          "path": "v1beta/{+name}",
+                          "flatPath": "v1beta/projects/{projectsId}/locations/{locationsId}/collections/{collectionsId}/dataStores/{dataStoresId}/sessions/{sessionsId}",
+                          "httpMethod": "GET",
+                          "parameters": {
+                            "name": {
+                              "description": "Required. The resource name of the Session to get. Format: `projects/{project_number}/locations/{location_id}/collections/{collection}/dataStores/{data_store_id}/sessions/{session_id}`",
+                              "pattern": "^projects/[^/]+/locations/[^/]+/collections/[^/]+/dataStores/[^/]+/sessions/[^/]+$",
+                              "location": "path",
+                              "required": true,
+                              "type": "string"
+                            }
+                          },
+                          "parameterOrder": [
+                            "name"
+                          ],
+                          "response": {
+                            "$ref": "GoogleCloudDiscoveryengineV1betaSession"
+                          },
+                          "scopes": [
+                            "https://www.googleapis.com/auth/cloud-platform"
+                          ],
+                          "description": "Gets a Session."
+                        },
+                        "list": {
+                          "id": "discoveryengine.projects.locations.collections.dataStores.sessions.list",
+                          "path": "v1beta/{+parent}/sessions",
+                          "flatPath": "v1beta/projects/{projectsId}/locations/{locationsId}/collections/{collectionsId}/dataStores/{dataStoresId}/sessions",
+                          "httpMethod": "GET",
+                          "parameters": {
+                            "parent": {
+                              "description": "Required. The data store resource name. Format: `projects/{project_number}/locations/{location_id}/collections/{collection}/dataStores/{data_store_id}`",
+                              "pattern": "^projects/[^/]+/locations/[^/]+/collections/[^/]+/dataStores/[^/]+$",
+                              "location": "path",
+                              "required": true,
+                              "type": "string"
+                            },
+                            "pageSize": {
+                              "description": "Maximum number of results to return. If unspecified, defaults to 50. Max allowed value is 1000.",
+                              "location": "query",
+                              "type": "integer",
+                              "format": "int32"
+                            },
+                            "pageToken": {
+                              "description": "A page token, received from a previous `ListSessions` call. Provide this to retrieve the subsequent page.",
+                              "location": "query",
+                              "type": "string"
+                            },
+                            "filter": {
+                              "description": "A filter to apply on the list results. The supported features are: user_pseudo_id, state. Example: \"user_pseudo_id = some_id\"",
+                              "location": "query",
+                              "type": "string"
+                            },
+                            "orderBy": {
+                              "description": "A comma-separated list of fields to order by, sorted in ascending order. Use \"desc\" after a field name for descending. Supported fields: * `update_time` * `create_time` * `session_name` Example: \"update_time desc\" \"create_time\"",
+                              "location": "query",
+                              "type": "string"
+                            }
+                          },
+                          "parameterOrder": [
+                            "parent"
+                          ],
+                          "response": {
+                            "$ref": "GoogleCloudDiscoveryengineV1betaListSessionsResponse"
+                          },
+                          "scopes": [
+                            "https://www.googleapis.com/auth/cloud-platform"
+                          ],
+                          "description": "Lists all Sessions by their parent DataStore."
+                        }
+                      },
+                      "resources": {
+                        "answers": {
+                          "methods": {
+                            "get": {
+                              "id": "discoveryengine.projects.locations.collections.dataStores.sessions.answers.get",
+                              "path": "v1beta/{+name}",
+                              "flatPath": "v1beta/projects/{projectsId}/locations/{locationsId}/collections/{collectionsId}/dataStores/{dataStoresId}/sessions/{sessionsId}/answers/{answersId}",
+                              "httpMethod": "GET",
+                              "parameters": {
+                                "name": {
+                                  "description": "Required. The resource name of the Answer to get. Format: `projects/{project_number}/locations/{location_id}/collections/{collection}/engines/{engine_id}/sessions/{session_id}/answers/{answer_id}`",
+                                  "pattern": "^projects/[^/]+/locations/[^/]+/collections/[^/]+/dataStores/[^/]+/sessions/[^/]+/answers/[^/]+$",
+                                  "location": "path",
+                                  "required": true,
+                                  "type": "string"
+                                }
+                              },
+                              "parameterOrder": [
+                                "name"
+                              ],
+                              "response": {
+                                "$ref": "GoogleCloudDiscoveryengineV1betaAnswer"
+                              },
+                              "scopes": [
+                                "https://www.googleapis.com/auth/cloud-platform"
+                              ],
+                              "description": "Gets a Answer."
+                            }
+                          }
                         }
                       }
                     },
@@ -8956,6 +10735,34 @@
                           ],
                           "description": "Performs a search."
                         },
+                        "answer": {
+                          "id": "discoveryengine.projects.locations.collections.engines.servingConfigs.answer",
+                          "path": "v1beta/{+servingConfig}:answer",
+                          "flatPath": "v1beta/projects/{projectsId}/locations/{locationsId}/collections/{collectionsId}/engines/{enginesId}/servingConfigs/{servingConfigsId}:answer",
+                          "httpMethod": "POST",
+                          "parameters": {
+                            "servingConfig": {
+                              "description": "Required. The resource name of the Search serving config, such as `projects/*/locations/global/collections/default_collection/engines/*/servingConfigs/default_serving_config`, or `projects/*/locations/global/collections/default_collection/dataStores/*/servingConfigs/default_serving_config`. This field is used to identify the serving configuration name, set of models used to make the search.",
+                              "pattern": "^projects/[^/]+/locations/[^/]+/collections/[^/]+/engines/[^/]+/servingConfigs/[^/]+$",
+                              "location": "path",
+                              "required": true,
+                              "type": "string"
+                            }
+                          },
+                          "parameterOrder": [
+                            "servingConfig"
+                          ],
+                          "request": {
+                            "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequest"
+                          },
+                          "response": {
+                            "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryResponse"
+                          },
+                          "scopes": [
+                            "https://www.googleapis.com/auth/cloud-platform"
+                          ],
+                          "description": "Answer query method."
+                        },
                         "recommend": {
                           "id": "discoveryengine.projects.locations.collections.engines.servingConfigs.recommend",
                           "path": "v1beta/{+servingConfig}:recommend",
@@ -9268,6 +11075,199 @@
                             "https://www.googleapis.com/auth/cloud-platform"
                           ],
                           "description": "Lists all Conversations by their parent DataStore."
+                        }
+                      }
+                    },
+                    "sessions": {
+                      "methods": {
+                        "create": {
+                          "id": "discoveryengine.projects.locations.collections.engines.sessions.create",
+                          "path": "v1beta/{+parent}/sessions",
+                          "flatPath": "v1beta/projects/{projectsId}/locations/{locationsId}/collections/{collectionsId}/engines/{enginesId}/sessions",
+                          "httpMethod": "POST",
+                          "parameters": {
+                            "parent": {
+                              "description": "Required. Full resource name of parent data store. Format: `projects/{project_number}/locations/{location_id}/collections/{collection}/dataStores/{data_store_id}`",
+                              "pattern": "^projects/[^/]+/locations/[^/]+/collections/[^/]+/engines/[^/]+$",
+                              "location": "path",
+                              "required": true,
+                              "type": "string"
+                            }
+                          },
+                          "parameterOrder": [
+                            "parent"
+                          ],
+                          "request": {
+                            "$ref": "GoogleCloudDiscoveryengineV1betaSession"
+                          },
+                          "response": {
+                            "$ref": "GoogleCloudDiscoveryengineV1betaSession"
+                          },
+                          "scopes": [
+                            "https://www.googleapis.com/auth/cloud-platform"
+                          ],
+                          "description": "Creates a Session. If the Session to create already exists, an ALREADY_EXISTS error is returned."
+                        },
+                        "delete": {
+                          "id": "discoveryengine.projects.locations.collections.engines.sessions.delete",
+                          "path": "v1beta/{+name}",
+                          "flatPath": "v1beta/projects/{projectsId}/locations/{locationsId}/collections/{collectionsId}/engines/{enginesId}/sessions/{sessionsId}",
+                          "httpMethod": "DELETE",
+                          "parameters": {
+                            "name": {
+                              "description": "Required. The resource name of the Session to delete. Format: `projects/{project_number}/locations/{location_id}/collections/{collection}/dataStores/{data_store_id}/sessions/{session_id}`",
+                              "pattern": "^projects/[^/]+/locations/[^/]+/collections/[^/]+/engines/[^/]+/sessions/[^/]+$",
+                              "location": "path",
+                              "required": true,
+                              "type": "string"
+                            }
+                          },
+                          "parameterOrder": [
+                            "name"
+                          ],
+                          "response": {
+                            "$ref": "GoogleProtobufEmpty"
+                          },
+                          "scopes": [
+                            "https://www.googleapis.com/auth/cloud-platform"
+                          ],
+                          "description": "Deletes a Session. If the Session to delete does not exist, a NOT_FOUND error is returned."
+                        },
+                        "patch": {
+                          "id": "discoveryengine.projects.locations.collections.engines.sessions.patch",
+                          "path": "v1beta/{+name}",
+                          "flatPath": "v1beta/projects/{projectsId}/locations/{locationsId}/collections/{collectionsId}/engines/{enginesId}/sessions/{sessionsId}",
+                          "httpMethod": "PATCH",
+                          "parameters": {
+                            "name": {
+                              "description": "Immutable. Fully qualified name `project/*/locations/global/collections/{collection}/engines/{engine}/sessions/*`",
+                              "pattern": "^projects/[^/]+/locations/[^/]+/collections/[^/]+/engines/[^/]+/sessions/[^/]+$",
+                              "location": "path",
+                              "required": true,
+                              "type": "string"
+                            },
+                            "updateMask": {
+                              "description": "Indicates which fields in the provided Session to update. The following are NOT supported: * Session.name If not set or empty, all supported fields are updated.",
+                              "location": "query",
+                              "type": "string",
+                              "format": "google-fieldmask"
+                            }
+                          },
+                          "parameterOrder": [
+                            "name"
+                          ],
+                          "request": {
+                            "$ref": "GoogleCloudDiscoveryengineV1betaSession"
+                          },
+                          "response": {
+                            "$ref": "GoogleCloudDiscoveryengineV1betaSession"
+                          },
+                          "scopes": [
+                            "https://www.googleapis.com/auth/cloud-platform"
+                          ],
+                          "description": "Updates a Session. Session action type cannot be changed. If the Session to update does not exist, a NOT_FOUND error is returned."
+                        },
+                        "get": {
+                          "id": "discoveryengine.projects.locations.collections.engines.sessions.get",
+                          "path": "v1beta/{+name}",
+                          "flatPath": "v1beta/projects/{projectsId}/locations/{locationsId}/collections/{collectionsId}/engines/{enginesId}/sessions/{sessionsId}",
+                          "httpMethod": "GET",
+                          "parameters": {
+                            "name": {
+                              "description": "Required. The resource name of the Session to get. Format: `projects/{project_number}/locations/{location_id}/collections/{collection}/dataStores/{data_store_id}/sessions/{session_id}`",
+                              "pattern": "^projects/[^/]+/locations/[^/]+/collections/[^/]+/engines/[^/]+/sessions/[^/]+$",
+                              "location": "path",
+                              "required": true,
+                              "type": "string"
+                            }
+                          },
+                          "parameterOrder": [
+                            "name"
+                          ],
+                          "response": {
+                            "$ref": "GoogleCloudDiscoveryengineV1betaSession"
+                          },
+                          "scopes": [
+                            "https://www.googleapis.com/auth/cloud-platform"
+                          ],
+                          "description": "Gets a Session."
+                        },
+                        "list": {
+                          "id": "discoveryengine.projects.locations.collections.engines.sessions.list",
+                          "path": "v1beta/{+parent}/sessions",
+                          "flatPath": "v1beta/projects/{projectsId}/locations/{locationsId}/collections/{collectionsId}/engines/{enginesId}/sessions",
+                          "httpMethod": "GET",
+                          "parameters": {
+                            "parent": {
+                              "description": "Required. The data store resource name. Format: `projects/{project_number}/locations/{location_id}/collections/{collection}/dataStores/{data_store_id}`",
+                              "pattern": "^projects/[^/]+/locations/[^/]+/collections/[^/]+/engines/[^/]+$",
+                              "location": "path",
+                              "required": true,
+                              "type": "string"
+                            },
+                            "pageSize": {
+                              "description": "Maximum number of results to return. If unspecified, defaults to 50. Max allowed value is 1000.",
+                              "location": "query",
+                              "type": "integer",
+                              "format": "int32"
+                            },
+                            "pageToken": {
+                              "description": "A page token, received from a previous `ListSessions` call. Provide this to retrieve the subsequent page.",
+                              "location": "query",
+                              "type": "string"
+                            },
+                            "filter": {
+                              "description": "A filter to apply on the list results. The supported features are: user_pseudo_id, state. Example: \"user_pseudo_id = some_id\"",
+                              "location": "query",
+                              "type": "string"
+                            },
+                            "orderBy": {
+                              "description": "A comma-separated list of fields to order by, sorted in ascending order. Use \"desc\" after a field name for descending. Supported fields: * `update_time` * `create_time` * `session_name` Example: \"update_time desc\" \"create_time\"",
+                              "location": "query",
+                              "type": "string"
+                            }
+                          },
+                          "parameterOrder": [
+                            "parent"
+                          ],
+                          "response": {
+                            "$ref": "GoogleCloudDiscoveryengineV1betaListSessionsResponse"
+                          },
+                          "scopes": [
+                            "https://www.googleapis.com/auth/cloud-platform"
+                          ],
+                          "description": "Lists all Sessions by their parent DataStore."
+                        }
+                      },
+                      "resources": {
+                        "answers": {
+                          "methods": {
+                            "get": {
+                              "id": "discoveryengine.projects.locations.collections.engines.sessions.answers.get",
+                              "path": "v1beta/{+name}",
+                              "flatPath": "v1beta/projects/{projectsId}/locations/{locationsId}/collections/{collectionsId}/engines/{enginesId}/sessions/{sessionsId}/answers/{answersId}",
+                              "httpMethod": "GET",
+                              "parameters": {
+                                "name": {
+                                  "description": "Required. The resource name of the Answer to get. Format: `projects/{project_number}/locations/{location_id}/collections/{collection}/engines/{engine_id}/sessions/{session_id}/answers/{answer_id}`",
+                                  "pattern": "^projects/[^/]+/locations/[^/]+/collections/[^/]+/engines/[^/]+/sessions/[^/]+/answers/[^/]+$",
+                                  "location": "path",
+                                  "required": true,
+                                  "type": "string"
+                                }
+                              },
+                              "parameterOrder": [
+                                "name"
+                              ],
+                              "response": {
+                                "$ref": "GoogleCloudDiscoveryengineV1betaAnswer"
+                              },
+                              "scopes": [
+                                "https://www.googleapis.com/auth/cloud-platform"
+                              ],
+                              "description": "Gets a Answer."
+                            }
+                          }
                         }
                       }
                     }
@@ -10102,6 +12102,34 @@
                       ],
                       "description": "Performs a search."
                     },
+                    "answer": {
+                      "id": "discoveryengine.projects.locations.dataStores.servingConfigs.answer",
+                      "path": "v1beta/{+servingConfig}:answer",
+                      "flatPath": "v1beta/projects/{projectsId}/locations/{locationsId}/dataStores/{dataStoresId}/servingConfigs/{servingConfigsId}:answer",
+                      "httpMethod": "POST",
+                      "parameters": {
+                        "servingConfig": {
+                          "description": "Required. The resource name of the Search serving config, such as `projects/*/locations/global/collections/default_collection/engines/*/servingConfigs/default_serving_config`, or `projects/*/locations/global/collections/default_collection/dataStores/*/servingConfigs/default_serving_config`. This field is used to identify the serving configuration name, set of models used to make the search.",
+                          "pattern": "^projects/[^/]+/locations/[^/]+/dataStores/[^/]+/servingConfigs/[^/]+$",
+                          "location": "path",
+                          "required": true,
+                          "type": "string"
+                        }
+                      },
+                      "parameterOrder": [
+                        "servingConfig"
+                      ],
+                      "request": {
+                        "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryRequest"
+                      },
+                      "response": {
+                        "$ref": "GoogleCloudDiscoveryengineV1betaAnswerQueryResponse"
+                      },
+                      "scopes": [
+                        "https://www.googleapis.com/auth/cloud-platform"
+                      ],
+                      "description": "Answer query method."
+                    },
                     "recommend": {
                       "id": "discoveryengine.projects.locations.dataStores.servingConfigs.recommend",
                       "path": "v1beta/{+servingConfig}:recommend",
@@ -10414,6 +12442,199 @@
                         "https://www.googleapis.com/auth/cloud-platform"
                       ],
                       "description": "Lists all Conversations by their parent DataStore."
+                    }
+                  }
+                },
+                "sessions": {
+                  "methods": {
+                    "create": {
+                      "id": "discoveryengine.projects.locations.dataStores.sessions.create",
+                      "path": "v1beta/{+parent}/sessions",
+                      "flatPath": "v1beta/projects/{projectsId}/locations/{locationsId}/dataStores/{dataStoresId}/sessions",
+                      "httpMethod": "POST",
+                      "parameters": {
+                        "parent": {
+                          "description": "Required. Full resource name of parent data store. Format: `projects/{project_number}/locations/{location_id}/collections/{collection}/dataStores/{data_store_id}`",
+                          "pattern": "^projects/[^/]+/locations/[^/]+/dataStores/[^/]+$",
+                          "location": "path",
+                          "required": true,
+                          "type": "string"
+                        }
+                      },
+                      "parameterOrder": [
+                        "parent"
+                      ],
+                      "request": {
+                        "$ref": "GoogleCloudDiscoveryengineV1betaSession"
+                      },
+                      "response": {
+                        "$ref": "GoogleCloudDiscoveryengineV1betaSession"
+                      },
+                      "scopes": [
+                        "https://www.googleapis.com/auth/cloud-platform"
+                      ],
+                      "description": "Creates a Session. If the Session to create already exists, an ALREADY_EXISTS error is returned."
+                    },
+                    "delete": {
+                      "id": "discoveryengine.projects.locations.dataStores.sessions.delete",
+                      "path": "v1beta/{+name}",
+                      "flatPath": "v1beta/projects/{projectsId}/locations/{locationsId}/dataStores/{dataStoresId}/sessions/{sessionsId}",
+                      "httpMethod": "DELETE",
+                      "parameters": {
+                        "name": {
+                          "description": "Required. The resource name of the Session to delete. Format: `projects/{project_number}/locations/{location_id}/collections/{collection}/dataStores/{data_store_id}/sessions/{session_id}`",
+                          "pattern": "^projects/[^/]+/locations/[^/]+/dataStores/[^/]+/sessions/[^/]+$",
+                          "location": "path",
+                          "required": true,
+                          "type": "string"
+                        }
+                      },
+                      "parameterOrder": [
+                        "name"
+                      ],
+                      "response": {
+                        "$ref": "GoogleProtobufEmpty"
+                      },
+                      "scopes": [
+                        "https://www.googleapis.com/auth/cloud-platform"
+                      ],
+                      "description": "Deletes a Session. If the Session to delete does not exist, a NOT_FOUND error is returned."
+                    },
+                    "patch": {
+                      "id": "discoveryengine.projects.locations.dataStores.sessions.patch",
+                      "path": "v1beta/{+name}",
+                      "flatPath": "v1beta/projects/{projectsId}/locations/{locationsId}/dataStores/{dataStoresId}/sessions/{sessionsId}",
+                      "httpMethod": "PATCH",
+                      "parameters": {
+                        "name": {
+                          "description": "Immutable. Fully qualified name `project/*/locations/global/collections/{collection}/engines/{engine}/sessions/*`",
+                          "pattern": "^projects/[^/]+/locations/[^/]+/dataStores/[^/]+/sessions/[^/]+$",
+                          "location": "path",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "updateMask": {
+                          "description": "Indicates which fields in the provided Session to update. The following are NOT supported: * Session.name If not set or empty, all supported fields are updated.",
+                          "location": "query",
+                          "type": "string",
+                          "format": "google-fieldmask"
+                        }
+                      },
+                      "parameterOrder": [
+                        "name"
+                      ],
+                      "request": {
+                        "$ref": "GoogleCloudDiscoveryengineV1betaSession"
+                      },
+                      "response": {
+                        "$ref": "GoogleCloudDiscoveryengineV1betaSession"
+                      },
+                      "scopes": [
+                        "https://www.googleapis.com/auth/cloud-platform"
+                      ],
+                      "description": "Updates a Session. Session action type cannot be changed. If the Session to update does not exist, a NOT_FOUND error is returned."
+                    },
+                    "get": {
+                      "id": "discoveryengine.projects.locations.dataStores.sessions.get",
+                      "path": "v1beta/{+name}",
+                      "flatPath": "v1beta/projects/{projectsId}/locations/{locationsId}/dataStores/{dataStoresId}/sessions/{sessionsId}",
+                      "httpMethod": "GET",
+                      "parameters": {
+                        "name": {
+                          "description": "Required. The resource name of the Session to get. Format: `projects/{project_number}/locations/{location_id}/collections/{collection}/dataStores/{data_store_id}/sessions/{session_id}`",
+                          "pattern": "^projects/[^/]+/locations/[^/]+/dataStores/[^/]+/sessions/[^/]+$",
+                          "location": "path",
+                          "required": true,
+                          "type": "string"
+                        }
+                      },
+                      "parameterOrder": [
+                        "name"
+                      ],
+                      "response": {
+                        "$ref": "GoogleCloudDiscoveryengineV1betaSession"
+                      },
+                      "scopes": [
+                        "https://www.googleapis.com/auth/cloud-platform"
+                      ],
+                      "description": "Gets a Session."
+                    },
+                    "list": {
+                      "id": "discoveryengine.projects.locations.dataStores.sessions.list",
+                      "path": "v1beta/{+parent}/sessions",
+                      "flatPath": "v1beta/projects/{projectsId}/locations/{locationsId}/dataStores/{dataStoresId}/sessions",
+                      "httpMethod": "GET",
+                      "parameters": {
+                        "parent": {
+                          "description": "Required. The data store resource name. Format: `projects/{project_number}/locations/{location_id}/collections/{collection}/dataStores/{data_store_id}`",
+                          "pattern": "^projects/[^/]+/locations/[^/]+/dataStores/[^/]+$",
+                          "location": "path",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "pageSize": {
+                          "description": "Maximum number of results to return. If unspecified, defaults to 50. Max allowed value is 1000.",
+                          "location": "query",
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        "pageToken": {
+                          "description": "A page token, received from a previous `ListSessions` call. Provide this to retrieve the subsequent page.",
+                          "location": "query",
+                          "type": "string"
+                        },
+                        "filter": {
+                          "description": "A filter to apply on the list results. The supported features are: user_pseudo_id, state. Example: \"user_pseudo_id = some_id\"",
+                          "location": "query",
+                          "type": "string"
+                        },
+                        "orderBy": {
+                          "description": "A comma-separated list of fields to order by, sorted in ascending order. Use \"desc\" after a field name for descending. Supported fields: * `update_time` * `create_time` * `session_name` Example: \"update_time desc\" \"create_time\"",
+                          "location": "query",
+                          "type": "string"
+                        }
+                      },
+                      "parameterOrder": [
+                        "parent"
+                      ],
+                      "response": {
+                        "$ref": "GoogleCloudDiscoveryengineV1betaListSessionsResponse"
+                      },
+                      "scopes": [
+                        "https://www.googleapis.com/auth/cloud-platform"
+                      ],
+                      "description": "Lists all Sessions by their parent DataStore."
+                    }
+                  },
+                  "resources": {
+                    "answers": {
+                      "methods": {
+                        "get": {
+                          "id": "discoveryengine.projects.locations.dataStores.sessions.answers.get",
+                          "path": "v1beta/{+name}",
+                          "flatPath": "v1beta/projects/{projectsId}/locations/{locationsId}/dataStores/{dataStoresId}/sessions/{sessionsId}/answers/{answersId}",
+                          "httpMethod": "GET",
+                          "parameters": {
+                            "name": {
+                              "description": "Required. The resource name of the Answer to get. Format: `projects/{project_number}/locations/{location_id}/collections/{collection}/engines/{engine_id}/sessions/{session_id}/answers/{answer_id}`",
+                              "pattern": "^projects/[^/]+/locations/[^/]+/dataStores/[^/]+/sessions/[^/]+/answers/[^/]+$",
+                              "location": "path",
+                              "required": true,
+                              "type": "string"
+                            }
+                          },
+                          "parameterOrder": [
+                            "name"
+                          ],
+                          "response": {
+                            "$ref": "GoogleCloudDiscoveryengineV1betaAnswer"
+                          },
+                          "scopes": [
+                            "https://www.googleapis.com/auth/cloud-platform"
+                          ],
+                          "description": "Gets a Answer."
+                        }
+                      }
                     }
                   }
                 },
@@ -10940,6 +13161,38 @@
                 }
               }
             },
+            "groundingConfigs": {
+              "methods": {
+                "check": {
+                  "id": "discoveryengine.projects.locations.groundingConfigs.check",
+                  "path": "v1beta/{+groundingConfig}:check",
+                  "flatPath": "v1beta/projects/{projectsId}/locations/{locationsId}/groundingConfigs/{groundingConfigsId}:check",
+                  "httpMethod": "POST",
+                  "parameters": {
+                    "groundingConfig": {
+                      "description": "Required. The resource name of the grounding config, such as `projects/*/locations/global/groundingConfigs/default_grounding_config`.",
+                      "pattern": "^projects/[^/]+/locations/[^/]+/groundingConfigs/[^/]+$",
+                      "location": "path",
+                      "required": true,
+                      "type": "string"
+                    }
+                  },
+                  "parameterOrder": [
+                    "groundingConfig"
+                  ],
+                  "request": {
+                    "$ref": "GoogleCloudDiscoveryengineV1betaCheckGroundingRequest"
+                  },
+                  "response": {
+                    "$ref": "GoogleCloudDiscoveryengineV1betaCheckGroundingResponse"
+                  },
+                  "scopes": [
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "description": "Performs a grounding check."
+                }
+              }
+            },
             "rankingConfigs": {
               "methods": {
                 "rank": {
@@ -11047,10 +13300,7 @@
       }
     }
   },
-  "version": "v1beta",
+  "baseUrl": "https://discoveryengine.googleapis.com/",
   "ownerName": "Google",
-  "basePath": "",
-  "kind": "discovery#restDescription",
-  "fullyEncodeReservedExpansion": true,
-  "servicePath": ""
+  "documentationLink": "https://cloud.google.com/discovery-engine/docs"
 }
