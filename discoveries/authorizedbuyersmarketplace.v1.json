@@ -1,11 +1,13 @@
 {
-  "version": "v1",
-  "ownerName": "Google",
-  "protocol": "rest",
-  "batchPath": "batch",
-  "ownerDomain": "google.com",
   "baseUrl": "https://authorizedbuyersmarketplace.googleapis.com/",
-  "canonicalName": "Authorized Buyers Marketplace",
+  "title": "Authorized Buyers Marketplace API",
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
+  "fullyEncodeReservedExpansion": true,
+  "version_module": true,
+  "version": "v1",
   "parameters": {
     "access_token": {
       "type": "string",
@@ -84,16 +86,10 @@
     }
   },
   "mtlsRootUrl": "https://authorizedbuyersmarketplace.mtls.googleapis.com/",
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/authorized-buyers-marketplace": {
-          "description": "See, create, edit, and delete your Authorized Buyers Marketplace entities."
-        }
-      }
-    }
-  },
-  "fullyEncodeReservedExpansion": true,
+  "rootUrl": "https://authorizedbuyersmarketplace.googleapis.com/",
+  "protocol": "rest",
+  "documentationLink": "https://developers.google.com/authorized-buyers/apis/marketplace/reference/rest/",
+  "ownerDomain": "google.com",
   "schemas": {
     "AuctionPackage": {
       "id": "AuctionPackage",
@@ -131,12 +127,48 @@
           "format": "google-datetime"
         },
         "subscribedClients": {
-          "description": "Output only. The list of clients of the current buyer that are subscribed to the AuctionPackage. Format: `buyers/{buyerAccountId}/clients/{clientAccountId}`",
+          "description": "Output only. When calling as a buyer, the list of clients of the current buyer that are subscribed to the AuctionPackage. When calling as a bidder, the list of clients that are subscribed to the AuctionPackage owned by the bidder or its buyers. Format: `buyers/{buyerAccountId}/clients/{clientAccountId}`",
           "readOnly": true,
           "type": "array",
           "items": {
             "type": "string"
           }
+        },
+        "subscribedBuyers": {
+          "description": "Output only. The list of buyers that are subscribed to the AuctionPackage. This field is only populated when calling as a bidder. Format: `buyers/{buyerAccountId}`",
+          "readOnly": true,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "subscribedMediaPlanners": {
+          "description": "Output only. The list of media planners that are subscribed to the AuctionPackage. This field is only populated when calling as a bidder.",
+          "readOnly": true,
+          "type": "array",
+          "items": {
+            "$ref": "MediaPlanner"
+          }
+        },
+        "eligibleSeatIds": {
+          "description": "Output only. If set, this field contains the list of DSP specific seat ids set by media planners that are eligible to transact on this deal. The seat ID is in the calling DSP's namespace.",
+          "readOnly": true,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "MediaPlanner": {
+      "id": "MediaPlanner",
+      "description": "Describes a single Media Planner account.",
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "description": "Output only. Account ID of the media planner.",
+          "readOnly": true,
+          "type": "string"
         }
       }
     },
@@ -482,18 +514,6 @@
           "items": {
             "type": "string"
           }
-        }
-      }
-    },
-    "MediaPlanner": {
-      "id": "MediaPlanner",
-      "description": "Describes a single Media Planner account.",
-      "type": "object",
-      "properties": {
-        "accountId": {
-          "description": "Output only. Account ID of the media planner.",
-          "readOnly": true,
-          "type": "string"
         }
       }
     },
@@ -1938,21 +1958,26 @@
       }
     }
   },
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "documentationLink": "https://developers.google.com/authorized-buyers/apis/marketplace/reference/rest/",
-  "title": "Authorized Buyers Marketplace API",
-  "version_module": true,
-  "name": "authorizedbuyersmarketplace",
-  "rootUrl": "https://authorizedbuyersmarketplace.googleapis.com/",
-  "description": "The Authorized Buyers Marketplace API lets buyers programmatically discover inventory; propose, retrieve and negotiate deals with publishers.",
-  "servicePath": "",
-  "basePath": "",
-  "revision": "20240417",
+  "revision": "20240418",
   "discoveryVersion": "v1",
+  "canonicalName": "Authorized Buyers Marketplace",
+  "description": "The Authorized Buyers Marketplace API lets buyers programmatically discover inventory; propose, retrieve and negotiate deals with publishers.",
   "kind": "discovery#restDescription",
+  "servicePath": "",
+  "name": "authorizedbuyersmarketplace",
+  "basePath": "",
+  "batchPath": "batch",
+  "ownerName": "Google",
+  "id": "authorizedbuyersmarketplace:v1",
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/authorized-buyers-marketplace": {
+          "description": "See, create, edit, and delete your Authorized Buyers Marketplace entities."
+        }
+      }
+    }
+  },
   "resources": {
     "buyers": {
       "resources": {
@@ -1990,7 +2015,7 @@
               "httpMethod": "GET",
               "parameters": {
                 "parent": {
-                  "description": "Required. Name of the parent buyer that can access the auction package. Format: `buyers/{accountId}`",
+                  "description": "Required. Name of the parent buyer that can access the auction package. Format: `buyers/{accountId}`. When used with a bidder account, the auction packages that the bidder, its media planners, its buyers and clients are subscribed to will be listed, in the format `bidders/{accountId}`.",
                   "pattern": "^buyers/[^/]+$",
                   "location": "path",
                   "required": true,
@@ -2008,7 +2033,7 @@
                   "type": "string"
                 },
                 "filter": {
-                  "description": "Optional. Optional query string using the [Cloud API list filtering syntax](https://developers.google.com/authorized-buyers/apis/guides/list-filters) Only supported when parent is bidder. Supported columns for filtering are: * displayName * createTime * updateTime * eligibleSeatIds",
+                  "description": "Optional. Optional query string using the [Cloud API list filtering syntax](/authorized-buyers/apis/guides/list-filters). Only supported when parent is bidder. Supported columns for filtering are: * displayName * createTime * updateTime * eligibleSeatIds",
                   "location": "query",
                   "type": "string"
                 }
@@ -2022,7 +2047,7 @@
               "scopes": [
                 "https://www.googleapis.com/auth/authorized-buyers-marketplace"
               ],
-              "description": "List the auction packages subscribed by a buyer and its clients."
+              "description": "List the auction packages. Buyers can use the URL path \"/v1/buyers/{accountId}/auctionPackages\" to list auction packages for the current buyer and its clients. Bidders can use the URL path \"/v1/bidders/{accountId}/auctionPackages\" to list auction packages for the bidder, its media planners, its buyers, and all their clients."
             },
             "subscribe": {
               "id": "authorizedbuyersmarketplace.buyers.auctionPackages.subscribe",
@@ -3108,6 +3133,51 @@
     },
     "bidders": {
       "resources": {
+        "auctionPackages": {
+          "methods": {
+            "list": {
+              "id": "authorizedbuyersmarketplace.bidders.auctionPackages.list",
+              "path": "v1/{+parent}/auctionPackages",
+              "flatPath": "v1/bidders/{biddersId}/auctionPackages",
+              "httpMethod": "GET",
+              "parameters": {
+                "parent": {
+                  "description": "Required. Name of the parent buyer that can access the auction package. Format: `buyers/{accountId}`. When used with a bidder account, the auction packages that the bidder, its media planners, its buyers and clients are subscribed to will be listed, in the format `bidders/{accountId}`.",
+                  "pattern": "^bidders/[^/]+$",
+                  "location": "path",
+                  "required": true,
+                  "type": "string"
+                },
+                "pageSize": {
+                  "description": "Requested page size. The server may return fewer results than requested. Max allowed page size is 500.",
+                  "location": "query",
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "pageToken": {
+                  "description": "The page token as returned. ListAuctionPackagesResponse.nextPageToken",
+                  "location": "query",
+                  "type": "string"
+                },
+                "filter": {
+                  "description": "Optional. Optional query string using the [Cloud API list filtering syntax](/authorized-buyers/apis/guides/list-filters). Only supported when parent is bidder. Supported columns for filtering are: * displayName * createTime * updateTime * eligibleSeatIds",
+                  "location": "query",
+                  "type": "string"
+                }
+              },
+              "parameterOrder": [
+                "parent"
+              ],
+              "response": {
+                "$ref": "ListAuctionPackagesResponse"
+              },
+              "scopes": [
+                "https://www.googleapis.com/auth/authorized-buyers-marketplace"
+              ],
+              "description": "List the auction packages. Buyers can use the URL path \"/v1/buyers/{accountId}/auctionPackages\" to list auction packages for the current buyer and its clients. Bidders can use the URL path \"/v1/bidders/{accountId}/auctionPackages\" to list auction packages for the bidder, its media planners, its buyers, and all their clients."
+            }
+          }
+        },
         "finalizedDeals": {
           "methods": {
             "list": {
@@ -3160,6 +3230,5 @@
         }
       }
     }
-  },
-  "id": "authorizedbuyersmarketplace:v1"
+  }
 }
