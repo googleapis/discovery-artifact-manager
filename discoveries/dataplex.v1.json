@@ -1,7 +1,10 @@
 {
+  "kind": "discovery#restDescription",
+  "batchPath": "batch",
+  "canonicalName": "Cloud Dataplex",
+  "baseUrl": "https://dataplex.googleapis.com/",
+  "ownerName": "Google",
   "discoveryVersion": "v1",
-  "revision": "20240311",
-  "title": "Cloud Dataplex API",
   "resources": {
     "projects": {
       "resources": {
@@ -1250,7 +1253,7 @@
                           "type": "string"
                         },
                         "filter": {
-                          "description": "Optional. A filter on the entries to return. Filters are case-sensitive. The request can be filtered by the following fields: entry_type, display_name. The comparison operators are =, !=, \u003c, \u003e, \u003c=, \u003e= (strings are compared according to lexical order) The logical operators AND, OR, NOT can be used in the filter. Example filter expressions: \"display_name=AnExampleDisplayName\" \"entry_type=projects/example-project/locations/global/entryTypes/example-entry_type\" \"entry_type=projects/a* OR \"entry_type=projects/k*\" \"NOT display_name=AnotherExampleDisplayName\"",
+                          "description": "Optional. A filter on the entries to return. Filters are case-sensitive. The request can be filtered by the following fields: entry_type, entry_source.display_name. The comparison operators are =, !=, \u003c, \u003e, \u003c=, \u003e= (strings are compared according to lexical order) The logical operators AND, OR, NOT can be used in the filter. Wildcard \"*\" can be used, but for entry_type the full project id or number needs to be provided. Example filter expressions: \"entry_source.display_name=AnExampleDisplayName\" \"entry_type=projects/example-project/locations/global/entryTypes/example-entry_type\" \"entry_type=projects/example-project/locations/us/entryTypes/a* OR entry_type=projects/another-project/locations/*\" \"NOT entry_source.display_name=AnotherExampleDisplayName\"",
                           "location": "query",
                           "type": "string"
                         }
@@ -5169,22 +5172,8 @@
       }
     }
   },
-  "name": "dataplex",
-  "version": "v1",
-  "servicePath": "",
-  "protocol": "rest",
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
-        }
-      }
-    }
-  },
-  "fullyEncodeReservedExpansion": true,
-  "rootUrl": "https://dataplex.googleapis.com/",
-  "version_module": true,
+  "basePath": "",
+  "description": "Dataplex API is used to manage the lifecycle of data lakes.",
   "schemas": {
     "GoogleLongrunningListOperationsResponse": {
       "id": "GoogleLongrunningListOperationsResponse",
@@ -5743,7 +5732,7 @@
           "format": "google-datetime"
         },
         "aspects": {
-          "description": "Optional. The Aspects attached to the Entry. The key is either the resource name of the aspect type (if the aspect is attached directly to the entry) or \"aspectType@path\" if the aspect is attached to an entry's path.",
+          "description": "Optional. The Aspects attached to the Entry. The format for the key can be one of the following: 1. {projectId}.{locationId}.{aspectTypeId} (if the aspect is attached directly to the entry) 2. {projectId}.{locationId}.{aspectTypeId}@{path} (if the aspect is attached to an entry's path)",
           "type": "object",
           "additionalProperties": {
             "$ref": "GoogleCloudDataplexV1Aspect"
@@ -5937,42 +5926,6 @@
       "description": "A single result of a SearchEntries request.",
       "type": "object",
       "properties": {
-        "entry": {
-          "description": "Resource name of the entry.",
-          "deprecated": true,
-          "type": "string"
-        },
-        "displayName": {
-          "description": "Display name.",
-          "deprecated": true,
-          "type": "string"
-        },
-        "entryType": {
-          "description": "The entry type.",
-          "deprecated": true,
-          "type": "string"
-        },
-        "modifyTime": {
-          "description": "The last modification timestamp.",
-          "deprecated": true,
-          "type": "string",
-          "format": "google-datetime"
-        },
-        "fullyQualifiedName": {
-          "description": "Fully qualified name.",
-          "deprecated": true,
-          "type": "string"
-        },
-        "description": {
-          "description": "Entry description.",
-          "deprecated": true,
-          "type": "string"
-        },
-        "relativeResource": {
-          "description": "Relative resource name.",
-          "deprecated": true,
-          "type": "string"
-        },
         "linkedResource": {
           "description": "Linked resource name.",
           "type": "string"
@@ -6686,14 +6639,12 @@
           "enumDescriptions": [
             "The DataScan type is unspecified.",
             "Data Quality scan.",
-            "Data Profile scan.",
-            "Data Documentation scan."
+            "Data Profile scan."
           ],
           "enum": [
             "DATA_SCAN_TYPE_UNSPECIFIED",
             "DATA_QUALITY",
-            "DATA_PROFILE",
-            "DATA_DOCUMENTATION"
+            "DATA_PROFILE"
           ]
         },
         "dataQualitySpec": {
@@ -6704,10 +6655,6 @@
           "description": "DataProfileScan related setting.",
           "$ref": "GoogleCloudDataplexV1DataProfileSpec"
         },
-        "dataDocumentationSpec": {
-          "description": "DataDocumentationScan related setting.",
-          "$ref": "GoogleCloudDataplexV1DataDocumentationSpec"
-        },
         "dataQualityResult": {
           "description": "Output only. The result of the data quality scan.",
           "readOnly": true,
@@ -6717,11 +6664,6 @@
           "description": "Output only. The result of the data profile scan.",
           "readOnly": true,
           "$ref": "GoogleCloudDataplexV1DataProfileResult"
-        },
-        "dataDocumentationResult": {
-          "description": "Output only. The result of the data documentation scan.",
-          "readOnly": true,
-          "$ref": "GoogleCloudDataplexV1DataDocumentationResult"
         }
       }
     },
@@ -6868,6 +6810,10 @@
           "description": "Aggregate rule which evaluates whether the provided expression is true for a table.",
           "$ref": "GoogleCloudDataplexV1DataQualityRuleTableConditionExpectation"
         },
+        "sqlAssertion": {
+          "description": "Aggregate rule which evaluates the number of rows returned for the provided statement.",
+          "$ref": "GoogleCloudDataplexV1DataQualityRuleSqlAssertion"
+        },
         "column": {
           "description": "Optional. The unnested column which this rule is evaluated against.",
           "type": "string"
@@ -7012,6 +6958,17 @@
       "properties": {
         "sqlExpression": {
           "description": "Optional. The SQL expression.",
+          "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDataplexV1DataQualityRuleSqlAssertion": {
+      "id": "GoogleCloudDataplexV1DataQualityRuleSqlAssertion",
+      "description": "Queries for rows returned by the provided SQL statement. If any rows are are returned, this rule fails.The SQL statement needs to use BigQuery standard SQL syntax, and must not contain any semicolons.${data()} can be used to reference the rows being evaluated, i.e. the table after all additional filters (row filters, incremental data filters, sampling) are applied.Example: SELECT * FROM ${data()} WHERE price \u003c 0",
+      "type": "object",
+      "properties": {
+        "sqlStatement": {
+          "description": "Optional. The SQL statement.",
           "type": "string"
         }
       }
@@ -7167,12 +7124,6 @@
         }
       }
     },
-    "GoogleCloudDataplexV1DataDocumentationSpec": {
-      "id": "GoogleCloudDataplexV1DataDocumentationSpec",
-      "description": "DataDocumentation scan related spec.",
-      "type": "object",
-      "properties": {}
-    },
     "GoogleCloudDataplexV1DataQualityResult": {
       "id": "GoogleCloudDataplexV1DataQualityResult",
       "description": "The output of a DataQualityScan.",
@@ -7313,6 +7264,12 @@
         "failingRowsQuery": {
           "description": "The query to find rows that did not pass this rule.This field is only valid for row-level type rules.",
           "type": "string"
+        },
+        "assertionRowCount": {
+          "description": "Output only. The number of rows returned by the sql statement in the SqlAssertion rule.This field is only valid for SqlAssertion rules.",
+          "readOnly": true,
+          "type": "string",
+          "format": "int64"
         }
       }
     },
@@ -7639,38 +7596,6 @@
         }
       }
     },
-    "GoogleCloudDataplexV1DataDocumentationResult": {
-      "id": "GoogleCloudDataplexV1DataDocumentationResult",
-      "description": "The output of a DataDocumentation scan.",
-      "type": "object",
-      "properties": {
-        "queries": {
-          "description": "Output only. The list of generated queries.",
-          "readOnly": true,
-          "type": "array",
-          "items": {
-            "$ref": "GoogleCloudDataplexV1DataDocumentationResultQuery"
-          }
-        }
-      }
-    },
-    "GoogleCloudDataplexV1DataDocumentationResultQuery": {
-      "id": "GoogleCloudDataplexV1DataDocumentationResultQuery",
-      "description": "A query in data documentation",
-      "type": "object",
-      "properties": {
-        "sql": {
-          "description": "Output only. The SQL query string which can be executed.",
-          "readOnly": true,
-          "type": "string"
-        },
-        "description": {
-          "description": "Output only. The description for the query.",
-          "readOnly": true,
-          "type": "string"
-        }
-      }
-    },
     "GoogleCloudDataplexV1ListDataScansResponse": {
       "id": "GoogleCloudDataplexV1ListDataScansResponse",
       "description": "List dataScans response.",
@@ -7775,14 +7700,12 @@
           "enumDescriptions": [
             "The DataScan type is unspecified.",
             "Data Quality scan.",
-            "Data Profile scan.",
-            "Data Documentation scan."
+            "Data Profile scan."
           ],
           "enum": [
             "DATA_SCAN_TYPE_UNSPECIFIED",
             "DATA_QUALITY",
-            "DATA_PROFILE",
-            "DATA_DOCUMENTATION"
+            "DATA_PROFILE"
           ]
         },
         "dataQualitySpec": {
@@ -7795,11 +7718,6 @@
           "readOnly": true,
           "$ref": "GoogleCloudDataplexV1DataProfileSpec"
         },
-        "dataDocumentationSpec": {
-          "description": "Output only. DataDocumentationScan related setting.",
-          "readOnly": true,
-          "$ref": "GoogleCloudDataplexV1DataDocumentationSpec"
-        },
         "dataQualityResult": {
           "description": "Output only. The result of the data quality scan.",
           "readOnly": true,
@@ -7809,11 +7727,6 @@
           "description": "Output only. The result of the data profile scan.",
           "readOnly": true,
           "$ref": "GoogleCloudDataplexV1DataProfileResult"
-        },
-        "dataDocumentationResult": {
-          "description": "Output only. The result of the data documentation scan.",
-          "readOnly": true,
-          "$ref": "GoogleCloudDataplexV1DataDocumentationResult"
         }
       }
     },
@@ -11008,16 +10921,27 @@
       }
     }
   },
-  "mtlsRootUrl": "https://dataplex.mtls.googleapis.com/",
-  "ownerDomain": "google.com",
-  "baseUrl": "https://dataplex.googleapis.com/",
-  "documentationLink": "https://cloud.google.com/dataplex/docs",
+  "version": "v1",
+  "version_module": true,
+  "servicePath": "",
+  "protocol": "rest",
+  "revision": "20240410",
+  "title": "Cloud Dataplex API",
+  "rootUrl": "https://dataplex.googleapis.com/",
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        }
+      }
+    }
+  },
   "id": "dataplex:v1",
-  "kind": "discovery#restDescription",
-  "batchPath": "batch",
-  "canonicalName": "Cloud Dataplex",
-  "description": "Dataplex API is used to manage the lifecycle of data lakes.",
-  "basePath": "",
+  "documentationLink": "https://cloud.google.com/dataplex/docs",
+  "ownerDomain": "google.com",
+  "mtlsRootUrl": "https://dataplex.mtls.googleapis.com/",
+  "name": "dataplex",
   "icons": {
     "x16": "http://www.google.com/images/icons/product/search-16.gif",
     "x32": "http://www.google.com/images/icons/product/search-32.gif"
@@ -11099,5 +11023,5 @@
       "location": "query"
     }
   },
-  "ownerName": "Google"
+  "fullyEncodeReservedExpansion": true
 }
