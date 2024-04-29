@@ -1,7 +1,4 @@
 {
-  "basePath": "",
-  "ownerDomain": "google.com",
-  "mtlsRootUrl": "https://sheets.mtls.googleapis.com/",
   "schemas": {
     "ValueRange": {
       "id": "ValueRange",
@@ -5257,6 +5254,10 @@
         "refreshDataSource": {
           "description": "Refreshes one or multiple data sources and associated dbobjects.",
           "$ref": "RefreshDataSourceRequest"
+        },
+        "cancelDataSourceRefresh": {
+          "description": "Cancels refreshes of one or multiple data sources and associated dbobjects.",
+          "$ref": "CancelDataSourceRefreshRequest"
         }
       }
     },
@@ -6546,6 +6547,25 @@
         }
       }
     },
+    "CancelDataSourceRefreshRequest": {
+      "id": "CancelDataSourceRefreshRequest",
+      "description": "Cancels one or multiple refreshes of data source objects in the spreadsheet by the specified references.",
+      "type": "object",
+      "properties": {
+        "references": {
+          "description": "References to data source objects whose refreshes are to be cancelled.",
+          "$ref": "DataSourceObjectReferences"
+        },
+        "dataSourceId": {
+          "description": "Reference to a DataSource. If specified, cancels all associated data source object refreshes for this data source.",
+          "type": "string"
+        },
+        "isAll": {
+          "description": "Cancels all existing data source object refreshes for all data sources in the spreadsheet.",
+          "type": "boolean"
+        }
+      }
+    },
     "BatchUpdateSpreadsheetResponse": {
       "id": "BatchUpdateSpreadsheetResponse",
       "description": "The reply for batch updating a spreadsheet.",
@@ -6664,6 +6684,10 @@
         "refreshDataSource": {
           "description": "A reply from refreshing data source objects.",
           "$ref": "RefreshDataSourceResponse"
+        },
+        "cancelDataSourceRefresh": {
+          "description": "A reply from cancelling data source object refreshes.",
+          "$ref": "CancelDataSourceRefreshResponse"
         }
       }
     },
@@ -6995,6 +7019,76 @@
         }
       }
     },
+    "CancelDataSourceRefreshResponse": {
+      "id": "CancelDataSourceRefreshResponse",
+      "description": "The response from cancelling one or multiple data source object refreshes.",
+      "type": "object",
+      "properties": {
+        "statuses": {
+          "description": "The cancellation statuses of refreshes of all data source objects specified in the request. If is_all is specified, the field contains only those in failure status. Refreshing and canceling refresh the same data source object is also not allowed in the same `batchUpdate`.",
+          "type": "array",
+          "items": {
+            "$ref": "CancelDataSourceRefreshStatus"
+          }
+        }
+      }
+    },
+    "CancelDataSourceRefreshStatus": {
+      "id": "CancelDataSourceRefreshStatus",
+      "description": "The status of cancelling a single data source object refresh.",
+      "type": "object",
+      "properties": {
+        "reference": {
+          "description": "Reference to the data source object whose refresh is being cancelled.",
+          "$ref": "DataSourceObjectReference"
+        },
+        "refreshCancellationStatus": {
+          "description": "The cancellation status.",
+          "$ref": "RefreshCancellationStatus"
+        }
+      }
+    },
+    "RefreshCancellationStatus": {
+      "id": "RefreshCancellationStatus",
+      "description": "The status of a refresh cancellation. You can send cancel request to explicitly cancel one or multiple data source object refreshes.",
+      "type": "object",
+      "properties": {
+        "state": {
+          "description": "The state of a call to cancel a refresh in Sheets.",
+          "type": "string",
+          "enumDescriptions": [
+            "Default value, do not use.",
+            "The API call to Sheets to cancel a refresh has succeeded. This does not mean that the cancel happened successfully, but that the call has been made successfully.",
+            "The API call to Sheets to cancel a refresh has failed."
+          ],
+          "enum": [
+            "REFRESH_CANCELLATION_STATE_UNSPECIFIED",
+            "CANCEL_SUCCEEDED",
+            "CANCEL_FAILED"
+          ]
+        },
+        "errorCode": {
+          "description": "The error code.",
+          "type": "string",
+          "enumDescriptions": [
+            "Default value, do not use.",
+            "Execution to be cancelled not found in the query engine or in Sheets.",
+            "The user does not have permission to cancel the query.",
+            "The query execution has already completed and thus could not be cancelled.",
+            "There is already another cancellation in process.",
+            "All other errors."
+          ],
+          "enum": [
+            "REFRESH_CANCELLATION_ERROR_CODE_UNSPECIFIED",
+            "EXECUTION_NOT_FOUND",
+            "CANCEL_PERMISSION_DENIED",
+            "QUERY_EXECUTION_COMPLETED",
+            "CONCURRENT_CANCELLATION",
+            "CANCEL_OTHER_ERROR"
+          ]
+        }
+      }
+    },
     "CopySheetToAnotherSpreadsheetRequest": {
       "id": "CopySheetToAnotherSpreadsheetRequest",
       "description": "The request to copy a sheet across spreadsheets.",
@@ -7007,97 +7101,8 @@
       }
     }
   },
-  "kind": "discovery#restDescription",
-  "batchPath": "batch",
-  "documentationLink": "https://developers.google.com/sheets/",
-  "fullyEncodeReservedExpansion": true,
-  "canonicalName": "Sheets",
-  "discoveryVersion": "v1",
-  "protocol": "rest",
-  "version_module": true,
-  "ownerName": "Google",
-  "parameters": {
-    "access_token": {
-      "type": "string",
-      "description": "OAuth access token.",
-      "location": "query"
-    },
-    "alt": {
-      "type": "string",
-      "description": "Data format for response.",
-      "default": "json",
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ],
-      "location": "query"
-    },
-    "callback": {
-      "type": "string",
-      "description": "JSONP",
-      "location": "query"
-    },
-    "fields": {
-      "type": "string",
-      "description": "Selector specifying which fields to include in a partial response.",
-      "location": "query"
-    },
-    "key": {
-      "type": "string",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
-      "location": "query"
-    },
-    "oauth_token": {
-      "type": "string",
-      "description": "OAuth 2.0 token for the current user.",
-      "location": "query"
-    },
-    "prettyPrint": {
-      "type": "boolean",
-      "description": "Returns response with indentations and line breaks.",
-      "default": "true",
-      "location": "query"
-    },
-    "quotaUser": {
-      "type": "string",
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
-      "location": "query"
-    },
-    "upload_protocol": {
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
-      "location": "query"
-    },
-    "uploadType": {
-      "type": "string",
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
-      "location": "query"
-    },
-    "$.xgafv": {
-      "type": "string",
-      "description": "V1 error format.",
-      "enum": [
-        "1",
-        "2"
-      ],
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ],
-      "location": "query"
-    }
-  },
-  "revision": "20240416",
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
+  "version": "v4",
+  "ownerDomain": "google.com",
   "auth": {
     "oauth2": {
       "scopes": {
@@ -7119,8 +7124,14 @@
       }
     }
   },
-  "version": "v4",
-  "name": "sheets",
+  "description": "Reads and writes Google Sheets.",
+  "id": "sheets:v4",
+  "ownerName": "Google",
+  "title": "Google Sheets API",
+  "revision": "20240423",
+  "baseUrl": "https://sheets.googleapis.com/",
+  "discoveryVersion": "v1",
+  "canonicalName": "Sheets",
   "resources": {
     "spreadsheets": {
       "methods": {
@@ -7875,10 +7886,96 @@
       }
     }
   },
-  "baseUrl": "https://sheets.googleapis.com/",
   "servicePath": "",
-  "id": "sheets:v4",
-  "description": "Reads and writes Google Sheets.",
+  "basePath": "",
+  "name": "sheets",
+  "mtlsRootUrl": "https://sheets.mtls.googleapis.com/",
+  "documentationLink": "https://developers.google.com/sheets/",
+  "batchPath": "batch",
+  "fullyEncodeReservedExpansion": true,
+  "protocol": "rest",
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
   "rootUrl": "https://sheets.googleapis.com/",
-  "title": "Google Sheets API"
+  "version_module": true,
+  "parameters": {
+    "access_token": {
+      "type": "string",
+      "description": "OAuth access token.",
+      "location": "query"
+    },
+    "alt": {
+      "type": "string",
+      "description": "Data format for response.",
+      "default": "json",
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "location": "query"
+    },
+    "callback": {
+      "type": "string",
+      "description": "JSONP",
+      "location": "query"
+    },
+    "fields": {
+      "type": "string",
+      "description": "Selector specifying which fields to include in a partial response.",
+      "location": "query"
+    },
+    "key": {
+      "type": "string",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+      "location": "query"
+    },
+    "oauth_token": {
+      "type": "string",
+      "description": "OAuth 2.0 token for the current user.",
+      "location": "query"
+    },
+    "prettyPrint": {
+      "type": "boolean",
+      "description": "Returns response with indentations and line breaks.",
+      "default": "true",
+      "location": "query"
+    },
+    "quotaUser": {
+      "type": "string",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
+      "location": "query"
+    },
+    "upload_protocol": {
+      "type": "string",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
+      "location": "query"
+    },
+    "uploadType": {
+      "type": "string",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
+      "location": "query"
+    },
+    "$.xgafv": {
+      "type": "string",
+      "description": "V1 error format.",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "location": "query"
+    }
+  },
+  "kind": "discovery#restDescription"
 }
