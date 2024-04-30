@@ -1,6 +1,81 @@
 {
+  "baseUrl": "https://servicecontrol.googleapis.com/",
+  "kind": "discovery#restDescription",
   "id": "servicecontrol:v2",
-  "rootUrl": "https://servicecontrol.googleapis.com/",
+  "canonicalName": "Service Control",
+  "ownerDomain": "google.com",
+  "revision": "20240426",
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
+  "resources": {
+    "services": {
+      "methods": {
+        "check": {
+          "id": "servicecontrol.services.check",
+          "path": "v2/services/{serviceName}:check",
+          "flatPath": "v2/services/{serviceName}:check",
+          "httpMethod": "POST",
+          "parameters": {
+            "serviceName": {
+              "description": "The service name as specified in its service configuration. For example, `\"pubsub.googleapis.com\"`. See [google.api.Service](https://cloud.google.com/service-management/reference/rpc/google.api#google.api.Service) for the definition of a service name.",
+              "location": "path",
+              "required": true,
+              "type": "string"
+            }
+          },
+          "parameterOrder": [
+            "serviceName"
+          ],
+          "request": {
+            "$ref": "CheckRequest"
+          },
+          "response": {
+            "$ref": "CheckResponse"
+          },
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform",
+            "https://www.googleapis.com/auth/servicecontrol"
+          ],
+          "description": "Private Preview. This feature is only available for approved services. This method provides admission control for services that are integrated with [Service Infrastructure](https://cloud.google.com/service-infrastructure). It checks whether an operation should be allowed based on the service configuration and relevant policies. It must be called before the operation is executed. For more information, see [Admission Control](https://cloud.google.com/service-infrastructure/docs/admission-control). NOTE: The admission control has an expected policy propagation delay of 60s. The caller **must** not depend on the most recent policy changes. NOTE: The admission control has a hard limit of 1 referenced resources per call. If an operation refers to more than 1 resources, the caller must call the Check method multiple times. This method requires the `servicemanagement.services.check` permission on the specified service. For more information, see [Service Control API Access Control](https://cloud.google.com/service-infrastructure/docs/service-control/access-control)."
+        },
+        "report": {
+          "id": "servicecontrol.services.report",
+          "path": "v2/services/{serviceName}:report",
+          "flatPath": "v2/services/{serviceName}:report",
+          "httpMethod": "POST",
+          "parameters": {
+            "serviceName": {
+              "description": "The service name as specified in its service configuration. For example, `\"pubsub.googleapis.com\"`. See [google.api.Service](https://cloud.google.com/service-management/reference/rpc/google.api#google.api.Service) for the definition of a service name.",
+              "location": "path",
+              "required": true,
+              "type": "string"
+            }
+          },
+          "parameterOrder": [
+            "serviceName"
+          ],
+          "request": {
+            "$ref": "ReportRequest"
+          },
+          "response": {
+            "$ref": "ReportResponse"
+          },
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform",
+            "https://www.googleapis.com/auth/servicecontrol"
+          ],
+          "description": "Private Preview. This feature is only available for approved services. This method provides telemetry reporting for services that are integrated with [Service Infrastructure](https://cloud.google.com/service-infrastructure). It reports a list of operations that have occurred on a service. It must be called after the operations have been executed. For more information, see [Telemetry Reporting](https://cloud.google.com/service-infrastructure/docs/telemetry-reporting). NOTE: The telemetry reporting has a hard limit of 1000 operations and 1MB per Report call. It is recommended to have no more than 100 operations per call. This method requires the `servicemanagement.services.report` permission on the specified service. For more information, see [Service Control API Access Control](https://cloud.google.com/service-infrastructure/docs/service-control/access-control)."
+        }
+      }
+    }
+  },
+  "fullyEncodeReservedExpansion": true,
+  "version_module": true,
+  "name": "servicecontrol",
+  "ownerName": "Google",
+  "mtlsRootUrl": "https://servicecontrol.mtls.googleapis.com/",
   "parameters": {
     "access_token": {
       "type": "string",
@@ -78,7 +153,8 @@
       "location": "query"
     }
   },
-  "canonicalName": "Service Control",
+  "documentationLink": "https://cloud.google.com/service-control/",
+  "description": "Provides admission control and telemetry reporting for services integrated with Service Infrastructure. ",
   "schemas": {
     "CheckRequest": {
       "id": "CheckRequest",
@@ -1127,26 +1203,70 @@
           "type": "string"
         }
       }
+    },
+    "V2ResourceEvent": {
+      "id": "V2ResourceEvent",
+      "description": "Report v2 extension proto for passing the resource metadata associated with a resource create/update/delete/undelete event from ESF to Chemist. ResourceEvent proto should be serialized into the ReportRequest.operations.extensions.",
+      "type": "object",
+      "properties": {
+        "payload": {
+          "description": "The payload contains metadata associated with the resource event. A ResourceEventPayloadStatus is provided instead if the original payload cannot be returned due to a limitation (e.g. size limit).",
+          "type": "object",
+          "additionalProperties": {
+            "type": "any",
+            "description": "Properties of the object. Contains field @type with type URL."
+          }
+        },
+        "type": {
+          "description": "The resource event type determines how the backend service should process the event.",
+          "type": "string",
+          "enumDescriptions": [
+            "The resource event type is unclear. We do not expect any events to fall into this category.",
+            "The resource is created/inserted.",
+            "The resource is updated.",
+            "The resource is deleted.",
+            "The resource is un-deleted."
+          ],
+          "enum": [
+            "TYPE_UNSPECIFIED",
+            "CREATE",
+            "UPDATE",
+            "DELETE",
+            "UNDELETE"
+          ]
+        },
+        "destinations": {
+          "description": "The destinations field determines which backend services should handle the event. This should be specified as a comma-delimited string.",
+          "type": "string"
+        },
+        "resource": {
+          "description": "The resource associated with the event.",
+          "$ref": "Resource"
+        },
+        "parent": {
+          "description": "The parent resource for the resource.",
+          "$ref": "Resource"
+        },
+        "path": {
+          "description": "The api path the resource event was created in. This should match the source of the `payload` field. For direct integrations with Chemist, this should generally be the RESPONSE. go/resource-event-pipeline-type",
+          "type": "string",
+          "enumDescriptions": [
+            "Default value. Do not use.",
+            "The request path.",
+            "The response path."
+          ],
+          "enum": [
+            "API_PATH_UNSPECIFIED",
+            "REQUEST",
+            "RESPONSE"
+          ]
+        }
+      }
     }
   },
-  "baseUrl": "https://servicecontrol.googleapis.com/",
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "ownerDomain": "google.com",
-  "ownerName": "Google",
-  "kind": "discovery#restDescription",
-  "documentationLink": "https://cloud.google.com/service-control/",
-  "batchPath": "batch",
-  "mtlsRootUrl": "https://servicecontrol.mtls.googleapis.com/",
-  "version": "v2",
-  "protocol": "rest",
-  "version_module": true,
-  "revision": "20240419",
+  "servicePath": "",
   "title": "Service Control API",
-  "fullyEncodeReservedExpansion": true,
-  "basePath": "",
+  "rootUrl": "https://servicecontrol.googleapis.com/",
   "auth": {
     "oauth2": {
       "scopes": {
@@ -1159,70 +1279,9 @@
       }
     }
   },
-  "name": "servicecontrol",
-  "servicePath": "",
-  "resources": {
-    "services": {
-      "methods": {
-        "check": {
-          "id": "servicecontrol.services.check",
-          "path": "v2/services/{serviceName}:check",
-          "flatPath": "v2/services/{serviceName}:check",
-          "httpMethod": "POST",
-          "parameters": {
-            "serviceName": {
-              "description": "The service name as specified in its service configuration. For example, `\"pubsub.googleapis.com\"`. See [google.api.Service](https://cloud.google.com/service-management/reference/rpc/google.api#google.api.Service) for the definition of a service name.",
-              "location": "path",
-              "required": true,
-              "type": "string"
-            }
-          },
-          "parameterOrder": [
-            "serviceName"
-          ],
-          "request": {
-            "$ref": "CheckRequest"
-          },
-          "response": {
-            "$ref": "CheckResponse"
-          },
-          "scopes": [
-            "https://www.googleapis.com/auth/cloud-platform",
-            "https://www.googleapis.com/auth/servicecontrol"
-          ],
-          "description": "Private Preview. This feature is only available for approved services. This method provides admission control for services that are integrated with [Service Infrastructure](https://cloud.google.com/service-infrastructure). It checks whether an operation should be allowed based on the service configuration and relevant policies. It must be called before the operation is executed. For more information, see [Admission Control](https://cloud.google.com/service-infrastructure/docs/admission-control). NOTE: The admission control has an expected policy propagation delay of 60s. The caller **must** not depend on the most recent policy changes. NOTE: The admission control has a hard limit of 1 referenced resources per call. If an operation refers to more than 1 resources, the caller must call the Check method multiple times. This method requires the `servicemanagement.services.check` permission on the specified service. For more information, see [Service Control API Access Control](https://cloud.google.com/service-infrastructure/docs/service-control/access-control)."
-        },
-        "report": {
-          "id": "servicecontrol.services.report",
-          "path": "v2/services/{serviceName}:report",
-          "flatPath": "v2/services/{serviceName}:report",
-          "httpMethod": "POST",
-          "parameters": {
-            "serviceName": {
-              "description": "The service name as specified in its service configuration. For example, `\"pubsub.googleapis.com\"`. See [google.api.Service](https://cloud.google.com/service-management/reference/rpc/google.api#google.api.Service) for the definition of a service name.",
-              "location": "path",
-              "required": true,
-              "type": "string"
-            }
-          },
-          "parameterOrder": [
-            "serviceName"
-          ],
-          "request": {
-            "$ref": "ReportRequest"
-          },
-          "response": {
-            "$ref": "ReportResponse"
-          },
-          "scopes": [
-            "https://www.googleapis.com/auth/cloud-platform",
-            "https://www.googleapis.com/auth/servicecontrol"
-          ],
-          "description": "Private Preview. This feature is only available for approved services. This method provides telemetry reporting for services that are integrated with [Service Infrastructure](https://cloud.google.com/service-infrastructure). It reports a list of operations that have occurred on a service. It must be called after the operations have been executed. For more information, see [Telemetry Reporting](https://cloud.google.com/service-infrastructure/docs/telemetry-reporting). NOTE: The telemetry reporting has a hard limit of 1000 operations and 1MB per Report call. It is recommended to have no more than 100 operations per call. This method requires the `servicemanagement.services.report` permission on the specified service. For more information, see [Service Control API Access Control](https://cloud.google.com/service-infrastructure/docs/service-control/access-control)."
-        }
-      }
-    }
-  },
-  "description": "Provides admission control and telemetry reporting for services integrated with Service Infrastructure. ",
-  "discoveryVersion": "v1"
+  "batchPath": "batch",
+  "discoveryVersion": "v1",
+  "basePath": "",
+  "protocol": "rest",
+  "version": "v2"
 }
