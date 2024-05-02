@@ -1,19 +1,10 @@
 {
+  "protocol": "rest",
   "name": "gkehub",
-  "batchPath": "batch",
-  "discoveryVersion": "v1",
-  "kind": "discovery#restDescription",
-  "basePath": "",
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
-        }
-      }
-    }
-  },
+  "baseUrl": "https://gkehub.googleapis.com/",
   "rootUrl": "https://gkehub.googleapis.com/",
+  "fullyEncodeReservedExpansion": true,
+  "revision": "20240428",
   "schemas": {
     "ListOperationsResponse": {
       "id": "ListOperationsResponse",
@@ -1357,6 +1348,10 @@
           "items": {
             "$ref": "IdentityServiceAuthMethod"
           }
+        },
+        "identityServiceOptions": {
+          "description": "Optional. non-protocol-related configuration options.",
+          "$ref": "IdentityServiceIdentityServiceOptions"
         }
       }
     },
@@ -1376,6 +1371,14 @@
         "googleConfig": {
           "description": "GoogleConfig specific configuration.",
           "$ref": "IdentityServiceGoogleConfig"
+        },
+        "samlConfig": {
+          "description": "SAML specific configuration.",
+          "$ref": "IdentityServiceSamlConfig"
+        },
+        "ldapConfig": {
+          "description": "LDAP specific configuration.",
+          "$ref": "IdentityServiceLdapConfig"
         },
         "name": {
           "description": "Identifier for auth config.",
@@ -1478,6 +1481,14 @@
           "readOnly": true,
           "type": "string",
           "format": "byte"
+        },
+        "userClaim": {
+          "description": "Optional. Claim in the AzureAD ID Token that holds the user details.",
+          "type": "string"
+        },
+        "groupFormat": {
+          "description": "Optional. Format of the AzureAD groups that the client wants for auth.",
+          "type": "string"
         }
       }
     },
@@ -1489,6 +1500,180 @@
         "disable": {
           "description": "Disable automatic configuration of Google Plugin on supported platforms.",
           "type": "boolean"
+        }
+      }
+    },
+    "IdentityServiceSamlConfig": {
+      "id": "IdentityServiceSamlConfig",
+      "description": "Configuration for the SAML Auth flow.",
+      "type": "object",
+      "properties": {
+        "identityProviderId": {
+          "description": "Required. The entity ID of the SAML IdP.",
+          "type": "string"
+        },
+        "identityProviderSsoUri": {
+          "description": "Required. The URI where the SAML IdP exposes the SSO service.",
+          "type": "string"
+        },
+        "identityProviderCertificates": {
+          "description": "Required. The list of IdP certificates to validate the SAML response against.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "userAttribute": {
+          "description": "Optional. The SAML attribute to read username from. If unspecified, the username will be read from the NameID element of the assertion in SAML response. This value is expected to be a string and will be passed along as-is (with the option of being prefixed by the `user_prefix`).",
+          "type": "string"
+        },
+        "groupsAttribute": {
+          "description": "Optional. The SAML attribute to read groups from. This value is expected to be a string and will be passed along as-is (with the option of being prefixed by the `group_prefix`).",
+          "type": "string"
+        },
+        "userPrefix": {
+          "description": "Optional. Prefix to prepend to user name.",
+          "type": "string"
+        },
+        "groupPrefix": {
+          "description": "Optional. Prefix to prepend to group name.",
+          "type": "string"
+        },
+        "attributeMapping": {
+          "description": "Optional. The mapping of additional user attributes like nickname, birthday and address etc.. `key` is the name of this additional attribute. `value` is a string presenting as CEL(common expression language, go/cel) used for getting the value from the resources. Take nickname as an example, in this case, `key` is \"attribute.nickname\" and `value` is \"assertion.nickname\".",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "IdentityServiceLdapConfig": {
+      "id": "IdentityServiceLdapConfig",
+      "description": "Configuration for the LDAP Auth flow.",
+      "type": "object",
+      "properties": {
+        "server": {
+          "description": "Required. Server settings for the external LDAP server.",
+          "$ref": "IdentityServiceServerConfig"
+        },
+        "user": {
+          "description": "Required. Defines where users exist in the LDAP directory.",
+          "$ref": "IdentityServiceUserConfig"
+        },
+        "group": {
+          "description": "Optional. Contains the properties for locating and authenticating groups in the directory.",
+          "$ref": "IdentityServiceGroupConfig"
+        },
+        "serviceAccount": {
+          "description": "Required. Contains the credentials of the service account which is authorized to perform the LDAP search in the directory. The credentials can be supplied by the combination of the DN and password or the client certificate.",
+          "$ref": "IdentityServiceServiceAccountConfig"
+        }
+      }
+    },
+    "IdentityServiceServerConfig": {
+      "id": "IdentityServiceServerConfig",
+      "description": "Server settings for the external LDAP server.",
+      "type": "object",
+      "properties": {
+        "host": {
+          "description": "Required. Defines the hostname or IP of the LDAP server. Port is optional and will default to 389, if unspecified. For example, \"ldap.server.example\" or \"10.10.10.10:389\".",
+          "type": "string"
+        },
+        "connectionType": {
+          "description": "Optional. Defines the connection type to communicate with the LDAP server. If `starttls` or `ldaps` is specified, the certificate_authority_data should not be empty.",
+          "type": "string"
+        },
+        "certificateAuthorityData": {
+          "description": "Optional. Contains a Base64 encoded, PEM formatted certificate authority certificate for the LDAP server. This must be provided for the \"ldaps\" and \"startTLS\" connections.",
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "IdentityServiceUserConfig": {
+      "id": "IdentityServiceUserConfig",
+      "description": "Defines where users exist in the LDAP directory.",
+      "type": "object",
+      "properties": {
+        "baseDn": {
+          "description": "Required. The location of the subtree in the LDAP directory to search for user entries.",
+          "type": "string"
+        },
+        "loginAttribute": {
+          "description": "Optional. The name of the attribute which matches against the input username. This is used to find the user in the LDAP database e.g. \"(=)\" and is combined with the optional filter field. This defaults to \"userPrincipalName\".",
+          "type": "string"
+        },
+        "idAttribute": {
+          "description": "Optional. Determines which attribute to use as the user's identity after they are authenticated. This is distinct from the loginAttribute field to allow users to login with a username, but then have their actual identifier be an email address or full Distinguished Name (DN). For example, setting loginAttribute to \"sAMAccountName\" and identifierAttribute to \"userPrincipalName\" would allow a user to login as \"bsmith\", but actual RBAC policies for the user would be written as \"bsmith@example.com\". Using \"userPrincipalName\" is recommended since this will be unique for each user. This defaults to \"userPrincipalName\".",
+          "type": "string"
+        },
+        "filter": {
+          "description": "Optional. Filter to apply when searching for the user. This can be used to further restrict the user accounts which are allowed to login. This defaults to \"(objectClass=User)\".",
+          "type": "string"
+        }
+      }
+    },
+    "IdentityServiceGroupConfig": {
+      "id": "IdentityServiceGroupConfig",
+      "description": "Contains the properties for locating and authenticating groups in the directory.",
+      "type": "object",
+      "properties": {
+        "baseDn": {
+          "description": "Required. The location of the subtree in the LDAP directory to search for group entries.",
+          "type": "string"
+        },
+        "idAttribute": {
+          "description": "Optional. The identifying name of each group a user belongs to. For example, if this is set to \"distinguishedName\" then RBACs and other group expectations should be written as full DNs. This defaults to \"distinguishedName\".",
+          "type": "string"
+        },
+        "filter": {
+          "description": "Optional. Optional filter to be used when searching for groups a user belongs to. This can be used to explicitly match only certain groups in order to reduce the amount of groups returned for each user. This defaults to \"(objectClass=Group)\".",
+          "type": "string"
+        }
+      }
+    },
+    "IdentityServiceServiceAccountConfig": {
+      "id": "IdentityServiceServiceAccountConfig",
+      "description": "Contains the credentials of the service account which is authorized to perform the LDAP search in the directory. The credentials can be supplied by the combination of the DN and password or the client certificate.",
+      "type": "object",
+      "properties": {
+        "simpleBindCredentials": {
+          "description": "Credentials for basic auth.",
+          "$ref": "IdentityServiceSimpleBindCredentials"
+        }
+      }
+    },
+    "IdentityServiceSimpleBindCredentials": {
+      "id": "IdentityServiceSimpleBindCredentials",
+      "description": "The structure holds the LDAP simple binding credential.",
+      "type": "object",
+      "properties": {
+        "dn": {
+          "description": "Required. The distinguished name(DN) of the service account object/user.",
+          "type": "string"
+        },
+        "password": {
+          "description": "Required. Input only. The password of the service account object/user.",
+          "type": "string"
+        },
+        "encryptedPassword": {
+          "description": "Output only. The encrypted password of the service account object/user.",
+          "readOnly": true,
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "IdentityServiceIdentityServiceOptions": {
+      "id": "IdentityServiceIdentityServiceOptions",
+      "description": "Holds non-protocol-related configuration options.",
+      "type": "object",
+      "properties": {
+        "sessionDuration": {
+          "description": "Optional. Determines the lifespan of STS tokens issued by Anthos Identity Service.",
+          "type": "string",
+          "format": "google-duration"
         }
       }
     },
@@ -2338,6 +2523,14 @@
         "configApiVersion": {
           "description": "The API version (i.e. Istio CRD version) for configuring service mesh in this cluster. This version is influenced by the `default_channel` field.",
           "type": "string"
+        },
+        "conditions": {
+          "description": "Output only. List of conditions reported for this membership.",
+          "readOnly": true,
+          "type": "array",
+          "items": {
+            "$ref": "ServiceMeshCondition"
+          }
         }
       }
     },
@@ -2375,6 +2568,23 @@
             "STALLED",
             "NEEDS_ATTENTION",
             "DEGRADED"
+          ]
+        },
+        "implementation": {
+          "description": "Output only. Implementation of managed control plane.",
+          "readOnly": true,
+          "type": "string",
+          "enumDescriptions": [
+            "Unspecified",
+            "A Google build of istiod is used for the managed control plane.",
+            "Traffic director is used for the managed control plane.",
+            "The control plane implementation is being updated."
+          ],
+          "enum": [
+            "IMPLEMENTATION_UNSPECIFIED",
+            "ISTIOD",
+            "TRAFFIC_DIRECTOR",
+            "UPDATING"
           ]
         }
       }
@@ -2429,6 +2639,99 @@
           "items": {
             "$ref": "ServiceMeshStatusDetails"
           }
+        }
+      }
+    },
+    "ServiceMeshCondition": {
+      "id": "ServiceMeshCondition",
+      "description": "Condition being reported.",
+      "type": "object",
+      "properties": {
+        "code": {
+          "description": "Unique identifier of the condition which describes the condition recognizable to the user.",
+          "type": "string",
+          "enumDescriptions": [
+            "Default Unspecified code",
+            "Mesh IAM permission denied error code",
+            "CNI config unsupported error code",
+            "GKE sandbox unsupported error code",
+            "Nodepool workload identity federation required error code",
+            "CNI installation failed error code",
+            "CNI pod unschedulable error code",
+            "Multiple control planes unsupported error code",
+            "VPC-SC GA is supported for this control plane.",
+            "Configuration (Istio/k8s resources) failed to apply due to internal error.",
+            "Configuration failed to be applied due to being invalid.",
+            "Encountered configuration(s) with possible unintended behavior or invalid configuration. These configs may not have been applied.",
+            "BackendService quota exceeded error code.",
+            "HealthCheck quota exceeded error code.",
+            "HTTPRoute quota exceeded error code.",
+            "TCPRoute quota exceeded error code.",
+            "TLS routes quota exceeded error code.",
+            "TrafficPolicy quota exceeded error code.",
+            "EndpointPolicy quota exceeded error code.",
+            "Gateway quota exceeded error code.",
+            "Mesh quota exceeded error code.",
+            "ServerTLSPolicy quota exceeded error code.",
+            "ClientTLSPolicy quota exceeded error code.",
+            "ServiceLBPolicy quota exceeded error code.",
+            "HTTPFilter quota exceeded error code.",
+            "TCPFilter quota exceeded error code.",
+            "NetworkEndpointGroup quota exceeded error code."
+          ],
+          "enum": [
+            "CODE_UNSPECIFIED",
+            "MESH_IAM_PERMISSION_DENIED",
+            "CNI_CONFIG_UNSUPPORTED",
+            "GKE_SANDBOX_UNSUPPORTED",
+            "NODEPOOL_WORKLOAD_IDENTITY_FEDERATION_REQUIRED",
+            "CNI_INSTALLATION_FAILED",
+            "CNI_POD_UNSCHEDULABLE",
+            "UNSUPPORTED_MULTIPLE_CONTROL_PLANES",
+            "VPCSC_GA_SUPPORTED",
+            "CONFIG_APPLY_INTERNAL_ERROR",
+            "CONFIG_VALIDATION_ERROR",
+            "CONFIG_VALIDATION_WARNING",
+            "QUOTA_EXCEEDED_BACKEND_SERVICES",
+            "QUOTA_EXCEEDED_HEALTH_CHECKS",
+            "QUOTA_EXCEEDED_HTTP_ROUTES",
+            "QUOTA_EXCEEDED_TCP_ROUTES",
+            "QUOTA_EXCEEDED_TLS_ROUTES",
+            "QUOTA_EXCEEDED_TRAFFIC_POLICIES",
+            "QUOTA_EXCEEDED_ENDPOINT_POLICIES",
+            "QUOTA_EXCEEDED_GATEWAYS",
+            "QUOTA_EXCEEDED_MESHES",
+            "QUOTA_EXCEEDED_SERVER_TLS_POLICIES",
+            "QUOTA_EXCEEDED_CLIENT_TLS_POLICIES",
+            "QUOTA_EXCEEDED_SERVICE_LB_POLICIES",
+            "QUOTA_EXCEEDED_HTTP_FILTERS",
+            "QUOTA_EXCEEDED_TCP_FILTERS",
+            "QUOTA_EXCEEDED_NETWORK_ENDPOINT_GROUPS"
+          ]
+        },
+        "documentationLink": {
+          "description": "Links contains actionable information.",
+          "type": "string"
+        },
+        "details": {
+          "description": "A short summary about the issue.",
+          "type": "string"
+        },
+        "severity": {
+          "description": "Severity level of the condition.",
+          "type": "string",
+          "enumDescriptions": [
+            "Unspecified severity",
+            "Indicates an issue that prevents the mesh from operating correctly",
+            "Indicates a setting is likely wrong, but the mesh is still able to operate",
+            "An informational message, not requiring any action"
+          ],
+          "enum": [
+            "SEVERITY_UNSPECIFIED",
+            "ERROR",
+            "WARNING",
+            "INFO"
+          ]
         }
       }
     },
@@ -4459,13 +4762,106 @@
       }
     }
   },
+  "mtlsRootUrl": "https://gkehub.mtls.googleapis.com/",
   "documentationLink": "https://cloud.google.com/anthos/multicluster-management/connect/registering-a-cluster",
   "version": "v1alpha",
+  "basePath": "",
+  "batchPath": "batch",
   "description": "",
+  "version_module": true,
   "canonicalName": "GKE Hub",
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        }
+      }
+    }
+  },
+  "servicePath": "",
+  "parameters": {
+    "access_token": {
+      "type": "string",
+      "description": "OAuth access token.",
+      "location": "query"
+    },
+    "alt": {
+      "type": "string",
+      "description": "Data format for response.",
+      "default": "json",
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "location": "query"
+    },
+    "callback": {
+      "type": "string",
+      "description": "JSONP",
+      "location": "query"
+    },
+    "fields": {
+      "type": "string",
+      "description": "Selector specifying which fields to include in a partial response.",
+      "location": "query"
+    },
+    "key": {
+      "type": "string",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+      "location": "query"
+    },
+    "oauth_token": {
+      "type": "string",
+      "description": "OAuth 2.0 token for the current user.",
+      "location": "query"
+    },
+    "prettyPrint": {
+      "type": "boolean",
+      "description": "Returns response with indentations and line breaks.",
+      "default": "true",
+      "location": "query"
+    },
+    "quotaUser": {
+      "type": "string",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
+      "location": "query"
+    },
+    "upload_protocol": {
+      "type": "string",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
+      "location": "query"
+    },
+    "uploadType": {
+      "type": "string",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
+      "location": "query"
+    },
+    "$.xgafv": {
+      "type": "string",
+      "description": "V1 error format.",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "location": "query"
+    }
+  },
   "ownerDomain": "google.com",
-  "title": "GKE Hub API",
-  "mtlsRootUrl": "https://gkehub.mtls.googleapis.com/",
   "resources": {
     "projects": {
       "resources": {
@@ -6537,93 +6933,9 @@
       }
     }
   },
-  "parameters": {
-    "access_token": {
-      "type": "string",
-      "description": "OAuth access token.",
-      "location": "query"
-    },
-    "alt": {
-      "type": "string",
-      "description": "Data format for response.",
-      "default": "json",
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ],
-      "location": "query"
-    },
-    "callback": {
-      "type": "string",
-      "description": "JSONP",
-      "location": "query"
-    },
-    "fields": {
-      "type": "string",
-      "description": "Selector specifying which fields to include in a partial response.",
-      "location": "query"
-    },
-    "key": {
-      "type": "string",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
-      "location": "query"
-    },
-    "oauth_token": {
-      "type": "string",
-      "description": "OAuth 2.0 token for the current user.",
-      "location": "query"
-    },
-    "prettyPrint": {
-      "type": "boolean",
-      "description": "Returns response with indentations and line breaks.",
-      "default": "true",
-      "location": "query"
-    },
-    "quotaUser": {
-      "type": "string",
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
-      "location": "query"
-    },
-    "upload_protocol": {
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
-      "location": "query"
-    },
-    "uploadType": {
-      "type": "string",
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
-      "location": "query"
-    },
-    "$.xgafv": {
-      "type": "string",
-      "description": "V1 error format.",
-      "enum": [
-        "1",
-        "2"
-      ],
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ],
-      "location": "query"
-    }
-  },
-  "protocol": "rest",
-  "ownerName": "Google",
-  "revision": "20240225",
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "fullyEncodeReservedExpansion": true,
-  "baseUrl": "https://gkehub.googleapis.com/",
+  "kind": "discovery#restDescription",
   "id": "gkehub:v1alpha",
-  "servicePath": "",
-  "version_module": true
+  "ownerName": "Google",
+  "title": "GKE Hub API",
+  "discoveryVersion": "v1"
 }

@@ -1,10 +1,14 @@
 {
-  "mtlsRootUrl": "https://servicecontrol.mtls.googleapis.com/",
-  "kind": "discovery#restDescription",
-  "description": "Provides admission control and telemetry reporting for services integrated with Service Infrastructure. ",
-  "revision": "20240223",
-  "version": "v1",
-  "title": "Service Control API",
+  "version_module": true,
+  "name": "servicecontrol",
+  "revision": "20240426",
+  "discoveryVersion": "v1",
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
+  "ownerName": "Google",
+  "baseUrl": "https://servicecontrol.googleapis.com/",
   "auth": {
     "oauth2": {
       "scopes": {
@@ -17,9 +21,10 @@
       }
     }
   },
-  "discoveryVersion": "v1",
-  "ownerName": "Google",
-  "rootUrl": "https://servicecontrol.googleapis.com/",
+  "id": "servicecontrol:v1",
+  "title": "Service Control API",
+  "fullyEncodeReservedExpansion": true,
+  "servicePath": "",
   "parameters": {
     "access_token": {
       "type": "string",
@@ -97,13 +102,10 @@
       "location": "query"
     }
   },
-  "id": "servicecontrol:v1",
   "protocol": "rest",
-  "baseUrl": "https://servicecontrol.googleapis.com/",
-  "documentationLink": "https://cloud.google.com/service-control/",
-  "version_module": true,
-  "canonicalName": "Service Control",
-  "servicePath": "",
+  "description": "Provides admission control and telemetry reporting for services integrated with Service Infrastructure. ",
+  "version": "v1",
+  "basePath": "",
   "schemas": {
     "AllocateQuotaRequest": {
       "id": "AllocateQuotaRequest",
@@ -1567,6 +1569,24 @@
         "resourceAttributes": {
           "description": "Resource attributes used in IAM condition evaluation. This field contains resource attributes like resource type and resource name. To get the whole view of the attributes used in IAM condition evaluation, the user must also look into `AuditLog.request_metadata.request_attributes`.",
           "$ref": "Resource"
+        },
+        "permissionType": {
+          "description": "The type of the permission that was checked. For data access audit logs this corresponds with the permission type that must be enabled in the project/folder/organization IAM policy in order for the log to be written.",
+          "type": "string",
+          "enumDescriptions": [
+            "Default. Should not be used.",
+            "Permissions that gate reading resource configuration or metadata.",
+            "Permissions that gate modification of resource configuration or metadata.",
+            "Permissions that gate reading user-provided data.",
+            "Permissions that gate writing user-provided data."
+          ],
+          "enum": [
+            "PERMISSION_TYPE_UNSPECIFIED",
+            "ADMIN_READ",
+            "ADMIN_WRITE",
+            "DATA_READ",
+            "DATA_WRITE"
+          ]
         }
       }
     },
@@ -1834,6 +1854,10 @@
           "items": {
             "type": "string"
           }
+        },
+        "credentialId": {
+          "description": "Identifies the client credential id used for authentication. credential_id is in the format of AUTH_METHOD:IDENTIFIER, e.g. \"serviceaccount:XXXXX, apikey:XXXXX\" where the format of the IDENTIFIER can vary for different AUTH_METHODs.",
+          "type": "string"
         }
       }
     },
@@ -2089,16 +2113,72 @@
           "type": "string"
         }
       }
+    },
+    "V1ResourceEvent": {
+      "id": "V1ResourceEvent",
+      "description": "Report v2 extension proto for passing the resource metadata associated with a resource create/update/delete/undelete event from ESF to Chemist. ResourceEvent proto should be serialized into the ReportRequest.operations.extensions.",
+      "type": "object",
+      "properties": {
+        "payload": {
+          "description": "The payload contains metadata associated with the resource event. A ResourceEventPayloadStatus is provided instead if the original payload cannot be returned due to a limitation (e.g. size limit).",
+          "type": "object",
+          "additionalProperties": {
+            "type": "any",
+            "description": "Properties of the object. Contains field @type with type URL."
+          }
+        },
+        "type": {
+          "description": "The resource event type determines how the backend service should process the event.",
+          "type": "string",
+          "enumDescriptions": [
+            "The resource event type is unclear. We do not expect any events to fall into this category.",
+            "The resource is created/inserted.",
+            "The resource is updated.",
+            "The resource is deleted.",
+            "The resource is un-deleted."
+          ],
+          "enum": [
+            "TYPE_UNSPECIFIED",
+            "CREATE",
+            "UPDATE",
+            "DELETE",
+            "UNDELETE"
+          ]
+        },
+        "destinations": {
+          "description": "The destinations field determines which backend services should handle the event. This should be specified as a comma-delimited string.",
+          "type": "string"
+        },
+        "resource": {
+          "description": "The resource associated with the event.",
+          "$ref": "Resource"
+        },
+        "parent": {
+          "description": "The parent resource for the resource.",
+          "$ref": "Resource"
+        },
+        "path": {
+          "description": "The api path the resource event was created in. This should match the source of the `payload` field. For direct integrations with Chemist, this should generally be the RESPONSE. go/resource-event-pipeline-type",
+          "type": "string",
+          "enumDescriptions": [
+            "Default value. Do not use.",
+            "The request path.",
+            "The response path."
+          ],
+          "enum": [
+            "API_PATH_UNSPECIFIED",
+            "REQUEST",
+            "RESPONSE"
+          ]
+        }
+      }
     }
   },
-  "fullyEncodeReservedExpansion": true,
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "batchPath": "batch",
-  "basePath": "",
-  "name": "servicecontrol",
+  "kind": "discovery#restDescription",
+  "mtlsRootUrl": "https://servicecontrol.mtls.googleapis.com/",
+  "documentationLink": "https://cloud.google.com/service-control/",
+  "ownerDomain": "google.com",
+  "canonicalName": "Service Control",
   "resources": {
     "services": {
       "methods": {
@@ -2189,5 +2269,6 @@
       }
     }
   },
-  "ownerDomain": "google.com"
+  "rootUrl": "https://servicecontrol.googleapis.com/",
+  "batchPath": "batch"
 }

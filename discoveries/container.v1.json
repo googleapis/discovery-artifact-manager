@@ -1,10 +1,6 @@
 {
-  "mtlsRootUrl": "https://container.mtls.googleapis.com/",
-  "rootUrl": "https://container.googleapis.com/",
-  "ownerName": "Google",
   "id": "container:v1",
-  "revision": "20240214",
-  "documentationLink": "https://cloud.google.com/container-engine/",
+  "servicePath": "",
   "parameters": {
     "access_token": {
       "type": "string",
@@ -82,8 +78,7 @@
       "location": "query"
     }
   },
-  "canonicalName": "Container",
-  "fullyEncodeReservedExpansion": true,
+  "name": "container",
   "auth": {
     "oauth2": {
       "scopes": {
@@ -93,20 +88,13 @@
       }
     }
   },
-  "name": "container",
-  "servicePath": "",
-  "version": "v1",
-  "description": "Builds and manages container-based applications, powered by the open source Kubernetes technology.",
-  "batchPath": "batch",
   "title": "Kubernetes Engine API",
-  "protocol": "rest",
-  "basePath": "",
-  "baseUrl": "https://container.googleapis.com/",
+  "fullyEncodeReservedExpansion": true,
+  "canonicalName": "Container",
+  "ownerDomain": "google.com",
+  "kind": "discovery#restDescription",
+  "rootUrl": "https://container.googleapis.com/",
   "discoveryVersion": "v1",
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
   "schemas": {
     "ListClustersResponse": {
       "id": "ListClustersResponse",
@@ -616,6 +604,10 @@
           "description": "Parameters for node pools to be backed by shared sole tenant node groups.",
           "$ref": "SoleTenantConfig"
         },
+        "containerdConfig": {
+          "description": "Parameters for containerd customization.",
+          "$ref": "ContainerdConfig"
+        },
         "resourceManagerTags": {
           "description": "A map of resource manager tag keys and values to be attached to the nodes.",
           "$ref": "ResourceManagerTags"
@@ -630,6 +622,10 @@
           "items": {
             "$ref": "SecondaryBootDisk"
           }
+        },
+        "secondaryBootDiskUpdateStrategy": {
+          "description": "Secondary boot disk update strategy.",
+          "$ref": "SecondaryBootDiskUpdateStrategy"
         }
       }
     },
@@ -676,11 +672,13 @@
           "type": "string",
           "enumDescriptions": [
             "Default value.",
-            "GPUs are time-shared between containers."
+            "GPUs are time-shared between containers.",
+            "GPUs are shared between containers with NVIDIA MPS."
           ],
           "enum": [
             "GPU_SHARING_STRATEGY_UNSPECIFIED",
-            "TIME_SHARING"
+            "TIME_SHARING",
+            "MPS"
           ]
         }
       }
@@ -853,6 +851,27 @@
             "CGROUP_MODE_V1",
             "CGROUP_MODE_V2"
           ]
+        },
+        "hugepages": {
+          "description": "Optional. Amounts for 2M and 1G hugepages",
+          "$ref": "HugepagesConfig"
+        }
+      }
+    },
+    "HugepagesConfig": {
+      "id": "HugepagesConfig",
+      "description": "Hugepages amount in both 2m and 1g size",
+      "type": "object",
+      "properties": {
+        "hugepageSize2m": {
+          "description": "Optional. Amount of 2M hugepages",
+          "type": "integer",
+          "format": "int32"
+        },
+        "hugepageSize1g": {
+          "description": "Optional. Amount of 1G hugepages",
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -904,6 +923,10 @@
           "description": "The number of threads per physical core. To disable simultaneous multithreading (SMT) set this to 1. If unset, the maximum number of threads supported per core by the underlying processor is assumed.",
           "type": "string",
           "format": "int64"
+        },
+        "enableNestedVirtualization": {
+          "description": "Whether or not to enable nested virtualization (defaults to false).",
+          "type": "boolean"
         }
       }
     },
@@ -1063,6 +1086,64 @@
         }
       }
     },
+    "ContainerdConfig": {
+      "id": "ContainerdConfig",
+      "description": "ContainerdConfig contains configuration to customize containerd.",
+      "type": "object",
+      "properties": {
+        "privateRegistryAccessConfig": {
+          "description": "PrivateRegistryAccessConfig is used to configure access configuration for private container registries.",
+          "$ref": "PrivateRegistryAccessConfig"
+        }
+      }
+    },
+    "PrivateRegistryAccessConfig": {
+      "id": "PrivateRegistryAccessConfig",
+      "description": "PrivateRegistryAccessConfig contains access configuration for private container registries.",
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "description": "Private registry access is enabled.",
+          "type": "boolean"
+        },
+        "certificateAuthorityDomainConfig": {
+          "description": "Private registry access configuration.",
+          "type": "array",
+          "items": {
+            "$ref": "CertificateAuthorityDomainConfig"
+          }
+        }
+      }
+    },
+    "CertificateAuthorityDomainConfig": {
+      "id": "CertificateAuthorityDomainConfig",
+      "description": "CertificateAuthorityDomainConfig configures one or more fully qualified domain names (FQDN) to a specific certificate.",
+      "type": "object",
+      "properties": {
+        "fqdns": {
+          "description": "List of fully qualified domain names (FQDN). Specifying port is supported. Wilcards are NOT supported. Examples: - my.customdomain.com - 10.0.1.2:5000",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "gcpSecretManagerCertificateConfig": {
+          "description": "Google Secret Manager (GCP) certificate configuration.",
+          "$ref": "GCPSecretManagerCertificateConfig"
+        }
+      }
+    },
+    "GCPSecretManagerCertificateConfig": {
+      "id": "GCPSecretManagerCertificateConfig",
+      "description": "GCPSecretManagerCertificateConfig configures a secret from [Google Secret Manager](https://cloud.google.com/secret-manager).",
+      "type": "object",
+      "properties": {
+        "secretUri": {
+          "description": "Secret URI, in the form \"projects/$PROJECT_ID/secrets/$SECRET_NAME/versions/$VERSION\". Version can be fixed (e.g. \"2\") or \"latest\"",
+          "type": "string"
+        }
+      }
+    },
     "ResourceManagerTags": {
       "id": "ResourceManagerTags",
       "description": "A map of resource manager tag keys and values to be attached to the nodes for managing Compute Engine firewalls using Network Firewall Policies. Tags must be according to specifications in https://cloud.google.com/vpc/docs/tags-firewalls-overview#specifications. A maximum of 5 tag key-value pairs can be specified. Existing tags will be replaced with new values.",
@@ -1099,6 +1180,12 @@
           "type": "string"
         }
       }
+    },
+    "SecondaryBootDiskUpdateStrategy": {
+      "id": "SecondaryBootDiskUpdateStrategy",
+      "description": "SecondaryBootDiskUpdateStrategy is a placeholder which will be extended in the future to define different options for updating secondary boot disks.",
+      "type": "object",
+      "properties": {}
     },
     "MasterAuth": {
       "id": "MasterAuth",
@@ -2506,7 +2593,7 @@
           "type": "boolean"
         },
         "inTransitEncryptionConfig": {
-          "description": "Specify the details of in-transit encryption.",
+          "description": "Specify the details of in-transit encryption. Now named inter-node transparent encryption.",
           "type": "string",
           "enumDescriptions": [
             "Unspecified, will be inferred as default - IN_TRANSIT_ENCRYPTION_UNSPECIFIED.",
@@ -2518,6 +2605,10 @@
             "IN_TRANSIT_ENCRYPTION_DISABLED",
             "IN_TRANSIT_ENCRYPTION_INTER_NODE_TRANSPARENT"
           ]
+        },
+        "enableCiliumClusterwideNetworkPolicy": {
+          "description": "Whether CiliumClusterwideNetworkPolicy is enabled on this cluster.",
+          "type": "boolean"
         }
       }
     },
@@ -2569,6 +2660,10 @@
         },
         "clusterDnsDomain": {
           "description": "cluster_dns_domain is the suffix used for all cluster service records.",
+          "type": "string"
+        },
+        "additiveVpcScopeDnsDomain": {
+          "description": "Optional. The domain used in Additive VPC scope.",
           "type": "string"
         }
       }
@@ -2754,6 +2849,65 @@
             "ENCRYPTED",
             "DECRYPTED"
           ]
+        },
+        "currentState": {
+          "description": "Output only. The current state of etcd encryption.",
+          "readOnly": true,
+          "type": "string",
+          "enumDescriptions": [
+            "Should never be set",
+            "Secrets in etcd are encrypted.",
+            "Secrets in etcd are stored in plain text (at etcd level) - this is unrelated to Compute Engine level full disk encryption.",
+            "Encryption (or re-encryption with a different CloudKMS key) of Secrets is in progress.",
+            "Encryption (or re-encryption with a different CloudKMS key) of Secrets in etcd encountered an error.",
+            "De-crypting Secrets to plain text in etcd is in progress.",
+            "De-crypting Secrets to plain text in etcd encountered an error."
+          ],
+          "enum": [
+            "CURRENT_STATE_UNSPECIFIED",
+            "CURRENT_STATE_ENCRYPTED",
+            "CURRENT_STATE_DECRYPTED",
+            "CURRENT_STATE_ENCRYPTION_PENDING",
+            "CURRENT_STATE_ENCRYPTION_ERROR",
+            "CURRENT_STATE_DECRYPTION_PENDING",
+            "CURRENT_STATE_DECRYPTION_ERROR"
+          ]
+        },
+        "decryptionKeys": {
+          "description": "Output only. Keys in use by the cluster for decrypting existing objects, in addition to the key in `key_name`. Each item is a CloudKMS key resource.",
+          "readOnly": true,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lastOperationErrors": {
+          "description": "Output only. Records errors seen during DatabaseEncryption update operations.",
+          "readOnly": true,
+          "type": "array",
+          "items": {
+            "$ref": "OperationError"
+          }
+        }
+      }
+    },
+    "OperationError": {
+      "id": "OperationError",
+      "description": "OperationError records errors seen from CloudKMS keys encountered during updates to DatabaseEncryption configuration.",
+      "type": "object",
+      "properties": {
+        "keyName": {
+          "description": "CloudKMS key resource that had the error.",
+          "type": "string"
+        },
+        "errorMessage": {
+          "description": "Description of the error seen during the operation.",
+          "type": "string"
+        },
+        "timestamp": {
+          "description": "Time when the CloudKMS error was seen.",
+          "type": "string",
+          "format": "google-datetime"
         }
       }
     },
@@ -2969,6 +3123,10 @@
         "loggingConfig": {
           "description": "Logging configuration for node pools.",
           "$ref": "NodePoolLoggingConfig"
+        },
+        "containerdConfig": {
+          "description": "Parameters for containerd customization.",
+          "$ref": "ContainerdConfig"
         }
       }
     },
@@ -3173,12 +3331,14 @@
           "enumDescriptions": [
             "Default value not specified.",
             "Disables Security Posture features on the cluster.",
-            "Applies Security Posture features on the cluster."
+            "Applies Security Posture features on the cluster.",
+            "Applies the Security Posture off cluster Enterprise level features."
           ],
           "enum": [
             "MODE_UNSPECIFIED",
             "DISABLED",
-            "BASIC"
+            "BASIC",
+            "ENTERPRISE"
           ]
         },
         "vulnerabilityMode": {
@@ -3626,7 +3786,7 @@
           "$ref": "VerticalPodAutoscaling"
         },
         "desiredPrivateClusterConfig": {
-          "description": "The desired private cluster configuration.",
+          "description": "The desired private cluster configuration. master_global_access_config is the only field that can be changed via this field. See also ClusterUpdate.desired_enable_private_endpoint for modifying other fields within PrivateClusterConfig.",
           "$ref": "PrivateClusterConfig"
         },
         "desiredIntraNodeVisibilityConfig": {
@@ -3781,6 +3941,14 @@
           "description": "Desired Beta APIs to be enabled for cluster.",
           "$ref": "K8sBetaAPIConfig"
         },
+        "desiredContainerdConfig": {
+          "description": "The desired containerd config for the cluster.",
+          "$ref": "ContainerdConfig"
+        },
+        "desiredEnableMultiNetworking": {
+          "description": "Enable/Disable Multi-Networking for the cluster",
+          "type": "boolean"
+        },
         "desiredNodePoolAutoConfigResourceManagerTags": {
           "description": "The desired resource manager tags that apply to all auto-provisioned node pools in autopilot clusters and node auto-provisioning enabled clusters.",
           "$ref": "ResourceManagerTags"
@@ -3798,6 +3966,10 @@
             "IN_TRANSIT_ENCRYPTION_DISABLED",
             "IN_TRANSIT_ENCRYPTION_INTER_NODE_TRANSPARENT"
           ]
+        },
+        "desiredEnableCiliumClusterwideNetworkPolicy": {
+          "description": "Enable/Disable Cilium Clusterwide Network Policy for the cluster.",
+          "type": "boolean"
         }
       }
     },
@@ -3931,6 +4103,13 @@
           "description": "Parameters that can be configured on Windows nodes.",
           "$ref": "WindowsNodeConfig"
         },
+        "accelerators": {
+          "description": "A list of hardware accelerators to be attached to each node. See https://cloud.google.com/compute/docs/gpus for more information about support for GPUs.",
+          "type": "array",
+          "items": {
+            "$ref": "AcceleratorConfig"
+          }
+        },
         "machineType": {
           "description": "Optional. The desired [Google Compute Engine machine type](https://cloud.google.com/compute/docs/machine-types) for nodes in the node pool. Initiates an upgrade operation that migrates the nodes in the node pool to the specified machine type.",
           "type": "string"
@@ -3947,6 +4126,10 @@
         "resourceManagerTags": {
           "description": "Desired resource manager tag keys and values to be attached to the nodes for managing Compute Engine firewalls using Network Firewall Policies. Existing tags will be replaced with new values.",
           "$ref": "ResourceManagerTags"
+        },
+        "containerdConfig": {
+          "description": "The desired containerd config for nodes in the node pool. Initiates an upgrade operation that recreates the nodes with the new config.",
+          "$ref": "ContainerdConfig"
         },
         "queuedProvisioning": {
           "description": "Specifies the configuration of queued provisioning.",
@@ -5109,8 +5292,15 @@
       }
     }
   },
-  "ownerDomain": "google.com",
-  "kind": "discovery#restDescription",
+  "ownerName": "Google",
+  "basePath": "",
+  "baseUrl": "https://container.googleapis.com/",
+  "mtlsRootUrl": "https://container.mtls.googleapis.com/",
+  "documentationLink": "https://cloud.google.com/container-engine/",
+  "protocol": "rest",
+  "description": "Builds and manages container-based applications, powered by the open source Kubernetes technology.",
+  "version": "v1",
+  "batchPath": "batch",
   "resources": {
     "projects": {
       "resources": {
@@ -7546,5 +7736,10 @@
         }
       }
     }
+  },
+  "revision": "20240409",
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
   }
 }

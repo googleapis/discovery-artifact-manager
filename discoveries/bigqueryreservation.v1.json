@@ -1,85 +1,30 @@
 {
-  "name": "bigqueryreservation",
-  "discoveryVersion": "v1",
-  "ownerDomain": "google.com",
-  "parameters": {
-    "access_token": {
-      "type": "string",
-      "description": "OAuth access token.",
-      "location": "query"
-    },
-    "alt": {
-      "type": "string",
-      "description": "Data format for response.",
-      "default": "json",
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ],
-      "location": "query"
-    },
-    "callback": {
-      "type": "string",
-      "description": "JSONP",
-      "location": "query"
-    },
-    "fields": {
-      "type": "string",
-      "description": "Selector specifying which fields to include in a partial response.",
-      "location": "query"
-    },
-    "key": {
-      "type": "string",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
-      "location": "query"
-    },
-    "oauth_token": {
-      "type": "string",
-      "description": "OAuth 2.0 token for the current user.",
-      "location": "query"
-    },
-    "prettyPrint": {
-      "type": "boolean",
-      "description": "Returns response with indentations and line breaks.",
-      "default": "true",
-      "location": "query"
-    },
-    "quotaUser": {
-      "type": "string",
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
-      "location": "query"
-    },
-    "upload_protocol": {
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
-      "location": "query"
-    },
-    "uploadType": {
-      "type": "string",
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
-      "location": "query"
-    },
-    "$.xgafv": {
-      "type": "string",
-      "description": "V1 error format.",
-      "enum": [
-        "1",
-        "2"
-      ],
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ],
-      "location": "query"
+  "rootUrl": "https://bigqueryreservation.googleapis.com/",
+  "servicePath": "",
+  "baseUrl": "https://bigqueryreservation.googleapis.com/",
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
+  "batchPath": "batch",
+  "fullyEncodeReservedExpansion": true,
+  "documentationLink": "https://cloud.google.com/bigquery/",
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/bigquery": {
+          "description": "View and manage your data in Google BigQuery and see the email address for your Google Account"
+        },
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        }
+      }
     }
   },
-  "ownerName": "Google",
+  "version": "v1",
+  "version_module": true,
+  "description": "A service to modify your BigQuery flat-rate reservations.",
+  "protocol": "rest",
   "schemas": {
     "Reservation": {
       "id": "Reservation",
@@ -104,7 +49,7 @@
           "$ref": "Autoscale"
         },
         "concurrency": {
-          "description": "Job concurrency target which sets a soft upper bound on the number of jobs that can run concurrently in this reservation. This is a soft target due to asynchronous nature of the system and various optimizations for small queries. Default value is 0 which means that concurrency target will be automatically computed by the system. NOTE: this field is exposed as `target_job_concurrency` in the Information Schema, DDL and BQ CLI.",
+          "description": "Job concurrency target which sets a soft upper bound on the number of jobs that can run concurrently in this reservation. This is a soft target due to asynchronous nature of the system and various optimizations for small queries. Default value is 0 which means that concurrency target will be automatically computed by the system. NOTE: this field is exposed as target job concurrency in the Information Schema, DDL and BQ CLI.",
           "type": "string",
           "format": "int64"
         },
@@ -139,6 +84,18 @@
             "ENTERPRISE",
             "ENTERPRISE_PLUS"
           ]
+        },
+        "primaryLocation": {
+          "description": "Optional. The primary location of the reservation. The field is only meaningful for reservation used for cross region disaster recovery. The field is output only for customers and should not be specified, however, the google.api.field_behavior is not set to OUTPUT_ONLY since these fields are set in rerouted requests sent across regions.",
+          "type": "string"
+        },
+        "secondaryLocation": {
+          "description": "Optional. The secondary location of the reservation which is used for cross region disaster recovery purposes. Customer can set this in create/update reservation calls to create a failover reservation or convert a non-failover reservation to a failover reservation.",
+          "type": "string"
+        },
+        "originalPrimaryLocation": {
+          "description": "Optional. The original primary location of the reservation which is set only during its creation and remains unchanged afterwards. It can be used by the customer to answer questions about disaster recovery billing. The field is output only for customers and should not be specified, however, the google.api.field_behavior is not set to OUTPUT_ONLY since these fields are set in rerouted requests sent across regions.",
+          "type": "string"
         }
       }
     },
@@ -181,6 +138,12 @@
     "Empty": {
       "id": "Empty",
       "description": "A generic empty message that you can re-use to avoid defining duplicated empty messages in your APIs. A typical example is to use it as the request or the response type of an API method. For instance: service Foo { rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty); }",
+      "type": "object",
+      "properties": {}
+    },
+    "FailoverReservationRequest": {
+      "id": "FailoverReservationRequest",
+      "description": "The request for ReservationService.FailoverReservation.",
       "type": "object",
       "properties": {}
     },
@@ -448,14 +411,16 @@
             "Pipeline (load/export) jobs from the project will use the reservation.",
             "Query jobs from the project will use the reservation.",
             "BigQuery ML jobs that use services external to BigQuery for model training. These jobs will not utilize idle slots from other reservations.",
-            "Background jobs that BigQuery runs for the customers in the background."
+            "Background jobs that BigQuery runs for the customers in the background.",
+            "Continuous SQL jobs will use this reservation. Reservations with continuous assignments cannot be mixed with non-continuous assignments."
           ],
           "enum": [
             "JOB_TYPE_UNSPECIFIED",
             "PIPELINE",
             "QUERY",
             "ML_EXTERNAL",
-            "BACKGROUND"
+            "BACKGROUND",
+            "CONTINUOUS"
           ]
         },
         "state": {
@@ -593,6 +558,86 @@
       }
     }
   },
+  "basePath": "",
+  "parameters": {
+    "access_token": {
+      "type": "string",
+      "description": "OAuth access token.",
+      "location": "query"
+    },
+    "alt": {
+      "type": "string",
+      "description": "Data format for response.",
+      "default": "json",
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "location": "query"
+    },
+    "callback": {
+      "type": "string",
+      "description": "JSONP",
+      "location": "query"
+    },
+    "fields": {
+      "type": "string",
+      "description": "Selector specifying which fields to include in a partial response.",
+      "location": "query"
+    },
+    "key": {
+      "type": "string",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+      "location": "query"
+    },
+    "oauth_token": {
+      "type": "string",
+      "description": "OAuth 2.0 token for the current user.",
+      "location": "query"
+    },
+    "prettyPrint": {
+      "type": "boolean",
+      "description": "Returns response with indentations and line breaks.",
+      "default": "true",
+      "location": "query"
+    },
+    "quotaUser": {
+      "type": "string",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
+      "location": "query"
+    },
+    "upload_protocol": {
+      "type": "string",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
+      "location": "query"
+    },
+    "uploadType": {
+      "type": "string",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
+      "location": "query"
+    },
+    "$.xgafv": {
+      "type": "string",
+      "description": "V1 error format.",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "location": "query"
+    }
+  },
+  "ownerDomain": "google.com",
+  "discoveryVersion": "v1",
   "resources": {
     "projects": {
       "resources": {
@@ -905,6 +950,35 @@
                     "https://www.googleapis.com/auth/cloud-platform"
                   ],
                   "description": "Updates an existing reservation resource."
+                },
+                "failoverReservation": {
+                  "id": "bigqueryreservation.projects.locations.reservations.failoverReservation",
+                  "path": "v1/{+name}:failoverReservation",
+                  "flatPath": "v1/projects/{projectsId}/locations/{locationsId}/reservations/{reservationsId}:failoverReservation",
+                  "httpMethod": "POST",
+                  "parameters": {
+                    "name": {
+                      "description": "Required. Resource name of the reservation to failover. E.g., `projects/myproject/locations/US/reservations/team1-prod`",
+                      "pattern": "^projects/[^/]+/locations/[^/]+/reservations/[^/]+$",
+                      "location": "path",
+                      "required": true,
+                      "type": "string"
+                    }
+                  },
+                  "parameterOrder": [
+                    "name"
+                  ],
+                  "request": {
+                    "$ref": "FailoverReservationRequest"
+                  },
+                  "response": {
+                    "$ref": "Reservation"
+                  },
+                  "scopes": [
+                    "https://www.googleapis.com/auth/bigquery",
+                    "https://www.googleapis.com/auth/cloud-platform"
+                  ],
+                  "description": "Failover a reservation to the secondary location. The operation should be done in the current secondary location, which will be promoted to the new primary location for the reservation. Attempting to failover a reservation in the current primary location will fail with the error code `google.rpc.Code.FAILED_PRECONDITION`."
                 }
               },
               "resources": {
@@ -1310,18 +1384,9 @@
       }
     }
   },
-  "revision": "20240217",
-  "canonicalName": "BigQuery Reservation",
-  "baseUrl": "https://bigqueryreservation.googleapis.com/",
-  "protocol": "rest",
-  "description": "A service to modify your BigQuery flat-rate reservations.",
-  "batchPath": "batch",
-  "version": "v1",
-  "rootUrl": "https://bigqueryreservation.googleapis.com/",
-  "version_module": true,
-  "mtlsRootUrl": "https://bigqueryreservation.mtls.googleapis.com/",
-  "basePath": "",
-  "fullyEncodeReservedExpansion": true,
+  "name": "bigqueryreservation",
+  "id": "bigqueryreservation:v1",
+  "kind": "discovery#restDescription",
   "endpoints": [
     {
       "endpointUrl": "https://bigqueryreservation.me-central2.rep.googleapis.com/",
@@ -1349,25 +1414,9 @@
       "description": "Regional Endpoint"
     }
   ],
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "documentationLink": "https://cloud.google.com/bigquery/",
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/bigquery": {
-          "description": "View and manage your data in Google BigQuery and see the email address for your Google Account"
-        },
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
-        }
-      }
-    }
-  },
-  "servicePath": "",
-  "id": "bigqueryreservation:v1",
   "title": "BigQuery Reservation API",
-  "kind": "discovery#restDescription"
+  "mtlsRootUrl": "https://bigqueryreservation.mtls.googleapis.com/",
+  "canonicalName": "BigQuery Reservation",
+  "revision": "20240318",
+  "ownerName": "Google"
 }

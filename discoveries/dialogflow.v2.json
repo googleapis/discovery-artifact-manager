@@ -1,21 +1,8 @@
 {
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "rootUrl": "https://dialogflow.googleapis.com/",
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
-        },
-        "https://www.googleapis.com/auth/dialogflow": {
-          "description": "View, manage and query your Dialogflow agents"
-        }
-      }
-    }
-  },
+  "ownerName": "Google",
+  "version_module": true,
+  "description": "Builds conversational interfaces (for example, chatbots, and voice-powered apps and devices).",
+  "protocol": "rest",
   "schemas": {
     "GoogleLongrunningListOperationsResponse": {
       "id": "GoogleLongrunningListOperationsResponse",
@@ -5219,6 +5206,10 @@
         "sentimentAnalysisResult": {
           "description": "The sentiment analysis result of the current user request. The field is filled when sentiment analysis is configured to be enabled for the request.",
           "$ref": "GoogleCloudDialogflowCxV3WebhookRequestSentimentAnalysisResult"
+        },
+        "languageInfo": {
+          "description": "Information about the language of the request.",
+          "$ref": "GoogleCloudDialogflowCxV3LanguageInfo"
         }
       }
     },
@@ -5593,6 +5584,26 @@
         },
         "magnitude": {
           "description": "A non-negative number in the [0, +inf) range, which represents the absolute magnitude of sentiment, regardless of score (positive or negative).",
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "GoogleCloudDialogflowCxV3LanguageInfo": {
+      "id": "GoogleCloudDialogflowCxV3LanguageInfo",
+      "description": "Represents the language information of the request.",
+      "type": "object",
+      "properties": {
+        "inputLanguageCode": {
+          "description": "The language code specified in the original request.",
+          "type": "string"
+        },
+        "resolvedLanguageCode": {
+          "description": "The language code detected for this request based on the user conversation.",
+          "type": "string"
+        },
+        "confidenceScore": {
+          "description": "The confidence score of the detected language between 0 and 1.",
           "type": "number",
           "format": "float"
         }
@@ -6349,6 +6360,10 @@
           "description": "If present, incoming audio is exported by Dialogflow to the configured Google Cloud Storage destination. Exposed at the following levels: - Agent level - Flow level",
           "$ref": "GoogleCloudDialogflowCxV3GcsDestination"
         },
+        "speechSettings": {
+          "description": "Settings for speech to text detection. Exposed at the following levels: - Agent level - Flow level - Page level - Parameter level",
+          "$ref": "GoogleCloudDialogflowCxV3AdvancedSettingsSpeechSettings"
+        },
         "dtmfSettings": {
           "description": "Settings for DTMF. Exposed at the following levels: - Agent level - Flow level - Page level - Parameter level.",
           "$ref": "GoogleCloudDialogflowCxV3AdvancedSettingsDtmfSettings"
@@ -6367,6 +6382,34 @@
         "uri": {
           "description": "Required. The Google Cloud Storage URI for the exported objects. A URI is of the form: `gs://bucket/object-name-or-prefix` Whether a full object name, or just a prefix, its usage depends on the Dialogflow operation.",
           "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDialogflowCxV3AdvancedSettingsSpeechSettings": {
+      "id": "GoogleCloudDialogflowCxV3AdvancedSettingsSpeechSettings",
+      "description": "Define behaviors of speech to text detection.",
+      "type": "object",
+      "properties": {
+        "endpointerSensitivity": {
+          "description": "Sensitivity of the speech model that detects the end of speech. Scale from 0 to 100.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "noSpeechTimeout": {
+          "description": "Timeout before detecting no speech.",
+          "type": "string",
+          "format": "google-duration"
+        },
+        "useTimeoutBasedEndpointing": {
+          "description": "Use timeout based endpointing, interpreting endpointer sensitivy as seconds of timeout value.",
+          "type": "boolean"
+        },
+        "models": {
+          "description": "Mapping from language to Speech-to-Text model. The mapped Speech-to-Text model will be selected for requests from its corresponding language. For more information, see [Speech models](https://cloud.google.com/dialogflow/cx/docs/concept/speech-models).",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       }
     },
@@ -7085,6 +7128,26 @@
             "format": "byte"
           }
         },
+        "oauthConfig": {
+          "description": "Optional. The OAuth configuration of the webhook. If specified, Dialogflow will initiate the OAuth client credential flow to exchange an access token from the 3rd party platform and put it in the auth header.",
+          "$ref": "GoogleCloudDialogflowCxV3WebhookGenericWebServiceOAuthConfig"
+        },
+        "serviceAgentAuth": {
+          "description": "Optional. Indicate the auth token type generated from the [Diglogflow service agent](https://cloud.google.com/iam/docs/service-agents#dialogflow-service-agent). The generated token is sent in the Authorization header.",
+          "type": "string",
+          "enumDescriptions": [
+            "Service agent auth type unspecified. Default to ID_TOKEN.",
+            "No token used.",
+            "Use [ID token](https://cloud.google.com/docs/authentication/token-types#id) generated from service agent. This can be used to access Cloud Function and Cloud Run after you grant Invoker role to `service-@gcp-sa-dialogflow.iam.gserviceaccount.com`.",
+            "Use [access token](https://cloud.google.com/docs/authentication/token-types#access) generated from service agent. This can be used to access other Google Cloud APIs after you grant required roles to `service-@gcp-sa-dialogflow.iam.gserviceaccount.com`."
+          ],
+          "enum": [
+            "SERVICE_AGENT_AUTH_UNSPECIFIED",
+            "NONE",
+            "ID_TOKEN",
+            "ACCESS_TOKEN"
+          ]
+        },
         "webhookType": {
           "description": "Optional. Type of the webhook.",
           "type": "string",
@@ -7131,6 +7194,32 @@
           "description": "Optional. Maps the values extracted from specific fields of the flexible webhook response into session parameters. - Key: session parameter name - Value: field path in the webhook response",
           "type": "object",
           "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "GoogleCloudDialogflowCxV3WebhookGenericWebServiceOAuthConfig": {
+      "id": "GoogleCloudDialogflowCxV3WebhookGenericWebServiceOAuthConfig",
+      "description": "Represents configuration of OAuth client credential flow for 3rd party API authentication.",
+      "type": "object",
+      "properties": {
+        "clientId": {
+          "description": "Required. The client ID provided by the 3rd party platform.",
+          "type": "string"
+        },
+        "clientSecret": {
+          "description": "Required. The client secret provided by the 3rd party platform.",
+          "type": "string"
+        },
+        "tokenEndpoint": {
+          "description": "Required. The token endpoint provided by the 3rd party platform to exchange an access token.",
+          "type": "string"
+        },
+        "scopes": {
+          "description": "Optional. The OAuth scopes to grant.",
+          "type": "array",
+          "items": {
             "type": "string"
           }
         }
@@ -7497,6 +7586,10 @@
         "sentimentAnalysisResult": {
           "description": "The sentiment analysis result of the current user request. The field is filled when sentiment analysis is configured to be enabled for the request.",
           "$ref": "GoogleCloudDialogflowCxV3beta1WebhookRequestSentimentAnalysisResult"
+        },
+        "languageInfo": {
+          "description": "Information about the language of the request.",
+          "$ref": "GoogleCloudDialogflowCxV3beta1LanguageInfo"
         }
       }
     },
@@ -7855,6 +7948,26 @@
         },
         "magnitude": {
           "description": "A non-negative number in the [0, +inf) range, which represents the absolute magnitude of sentiment, regardless of score (positive or negative).",
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "GoogleCloudDialogflowCxV3beta1LanguageInfo": {
+      "id": "GoogleCloudDialogflowCxV3beta1LanguageInfo",
+      "description": "Represents the language information of the request.",
+      "type": "object",
+      "properties": {
+        "inputLanguageCode": {
+          "description": "The language code specified in the original request.",
+          "type": "string"
+        },
+        "resolvedLanguageCode": {
+          "description": "The language code detected for this request based on the user conversation.",
+          "type": "string"
+        },
+        "confidenceScore": {
+          "description": "The confidence score of the detected language between 0 and 1.",
           "type": "number",
           "format": "float"
         }
@@ -8611,6 +8724,10 @@
           "description": "If present, incoming audio is exported by Dialogflow to the configured Google Cloud Storage destination. Exposed at the following levels: - Agent level - Flow level",
           "$ref": "GoogleCloudDialogflowCxV3beta1GcsDestination"
         },
+        "speechSettings": {
+          "description": "Settings for speech to text detection. Exposed at the following levels: - Agent level - Flow level - Page level - Parameter level",
+          "$ref": "GoogleCloudDialogflowCxV3beta1AdvancedSettingsSpeechSettings"
+        },
         "dtmfSettings": {
           "description": "Settings for DTMF. Exposed at the following levels: - Agent level - Flow level - Page level - Parameter level.",
           "$ref": "GoogleCloudDialogflowCxV3beta1AdvancedSettingsDtmfSettings"
@@ -8629,6 +8746,34 @@
         "uri": {
           "description": "Required. The Google Cloud Storage URI for the exported objects. A URI is of the form: `gs://bucket/object-name-or-prefix` Whether a full object name, or just a prefix, its usage depends on the Dialogflow operation.",
           "type": "string"
+        }
+      }
+    },
+    "GoogleCloudDialogflowCxV3beta1AdvancedSettingsSpeechSettings": {
+      "id": "GoogleCloudDialogflowCxV3beta1AdvancedSettingsSpeechSettings",
+      "description": "Define behaviors of speech to text detection.",
+      "type": "object",
+      "properties": {
+        "endpointerSensitivity": {
+          "description": "Sensitivity of the speech model that detects the end of speech. Scale from 0 to 100.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "noSpeechTimeout": {
+          "description": "Timeout before detecting no speech.",
+          "type": "string",
+          "format": "google-duration"
+        },
+        "useTimeoutBasedEndpointing": {
+          "description": "Use timeout based endpointing, interpreting endpointer sensitivy as seconds of timeout value.",
+          "type": "boolean"
+        },
+        "models": {
+          "description": "Mapping from language to Speech-to-Text model. The mapped Speech-to-Text model will be selected for requests from its corresponding language. For more information, see [Speech models](https://cloud.google.com/dialogflow/cx/docs/concept/speech-models).",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       }
     },
@@ -9347,6 +9492,26 @@
             "format": "byte"
           }
         },
+        "oauthConfig": {
+          "description": "Optional. The OAuth configuration of the webhook. If specified, Dialogflow will initiate the OAuth client credential flow to exchange an access token from the 3rd party platform and put it in the auth header.",
+          "$ref": "GoogleCloudDialogflowCxV3beta1WebhookGenericWebServiceOAuthConfig"
+        },
+        "serviceAgentAuth": {
+          "description": "Optional. Indicate the auth token type generated from the [Diglogflow service agent](https://cloud.google.com/iam/docs/service-agents#dialogflow-service-agent). The generated token is sent in the Authorization header.",
+          "type": "string",
+          "enumDescriptions": [
+            "Service agent auth type unspecified. Default to ID_TOKEN.",
+            "No token used.",
+            "Use [ID token](https://cloud.google.com/docs/authentication/token-types#id) generated from service agent. This can be used to access Cloud Function and Cloud Run after you grant Invoker role to `service-@gcp-sa-dialogflow.iam.gserviceaccount.com`.",
+            "Use [access token](https://cloud.google.com/docs/authentication/token-types#access) generated from service agent. This can be used to access other Google Cloud APIs after you grant required roles to `service-@gcp-sa-dialogflow.iam.gserviceaccount.com`."
+          ],
+          "enum": [
+            "SERVICE_AGENT_AUTH_UNSPECIFIED",
+            "NONE",
+            "ID_TOKEN",
+            "ACCESS_TOKEN"
+          ]
+        },
         "webhookType": {
           "description": "Optional. Type of the webhook.",
           "type": "string",
@@ -9393,6 +9558,32 @@
           "description": "Optional. Maps the values extracted from specific fields of the flexible webhook response into session parameters. - Key: session parameter name - Value: field path in the webhook response",
           "type": "object",
           "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "GoogleCloudDialogflowCxV3beta1WebhookGenericWebServiceOAuthConfig": {
+      "id": "GoogleCloudDialogflowCxV3beta1WebhookGenericWebServiceOAuthConfig",
+      "description": "Represents configuration of OAuth client credential flow for 3rd party API authentication.",
+      "type": "object",
+      "properties": {
+        "clientId": {
+          "description": "Required. The client ID provided by the 3rd party platform.",
+          "type": "string"
+        },
+        "clientSecret": {
+          "description": "Required. The client secret provided by the 3rd party platform.",
+          "type": "string"
+        },
+        "tokenEndpoint": {
+          "description": "Required. The token endpoint provided by the 3rd party platform to exchange an access token.",
+          "type": "string"
+        },
+        "scopes": {
+          "description": "Optional. The OAuth scopes to grant.",
+          "type": "array",
+          "items": {
             "type": "string"
           }
         }
@@ -12479,16 +12670,87 @@
       }
     }
   },
-  "revision": "20240219",
-  "title": "Dialogflow API",
-  "protocol": "rest",
-  "fullyEncodeReservedExpansion": true,
-  "batchPath": "batch",
-  "ownerDomain": "google.com",
+  "id": "dialogflow:v2",
+  "parameters": {
+    "access_token": {
+      "type": "string",
+      "description": "OAuth access token.",
+      "location": "query"
+    },
+    "alt": {
+      "type": "string",
+      "description": "Data format for response.",
+      "default": "json",
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "location": "query"
+    },
+    "callback": {
+      "type": "string",
+      "description": "JSONP",
+      "location": "query"
+    },
+    "fields": {
+      "type": "string",
+      "description": "Selector specifying which fields to include in a partial response.",
+      "location": "query"
+    },
+    "key": {
+      "type": "string",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+      "location": "query"
+    },
+    "oauth_token": {
+      "type": "string",
+      "description": "OAuth 2.0 token for the current user.",
+      "location": "query"
+    },
+    "prettyPrint": {
+      "type": "boolean",
+      "description": "Returns response with indentations and line breaks.",
+      "default": "true",
+      "location": "query"
+    },
+    "quotaUser": {
+      "type": "string",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
+      "location": "query"
+    },
+    "upload_protocol": {
+      "type": "string",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
+      "location": "query"
+    },
+    "uploadType": {
+      "type": "string",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
+      "location": "query"
+    },
+    "$.xgafv": {
+      "type": "string",
+      "description": "V1 error format.",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "location": "query"
+    }
+  },
+  "discoveryVersion": "v1",
   "mtlsRootUrl": "https://dialogflow.mtls.googleapis.com/",
-  "servicePath": "",
-  "version": "v2",
-  "version_module": true,
+  "revision": "20240417",
   "resources": {
     "projects": {
       "methods": {
@@ -20709,91 +20971,33 @@
       }
     }
   },
-  "id": "dialogflow:v2",
-  "name": "dialogflow",
-  "kind": "discovery#restDescription",
-  "baseUrl": "https://dialogflow.googleapis.com/",
   "documentationLink": "https://cloud.google.com/dialogflow/",
-  "ownerName": "Google",
-  "discoveryVersion": "v1",
-  "description": "Builds conversational interfaces (for example, chatbots, and voice-powered apps and devices).",
-  "parameters": {
-    "access_token": {
-      "type": "string",
-      "description": "OAuth access token.",
-      "location": "query"
-    },
-    "alt": {
-      "type": "string",
-      "description": "Data format for response.",
-      "default": "json",
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ],
-      "location": "query"
-    },
-    "callback": {
-      "type": "string",
-      "description": "JSONP",
-      "location": "query"
-    },
-    "fields": {
-      "type": "string",
-      "description": "Selector specifying which fields to include in a partial response.",
-      "location": "query"
-    },
-    "key": {
-      "type": "string",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
-      "location": "query"
-    },
-    "oauth_token": {
-      "type": "string",
-      "description": "OAuth 2.0 token for the current user.",
-      "location": "query"
-    },
-    "prettyPrint": {
-      "type": "boolean",
-      "description": "Returns response with indentations and line breaks.",
-      "default": "true",
-      "location": "query"
-    },
-    "quotaUser": {
-      "type": "string",
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
-      "location": "query"
-    },
-    "upload_protocol": {
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
-      "location": "query"
-    },
-    "uploadType": {
-      "type": "string",
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
-      "location": "query"
-    },
-    "$.xgafv": {
-      "type": "string",
-      "description": "V1 error format.",
-      "enum": [
-        "1",
-        "2"
-      ],
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ],
-      "location": "query"
-    }
-  },
+  "batchPath": "batch",
+  "rootUrl": "https://dialogflow.googleapis.com/",
+  "baseUrl": "https://dialogflow.googleapis.com/",
+  "servicePath": "",
+  "fullyEncodeReservedExpansion": true,
+  "kind": "discovery#restDescription",
+  "canonicalName": "Dialogflow",
   "basePath": "",
-  "canonicalName": "Dialogflow"
+  "title": "Dialogflow API",
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
+  "name": "dialogflow",
+  "version": "v2",
+  "ownerDomain": "google.com",
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        },
+        "https://www.googleapis.com/auth/dialogflow": {
+          "description": "View, manage and query your Dialogflow agents"
+        }
+      }
+    }
+  }
 }
