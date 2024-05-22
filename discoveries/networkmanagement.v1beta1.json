@@ -1,9 +1,4 @@
 {
-  "name": "networkmanagement",
-  "version": "v1beta1",
-  "kind": "discovery#restDescription",
-  "mtlsRootUrl": "https://networkmanagement.mtls.googleapis.com/",
-  "documentationLink": "https://cloud.google.com/",
   "ownerDomain": "google.com",
   "parameters": {
     "access_token": {
@@ -82,14 +77,14 @@
       "location": "query"
     }
   },
-  "batchPath": "batch",
-  "title": "Network Management API",
-  "basePath": "",
-  "protocol": "rest",
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
+  "id": "networkmanagement:v1beta1",
+  "rootUrl": "https://networkmanagement.googleapis.com/",
+  "documentationLink": "https://cloud.google.com/",
   "ownerName": "Google",
-  "fullyEncodeReservedExpansion": true,
-  "description": "The Network Management API provides a collection of network performance monitoring and diagnostic capabilities.",
-  "revision": "20240501",
   "auth": {
     "oauth2": {
       "scopes": {
@@ -99,16 +94,7 @@
       }
     }
   },
-  "servicePath": "",
-  "discoveryVersion": "v1",
-  "rootUrl": "https://networkmanagement.googleapis.com/",
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "baseUrl": "https://networkmanagement.googleapis.com/",
-  "canonicalName": "Network Management",
-  "id": "networkmanagement:v1beta1",
+  "mtlsRootUrl": "https://networkmanagement.mtls.googleapis.com/",
   "schemas": {
     "ListLocationsResponse": {
       "id": "ListLocationsResponse",
@@ -635,6 +621,7 @@
             "Initial state: packet originating from a Cloud Run revision. A CloudRunRevisionInfo is populated with starting revision information.",
             "Initial state: packet originating from a Storage Bucket. Used only for return traces. The storage_bucket information is populated.",
             "Initial state: packet originating from a published service that uses Private Service Connect. Used only for return traces.",
+            "Initial state: packet originating from a serverless network endpoint group backend. Used only for return traces. The serverless_neg information is populated.",
             "Config checking state: verify ingress firewall rule.",
             "Config checking state: verify egress firewall rule.",
             "Config checking state: verify route.",
@@ -656,6 +643,7 @@
             "Special state: viewer of the test result does not have permission to see the configuration in this step."
           ],
           "enumDeprecated": [
+            false,
             false,
             false,
             false,
@@ -701,6 +689,7 @@
             "START_FROM_CLOUD_RUN_REVISION",
             "START_FROM_STORAGE_BUCKET",
             "START_FROM_PSC_PUBLISHED_SERVICE",
+            "START_FROM_SERVERLESS_NEG",
             "APPLY_INGRESS_FIREWALL_RULE",
             "APPLY_EGRESS_FIREWALL_RULE",
             "APPLY_ROUTE",
@@ -826,6 +815,10 @@
         "storageBucket": {
           "description": "Display information of a Storage Bucket. Used only for return traces.",
           "$ref": "StorageBucketInfo"
+        },
+        "serverlessNeg": {
+          "description": "Display information of a Serverless network endpoint group backend. Used only for return traces.",
+          "$ref": "ServerlessNegInfo"
         }
       }
     },
@@ -1131,19 +1124,19 @@
       "type": "object",
       "properties": {
         "displayName": {
-          "description": "Name of a Compute Engine forwarding rule.",
+          "description": "Name of the forwarding rule.",
           "type": "string"
         },
         "uri": {
-          "description": "URI of a Compute Engine forwarding rule.",
+          "description": "URI of the forwarding rule.",
           "type": "string"
         },
         "matchedProtocol": {
-          "description": "Protocol defined in the forwarding rule that matches the test.",
+          "description": "Protocol defined in the forwarding rule that matches the packet.",
           "type": "string"
         },
         "matchedPortRange": {
-          "description": "Port range defined in the forwarding rule that matches the test.",
+          "description": "Port range defined in the forwarding rule that matches the packet.",
           "type": "string"
         },
         "vip": {
@@ -1155,7 +1148,23 @@
           "type": "string"
         },
         "networkUri": {
-          "description": "Network URI. Only valid for Internal Load Balancer.",
+          "description": "Network URI.",
+          "type": "string"
+        },
+        "region": {
+          "description": "Region of the forwarding rule. Set only for regional forwarding rules.",
+          "type": "string"
+        },
+        "loadBalancerName": {
+          "description": "Name of the load balancer the forwarding rule belongs to. Empty for forwarding rules not related to load balancers (like PSC forwarding rules).",
+          "type": "string"
+        },
+        "pscServiceAttachmentUri": {
+          "description": "URI of the PSC service attachment this forwarding rule targets (if applicable).",
+          "type": "string"
+        },
+        "pscGoogleApiTarget": {
+          "description": "PSC Google API target this forwarding rule targets (if applicable).",
           "type": "string"
         }
       }
@@ -1281,14 +1290,15 @@
             "Target is a Google Kubernetes Engine cluster master.",
             "Target is a Cloud SQL instance.",
             "Target is a published service that uses [Private Service Connect](https://cloud.google.com/vpc/docs/configure-private-service-connect-services).",
-            "Target is all Google APIs that use [Private Service Connect](https://cloud.google.com/vpc/docs/configure-private-service-connect-apis).",
+            "Target is Google APIs that use [Private Service Connect](https://cloud.google.com/vpc/docs/configure-private-service-connect-apis).",
             "Target is a VPC-SC that uses [Private Service Connect](https://cloud.google.com/vpc/docs/configure-private-service-connect-apis).",
             "Target is a serverless network endpoint group.",
             "Target is a Cloud Storage bucket.",
             "Target is a private network. Used only for return traces.",
             "Target is a Cloud Function. Used only for return traces.",
             "Target is a App Engine service version. Used only for return traces.",
-            "Target is a Cloud Run revision. Used only for return traces."
+            "Target is a Cloud Run revision. Used only for return traces.",
+            "Target is a Google-managed service. Used only for return traces."
           ],
           "enum": [
             "TARGET_UNSPECIFIED",
@@ -1305,7 +1315,8 @@
             "PRIVATE_NETWORK",
             "CLOUD_FUNCTION",
             "APP_ENGINE_VERSION",
-            "CLOUD_RUN_REVISION"
+            "CLOUD_RUN_REVISION",
+            "GOOGLE_MANAGED_SERVICE"
           ]
         },
         "resourceUri": {
@@ -1314,6 +1325,14 @@
         },
         "ipAddress": {
           "description": "IP address of the target (if applicable).",
+          "type": "string"
+        },
+        "storageBucket": {
+          "description": "Name of the Cloud Storage Bucket the packet is delivered to (if applicable).",
+          "type": "string"
+        },
+        "pscGoogleApiTarget": {
+          "description": "PSC Google API target the packet is delivered to (if applicable).",
           "type": "string"
         }
       }
@@ -1574,7 +1593,8 @@
             "Packet was dropped inside Private Service Connect service producer.",
             "Packet sent to a load balancer, which requires a proxy-only subnet and the subnet is not found.",
             "Packet sent to Cloud Nat without active NAT IPs.",
-            "Packet is stuck in a routing loop."
+            "Packet is stuck in a routing loop.",
+            "Packet is dropped due to an unspecified reason inside a Google-managed service. Used only for return traces."
           ],
           "enum": [
             "CAUSE_UNSPECIFIED",
@@ -1638,7 +1658,8 @@
             "DROPPED_INSIDE_PSC_SERVICE_PRODUCER",
             "LOAD_BALANCER_HAS_NO_PROXY_SUBNET",
             "CLOUD_NAT_NO_ADDRESSES",
-            "ROUTING_LOOP"
+            "ROUTING_LOOP",
+            "DROPPED_INSIDE_GOOGLE_MANAGED_SERVICE"
           ]
         },
         "resourceUri": {
@@ -2109,6 +2130,17 @@
         }
       }
     },
+    "ServerlessNegInfo": {
+      "id": "ServerlessNegInfo",
+      "description": "For display only. Metadata associated with the serverless network endpoint group backend.",
+      "type": "object",
+      "properties": {
+        "negUri": {
+          "description": "URI of the serverless network endpoint group.",
+          "type": "string"
+        }
+      }
+    },
     "ProbingDetails": {
       "id": "ProbingDetails",
       "description": "Results of active probing from the last run of the test.",
@@ -2433,7 +2465,12 @@
       }
     }
   },
-  "version_module": true,
+  "name": "networkmanagement",
+  "fullyEncodeReservedExpansion": true,
+  "baseUrl": "https://networkmanagement.googleapis.com/",
+  "basePath": "",
+  "servicePath": "",
+  "kind": "discovery#restDescription",
   "resources": {
     "projects": {
       "resources": {
@@ -2920,5 +2957,14 @@
         }
       }
     }
-  }
+  },
+  "protocol": "rest",
+  "discoveryVersion": "v1",
+  "version": "v1beta1",
+  "version_module": true,
+  "canonicalName": "Network Management",
+  "title": "Network Management API",
+  "revision": "20240515",
+  "description": "The Network Management API provides a collection of network performance monitoring and diagnostic capabilities.",
+  "batchPath": "batch"
 }
