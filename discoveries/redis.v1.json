@@ -1,6 +1,5 @@
 {
   "description": "Creates and manages Redis instances on the Google Cloud Platform.",
-  "version_module": true,
   "resources": {
     "projects": {
       "resources": {
@@ -718,109 +717,9 @@
       }
     }
   },
+  "servicePath": "",
   "baseUrl": "https://redis.googleapis.com/",
-  "parameters": {
-    "access_token": {
-      "type": "string",
-      "description": "OAuth access token.",
-      "location": "query"
-    },
-    "alt": {
-      "type": "string",
-      "description": "Data format for response.",
-      "default": "json",
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ],
-      "location": "query"
-    },
-    "callback": {
-      "type": "string",
-      "description": "JSONP",
-      "location": "query"
-    },
-    "fields": {
-      "type": "string",
-      "description": "Selector specifying which fields to include in a partial response.",
-      "location": "query"
-    },
-    "key": {
-      "type": "string",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
-      "location": "query"
-    },
-    "oauth_token": {
-      "type": "string",
-      "description": "OAuth 2.0 token for the current user.",
-      "location": "query"
-    },
-    "prettyPrint": {
-      "type": "boolean",
-      "description": "Returns response with indentations and line breaks.",
-      "default": "true",
-      "location": "query"
-    },
-    "quotaUser": {
-      "type": "string",
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
-      "location": "query"
-    },
-    "upload_protocol": {
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
-      "location": "query"
-    },
-    "uploadType": {
-      "type": "string",
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
-      "location": "query"
-    },
-    "$.xgafv": {
-      "type": "string",
-      "description": "V1 error format.",
-      "enum": [
-        "1",
-        "2"
-      ],
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ],
-      "location": "query"
-    }
-  },
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "canonicalName": "Cloud Redis",
-  "batchPath": "batch",
-  "id": "redis:v1",
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
-        }
-      }
-    }
-  },
-  "title": "Google Cloud Memorystore for Redis API",
-  "mtlsRootUrl": "https://redis.mtls.googleapis.com/",
-  "fullyEncodeReservedExpansion": true,
-  "name": "redis",
-  "ownerName": "Google",
   "documentationLink": "https://cloud.google.com/memorystore/docs/redis/",
-  "ownerDomain": "google.com",
-  "rootUrl": "https://redis.googleapis.com/",
-  "discoveryVersion": "v1",
   "schemas": {
     "ListOperationsResponse": {
       "id": "ListOperationsResponse",
@@ -1131,6 +1030,10 @@
           "type": "number",
           "format": "double"
         },
+        "zoneDistributionConfig": {
+          "description": "Optional. This config will be used to determine how the customer wants us to distribute cluster resources within the region.",
+          "$ref": "ZoneDistributionConfig"
+        },
         "deletionProtectionEnabled": {
           "description": "Optional. The delete operation will fail when the value is set to true.",
           "type": "boolean"
@@ -1310,6 +1213,31 @@
             "EVERYSEC",
             "ALWAYS"
           ]
+        }
+      }
+    },
+    "ZoneDistributionConfig": {
+      "id": "ZoneDistributionConfig",
+      "description": "Zone distribution config for allocation of cluster resources.",
+      "type": "object",
+      "properties": {
+        "mode": {
+          "description": "Optional. The mode of zone distribution. Defaults to MULTI_ZONE, when not specified.",
+          "type": "string",
+          "enumDescriptions": [
+            "Not Set. Default: MULTI_ZONE",
+            "Distribute all resources across 3 zones picked at random, within the region.",
+            "Distribute all resources in a single zone. The zone field must be specified, when this mode is selected."
+          ],
+          "enum": [
+            "ZONE_DISTRIBUTION_MODE_UNSPECIFIED",
+            "MULTI_ZONE",
+            "SINGLE_ZONE"
+          ]
+        },
+        "zone": {
+          "description": "Optional. When SINGLE ZONE distribution is selected, zone field would be used to allocate all resources in that zone. This is not applicable to MULTI_ZONE, and would be ignored for MULTI_ZONE clusters.",
+          "type": "string"
         }
       }
     },
@@ -3325,13 +3253,17 @@
             "Unspecified metric type.",
             "CPU utilization for a resource. The value is a fraction between 0.0 and 1.0 (may momentarily exceed 1.0 in some cases).",
             "Memory utilization for a resource. The value is a fraction between 0.0 and 1.0 (may momentarily exceed 1.0 in some cases).",
-            "Number of network connections for a resource."
+            "Number of network connections for a resource.",
+            "Storage utilization for a resource. The value is a fraction between 0.0 and 1.0 (may momentarily exceed 1.0 in some cases).",
+            "Sotrage used by a resource."
           ],
           "enum": [
             "METRIC_TYPE_UNSPECIFIED",
             "CPU_UTILIZATION",
             "MEMORY_UTILIZATION",
-            "NETWORK_CONNECTIONS"
+            "NETWORK_CONNECTIONS",
+            "STORAGE_UTILIZATION",
+            "STORAGE_USED_BYTES"
           ]
         },
         "aggregationType": {
@@ -3339,11 +3271,17 @@
           "type": "string",
           "enumDescriptions": [
             "Unspecified aggregation type.",
-            "Maximum aggregation type."
+            "PEAK aggregation type.",
+            "P99 aggregation type.",
+            "P95 aggregation type.",
+            "current aggregation type."
           ],
           "enum": [
             "AGGREGATION_TYPE_UNSPECIFIED",
-            "MAXIMUM"
+            "PEAK",
+            "P99",
+            "P95",
+            "CURRENT"
           ]
         },
         "value": {
@@ -3485,10 +3423,111 @@
       "properties": {}
     }
   },
-  "kind": "discovery#restDescription",
+  "mtlsRootUrl": "https://redis.mtls.googleapis.com/",
+  "revision": "20240531",
   "basePath": "",
-  "revision": "20240528",
+  "ownerName": "Google",
   "version": "v1",
-  "servicePath": "",
-  "protocol": "rest"
+  "version_module": true,
+  "parameters": {
+    "access_token": {
+      "type": "string",
+      "description": "OAuth access token.",
+      "location": "query"
+    },
+    "alt": {
+      "type": "string",
+      "description": "Data format for response.",
+      "default": "json",
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "location": "query"
+    },
+    "callback": {
+      "type": "string",
+      "description": "JSONP",
+      "location": "query"
+    },
+    "fields": {
+      "type": "string",
+      "description": "Selector specifying which fields to include in a partial response.",
+      "location": "query"
+    },
+    "key": {
+      "type": "string",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+      "location": "query"
+    },
+    "oauth_token": {
+      "type": "string",
+      "description": "OAuth 2.0 token for the current user.",
+      "location": "query"
+    },
+    "prettyPrint": {
+      "type": "boolean",
+      "description": "Returns response with indentations and line breaks.",
+      "default": "true",
+      "location": "query"
+    },
+    "quotaUser": {
+      "type": "string",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
+      "location": "query"
+    },
+    "upload_protocol": {
+      "type": "string",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
+      "location": "query"
+    },
+    "uploadType": {
+      "type": "string",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
+      "location": "query"
+    },
+    "$.xgafv": {
+      "type": "string",
+      "description": "V1 error format.",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "location": "query"
+    }
+  },
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
+  "kind": "discovery#restDescription",
+  "name": "redis",
+  "batchPath": "batch",
+  "title": "Google Cloud Memorystore for Redis API",
+  "rootUrl": "https://redis.googleapis.com/",
+  "protocol": "rest",
+  "discoveryVersion": "v1",
+  "canonicalName": "Cloud Redis",
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        }
+      }
+    }
+  },
+  "fullyEncodeReservedExpansion": true,
+  "ownerDomain": "google.com",
+  "id": "redis:v1"
 }
