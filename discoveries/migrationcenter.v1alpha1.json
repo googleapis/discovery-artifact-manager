@@ -1,6 +1,4 @@
 {
-  "batchPath": "batch",
-  "baseUrl": "https://migrationcenter.googleapis.com/",
   "schemas": {
     "ListOperationsResponse": {
       "id": "ListOperationsResponse",
@@ -4113,13 +4111,17 @@
             "Unspecified commitment plan.",
             "No commitment plan.",
             "1-year regular committed use discount.",
-            "3-year regular committed use discount."
+            "3-year regular committed use discount.",
+            "1-year flexible committed use discount. While not supported in the v1 API, this value is converted to UNSPECIFIED in conversions to the v1 API.",
+            "3-year flexible committed use discount. While not supported in the v1 API, this value is converted to UNSPECIFIED in conversions to the v1 API."
           ],
           "enum": [
             "COMMITMENT_PLAN_UNSPECIFIED",
             "COMMITMENT_PLAN_NONE",
             "COMMITMENT_PLAN_ONE_YEAR",
-            "COMMITMENT_PLAN_THREE_YEARS"
+            "COMMITMENT_PLAN_THREE_YEARS",
+            "COMMITMENT_PLAN_FLEXIBLE_ONE_YEAR",
+            "COMMITMENT_PLAN_FLEXIBLE_THREE_YEARS"
           ]
         },
         "networkCostParameters": {
@@ -4252,12 +4254,16 @@
             "LICENSE_TYPE_DEFAULT",
             "LICENSE_TYPE_BRING_YOUR_OWN_LICENSE"
           ]
+        },
+        "osPricingPreferences": {
+          "description": "Optional. Pricing options for OS images.",
+          "$ref": "OperatingSystemPricingPreferences"
         }
       }
     },
     "MachinePreferences": {
       "id": "MachinePreferences",
-      "description": "The type of machines to consider when calculating virtual machine migration insights and recommendations. Not all machine types are available in all zones and regions.",
+      "description": "The type of machines to consider when calculating virtual machine migration insights and recommendations for GCE. Not all machine types are available in all zones and regions.",
       "type": "object",
       "properties": {
         "allowedMachineSeries": {
@@ -4277,6 +4283,66 @@
         "code": {
           "description": "Code to identify a machine series. Consult this for more details on the available series for Compute Engine: https://cloud.google.com/compute/docs/machine-resource#machine_type_comparison Consult this for more details on the available series for Google Cloud VMware Engine: https://cloud.google.com/vmware-engine/pricing",
           "type": "string"
+        }
+      }
+    },
+    "OperatingSystemPricingPreferences": {
+      "id": "OperatingSystemPricingPreferences",
+      "description": "Pricing options for OS images.",
+      "type": "object",
+      "properties": {
+        "windows": {
+          "description": "Optional. Pricing options for Windows images. No commitment plans are available, set it to unspecified.",
+          "$ref": "OperatingSystemPricingPreferencesOperatingSystemPricing"
+        },
+        "rhel": {
+          "description": "Optional. Pricing options for RHEL images.",
+          "$ref": "OperatingSystemPricingPreferencesOperatingSystemPricing"
+        },
+        "sles": {
+          "description": "Optional. Pricing options for SLES images.",
+          "$ref": "OperatingSystemPricingPreferencesOperatingSystemPricing"
+        },
+        "slesForSap": {
+          "description": "Optional. Pricing options for SLES for SAP images.",
+          "$ref": "OperatingSystemPricingPreferencesOperatingSystemPricing"
+        }
+      }
+    },
+    "OperatingSystemPricingPreferencesOperatingSystemPricing": {
+      "id": "OperatingSystemPricingPreferencesOperatingSystemPricing",
+      "description": "Pricing options of an OS image.",
+      "type": "object",
+      "properties": {
+        "licenseType": {
+          "description": "Optional. License type of the OS image.",
+          "type": "string",
+          "enumDescriptions": [
+            "Unspecified (default value).",
+            "Default Google Cloud licensing plan. Licensing is charged per usage. This a good value to start with.",
+            "Bring-your-own-license (BYOL) plan. User provides the OS license."
+          ],
+          "enum": [
+            "LICENSE_TYPE_UNSPECIFIED",
+            "LICENSE_TYPE_DEFAULT",
+            "LICENSE_TYPE_BRING_YOUR_OWN_LICENSE"
+          ]
+        },
+        "commitmentPlan": {
+          "description": "Optional. The plan of commitments for committed use discounts (CUD).",
+          "type": "string",
+          "enumDescriptions": [
+            "Unspecified commitment plan.",
+            "No commitment plan (on-demand usage).",
+            "1-year committed use discount.",
+            "3-year committed use discount."
+          ],
+          "enum": [
+            "COMMITMENT_PLAN_UNSPECIFIED",
+            "COMMITMENT_PLAN_ON_DEMAND",
+            "COMMITMENT_PLAN_1_YEAR",
+            "COMMITMENT_PLAN_3_YEAR"
+          ]
         }
       }
     },
@@ -4355,14 +4421,22 @@
             "Unspecified commitment plan.",
             "No commitment plan (on-demand usage).",
             "1-year regular committed use discount.",
-            "3-year regular committed use discount."
+            "3-year regular committed use discount.",
+            "1-year flexible committed use discount. While not supported in the v1 API, this value is converted to UNSPECIFIED in conversions to the v1 API.",
+            "3-year flexible committed use discount. While not supported in the v1 API, this value is converted to UNSPECIFIED in conversions to the v1 API."
           ],
           "enum": [
             "COMMITMENT_PLAN_UNSPECIFIED",
             "ON_DEMAND",
             "COMMITMENT_1_YEAR",
-            "COMMITMENT_3_YEAR"
+            "COMMITMENT_3_YEAR",
+            "COMMITMENT_FLEXIBLE_1_YEAR",
+            "COMMITMENT_FLEXIBLE_3_YEAR"
           ]
+        },
+        "osPricingPreferences": {
+          "description": "Optional. Pricing options for OS images.",
+          "$ref": "OperatingSystemPricingPreferences"
         },
         "nodeTypes": {
           "description": "A list of sole tenant node types. An empty list means that all possible node types will be considered.",
@@ -4416,16 +4490,14 @@
           "description": "Optional. Preferences for multithreading support.",
           "type": "string",
           "enumDescriptions": [
-            "Same as MULTITHREADING_AUTO_SELECT.",
-            "No multithreading support.",
-            "Allow multithreading support.",
-            "Choose to enable/disable multithreading according to which is lowest cost for your workload."
+            "Same as MULTITHREADING_DISABLED_WITH_COMPENSATION.",
+            "Disable simultaneous multithreading if doing so is lower cost.",
+            "Always enable simultaneous multithreading."
           ],
           "enum": [
             "MULTITHREADING_UNSPECIFIED",
             "MULTITHREADING_DISABLED",
-            "MULTITHREADING_ENABLED",
-            "MULTITHREADING_AUTO_SELECT"
+            "MULTITHREADING_ENABLED"
           ]
         },
         "versionType": {
@@ -4466,13 +4538,17 @@
             "Unspecified commitment plan.",
             "No commitment plan.",
             "1-year regular committed use discount.",
-            "3-year regular committed use discount."
+            "3-year regular committed use discount.",
+            "1-year flexible committed use discount. While not supported in the v1 API, this value is converted to UNSPECIFIED in conversions to the v1 API.",
+            "3-year flexible committed use discount. While not supported in the v1 API, this value is converted to UNSPECIFIED in conversions to the v1 API."
           ],
           "enum": [
             "COMMITMENT_PLAN_UNSPECIFIED",
             "COMMITMENT_PLAN_NONE",
             "COMMITMENT_PLAN_ONE_YEAR",
-            "COMMITMENT_PLAN_THREE_YEARS"
+            "COMMITMENT_PLAN_THREE_YEARS",
+            "COMMITMENT_PLAN_FLEXIBLE_ONE_YEAR",
+            "COMMITMENT_PLAN_FLEXIBLE_THREE_YEARS"
           ]
         },
         "zoneAvailability": {
@@ -5766,22 +5842,17 @@
       }
     }
   },
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
-        }
-      }
-    }
-  },
-  "rootUrl": "https://migrationcenter.googleapis.com/",
-  "servicePath": "",
-  "mtlsRootUrl": "https://migrationcenter.mtls.googleapis.com/",
   "ownerName": "Google",
+  "version_module": true,
   "documentationLink": "https://cloud.google.com/migration-center",
+  "ownerDomain": "google.com",
   "name": "migrationcenter",
+  "protocol": "rest",
+  "batchPath": "batch",
   "description": "A unified platform that helps you accelerate your end-to-end cloud journey from your current on-premises or cloud environments to Google Cloud.",
+  "revision": "20240606",
+  "kind": "discovery#restDescription",
+  "baseUrl": "https://migrationcenter.googleapis.com/",
   "parameters": {
     "access_token": {
       "type": "string",
@@ -5859,10 +5930,24 @@
       "location": "query"
     }
   },
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  "mtlsRootUrl": "https://migrationcenter.mtls.googleapis.com/",
+  "basePath": "",
+  "canonicalName": "Migration Center API",
+  "version": "v1alpha1",
+  "rootUrl": "https://migrationcenter.googleapis.com/",
+  "discoveryVersion": "v1",
+  "title": "Migration Center API",
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        }
+      }
+    }
   },
+  "fullyEncodeReservedExpansion": true,
+  "servicePath": "",
   "resources": {
     "projects": {
       "resources": {
@@ -8232,16 +8317,9 @@
       }
     }
   },
-  "revision": "20240523",
-  "version_module": true,
-  "ownerDomain": "google.com",
-  "basePath": "",
-  "canonicalName": "Migration Center API",
-  "fullyEncodeReservedExpansion": true,
-  "title": "Migration Center API",
-  "discoveryVersion": "v1",
-  "kind": "discovery#restDescription",
   "id": "migrationcenter:v1alpha1",
-  "protocol": "rest",
-  "version": "v1alpha1"
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  }
 }
