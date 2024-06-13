@@ -1,8 +1,5 @@
 {
   "description": "AlloyDB for PostgreSQL is an open source-compatible database service that provides a powerful option for migrating, modernizing, or building commercial-grade applications. It offers full compatibility with standard PostgreSQL, and is more than 4x faster for transactional workloads and up to 100x faster for analytical queries than standard PostgreSQL in our performance tests. AlloyDB for PostgreSQL offers a 99.99 percent availability SLA inclusive of maintenance. AlloyDB is optimized for the most demanding use cases, allowing you to build new applications that require high transaction throughput, large database sizes, or multiple read resources; scale existing PostgreSQL workloads with no application changes; and modernize legacy proprietary databases. ",
-  "mtlsRootUrl": "https://alloydb.mtls.googleapis.com/",
-  "ownerDomain": "google.com",
-  "kind": "discovery#restDescription",
   "schemas": {
     "ListOperationsResponse": {
       "id": "ListOperationsResponse",
@@ -320,6 +317,25 @@
         "geminiConfig": {
           "description": "Optional. Configuration parameters related to the Gemini in Databases add-on.",
           "$ref": "GeminiClusterConfig"
+        },
+        "subscriptionType": {
+          "description": "Optional. Subscription type of the cluster.",
+          "type": "string",
+          "enumDescriptions": [
+            "This is an unknown Subscription type (By default, Subscription Type is STANDARD)",
+            "Standard subscription.",
+            "Trial subscription."
+          ],
+          "enum": [
+            "SUBSCRIPTION_TYPE_UNSPECIFIED",
+            "STANDARD",
+            "TRIAL"
+          ]
+        },
+        "trialMetadata": {
+          "description": "Output only. Metadata for free trial clusters",
+          "readOnly": true,
+          "$ref": "TrialMetadata"
         }
       }
     },
@@ -802,6 +818,28 @@
           "description": "Output only. Whether the Gemini in Databases add-on is enabled for the cluster. It will be true only if the add-on has been enabled for the billing account corresponding to the cluster. Its status is toggled from the Admin Control Center (ACC) and cannot be toggled using AlloyDB's APIs.",
           "readOnly": true,
           "type": "boolean"
+        }
+      }
+    },
+    "TrialMetadata": {
+      "id": "TrialMetadata",
+      "description": "Contains information and all metadata related to TRIAL clusters.",
+      "type": "object",
+      "properties": {
+        "startTime": {
+          "description": "start time of the trial cluster.",
+          "type": "string",
+          "format": "google-datetime"
+        },
+        "endTime": {
+          "description": "End time of the trial cluster.",
+          "type": "string",
+          "format": "google-datetime"
+        },
+        "upgradeTime": {
+          "description": "Upgrade time of trial cluster to Standard cluster.",
+          "type": "string",
+          "format": "google-datetime"
         }
       }
     },
@@ -3192,13 +3230,17 @@
             "Unspecified metric type.",
             "CPU utilization for a resource. The value is a fraction between 0.0 and 1.0 (may momentarily exceed 1.0 in some cases).",
             "Memory utilization for a resource. The value is a fraction between 0.0 and 1.0 (may momentarily exceed 1.0 in some cases).",
-            "Number of network connections for a resource."
+            "Number of network connections for a resource.",
+            "Storage utilization for a resource. The value is a fraction between 0.0 and 1.0 (may momentarily exceed 1.0 in some cases).",
+            "Sotrage used by a resource."
           ],
           "enum": [
             "METRIC_TYPE_UNSPECIFIED",
             "CPU_UTILIZATION",
             "MEMORY_UTILIZATION",
-            "NETWORK_CONNECTIONS"
+            "NETWORK_CONNECTIONS",
+            "STORAGE_UTILIZATION",
+            "STORAGE_USED_BYTES"
           ]
         },
         "aggregationType": {
@@ -3206,11 +3248,17 @@
           "type": "string",
           "enumDescriptions": [
             "Unspecified aggregation type.",
-            "Maximum aggregation type."
+            "PEAK aggregation type.",
+            "P99 aggregation type.",
+            "P95 aggregation type.",
+            "current aggregation type."
           ],
           "enum": [
             "AGGREGATION_TYPE_UNSPECIFIED",
-            "MAXIMUM"
+            "PEAK",
+            "P99",
+            "P95",
+            "CURRENT"
           ]
         },
         "value": {
@@ -3281,8 +3329,22 @@
       }
     }
   },
-  "title": "AlloyDB API",
+  "ownerName": "Google",
+  "version": "v1beta",
   "version_module": true,
+  "revision": "20240605",
+  "title": "AlloyDB API",
+  "ownerDomain": "google.com",
+  "baseUrl": "https://alloydb.googleapis.com/",
+  "rootUrl": "https://alloydb.googleapis.com/",
+  "mtlsRootUrl": "https://alloydb.mtls.googleapis.com/",
+  "basePath": "",
+  "protocol": "rest",
+  "canonicalName": "Cloud AlloyDB Admin",
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
   "auth": {
     "oauth2": {
       "scopes": {
@@ -3292,10 +3354,88 @@
       }
     }
   },
-  "baseUrl": "https://alloydb.googleapis.com/",
-  "revision": "20240529",
-  "id": "alloydb:v1beta",
+  "batchPath": "batch",
+  "servicePath": "",
+  "parameters": {
+    "access_token": {
+      "type": "string",
+      "description": "OAuth access token.",
+      "location": "query"
+    },
+    "alt": {
+      "type": "string",
+      "description": "Data format for response.",
+      "default": "json",
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "location": "query"
+    },
+    "callback": {
+      "type": "string",
+      "description": "JSONP",
+      "location": "query"
+    },
+    "fields": {
+      "type": "string",
+      "description": "Selector specifying which fields to include in a partial response.",
+      "location": "query"
+    },
+    "key": {
+      "type": "string",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+      "location": "query"
+    },
+    "oauth_token": {
+      "type": "string",
+      "description": "OAuth 2.0 token for the current user.",
+      "location": "query"
+    },
+    "prettyPrint": {
+      "type": "boolean",
+      "description": "Returns response with indentations and line breaks.",
+      "default": "true",
+      "location": "query"
+    },
+    "quotaUser": {
+      "type": "string",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
+      "location": "query"
+    },
+    "upload_protocol": {
+      "type": "string",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
+      "location": "query"
+    },
+    "uploadType": {
+      "type": "string",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
+      "location": "query"
+    },
+    "$.xgafv": {
+      "type": "string",
+      "description": "V1 error format.",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "location": "query"
+    }
+  },
+  "name": "alloydb",
   "fullyEncodeReservedExpansion": true,
+  "id": "alloydb:v1beta",
   "resources": {
     "projects": {
       "resources": {
@@ -4650,96 +4790,7 @@
       }
     }
   },
-  "basePath": "",
-  "servicePath": "",
-  "discoveryVersion": "v1",
-  "rootUrl": "https://alloydb.googleapis.com/",
+  "kind": "discovery#restDescription",
   "documentationLink": "https://cloud.google.com/alloydb/",
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "name": "alloydb",
-  "batchPath": "batch",
-  "version": "v1beta",
-  "parameters": {
-    "access_token": {
-      "type": "string",
-      "description": "OAuth access token.",
-      "location": "query"
-    },
-    "alt": {
-      "type": "string",
-      "description": "Data format for response.",
-      "default": "json",
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ],
-      "location": "query"
-    },
-    "callback": {
-      "type": "string",
-      "description": "JSONP",
-      "location": "query"
-    },
-    "fields": {
-      "type": "string",
-      "description": "Selector specifying which fields to include in a partial response.",
-      "location": "query"
-    },
-    "key": {
-      "type": "string",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
-      "location": "query"
-    },
-    "oauth_token": {
-      "type": "string",
-      "description": "OAuth 2.0 token for the current user.",
-      "location": "query"
-    },
-    "prettyPrint": {
-      "type": "boolean",
-      "description": "Returns response with indentations and line breaks.",
-      "default": "true",
-      "location": "query"
-    },
-    "quotaUser": {
-      "type": "string",
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
-      "location": "query"
-    },
-    "upload_protocol": {
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
-      "location": "query"
-    },
-    "uploadType": {
-      "type": "string",
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
-      "location": "query"
-    },
-    "$.xgafv": {
-      "type": "string",
-      "description": "V1 error format.",
-      "enum": [
-        "1",
-        "2"
-      ],
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ],
-      "location": "query"
-    }
-  },
-  "protocol": "rest",
-  "ownerName": "Google",
-  "canonicalName": "Cloud AlloyDB Admin"
+  "discoveryVersion": "v1"
 }
