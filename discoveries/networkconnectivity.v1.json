@@ -1,7 +1,6 @@
 {
-  "batchPath": "batch",
-  "version_module": true,
   "baseUrl": "https://networkconnectivity.googleapis.com/",
+  "name": "networkconnectivity",
   "schemas": {
     "GoogleLongrunningListOperationsResponse": {
       "id": "GoogleLongrunningListOperationsResponse",
@@ -262,6 +261,10 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "consumerInstanceProject": {
+          "description": "Required. The project ID or project number of the consumer project. This project is the one that the consumer uses to interact with the producer instance. From the perspective of a consumer who's created a producer instance, this is the project of the producer instance. Format: 'projects/' Eg. 'projects/consumer-project' or 'projects/1234'",
+          "type": "string"
         }
       }
     },
@@ -487,6 +490,25 @@
           "description": "Optional. Max number of PSC connections for this policy.",
           "type": "string",
           "format": "int64"
+        },
+        "producerInstanceLocation": {
+          "description": "Required. ProducerInstanceLocation is used to specify which authorization mechanism to use to determine which projects the Producer instance can be within.",
+          "type": "string",
+          "enumDescriptions": [
+            "Producer instance location is not specified. When this option is chosen, then the PSC connections created by this ServiceConnectionPolicy must be within the same project as the Producer instance. This is the default ProducerInstanceLocation value. To allow for PSC connections from this network to other networks, use the CUSTOM_RESOURCE_HIERARCHY_LEVELS option.",
+            "Producer instance must be within one of the values provided in allowed_google_producers_resource_hierarchy_level."
+          ],
+          "enum": [
+            "PRODUCER_INSTANCE_LOCATION_UNSPECIFIED",
+            "CUSTOM_RESOURCE_HIERARCHY_LEVELS"
+          ]
+        },
+        "allowedGoogleProducersResourceHierarchyLevel": {
+          "description": "Optional. List of Projects, Folders, or Organizations from where the Producer instance can be within. For example, a network administrator can provide both 'organizations/foo' and 'projects/bar' as allowed_google_producers_resource_hierarchy_levels. This allowlists this network to connect with any Producer instance within the 'foo' organization or the 'bar' project. By default, allowed_google_producers_resource_hierarchy_level is empty. The format for each allowed_google_producers_resource_hierarchy_level is / where is one of 'projects', 'folders', or 'organizations' and is either the ID or the number of the resource type. Format for each allowed_google_producers_resource_hierarchy_level value: 'projects/' or 'folders/' or 'organizations/' Eg. [projects/my-project-id, projects/567, folders/891, organizations/123]",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -1170,6 +1192,13 @@
           "description": "Output only. The VPC network where these VPN tunnels are located.",
           "readOnly": true,
           "type": "string"
+        },
+        "includeImportRanges": {
+          "description": "Optional. IP ranges allowed to be included during import from hub.(does not control transit connectivity) The only allowed value for now is \"ALL_IPV4_RANGES\".",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -1193,6 +1222,13 @@
           "description": "Output only. The VPC network where these VLAN attachments are located.",
           "readOnly": true,
           "type": "string"
+        },
+        "includeImportRanges": {
+          "description": "Optional. IP ranges allowed to be included during import from hub.(does not control transit connectivity) The only allowed value for now is \"ALL_IPV4_RANGES\".",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -1216,6 +1252,13 @@
           "description": "Output only. The VPC network where these router appliance instances are located.",
           "readOnly": true,
           "type": "string"
+        },
+        "includeImportRanges": {
+          "description": "Optional. IP ranges allowed to be included during import from hub.(does not control transit connectivity) The only allowed value for now is \"ALL_IPV4_RANGES\".",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -2514,23 +2557,105 @@
       }
     }
   },
-  "kind": "discovery#restDescription",
-  "basePath": "",
-  "ownerName": "Google",
-  "mtlsRootUrl": "https://networkconnectivity.mtls.googleapis.com/",
   "servicePath": "",
+  "protocol": "rest",
+  "ownerDomain": "google.com",
+  "rootUrl": "https://networkconnectivity.googleapis.com/",
+  "ownerName": "Google",
+  "basePath": "",
+  "documentationLink": "https://cloud.google.com/network-connectivity/docs/reference/networkconnectivity/rest",
+  "mtlsRootUrl": "https://networkconnectivity.mtls.googleapis.com/",
   "version": "v1",
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
-        }
-      }
+  "revision": "20240618",
+  "title": "Network Connectivity API",
+  "id": "networkconnectivity:v1",
+  "batchPath": "batch",
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
+  "discoveryVersion": "v1",
+  "description": "This API enables connectivity with and between Google Cloud resources.",
+  "version_module": true,
+  "fullyEncodeReservedExpansion": true,
+  "canonicalName": "networkconnectivity",
+  "parameters": {
+    "access_token": {
+      "type": "string",
+      "description": "OAuth access token.",
+      "location": "query"
+    },
+    "alt": {
+      "type": "string",
+      "description": "Data format for response.",
+      "default": "json",
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "location": "query"
+    },
+    "callback": {
+      "type": "string",
+      "description": "JSONP",
+      "location": "query"
+    },
+    "fields": {
+      "type": "string",
+      "description": "Selector specifying which fields to include in a partial response.",
+      "location": "query"
+    },
+    "key": {
+      "type": "string",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+      "location": "query"
+    },
+    "oauth_token": {
+      "type": "string",
+      "description": "OAuth 2.0 token for the current user.",
+      "location": "query"
+    },
+    "prettyPrint": {
+      "type": "boolean",
+      "description": "Returns response with indentations and line breaks.",
+      "default": "true",
+      "location": "query"
+    },
+    "quotaUser": {
+      "type": "string",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
+      "location": "query"
+    },
+    "upload_protocol": {
+      "type": "string",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
+      "location": "query"
+    },
+    "uploadType": {
+      "type": "string",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
+      "location": "query"
+    },
+    "$.xgafv": {
+      "type": "string",
+      "description": "V1 error format.",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "location": "query"
     }
   },
-  "description": "This API enables connectivity with and between Google Cloud resources.",
-  "name": "networkconnectivity",
   "resources": {
     "projects": {
       "resources": {
@@ -5239,95 +5364,14 @@
       }
     }
   },
-  "protocol": "rest",
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "documentationLink": "https://cloud.google.com/network-connectivity/docs/reference/networkconnectivity/rest",
-  "parameters": {
-    "access_token": {
-      "type": "string",
-      "description": "OAuth access token.",
-      "location": "query"
-    },
-    "alt": {
-      "type": "string",
-      "description": "Data format for response.",
-      "default": "json",
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ],
-      "location": "query"
-    },
-    "callback": {
-      "type": "string",
-      "description": "JSONP",
-      "location": "query"
-    },
-    "fields": {
-      "type": "string",
-      "description": "Selector specifying which fields to include in a partial response.",
-      "location": "query"
-    },
-    "key": {
-      "type": "string",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
-      "location": "query"
-    },
-    "oauth_token": {
-      "type": "string",
-      "description": "OAuth 2.0 token for the current user.",
-      "location": "query"
-    },
-    "prettyPrint": {
-      "type": "boolean",
-      "description": "Returns response with indentations and line breaks.",
-      "default": "true",
-      "location": "query"
-    },
-    "quotaUser": {
-      "type": "string",
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
-      "location": "query"
-    },
-    "upload_protocol": {
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
-      "location": "query"
-    },
-    "uploadType": {
-      "type": "string",
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
-      "location": "query"
-    },
-    "$.xgafv": {
-      "type": "string",
-      "description": "V1 error format.",
-      "enum": [
-        "1",
-        "2"
-      ],
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ],
-      "location": "query"
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        }
+      }
     }
   },
-  "title": "Network Connectivity API",
-  "ownerDomain": "google.com",
-  "canonicalName": "networkconnectivity",
-  "discoveryVersion": "v1",
-  "revision": "20240529",
-  "id": "networkconnectivity:v1",
-  "fullyEncodeReservedExpansion": true,
-  "rootUrl": "https://networkconnectivity.googleapis.com/"
+  "kind": "discovery#restDescription"
 }
