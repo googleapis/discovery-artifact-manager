@@ -26,11 +26,11 @@ protobuf_deps()
 
 http_archive(
     name = "rules_proto",
-    sha256 = "602e7161d9195e50246177e7c55b2f39950a9cf7366f74ed5f22fd45750cd208",
-    strip_prefix = "rules_proto-97d8af4dc474595af3900dd85cb3a29ad28cc313",
+    sha256 = "c664412a5c7294d3d2b719ac68b46688a98ed12fb955a590e92388a7ae361fcc",
+    strip_prefix = "rules_proto-b38f0e67618ebe9ba8e23aee3d5f7e2779f1bc9f",
     urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_proto/archive/97d8af4dc474595af3900dd85cb3a29ad28cc313.tar.gz",
-        "https://github.com/bazelbuild/rules_proto/archive/97d8af4dc474595af3900dd85cb3a29ad28cc313.tar.gz",
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_proto/archive/b38f0e67618ebe9ba8e23aee3d5f7e2779f1bc9f.tar.gz",
+        "https://github.com/bazelbuild/rules_proto/archive/b38f0e67618ebe9ba8e23aee3d5f7e2779f1bc9f.tar.gz",
     ],
 )
 
