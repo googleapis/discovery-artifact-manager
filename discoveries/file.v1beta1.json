@@ -1,16 +1,12 @@
 {
+  "baseUrl": "https://file.googleapis.com/",
   "mtlsRootUrl": "https://file.mtls.googleapis.com/",
+  "id": "file:v1beta1",
+  "ownerName": "Google",
+  "kind": "discovery#restDescription",
+  "name": "file",
+  "servicePath": "",
   "batchPath": "batch",
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
-        }
-      }
-    }
-  },
-  "documentationLink": "https://cloud.google.com/filestore/",
   "schemas": {
     "ListOperationsResponse": {
       "id": "ListOperationsResponse",
@@ -311,6 +307,17 @@
         "directoryServices": {
           "description": "Optional. Directory Services configuration for Kerberos-based authentication. Should only be set if protocol is \"NFS_V4_1\".",
           "$ref": "DirectoryServicesConfig"
+        },
+        "replication": {
+          "description": "Optional. Replicaition configuration.",
+          "$ref": "Replication"
+        },
+        "tags": {
+          "description": "Optional. Input only. Immutable. Tag keys/values directly bound to this resource. For example: \"123/environment\": \"production\", \"123/costCenter\": \"marketing\"",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       }
     },
@@ -338,6 +345,15 @@
           "items": {
             "$ref": "NfsExportOptions"
           }
+        },
+        "performanceConfig": {
+          "description": "Optional. Used to configure performance.",
+          "$ref": "PerformanceConfig"
+        },
+        "performanceLimits": {
+          "description": "Output only. Used for getting performance limits.",
+          "readOnly": true,
+          "$ref": "PerformanceLimits"
         }
       }
     },
@@ -411,6 +427,80 @@
               "KRB5P"
             ]
           }
+        }
+      }
+    },
+    "PerformanceConfig": {
+      "id": "PerformanceConfig",
+      "description": "Performance configuration. Used for setting the performance configuration. Defaults to `iops_by_capacity` if unset in instance creation.",
+      "type": "object",
+      "properties": {
+        "iopsByCapacity": {
+          "description": "Automatically provision maximum available IOPS based on the capacity of the instance. Larger instances will be granted more IOPS. If instance capacity is increased or decreased, IOPS will be automatically adjusted upwards or downwards accordingly. The maximum available IOPS for a given capacity is defined in Filestore documentation.",
+          "type": "boolean"
+        },
+        "fixedIops": {
+          "description": "Choose a fixed provisioned IOPS value for the instance, which will remain constant regardless of instance capacity. Value must be a multiple of 1000. If the chosen value is outside the supported range for the instance's capacity during instance creation, instance creation will fail with an `InvalidArgument` error. Similarly, if an instance capacity update would result in a value outside the supported range, the update will fail with an `InvalidArgument` error.",
+          "$ref": "FixedIOPS"
+        },
+        "iopsPerGb": {
+          "description": "Provision IOPS dynamically based on the capacity of the instance. Provisioned read IOPS will be calculated by by multiplying the capacity of the instance in GiB by the `iops_per_gb` value, and rounding to the nearest 1000. For example, for a 1 TiB instance with an `iops_per_gb` value of 15, the provisioned read IOPS would be `1024 * 15 = 15,360`, rounded to `15,000`. If the calculated value is outside the supported range for the instance's capacity during instance creation, instance creation will fail with an `InvalidArgument` error. Similarly, if an instance capacity update would result in a value outside the supported range, the update will fail with an `InvalidArgument` error.",
+          "$ref": "IOPSPerGB"
+        }
+      }
+    },
+    "FixedIOPS": {
+      "id": "FixedIOPS",
+      "description": "Fixed IOPS parameters.",
+      "type": "object",
+      "properties": {
+        "maxReadIops": {
+          "description": "Required. Maximum raw read IOPS.",
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "IOPSPerGB": {
+      "id": "IOPSPerGB",
+      "description": "IOPS per capacity parameters.",
+      "type": "object",
+      "properties": {
+        "maxReadIopsPerGb": {
+          "description": "Required. Maximum read IOPS per GB.",
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "PerformanceLimits": {
+      "id": "PerformanceLimits",
+      "description": "The enforced performance limits, calculated from the instance's performance configuration.",
+      "type": "object",
+      "properties": {
+        "maxReadIops": {
+          "description": "Output only. The max read IOPS.",
+          "readOnly": true,
+          "type": "string",
+          "format": "int64"
+        },
+        "maxWriteIops": {
+          "description": "Output only. The max write IOPS.",
+          "readOnly": true,
+          "type": "string",
+          "format": "int64"
+        },
+        "maxReadThroughput": {
+          "description": "Output only. The max read throughput.",
+          "readOnly": true,
+          "type": "string",
+          "format": "int64"
+        },
+        "maxWriteThroughput": {
+          "description": "Output only. The max write throughput.",
+          "readOnly": true,
+          "type": "string",
+          "format": "int64"
         }
       }
     },
@@ -489,6 +579,83 @@
         "computer": {
           "description": "Required. The computer name is used as a prefix to the mount remote target. Example: if the computer is `my-computer`, the mount command will look like: `$mount -o vers=4.1,sec=krb5 my-computer.filestore.: `.",
           "type": "string"
+        }
+      }
+    },
+    "Replication": {
+      "id": "Replication",
+      "description": "Replication specifications.",
+      "type": "object",
+      "properties": {
+        "role": {
+          "description": "Output only. The replication role.",
+          "type": "string",
+          "enumDescriptions": [
+            "Role not set.",
+            "The instance is a Active replication member, functions as the replication source instance.",
+            "The instance is a Standby replication member, functions as the replication destination instance."
+          ],
+          "enum": [
+            "ROLE_UNSPECIFIED",
+            "ACTIVE",
+            "STANDBY"
+          ]
+        },
+        "replicas": {
+          "description": "Replicas configuration on the instance. For now, only a single replica config is supported.",
+          "type": "array",
+          "items": {
+            "$ref": "ReplicaConfig"
+          }
+        }
+      }
+    },
+    "ReplicaConfig": {
+      "id": "ReplicaConfig",
+      "description": "Replica configuration for the instance.",
+      "type": "object",
+      "properties": {
+        "state": {
+          "description": "Output only. The replica state.",
+          "type": "string",
+          "enumDescriptions": [
+            "State not set.",
+            "The replica is being created.",
+            "The replica is ready.",
+            "The replica is being removed.",
+            "The replica is experiencing an issue and might be unusable. You can get further details from the `stateReasons` field of the `ReplicaConfig` object."
+          ],
+          "enum": [
+            "STATE_UNSPECIFIED",
+            "CREATING",
+            "READY",
+            "REMOVING",
+            "FAILED"
+          ]
+        },
+        "stateReasons": {
+          "description": "Output only. Additional information about the replication state, if available.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enumDescriptions": [
+              "Reason not specified.",
+              "The peer instance is unreachable."
+            ],
+            "enum": [
+              "STATE_REASON_UNSPECIFIED",
+              "PEER_INSTANCE_UNREACHABLE"
+            ]
+          }
+        },
+        "peerInstance": {
+          "description": "The peer instance.",
+          "type": "string"
+        },
+        "lastActiveSyncTime": {
+          "description": "Output only. The timestamp of the latest replication snapshot taken on the active instance and is already replicated safely.",
+          "type": "string",
+          "format": "google-datetime"
         }
       }
     },
@@ -596,6 +763,13 @@
           "readOnly": true,
           "type": "string",
           "format": "int64"
+        },
+        "tags": {
+          "description": "Optional. Input only. Immutable. Tag keys/values directly bound to this resource. For example: \"123/environment\": \"production\", \"123/costCenter\": \"marketing\"",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       }
     },
@@ -738,6 +912,13 @@
         "kmsKeyName": {
           "description": "Immutable. KMS key name used for data encryption.",
           "type": "string"
+        },
+        "tags": {
+          "description": "Optional. Input only. Immutable. Tag keys/values directly bound to this resource. For example: \"123/environment\": \"production\", \"123/costCenter\": \"marketing\"",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       }
     },
@@ -1445,97 +1626,28 @@
       }
     }
   },
-  "fullyEncodeReservedExpansion": true,
-  "discoveryVersion": "v1",
-  "revision": "20240307",
-  "id": "file:v1beta1",
-  "protocol": "rest",
-  "description": "The Cloud Filestore API is used for creating and managing cloud file servers.",
-  "title": "Cloud Filestore API",
-  "ownerDomain": "google.com",
-  "parameters": {
-    "access_token": {
-      "type": "string",
-      "description": "OAuth access token.",
-      "location": "query"
-    },
-    "alt": {
-      "type": "string",
-      "description": "Data format for response.",
-      "default": "json",
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ],
-      "location": "query"
-    },
-    "callback": {
-      "type": "string",
-      "description": "JSONP",
-      "location": "query"
-    },
-    "fields": {
-      "type": "string",
-      "description": "Selector specifying which fields to include in a partial response.",
-      "location": "query"
-    },
-    "key": {
-      "type": "string",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
-      "location": "query"
-    },
-    "oauth_token": {
-      "type": "string",
-      "description": "OAuth 2.0 token for the current user.",
-      "location": "query"
-    },
-    "prettyPrint": {
-      "type": "boolean",
-      "description": "Returns response with indentations and line breaks.",
-      "default": "true",
-      "location": "query"
-    },
-    "quotaUser": {
-      "type": "string",
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
-      "location": "query"
-    },
-    "upload_protocol": {
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
-      "location": "query"
-    },
-    "uploadType": {
-      "type": "string",
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
-      "location": "query"
-    },
-    "$.xgafv": {
-      "type": "string",
-      "description": "V1 error format.",
-      "enum": [
-        "1",
-        "2"
-      ],
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ],
-      "location": "query"
-    }
-  },
-  "version": "v1beta1",
   "icons": {
     "x16": "http://www.google.com/images/icons/product/search-16.gif",
     "x32": "http://www.google.com/images/icons/product/search-32.gif"
   },
+  "protocol": "rest",
+  "title": "Cloud Filestore API",
+  "basePath": "",
+  "revision": "20240619",
+  "version": "v1beta1",
   "rootUrl": "https://file.googleapis.com/",
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        }
+      }
+    }
+  },
+  "ownerDomain": "google.com",
+  "description": "The Cloud Filestore API is used for creating and managing cloud file servers.",
+  "documentationLink": "https://cloud.google.com/filestore/",
   "resources": {
     "projects": {
       "resources": {
@@ -2501,12 +2613,85 @@
       }
     }
   },
-  "canonicalName": "Cloud Filestore",
-  "basePath": "",
+  "fullyEncodeReservedExpansion": true,
   "version_module": true,
-  "name": "file",
-  "kind": "discovery#restDescription",
-  "baseUrl": "https://file.googleapis.com/",
-  "ownerName": "Google",
-  "servicePath": ""
+  "canonicalName": "Cloud Filestore",
+  "parameters": {
+    "access_token": {
+      "type": "string",
+      "description": "OAuth access token.",
+      "location": "query"
+    },
+    "alt": {
+      "type": "string",
+      "description": "Data format for response.",
+      "default": "json",
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "location": "query"
+    },
+    "callback": {
+      "type": "string",
+      "description": "JSONP",
+      "location": "query"
+    },
+    "fields": {
+      "type": "string",
+      "description": "Selector specifying which fields to include in a partial response.",
+      "location": "query"
+    },
+    "key": {
+      "type": "string",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+      "location": "query"
+    },
+    "oauth_token": {
+      "type": "string",
+      "description": "OAuth 2.0 token for the current user.",
+      "location": "query"
+    },
+    "prettyPrint": {
+      "type": "boolean",
+      "description": "Returns response with indentations and line breaks.",
+      "default": "true",
+      "location": "query"
+    },
+    "quotaUser": {
+      "type": "string",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
+      "location": "query"
+    },
+    "upload_protocol": {
+      "type": "string",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
+      "location": "query"
+    },
+    "uploadType": {
+      "type": "string",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
+      "location": "query"
+    },
+    "$.xgafv": {
+      "type": "string",
+      "description": "V1 error format.",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "location": "query"
+    }
+  },
+  "discoveryVersion": "v1"
 }

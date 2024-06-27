@@ -1,40 +1,86 @@
 {
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
-        },
-        "https://www.googleapis.com/auth/pubsub": {
-          "description": "View and manage Pub/Sub topics and subscriptions"
-        }
-      }
+  "protocol": "rest",
+  "description": "Provides reliable, many-to-many, asynchronous messaging between applications. ",
+  "mtlsRootUrl": "https://pubsub.mtls.googleapis.com/",
+  "parameters": {
+    "access_token": {
+      "type": "string",
+      "description": "OAuth access token.",
+      "location": "query"
+    },
+    "alt": {
+      "type": "string",
+      "description": "Data format for response.",
+      "default": "json",
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "location": "query"
+    },
+    "callback": {
+      "type": "string",
+      "description": "JSONP",
+      "location": "query"
+    },
+    "fields": {
+      "type": "string",
+      "description": "Selector specifying which fields to include in a partial response.",
+      "location": "query"
+    },
+    "key": {
+      "type": "string",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+      "location": "query"
+    },
+    "oauth_token": {
+      "type": "string",
+      "description": "OAuth 2.0 token for the current user.",
+      "location": "query"
+    },
+    "prettyPrint": {
+      "type": "boolean",
+      "description": "Returns response with indentations and line breaks.",
+      "default": "true",
+      "location": "query"
+    },
+    "quotaUser": {
+      "type": "string",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
+      "location": "query"
+    },
+    "upload_protocol": {
+      "type": "string",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
+      "location": "query"
+    },
+    "uploadType": {
+      "type": "string",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
+      "location": "query"
+    },
+    "$.xgafv": {
+      "type": "string",
+      "description": "V1 error format.",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "location": "query"
     }
   },
-  "servicePath": "",
-  "name": "pubsub",
-  "description": "Provides reliable, many-to-many, asynchronous messaging between applications. ",
   "baseUrl": "https://pubsub.googleapis.com/",
-  "kind": "discovery#restDescription",
-  "version": "v1",
-  "discoveryVersion": "v1",
-  "endpoints": [
-    {
-      "endpointUrl": "https://pubsub.me-central2.rep.googleapis.com/",
-      "location": "me-central2",
-      "description": "Regional Endpoint"
-    },
-    {
-      "endpointUrl": "https://pubsub.europe-west3.rep.googleapis.com/",
-      "location": "europe-west3",
-      "description": "Regional Endpoint"
-    },
-    {
-      "endpointUrl": "https://pubsub.europe-west9.rep.googleapis.com/",
-      "location": "europe-west9",
-      "description": "Regional Endpoint"
-    }
-  ],
+  "servicePath": "",
   "schemas": {
     "SetIamPolicyRequest": {
       "id": "SetIamPolicyRequest",
@@ -699,6 +745,11 @@
             "ACTIVE",
             "RESOURCE_ERROR"
           ]
+        },
+        "analyticsHubSubscriptionInfo": {
+          "description": "Output only. Information about the associated Analytics Hub subscription. Only set if the subscritpion is created by Analytics Hub.",
+          "readOnly": true,
+          "$ref": "AnalyticsHubSubscriptionInfo"
         }
       }
     },
@@ -864,14 +915,16 @@
             "The subscription can actively send messages to Cloud Storage.",
             "Cannot write to the Cloud Storage bucket because of permission denied errors.",
             "Cannot write to the Cloud Storage bucket because it does not exist.",
-            "Cannot write to the destination because enforce_in_transit is set to true and the destination locations are not in the allowed regions."
+            "Cannot write to the destination because enforce_in_transit is set to true and the destination locations are not in the allowed regions.",
+            "Cannot write to the Cloud Storage bucket due to an incompatibility between the topic schema and subscription settings."
           ],
           "enum": [
             "STATE_UNSPECIFIED",
             "ACTIVE",
             "PERMISSION_DENIED",
             "NOT_FOUND",
-            "IN_TRANSIT_LOCATION_RESTRICTION"
+            "IN_TRANSIT_LOCATION_RESTRICTION",
+            "SCHEMA_MISMATCH"
           ]
         },
         "serviceAccountEmail": {
@@ -893,6 +946,10 @@
       "properties": {
         "writeMetadata": {
           "description": "Optional. When true, write the subscription name, message_id, publish_time, attributes, and ordering_key as additional fields in the output. The subscription name, message_id, and publish_time fields are put in their own fields while all other message properties other than data (for example, an ordering_key, if present) are added as entries in the attributes map.",
+          "type": "boolean"
+        },
+        "useTopicSchema": {
+          "description": "Optional. When true, the output Cloud Storage file will be serialized using the topic schema, if it exists.",
           "type": "boolean"
         }
       }
@@ -939,6 +996,21 @@
           "description": "Optional. The maximum delay between consecutive deliveries of a given message. Value should be between 0 and 600 seconds. Defaults to 600 seconds.",
           "type": "string",
           "format": "google-duration"
+        }
+      }
+    },
+    "AnalyticsHubSubscriptionInfo": {
+      "id": "AnalyticsHubSubscriptionInfo",
+      "description": "Information about an associated Analytics Hub subscription (https://cloud.google.com/bigquery/docs/analytics-hub-manage-subscriptions).",
+      "type": "object",
+      "properties": {
+        "listing": {
+          "description": "Optional. The name of the associated Analytics Hub listing resource. Pattern: \"projects/{project}/locations/{location}/dataExchanges/{data_exchange}/listings/{listing}\"",
+          "type": "string"
+        },
+        "subscription": {
+          "description": "Optional. The name of the associated Analytics Hub subscription resource. Pattern: \"projects/{project}/locations/{location}/subscriptions/{subscription}\"",
+          "type": "string"
         }
       }
     },
@@ -1173,14 +1245,25 @@
       "properties": {}
     }
   },
-  "mtlsRootUrl": "https://pubsub.mtls.googleapis.com/",
-  "revision": "20240319",
-  "ownerDomain": "google.com",
-  "documentationLink": "https://cloud.google.com/pubsub/docs",
-  "canonicalName": "Pubsub",
+  "title": "Cloud Pub/Sub API",
   "id": "pubsub:v1",
-  "batchPath": "batch",
-  "protocol": "rest",
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        },
+        "https://www.googleapis.com/auth/pubsub": {
+          "description": "View and manage Pub/Sub topics and subscriptions"
+        }
+      }
+    }
+  },
+  "rootUrl": "https://pubsub.googleapis.com/",
+  "ownerDomain": "google.com",
+  "basePath": "",
+  "name": "pubsub",
+  "version": "v1",
   "resources": {
     "projects": {
       "resources": {
@@ -2641,89 +2724,32 @@
       }
     }
   },
-  "parameters": {
-    "access_token": {
-      "type": "string",
-      "description": "OAuth access token.",
-      "location": "query"
-    },
-    "alt": {
-      "type": "string",
-      "description": "Data format for response.",
-      "default": "json",
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ],
-      "location": "query"
-    },
-    "callback": {
-      "type": "string",
-      "description": "JSONP",
-      "location": "query"
-    },
-    "fields": {
-      "type": "string",
-      "description": "Selector specifying which fields to include in a partial response.",
-      "location": "query"
-    },
-    "key": {
-      "type": "string",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
-      "location": "query"
-    },
-    "oauth_token": {
-      "type": "string",
-      "description": "OAuth 2.0 token for the current user.",
-      "location": "query"
-    },
-    "prettyPrint": {
-      "type": "boolean",
-      "description": "Returns response with indentations and line breaks.",
-      "default": "true",
-      "location": "query"
-    },
-    "quotaUser": {
-      "type": "string",
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
-      "location": "query"
-    },
-    "upload_protocol": {
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
-      "location": "query"
-    },
-    "uploadType": {
-      "type": "string",
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
-      "location": "query"
-    },
-    "$.xgafv": {
-      "type": "string",
-      "description": "V1 error format.",
-      "enum": [
-        "1",
-        "2"
-      ],
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ],
-      "location": "query"
-    }
-  },
+  "canonicalName": "Pubsub",
+  "discoveryVersion": "v1",
   "icons": {
     "x16": "http://www.google.com/images/icons/product/search-16.gif",
     "x32": "http://www.google.com/images/icons/product/search-32.gif"
   },
-  "rootUrl": "https://pubsub.googleapis.com/",
-  "basePath": "",
+  "batchPath": "batch",
+  "revision": "20240618",
   "ownerName": "Google",
-  "title": "Cloud Pub/Sub API"
+  "endpoints": [
+    {
+      "endpointUrl": "https://pubsub.me-central2.rep.googleapis.com/",
+      "location": "me-central2",
+      "description": "Regional Endpoint"
+    },
+    {
+      "endpointUrl": "https://pubsub.europe-west3.rep.googleapis.com/",
+      "location": "europe-west3",
+      "description": "Regional Endpoint"
+    },
+    {
+      "endpointUrl": "https://pubsub.europe-west9.rep.googleapis.com/",
+      "location": "europe-west9",
+      "description": "Regional Endpoint"
+    }
+  ],
+  "kind": "discovery#restDescription",
+  "documentationLink": "https://cloud.google.com/pubsub/docs"
 }

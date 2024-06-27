@@ -1,9 +1,10 @@
 {
-  "kind": "discovery#restDescription",
-  "description": "Lets Android application developers access their Google Play accounts. At a high level, the expected workflow is to \"insert\" an Edit, make changes as necessary, and then \"commit\" it. ",
-  "ownerName": "Google",
   "basePath": "",
-  "discoveryVersion": "v1",
+  "canonicalName": "Android Publisher",
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
   "resources": {
     "users": {
       "methods": {
@@ -4632,30 +4633,11 @@
       }
     }
   },
-  "id": "androidpublisher:v3",
-  "servicePath": "",
-  "mtlsRootUrl": "https://androidpublisher.mtls.googleapis.com/",
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "rootUrl": "https://androidpublisher.googleapis.com/",
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/androidpublisher": {
-          "description": "View and manage your Google Play Developer account"
-        }
-      }
-    }
-  },
-  "batchPath": "batch",
-  "canonicalName": "Android Publisher",
-  "revision": "20240418",
-  "documentationLink": "https://developers.google.com/android-publisher",
-  "protocol": "rest",
+  "title": "Google Play Android Developer API",
+  "kind": "discovery#restDescription",
   "name": "androidpublisher",
-  "baseUrl": "https://androidpublisher.googleapis.com/",
+  "batchPath": "batch",
+  "discoveryVersion": "v1",
   "schemas": {
     "User": {
       "id": "User",
@@ -5781,6 +5763,11 @@
         "userTaxAddress": {
           "description": "Required. User address for tax computation.",
           "$ref": "ExternalTransactionAddress"
+        },
+        "transactionProgramCode": {
+          "description": "Optional. The transaction program code, used to help determine service fee for apps partcipating in special partner programs. This field can not be used for external offers transactions. Developers participating in the Play Media Experience Program (https://play.google.com/console/about/programs/mediaprogram/) must provide the program code when reporting alternative billing external transactions. If you are an eligible developer, please contact your BDM for more information on how to set this field.",
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -7953,7 +7940,8 @@
             "Subscription is in grace period. The state is only available when the subscription is an auto renewing plan. In this state, all items are in grace period.",
             "Subscription is on hold (suspended). The state is only available when the subscription is an auto renewing plan. In this state, all items are on hold.",
             "Subscription is canceled but not expired yet. The state is only available when the subscription is an auto renewing plan. All items have auto_renew_enabled set to false.",
-            "Subscription is expired. All items have expiry_time in the past."
+            "Subscription is expired. All items have expiry_time in the past.",
+            "Pending transaction for subscription is canceled. If this pending purchase was for an existing subscription, use linked_purchase_token to get the current state of that subscription."
           ],
           "enum": [
             "SUBSCRIPTION_STATE_UNSPECIFIED",
@@ -7963,7 +7951,8 @@
             "SUBSCRIPTION_STATE_IN_GRACE_PERIOD",
             "SUBSCRIPTION_STATE_ON_HOLD",
             "SUBSCRIPTION_STATE_CANCELED",
-            "SUBSCRIPTION_STATE_EXPIRED"
+            "SUBSCRIPTION_STATE_EXPIRED",
+            "SUBSCRIPTION_STATE_PENDING_PURCHASE_CANCELED"
           ]
         },
         "latestOrderId": {
@@ -7979,7 +7968,7 @@
           "$ref": "PausedStateContext"
         },
         "canceledStateContext": {
-          "description": "Additional context around canceled subscriptions. Only present if the subscription currently has subscription_state SUBSCRIPTION_STATE_CANCELED.",
+          "description": "Additional context around canceled subscriptions. Only present if the subscription currently has subscription_state SUBSCRIPTION_STATE_CANCELED or SUBSCRIPTION_STATE_EXPIRED.",
           "$ref": "CanceledStateContext"
         },
         "testPurchase": {
@@ -8031,7 +8020,7 @@
     },
     "CanceledStateContext": {
       "id": "CanceledStateContext",
-      "description": "Information specific to a subscription in canceled state.",
+      "description": "Information specific to a subscription in the SUBSCRIPTION_STATE_CANCELED or SUBSCRIPTION_STATE_EXPIRED state.",
       "type": "object",
       "properties": {
         "userInitiatedCancellation": {
@@ -8213,6 +8202,10 @@
         "priceChangeDetails": {
           "description": "The information of the last price change for the item since subscription signup.",
           "$ref": "SubscriptionItemPriceChangeDetails"
+        },
+        "installmentDetails": {
+          "description": "The installment plan commitment and state related info for the auto renewing plan.",
+          "$ref": "InstallmentPlan"
         }
       }
     },
@@ -8263,6 +8256,38 @@
           "format": "google-datetime"
         }
       }
+    },
+    "InstallmentPlan": {
+      "id": "InstallmentPlan",
+      "description": "Information to a installment plan.",
+      "type": "object",
+      "properties": {
+        "initialCommittedPaymentsCount": {
+          "description": "Total number of payments the user is initially committed for.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "subsequentCommittedPaymentsCount": {
+          "description": "Total number of payments the user will be committed for after each commitment period. Empty means the installment plan will fall back to a normal auto-renew subscription after initial commitment.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "remainingCommittedPaymentsCount": {
+          "description": "Total number of committed payments remaining to be paid for in this renewal cycle.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "pendingCancellation": {
+          "description": "If present, this installment plan is pending to be canceled. The cancellation will happen only after the user finished all committed payments.",
+          "$ref": "PendingCancellation"
+        }
+      }
+    },
+    "PendingCancellation": {
+      "id": "PendingCancellation",
+      "description": "This is an indicator of whether there is a pending cancellation on the virtual installment plan. The cancellation will happen only after the user finished all committed payments.",
+      "type": "object",
+      "properties": {}
     },
     "PrepaidPlan": {
       "id": "PrepaidPlan",
@@ -8379,6 +8404,10 @@
         "taxAndComplianceSettings": {
           "description": "Details about taxes and legal compliance.",
           "$ref": "SubscriptionTaxAndComplianceSettings"
+        },
+        "restrictedPaymentCountries": {
+          "description": "Optional. Countries where the purchase of this subscription is restricted to payment methods registered in the same country. If empty, no payment location restrictions are imposed.",
+          "$ref": "RestrictedPaymentCountries"
         }
       }
     },
@@ -8415,6 +8444,10 @@
         "prepaidBasePlanType": {
           "description": "Set when the base plan does not automatically renew at the end of the billing period.",
           "$ref": "PrepaidBasePlanType"
+        },
+        "installmentsBasePlanType": {
+          "description": "Set for installments base plans where a user is committed to a specified number of payments.",
+          "$ref": "InstallmentsBasePlanType"
         },
         "regionalConfigs": {
           "description": "Region-specific information for this base plan.",
@@ -8516,6 +8549,72 @@
         }
       }
     },
+    "InstallmentsBasePlanType": {
+      "id": "InstallmentsBasePlanType",
+      "description": "Represents an installments base plan where a user commits to a specified number of payments.",
+      "type": "object",
+      "properties": {
+        "billingPeriodDuration": {
+          "description": "Required. Subscription period, specified in ISO 8601 format. For a list of acceptable billing periods, refer to the help center.",
+          "type": "string"
+        },
+        "committedPaymentsCount": {
+          "description": "Required. The number of payments the user is committed to.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "renewalType": {
+          "description": "Required. Installments base plan renewal type. Determines the behavior at the end of the initial commitment.",
+          "type": "string",
+          "enumDescriptions": [
+            "Unspecified state.",
+            "Renews periodically for the billing period duration without commitment.",
+            "Renews with the commitment of the same duration as the initial one."
+          ],
+          "enum": [
+            "RENEWAL_TYPE_UNSPECIFIED",
+            "RENEWAL_TYPE_RENEWS_WITHOUT_COMMITMENT",
+            "RENEWAL_TYPE_RENEWS_WITH_COMMITMENT"
+          ]
+        },
+        "gracePeriodDuration": {
+          "description": "Grace period of the subscription, specified in ISO 8601 format. Acceptable values are P0D (zero days), P3D (3 days), P7D (7 days), P14D (14 days), and P30D (30 days). If not specified, a default value will be used based on the recurring period duration.",
+          "type": "string"
+        },
+        "accountHoldDuration": {
+          "description": "Optional. Account hold period of the subscription, specified exclusively in days and in ISO 8601 format. Acceptable values are P0D (zero days) to P30D (30days). If not specified, the default value is P30D (30 days).",
+          "type": "string"
+        },
+        "resubscribeState": {
+          "description": "Whether users should be able to resubscribe to this base plan in Google Play surfaces. Defaults to RESUBSCRIBE_STATE_ACTIVE if not specified.",
+          "type": "string",
+          "enumDescriptions": [
+            "Unspecified state.",
+            "Resubscribe is active.",
+            "Resubscribe is inactive."
+          ],
+          "enum": [
+            "RESUBSCRIBE_STATE_UNSPECIFIED",
+            "RESUBSCRIBE_STATE_ACTIVE",
+            "RESUBSCRIBE_STATE_INACTIVE"
+          ]
+        },
+        "prorationMode": {
+          "description": "The proration mode for the base plan determines what happens when a user switches to this plan from another base plan. If unspecified, defaults to CHARGE_ON_NEXT_BILLING_DATE.",
+          "type": "string",
+          "enumDescriptions": [
+            "Unspecified mode.",
+            "Users will be charged for their new base plan at the end of their current billing period.",
+            "Users will be charged for their new base plan immediately and in full. Any remaining period of their existing subscription will be used to extend the duration of the new billing plan."
+          ],
+          "enum": [
+            "SUBSCRIPTION_PRORATION_MODE_UNSPECIFIED",
+            "SUBSCRIPTION_PRORATION_MODE_CHARGE_ON_NEXT_BILLING_DATE",
+            "SUBSCRIPTION_PRORATION_MODE_CHARGE_FULL_PRICE_IMMEDIATELY"
+          ]
+        }
+      }
+    },
     "RegionalBasePlanConfig": {
       "id": "RegionalBasePlanConfig",
       "description": "Configuration for a base plan specific to a region.",
@@ -8588,6 +8687,20 @@
         "description": {
           "description": "The description of this subscription in the language of this listing. Maximum length - 80 characters. Plain text.",
           "type": "string"
+        }
+      }
+    },
+    "RestrictedPaymentCountries": {
+      "id": "RestrictedPaymentCountries",
+      "description": "Countries where the purchase of this product is restricted to payment methods registered in the same country. If empty, no payment location restrictions are imposed.",
+      "type": "object",
+      "properties": {
+        "regionCodes": {
+          "description": "Required. Region codes to impose payment restrictions on, as defined by ISO 3166-2, e.g. \"US\".",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -9766,7 +9879,7 @@
           "format": "int32"
         },
         "voidedReason": {
-          "description": "The reason why the purchase was voided, possible values are: 0. Other 1. Remorse 2. Not_received 3. Defective 4. Accidental_purchase 5. Fraud 6. Friendly_fraud 7. Chargeback",
+          "description": "The reason why the purchase was voided, possible values are: 0. Other 1. Remorse 2. Not_received 3. Defective 4. Accidental_purchase 5. Fraud 6. Friendly_fraud 7. Chargeback 8. Unacknowledged_purchase",
           "type": "integer",
           "format": "int32"
         },
@@ -9778,8 +9891,22 @@
       }
     }
   },
-  "title": "Google Play Android Developer API",
-  "version": "v3",
+  "protocol": "rest",
+  "ownerDomain": "google.com",
+  "rootUrl": "https://androidpublisher.googleapis.com/",
+  "servicePath": "",
+  "description": "Lets Android application developers access their Google Play accounts. At a high level, the expected workflow is to \"insert\" an Edit, make changes as necessary, and then \"commit\" it. ",
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/androidpublisher": {
+          "description": "View and manage your Google Play Developer account"
+        }
+      }
+    }
+  },
+  "baseUrl": "https://androidpublisher.googleapis.com/",
+  "ownerName": "Google",
   "parameters": {
     "access_token": {
       "type": "string",
@@ -9857,5 +9984,9 @@
       "location": "query"
     }
   },
-  "ownerDomain": "google.com"
+  "version": "v3",
+  "documentationLink": "https://developers.google.com/android-publisher",
+  "id": "androidpublisher:v3",
+  "mtlsRootUrl": "https://androidpublisher.mtls.googleapis.com/",
+  "revision": "20240624"
 }

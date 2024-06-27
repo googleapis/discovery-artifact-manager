@@ -1,4 +1,19 @@
 {
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
+  "protocol": "rest",
+  "revision": "20240621",
+  "canonicalName": "CCAI Platform",
+  "title": "Contact Center AI Platform API",
+  "ownerDomain": "google.com",
+  "ownerName": "Google",
+  "servicePath": "",
+  "name": "contactcenteraiplatform",
+  "baseUrl": "https://contactcenteraiplatform.googleapis.com/",
+  "rootUrl": "https://contactcenteraiplatform.googleapis.com/",
+  "id": "contactcenteraiplatform:v1alpha1",
   "parameters": {
     "access_token": {
       "type": "string",
@@ -76,17 +91,9 @@
       "location": "query"
     }
   },
-  "kind": "discovery#restDescription",
-  "protocol": "rest",
-  "mtlsRootUrl": "https://contactcenteraiplatform.mtls.googleapis.com/",
-  "id": "contactcenteraiplatform:v1alpha1",
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "baseUrl": "https://contactcenteraiplatform.googleapis.com/",
-  "documentationLink": "https://cloud.google.com/solutions/contact-center-ai-platform",
-  "version": "v1alpha1",
+  "version_module": true,
+  "description": "",
+  "fullyEncodeReservedExpansion": true,
   "resources": {
     "projects": {
       "resources": {
@@ -495,21 +502,8 @@
       }
     }
   },
-  "fullyEncodeReservedExpansion": true,
-  "description": "",
-  "title": "Contact Center AI Platform API",
-  "version_module": true,
-  "basePath": "",
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
-        }
-      }
-    }
-  },
-  "ownerName": "Google",
+  "kind": "discovery#restDescription",
+  "mtlsRootUrl": "https://contactcenteraiplatform.mtls.googleapis.com/",
   "schemas": {
     "ListOperationsResponse": {
       "id": "ListOperationsResponse",
@@ -630,7 +624,7 @@
     },
     "ContactCenter": {
       "id": "ContactCenter",
-      "description": "Message describing ContactCenter object Next ID: 22",
+      "description": "Message describing ContactCenter object Next ID: 23",
       "type": "object",
       "properties": {
         "name": {
@@ -673,7 +667,10 @@
             "State FAILED",
             "State TERMINATING_FAILED",
             "State TERMINATED",
-            "State IN_GRACE_PERIOD"
+            "State IN_GRACE_PERIOD",
+            "State in STATE_FAILING_OVER. This State must ONLY be used by Multiregional Instances when a failover was triggered. Customers are not able to update instances in this state.",
+            "State DEGRADED. This State must ONLY be used by Multiregional Instances after a failover was executed successfully. Customers are not able to update instances in this state.",
+            "State REPAIRING. This State must ONLY be used by Multiregional Instances after a fallback was triggered. Customers are not able to update instancs in this state."
           ],
           "enum": [
             "STATE_UNSPECIFIED",
@@ -683,7 +680,10 @@
             "STATE_FAILED",
             "STATE_TERMINATING_FAILED",
             "STATE_TERMINATED",
-            "STATE_IN_GRACE_PERIOD"
+            "STATE_IN_GRACE_PERIOD",
+            "STATE_FAILING_OVER",
+            "STATE_DEGRADED",
+            "STATE_REPAIRING"
           ]
         },
         "customerDomainPrefix": {
@@ -719,12 +719,16 @@
           "type": "string"
         },
         "privateComponents": {
-          "description": "Output only. A list of UJET components that should be privately accessed. This field is set by reading settings from the data plane. For more information about the format of the component please refer to go/ccaip-vpc-sc-org-policy. This field is must be fully populated only for Create/Update resource operations. The main use case for this field is OrgPolicy checks via CPE.",
+          "description": "Output only. TODO(b/283407860) Deprecate this field.",
           "readOnly": true,
           "type": "array",
           "items": {
             "type": "string"
           }
+        },
+        "privateAccess": {
+          "description": "Optional. VPC-SC related networking configuration.",
+          "$ref": "PrivateAccess"
         },
         "early": {
           "description": "Optional. Early release channel.",
@@ -733,6 +737,10 @@
         "normal": {
           "description": "Optional. Normal release channel.",
           "$ref": "Normal"
+        },
+        "critical": {
+          "description": "Optional. Critical release channel.",
+          "$ref": "Critical"
         }
       }
     },
@@ -775,7 +783,13 @@
             "Instance Size STANDARD_XLARGE.",
             "Instance Size STANDARD_2XLARGE.",
             "Instance Size STANDARD_3XLARGE.",
-            "Instance Size DEV_EXTRA_SMALL."
+            "Instance Size DEV_EXTRA_SMALL.",
+            "Instance Size MULTIREGION_SMALL",
+            "Instance Size MULTIREGION_MEDIUM",
+            "Instance Size MULTIREGION_LARGE",
+            "Instance Size MULTIREGION_XLARGE",
+            "Instance Size MULTIREGION_2XLARGE.",
+            "Instance Size MULTIREGION_3XLARGE."
           ],
           "enum": [
             "INSTANCE_SIZE_UNSPECIFIED",
@@ -785,7 +799,13 @@
             "STANDARD_XLARGE",
             "STANDARD_2XLARGE",
             "STANDARD_3XLARGE",
-            "DEV_XSMALL"
+            "DEV_XSMALL",
+            "MULTIREGION_SMALL",
+            "MULTIREGION_MEDIUM",
+            "MULTIREGION_LARGE",
+            "MULTIREGION_XLARGE",
+            "MULTIREGION_2XLARGE",
+            "MULTIREGION_3XLARGE"
           ]
         }
       }
@@ -815,6 +835,67 @@
         "emailMapping": {
           "description": "IdP field that maps to the user’s email address",
           "type": "string"
+        },
+        "authenticationContexts": {
+          "description": "Additional contexts used for authentication.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enumDescriptions": [
+              "The Unspecified class indicates that the authentication was performed by unspecified means.",
+              "The Internet Protocol class is applicable when a principal is authenticated through the use of a provided IP address.",
+              "The Internet Protocol Password class is applicable when a principal is authenticated through the use of a provided IP address, in addition to a username/password.",
+              "This class is applicable when the principal has authenticated using a password to a local authentication authority, in order to acquire a Kerberos ticket. That Kerberos ticket is then used for subsequent network authentication.",
+              "Reflects no mobile customer registration procedures and an authentication of the mobile device without requiring explicit end-user interaction. This context class authenticates only the device and never the user; it is useful when services other than the mobile operator want to add a secure device authentication to their authentication process.",
+              "Reflects no mobile customer registration procedures and a two-factor based authentication, such as secure device and user PIN. This context class is useful when a service other than the mobile operator wants to link their customer ID to a mobile supplied two-factor authentication service by capturing mobile phone data at enrollment.",
+              "Reflects mobile contract customer registration procedures and a single factor authentication. For example, a digital signing device with tamper resistant memory for key storage, such as the mobile MSISDN, but no required PIN or biometric for real-time user authentication.",
+              "Reflects mobile contract customer registration procedures and a two-factor based authentication. For example, a digital signing device with tamper resistant memory for key storage, such as a GSM SIM, that requires explicit proof of user identity and intent, such as a PIN or biometric.",
+              "The Password class is applicable when a principal authenticates to an authentication authority through the presentation of a password over an unprotected HTTP session.",
+              "The PasswordProtectedTransport class is applicable when a principal authenticates to an authentication authority through the presentation of a password over a protected session.",
+              "The PreviousSession class is applicable when a principal had authenticated to an authentication authority at some point in the past using any authentication context supported by that authentication authority",
+              "The X509 context class indicates that the principal authenticated by means of a digital signature where the key was validated as part of an X.509 Public Key Infrastructure.",
+              "The PGP context class indicates that the principal authenticated by means of a digital signature where the key was validated as part of a PGP Public Key Infrastructure.",
+              "The SPKI context class indicates that the principal authenticated by means of a digital signature where the key was validated via an SPKI Infrastructure.",
+              "This context class indicates that the principal authenticated by means of a digital signature according to the processing rules specified in the XML Digital Signature specification [XMLSig].",
+              "The Smartcard class is identified when a principal authenticates to an authentication authority using a smartcard.",
+              "The SmartcardPKI class is applicable when a principal authenticates to an authentication authority through a two-factor authentication mechanism using a smartcard with enclosed private key and a PIN.",
+              "The Software-PKI class is applicable when a principal uses an X.509 certificate stored in software to authenticate to the authentication authority.",
+              "This class is used to indicate that the principal authenticated via the provision of a fixed-line telephone number, transported via a telephony protocol such as ADSL.",
+              "Indicates that the principal is \"roaming\" (perhaps using a phone card) and authenticates via the means of the line number, a user suffix, and a password element.",
+              "This class is used to indicate that the principal authenticated via the provision of a fixed-line telephone number and a user suffix, transported via a telephony protocol such as ADSL.",
+              "Indicates that the principal authenticated via the means of the line number, a user suffix, and a password element.",
+              "The Secure Remote Password class is applicable when the authentication was performed by means of Secure Remote Password as specified in [RFC 2945].",
+              "This class indicates that the principal authenticated by means of a client certificate, secured with the SSL/TLS transport.",
+              "The TimeSyncToken class is applicable when a principal authenticates through a time synchronization token."
+            ],
+            "enum": [
+              "AUTHENTICATION_CONTEXT_UNSPECIFIED",
+              "INTERNET_PROTOCOL",
+              "INTERNET_PROTOCOL_PASSWORD",
+              "KERBEROS",
+              "MOBILE_ONE_FACTOR_UNREGISTERED",
+              "MOBILE_TWO_FACTOR_UNREGISTERED",
+              "MOBILE_ONE_FACTOR_CONTRACT",
+              "MOBILE_TWO_FACTOR_CONTRACT",
+              "PASSWORD",
+              "PASSWORD_PROTECTED_TRANSPORT",
+              "PREVIOUS_SESSION",
+              "PUBLIC_KEY_X509",
+              "PUBLIC_KEY_PGP",
+              "PUBLIC_KEY_SPKI",
+              "PUBLIC_KEY_XML_DIGITAL_SIGNATURE",
+              "SMARTCARD",
+              "SMARTCARD_PKI",
+              "SOFTWARE_PKI",
+              "TELEPHONY",
+              "TELEPHONY_NOMADIC",
+              "TELEPHONY_PERSONALIZED",
+              "TELEPHONY_AUTHENTICATED",
+              "SECURE_REMOTE_PASSWORD",
+              "SSL_TLS_CERTIFICATE_BASED",
+              "TIME_SYNC_TOKEN"
+            ]
+          }
         }
       }
     },
@@ -833,9 +914,66 @@
         }
       }
     },
+    "PrivateAccess": {
+      "id": "PrivateAccess",
+      "description": "Defines ingress and egress private traffic settings for CCAIP instances.",
+      "type": "object",
+      "properties": {
+        "ingressSettings": {
+          "description": "List of ingress components that should not be accessed via the Internet. For more information see go/ccaip-private-path-v2.",
+          "type": "array",
+          "items": {
+            "$ref": "Component"
+          }
+        },
+        "egressSettings": {
+          "description": "List of egress components that should not be accessed via the Internet. For more information see go/ccaip-private-path-v2.",
+          "type": "array",
+          "items": {
+            "$ref": "Component"
+          }
+        },
+        "pscSetting": {
+          "description": "Private service connect settings.",
+          "$ref": "PscSetting"
+        }
+      }
+    },
+    "Component": {
+      "id": "Component",
+      "description": "Defines a logical CCAIP component that e.g. “EMAIL”, \"CRM\". For more information see go/ccaip-private-path-v2. Each logical component is associated with a list of service attachments.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "Name of the component.",
+          "type": "string"
+        },
+        "serviceAttachmentNames": {
+          "description": "Associated service attachments. The service attachment names that will be used for sending private traffic to the CCAIP tenant project. Example service attachment name: \"projects/${TENANT_PROJECT_ID}/regions/${REGION}/serviceAttachments/ingress-default\".",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "PscSetting": {
+      "id": "PscSetting",
+      "description": "Private service connect settings.",
+      "type": "object",
+      "properties": {
+        "allowedConsumerProjectIds": {
+          "description": "The list of project ids that are allowed to send traffic to the service attachment. This field should be filled only for the ingress components.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "Early": {
       "id": "Early",
-      "description": "First Channel to receive the updates. Meant to dev/test instances",
+      "description": "LINT.IfChange First Channel to receive the updates. Meant to dev/test instances",
       "type": "object",
       "properties": {}
     },
@@ -844,6 +982,94 @@
       "description": "Instances in this Channel will receive updates after all instances in `Early` were updated + 2 days.",
       "type": "object",
       "properties": {}
+    },
+    "Critical": {
+      "id": "Critical",
+      "description": "Instances in this Channel will receive updates after all instances in `Critical` were updated + 2 days. They also will only be updated outside of their peak hours.",
+      "type": "object",
+      "properties": {
+        "peakHours": {
+          "description": "Required. Hours during which the instance should not be updated.",
+          "type": "array",
+          "items": {
+            "$ref": "WeeklySchedule"
+          }
+        }
+      }
+    },
+    "WeeklySchedule": {
+      "id": "WeeklySchedule",
+      "description": "Message representing a weekly schedule.",
+      "type": "object",
+      "properties": {
+        "days": {
+          "description": "Required. Days of the week this schedule applies to.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enumDescriptions": [
+              "The day of the week is unspecified.",
+              "Monday",
+              "Tuesday",
+              "Wednesday",
+              "Thursday",
+              "Friday",
+              "Saturday",
+              "Sunday"
+            ],
+            "enum": [
+              "DAY_OF_WEEK_UNSPECIFIED",
+              "MONDAY",
+              "TUESDAY",
+              "WEDNESDAY",
+              "THURSDAY",
+              "FRIDAY",
+              "SATURDAY",
+              "SUNDAY"
+            ]
+          }
+        },
+        "startTime": {
+          "description": "Required. Daily start time of the schedule.",
+          "$ref": "TimeOfDay"
+        },
+        "endTime": {
+          "description": "Optional. Daily end time of the schedule. If `end_time` is before `start_time`, the schedule will be considered as ending on the next day.",
+          "$ref": "TimeOfDay"
+        },
+        "duration": {
+          "description": "Optional. Duration of the schedule.",
+          "type": "string",
+          "format": "google-duration"
+        }
+      }
+    },
+    "TimeOfDay": {
+      "id": "TimeOfDay",
+      "description": "Represents a time of day. The date and time zone are either not significant or are specified elsewhere. An API may choose to allow leap seconds. Related types are google.type.Date and `google.protobuf.Timestamp`.",
+      "type": "object",
+      "properties": {
+        "hours": {
+          "description": "Hours of day in 24 hour format. Should be from 0 to 23. An API may choose to allow the value \"24:00:00\" for scenarios like business closing time.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "minutes": {
+          "description": "Minutes of hour of day. Must be from 0 to 59.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "seconds": {
+          "description": "Seconds of minutes of the time. Must normally be from 0 to 59. An API may allow the value 60 if it allows leap-seconds.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "nanos": {
+          "description": "Fractions of seconds in nanoseconds. Must be from 0 to 999,999,999.",
+          "type": "integer",
+          "format": "int32"
+        }
+      }
     },
     "ContactCenterQuota": {
       "id": "ContactCenterQuota",
@@ -897,7 +1123,13 @@
             "Instance Size STANDARD_XLARGE.",
             "Instance Size STANDARD_2XLARGE.",
             "Instance Size STANDARD_3XLARGE.",
-            "Instance Size DEV_EXTRA_SMALL."
+            "Instance Size DEV_EXTRA_SMALL.",
+            "Instance Size MULTIREGION_SMALL",
+            "Instance Size MULTIREGION_MEDIUM",
+            "Instance Size MULTIREGION_LARGE",
+            "Instance Size MULTIREGION_XLARGE",
+            "Instance Size MULTIREGION_2XLARGE.",
+            "Instance Size MULTIREGION_3XLARGE."
           ],
           "enum": [
             "INSTANCE_SIZE_UNSPECIFIED",
@@ -907,7 +1139,13 @@
             "STANDARD_XLARGE",
             "STANDARD_2XLARGE",
             "STANDARD_3XLARGE",
-            "DEV_XSMALL"
+            "DEV_XSMALL",
+            "MULTIREGION_SMALL",
+            "MULTIREGION_MEDIUM",
+            "MULTIREGION_LARGE",
+            "MULTIREGION_XLARGE",
+            "MULTIREGION_2XLARGE",
+            "MULTIREGION_3XLARGE"
           ]
         }
       }
@@ -1057,12 +1295,18 @@
       }
     }
   },
-  "canonicalName": "CCAI Platform",
-  "rootUrl": "https://contactcenteraiplatform.googleapis.com/",
-  "name": "contactcenteraiplatform",
-  "ownerDomain": "google.com",
-  "batchPath": "batch",
+  "basePath": "",
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        }
+      }
+    }
+  },
   "discoveryVersion": "v1",
-  "revision": "20240419",
-  "servicePath": ""
+  "version": "v1alpha1",
+  "documentationLink": "https://cloud.google.com/solutions/contact-center-ai-platform",
+  "batchPath": "batch"
 }
