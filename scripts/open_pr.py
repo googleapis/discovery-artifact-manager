@@ -310,7 +310,9 @@ def update_pr(pr_number: str, github_token: Optional[str]) -> None:
     if approval_token is None:
         logging.info("No approval token provided; skipping automerge")
     elif not enable_autoapprove:
-        logging.info(f"Autoapproval is not enabled, set {AUTOMERGE_DISCOVERY_ENV} to `true`")
+        logging.info(
+            f"Autoapproval is not enabled, set {AUTOMERGE_DISCOVERY_ENV} to `true`"
+        )
     else:
         os.putenv(MAIN_TOKEN_ENV, approval_token)
         logging.info("Adding automerge label ...")
