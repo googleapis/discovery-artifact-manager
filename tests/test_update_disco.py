@@ -96,6 +96,7 @@ INDEX_2_CONTENT_SORTED = b"""{
   ]
 }"""
 
+
 class TestUpdateDisco(unittest.TestCase):
     def setUp(self):
         self._old_path = Path.cwd()
