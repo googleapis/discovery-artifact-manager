@@ -30,6 +30,7 @@ PULL_REQUEST_BODY = "Automatically created by the update_disco script."
 APPROVAL_MESSAGE = "Rubber-stamped automated update of discovery documents!"
 MAIN_TOKEN_ENV = "GITHUB_TOKEN"
 APPROVAL_TOKEN_ENV = "APPROVAL_GITHUB_TOKEN"
+AUTOMERGE_DISCOVERY_ENV = "AUTOMERGE_DISCOVERY"
 
 
 def main() -> None:
@@ -305,8 +306,11 @@ def update_pr(pr_number: str, github_token: Optional[str]) -> None:
         github_token {Optional[str]} -- The github token, if provided
     """
     approval_token: Optional[str] = os.getenv(APPROVAL_TOKEN_ENV)
+    enable_autoapprove: Optional[bool] = os.getenv(AUTOMERGE_DISCOVERY_ENV) == "true"
     if approval_token is None:
         logging.info("No approval token provided; skipping automerge")
+    elif not enable_autoapprove:
+        logging.info(f"Autoapproval is not enabled, set {AUTOMERGE_DISCOVERY_ENV} to `true`")
     else:
         os.putenv(MAIN_TOKEN_ENV, approval_token)
         logging.info("Adding automerge label ...")
