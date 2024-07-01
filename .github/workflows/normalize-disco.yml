@@ -1,0 +1,30 @@
+name: Normalize discovery documents
+on:
+  workflow_dispatch:
+
+jobs:
+  normalize-discoveries:
+    if: ${{ github.repository == 'googleapis/discovery-artifact-manager' }}
+    runs-on: ubuntu-latest
+    env:
+      ACCESS_TOKEN: ${{ secrets.YOSHI_CODE_BOT_TOKEN }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Install Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: execute
+        run: |
+          python scripts/normalize_discovery.py
+      - uses: googleapis/code-suggester@v4 # takes the changes from git directory
+        with:
+          command: pr
+          upstream_owner: googleapis
+          upstream_repo: discovery-artifact-manager
+          description: 'Ran scripts/normalize_discovery.py'
+          title: 'chore: normalize discovery docs'
+          message: 'chore: normalize discovery docs'
+          branch: normalize-discovery
+          git_dir: '.'
