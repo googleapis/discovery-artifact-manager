@@ -1,21 +1,8 @@
 {
   "fullyEncodeReservedExpansion": true,
-  "canonicalName": "Cloud Deploy",
-  "version": "v1",
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
   "protocol": "rest",
-  "auth": {
-    "oauth2": {
-      "scopes": {
-        "https://www.googleapis.com/auth/cloud-platform": {
-          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
-        }
-      }
-    }
-  },
+  "kind": "discovery#restDescription",
+  "version": "v1",
   "schemas": {
     "ListOperationsResponse": {
       "id": "ListOperationsResponse",
@@ -140,7 +127,7 @@
       "type": "object",
       "properties": {
         "name": {
-          "description": "Optional. Name of the `DeliveryPipeline`. Format is `projects/{project}/locations/{location}/deliveryPipelines/a-z{0,62}`.",
+          "description": "Optional. Name of the `DeliveryPipeline`. Format is `projects/{project}/locations/{location}/deliveryPipelines/{deliveryPipeline}`. The `deliveryPipeline` component must match `[a-z]([a-z0-9-]{0,61}[a-z0-9])?`",
           "type": "string"
         },
         "uid": {
@@ -437,7 +424,7 @@
       "type": "object",
       "properties": {
         "percentages": {
-          "description": "Required. The percentage based deployments that will occur as a part of a `Rollout`. List is expected in ascending order and each integer n is 0 \u003c= n \u003c 100.",
+          "description": "Required. The percentage based deployments that will occur as a part of a `Rollout`. List is expected in ascending order and each integer n is 0 \u003c= n \u003c 100. If the GatewayServiceMesh is configured for Kubernetes, then the range for n is 0 \u003c= n \u003c= 100.",
           "type": "array",
           "items": {
             "type": "integer",
@@ -632,7 +619,7 @@
       "type": "object",
       "properties": {
         "name": {
-          "description": "Optional. Name of the `Target`. Format is `projects/{project}/locations/{location}/targets/a-z{0,62}`.",
+          "description": "Optional. Name of the `Target`. Format is `projects/{project}/locations/{location}/targets/{target}`. The `target` component must match `[a-z]([a-z0-9-]{0,61}[a-z0-9])?`",
           "type": "string"
         },
         "targetId": {
@@ -725,12 +712,16 @@
       "type": "object",
       "properties": {
         "cluster": {
-          "description": "Information specifying a GKE Cluster. Format is `projects/{project_id}/locations/{location_id}/clusters/{cluster_id}`.",
+          "description": "Optional. Information specifying a GKE Cluster. Format is `projects/{project_id}/locations/{location_id}/clusters/{cluster_id}`.",
           "type": "string"
         },
         "internalIp": {
           "description": "Optional. If true, `cluster` is accessed using the private IP address of the control plane endpoint. Otherwise, the default IP address of the control plane endpoint is used. The default IP address is the private IP address for clusters with private control-plane endpoints and the public IP address otherwise. Only specify this option when `cluster` is a [private GKE cluster](https://cloud.google.com/kubernetes-engine/docs/concepts/private-cluster-concept).",
           "type": "boolean"
+        },
+        "proxyUrl": {
+          "description": "Optional. If set, used to configure a [proxy](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/#proxy) to the Kubernetes server.",
+          "type": "string"
         }
       }
     },
@@ -740,7 +731,7 @@
       "type": "object",
       "properties": {
         "membership": {
-          "description": "Membership of the GKE Hub-registered cluster to which to apply the Skaffold configuration. Format is `projects/{project}/locations/{location}/memberships/{membership_name}`.",
+          "description": "Optional. Membership of the GKE Hub-registered cluster to which to apply the Skaffold configuration. Format is `projects/{project}/locations/{location}/memberships/{membership_name}`.",
           "type": "string"
         }
       }
@@ -833,6 +824,10 @@
           "description": "Optional. Execution timeout for a Cloud Build Execution. This must be between 10m and 24h in seconds format. If unspecified, a default timeout of 1h is used.",
           "type": "string",
           "format": "google-duration"
+        },
+        "verbose": {
+          "description": "Optional. If true, additional logging will be enabled when running builds in this execution environment.",
+          "type": "boolean"
         }
       }
     },
@@ -922,7 +917,7 @@
       "type": "object",
       "properties": {
         "name": {
-          "description": "Optional. Name of the `Rollout`. Format is `projects/{project}/locations/{location}/deliveryPipelines/{deliveryPipeline}/releases/{release}/rollouts/a-z{0,62}`.",
+          "description": "Optional. Name of the `Rollout`. Format is `projects/{project}/locations/{location}/deliveryPipelines/{deliveryPipeline}/releases/{release}/rollouts/{rollout}`. The `rollout` component must match `[a-z]([a-z0-9-]{0,61}[a-z0-9])?`",
           "type": "string"
         },
         "uid": {
@@ -1087,7 +1082,7 @@
           "$ref": "Metadata"
         },
         "controllerRollout": {
-          "description": "Output only. Name of the `ControllerRollout`. Format is `projects/{project}/locations/{location}/deliveryPipelines/{deliveryPipeline}/releases/{release}/rollouts/a-z{0,62}`.",
+          "description": "Output only. Name of the `ControllerRollout`. Format is `projects/{project}/locations/{location}/deliveryPipelines/{deliveryPipeline}/releases/{release}/rollouts/{rollout}`.",
           "readOnly": true,
           "type": "string"
         },
@@ -1397,12 +1392,12 @@
       "type": "object",
       "properties": {
         "promoteAutomationRun": {
-          "description": "Output only. The ID of the AutomationRun initiated by a promote release rule.",
+          "description": "Output only. The name of the AutomationRun initiated by a promote release rule.",
           "readOnly": true,
           "type": "string"
         },
         "advanceAutomationRuns": {
-          "description": "Output only. The IDs of the AutomationRuns initiated by an advance rollout rule.",
+          "description": "Output only. The names of the AutomationRuns initiated by an advance rollout rule.",
           "readOnly": true,
           "type": "array",
           "items": {
@@ -1410,17 +1405,12 @@
           }
         },
         "repairAutomationRuns": {
-          "description": "Output only. The IDs of the AutomationRuns initiated by a repair rollout rule.",
+          "description": "Output only. The names of the AutomationRuns initiated by a repair rollout rule.",
           "readOnly": true,
           "type": "array",
           "items": {
             "type": "string"
           }
-        },
-        "currentRepairAutomationRun": {
-          "description": "Output only. The current AutomationRun repairing the rollout.",
-          "readOnly": true,
-          "type": "string"
         }
       }
     },
@@ -1481,7 +1471,7 @@
       "type": "object",
       "properties": {
         "name": {
-          "description": "Optional. Name of the `CustomTargetType`. Format is `projects/{project}/locations/{location}/customTargetTypes/a-z{0,62}`.",
+          "description": "Optional. Name of the `CustomTargetType`. Format is `projects/{project}/locations/{location}/customTargetTypes/{customTargetType}`. The `customTargetType` component must match `[a-z]([a-z0-9-]{0,61}[a-z0-9])?`",
           "type": "string"
         },
         "customTargetTypeId": {
@@ -1575,6 +1565,10 @@
         "googleCloudStorage": {
           "description": "Cloud Storage bucket containing the Skaffold Config modules.",
           "$ref": "SkaffoldGCSSource"
+        },
+        "googleCloudBuildRepo": {
+          "description": "Cloud Build V2 repository containing the Skaffold Config modules.",
+          "$ref": "SkaffoldGCBRepoSource"
         }
       }
     },
@@ -1592,7 +1586,7 @@
           "type": "string"
         },
         "ref": {
-          "description": "Optional. Git ref the package should be cloned from.",
+          "description": "Optional. Git branch or tag to use when cloning the repository.",
           "type": "string"
         }
       }
@@ -1608,6 +1602,25 @@
         },
         "path": {
           "description": "Optional. Relative path from the source to the Skaffold file.",
+          "type": "string"
+        }
+      }
+    },
+    "SkaffoldGCBRepoSource": {
+      "id": "SkaffoldGCBRepoSource",
+      "description": "Cloud Build V2 Repository containing Skaffold Configs.",
+      "type": "object",
+      "properties": {
+        "repository": {
+          "description": "Required. Name of the Cloud Build V2 Repository. Format is projects/{project}/locations/{location}/connections/{connection}/repositories/{repository}.",
+          "type": "string"
+        },
+        "path": {
+          "description": "Optional. Relative path from the repository root to the Skaffold Config file.",
+          "type": "string"
+        },
+        "ref": {
+          "description": "Optional. Branch or tag to use when cloning the repository.",
           "type": "string"
         }
       }
@@ -1643,7 +1656,7 @@
       "type": "object",
       "properties": {
         "name": {
-          "description": "Optional. Name of the `Release`. Format is `projects/{project}/locations/{location}/deliveryPipelines/{deliveryPipeline}/releases/a-z{0,62}`.",
+          "description": "Optional. Name of the `Release`. Format is `projects/{project}/locations/{location}/deliveryPipelines/{deliveryPipeline}/releases/{release}`. The `release` component must match `[a-z]([a-z0-9-]{0,61}[a-z0-9])?`",
           "type": "string"
         },
         "uid": {
@@ -2486,7 +2499,7 @@
       "type": "object",
       "properties": {
         "rollout": {
-          "description": "Output only. Name of the `ChildRollout`. Format is `projects/{project}/locations/{location}/deliveryPipelines/{deliveryPipeline}/releases/{release}/rollouts/a-z{0,62}`.",
+          "description": "Output only. Name of the `ChildRollout`. Format is `projects/{project}/locations/{location}/deliveryPipelines/{deliveryPipeline}/releases/{release}/rollouts/{rollout}`.",
           "readOnly": true,
           "type": "string"
         },
@@ -2503,7 +2516,7 @@
       "type": "object",
       "properties": {
         "rollout": {
-          "description": "Output only. Name of the `ChildRollout`. Format is `projects/{project}/locations/{location}/deliveryPipelines/{deliveryPipeline}/releases/{release}/rollouts/a-z{0,62}`.",
+          "description": "Output only. Name of the `ChildRollout`. Format is `projects/{project}/locations/{location}/deliveryPipelines/{deliveryPipeline}/releases/{release}/rollouts/{rollout}`.",
           "readOnly": true,
           "type": "string"
         },
@@ -2722,7 +2735,7 @@
       "type": "object",
       "properties": {
         "id": {
-          "description": "Required. ID of the rule. This id must be unique in the `Automation` resource to which this rule belongs. The format is `a-z{0,62}`.",
+          "description": "Required. ID of the rule. This id must be unique in the `Automation` resource to which this rule belongs. The format is `[a-z]([a-z0-9-]{0,61}[a-z0-9])?`.",
           "type": "string"
         },
         "wait": {
@@ -2762,7 +2775,7 @@
       "type": "object",
       "properties": {
         "id": {
-          "description": "Required. ID of the rule. This id must be unique in the `Automation` resource to which this rule belongs. The format is `a-z{0,62}`.",
+          "description": "Required. ID of the rule. This id must be unique in the `Automation` resource to which this rule belongs. The format is `[a-z]([a-z0-9-]{0,61}[a-z0-9])?`.",
           "type": "string"
         },
         "sourcePhases": {
@@ -2790,15 +2803,8 @@
       "type": "object",
       "properties": {
         "id": {
-          "description": "Required. ID of the rule. This id must be unique in the `Automation` resource to which this rule belongs. The format is `a-z{0,62}`.",
+          "description": "Required. ID of the rule. This id must be unique in the `Automation` resource to which this rule belongs. The format is `[a-z]([a-z0-9-]{0,61}[a-z0-9])?`.",
           "type": "string"
-        },
-        "sourcePhases": {
-          "description": "Optional. Phases within which jobs are subject to automatic repair actions on failure. Proceeds only after phase name matched any one in the list, or for all phases if unspecified. This value must consist of lower-case letters, numbers, and hyphens, start with a letter and end with a letter or a number, and have a max length of 63 characters. In other words, it must match the following regex: `^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$`.",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
         },
         "jobs": {
           "description": "Optional. Jobs to repair. Proceeds only after job name matched any one in the list, or for all jobs if unspecified or empty. The phase that includes the job must match the phase ID specified in `source_phase`. This value must consist of lower-case letters, numbers, and hyphens, start with a letter and end with a letter or a number, and have a max length of 63 characters. In other words, it must match the following regex: `^[a-z]([a-z0-9-]{0,61}[a-z0-9])?$`.",
@@ -2807,74 +2813,10 @@
             "type": "string"
           }
         },
-        "repairModes": {
-          "description": "Required. Defines the types of automatic repair actions for failed jobs.",
-          "type": "array",
-          "items": {
-            "$ref": "RepairMode"
-          }
-        },
         "condition": {
           "description": "Output only. Information around the state of the 'Automation' rule.",
           "readOnly": true,
           "$ref": "AutomationRuleCondition"
-        }
-      }
-    },
-    "RepairMode": {
-      "id": "RepairMode",
-      "description": "Configuration of the repair action.",
-      "type": "object",
-      "properties": {
-        "retry": {
-          "description": "Optional. Retries a failed job.",
-          "$ref": "Retry"
-        },
-        "rollback": {
-          "description": "Optional. Rolls back a `Rollout`.",
-          "$ref": "Rollback"
-        }
-      }
-    },
-    "Retry": {
-      "id": "Retry",
-      "description": "Retries the failed job.",
-      "type": "object",
-      "properties": {
-        "attempts": {
-          "description": "Required. Total number of retries. Retry is skipped if set to 0; The minimum value is 1, and the maximum value is 10.",
-          "type": "string",
-          "format": "int64"
-        },
-        "wait": {
-          "description": "Optional. How long to wait for the first retry. Default is 0, and the maximum value is 14d.",
-          "type": "string",
-          "format": "google-duration"
-        },
-        "backoffMode": {
-          "description": "Optional. The pattern of how wait time will be increased. Default is linear. Backoff mode will be ignored if `wait` is 0.",
-          "type": "string",
-          "enumDescriptions": [
-            "No WaitMode is specified.",
-            "Increases the wait time linearly.",
-            "Increases the wait time exponentially."
-          ],
-          "enum": [
-            "BACKOFF_MODE_UNSPECIFIED",
-            "BACKOFF_MODE_LINEAR",
-            "BACKOFF_MODE_EXPONENTIAL"
-          ]
-        }
-      }
-    },
-    "Rollback": {
-      "id": "Rollback",
-      "description": "Rolls back a `Rollout`.",
-      "type": "object",
-      "properties": {
-        "destinationPhase": {
-          "description": "Optional. The starting phase ID for the `Rollout`. If unspecified, the `Rollout` will start in the stable phase.",
-          "type": "string"
         }
       }
     },
@@ -3078,12 +3020,6 @@
           "readOnly": true,
           "type": "string"
         },
-        "currentRepairModeIndex": {
-          "description": "Output only. The index of the current repair action in the repair sequence.",
-          "readOnly": true,
-          "type": "string",
-          "format": "int64"
-        },
         "repairPhases": {
           "description": "Output only. Records of the repair attempts. Each repair phase may have multiple retry attempts or single rollback attempt.",
           "readOnly": true,
@@ -3106,7 +3042,7 @@
     },
     "RepairPhase": {
       "id": "RepairPhase",
-      "description": "RepairPhase tracks the repair attempts that have been made for each `RepairMode` specified in the `Automation` resource.",
+      "description": "RepairPhase tracks the repair attempts that have been made for each `RepairPhaseConfig` specified in the `Automation` resource.",
       "type": "object",
       "properties": {
         "retry": {
@@ -3147,18 +3083,6 @@
             "BACKOFF_MODE_EXPONENTIAL"
           ]
         },
-        "phaseId": {
-          "description": "Output only. The phase ID of the phase that includes the job being retried.",
-          "readOnly": true,
-          "deprecated": true,
-          "type": "string"
-        },
-        "jobId": {
-          "description": "Output only. The job ID for the Job to retry.",
-          "readOnly": true,
-          "deprecated": true,
-          "type": "string"
-        },
         "attempts": {
           "description": "Output only. Detail of a retry action.",
           "readOnly": true,
@@ -3197,7 +3121,6 @@
             "The `repair` action has failed.",
             "The `repair` action is in progress.",
             "The `repair` action is pending.",
-            "The `repair` action was skipped.",
             "The `repair` action was aborted."
           ],
           "enum": [
@@ -3207,7 +3130,6 @@
             "REPAIR_STATE_FAILED",
             "REPAIR_STATE_IN_PROGRESS",
             "REPAIR_STATE_PENDING",
-            "REPAIR_STATE_SKIPPED",
             "REPAIR_STATE_ABORTED"
           ]
         },
@@ -3244,7 +3166,6 @@
             "The `repair` action has failed.",
             "The `repair` action is in progress.",
             "The `repair` action is pending.",
-            "The `repair` action was skipped.",
             "The `repair` action was aborted."
           ],
           "enum": [
@@ -3254,7 +3175,6 @@
             "REPAIR_STATE_FAILED",
             "REPAIR_STATE_IN_PROGRESS",
             "REPAIR_STATE_PENDING",
-            "REPAIR_STATE_SKIPPED",
             "REPAIR_STATE_ABORTED"
           ]
         },
@@ -3594,11 +3514,9 @@
             "Restriction check failed.",
             "Resource deleted.",
             "Rollout updated.",
-            "Deploy Policy evaluation.",
             "Deprecated: This field is never used. Use release_render log type instead."
           ],
           "enumDeprecated": [
-            false,
             false,
             false,
             false,
@@ -3616,7 +3534,6 @@
             "TYPE_RESTRICTION_VIOLATED",
             "TYPE_RESOURCE_DELETED",
             "TYPE_ROLLOUT_UPDATE",
-            "TYPE_DEPLOY_POLICY_EVALUATION",
             "TYPE_RENDER_STATUES_CHANGE"
           ]
         }
@@ -3654,11 +3571,9 @@
             "Restriction check failed.",
             "Resource deleted.",
             "Rollout updated.",
-            "Deploy Policy evaluation.",
             "Deprecated: This field is never used. Use release_render log type instead."
           ],
           "enumDeprecated": [
-            false,
             false,
             false,
             false,
@@ -3676,7 +3591,6 @@
             "TYPE_RESTRICTION_VIOLATED",
             "TYPE_RESOURCE_DELETED",
             "TYPE_ROLLOUT_UPDATE",
-            "TYPE_DEPLOY_POLICY_EVALUATION",
             "TYPE_RENDER_STATUES_CHANGE"
           ]
         }
@@ -3710,11 +3624,9 @@
             "Restriction check failed.",
             "Resource deleted.",
             "Rollout updated.",
-            "Deploy Policy evaluation.",
             "Deprecated: This field is never used. Use release_render log type instead."
           ],
           "enumDeprecated": [
-            false,
             false,
             false,
             false,
@@ -3732,7 +3644,6 @@
             "TYPE_RESTRICTION_VIOLATED",
             "TYPE_RESOURCE_DELETED",
             "TYPE_ROLLOUT_UPDATE",
-            "TYPE_DEPLOY_POLICY_EVALUATION",
             "TYPE_RENDER_STATUES_CHANGE"
           ]
         },
@@ -3798,11 +3709,9 @@
             "Restriction check failed.",
             "Resource deleted.",
             "Rollout updated.",
-            "Deploy Policy evaluation.",
             "Deprecated: This field is never used. Use release_render log type instead."
           ],
           "enumDeprecated": [
-            false,
             false,
             false,
             false,
@@ -3820,7 +3729,6 @@
             "TYPE_RESTRICTION_VIOLATED",
             "TYPE_RESOURCE_DELETED",
             "TYPE_ROLLOUT_UPDATE",
-            "TYPE_DEPLOY_POLICY_EVALUATION",
             "TYPE_RENDER_STATUES_CHANGE"
           ]
         }
@@ -3866,11 +3774,9 @@
             "Restriction check failed.",
             "Resource deleted.",
             "Rollout updated.",
-            "Deploy Policy evaluation.",
             "Deprecated: This field is never used. Use release_render log type instead."
           ],
           "enumDeprecated": [
-            false,
             false,
             false,
             false,
@@ -3888,7 +3794,6 @@
             "TYPE_RESTRICTION_VIOLATED",
             "TYPE_RESOURCE_DELETED",
             "TYPE_ROLLOUT_UPDATE",
-            "TYPE_DEPLOY_POLICY_EVALUATION",
             "TYPE_RENDER_STATUES_CHANGE"
           ]
         },
@@ -3954,11 +3859,9 @@
             "Restriction check failed.",
             "Resource deleted.",
             "Rollout updated.",
-            "Deploy Policy evaluation.",
             "Deprecated: This field is never used. Use release_render log type instead."
           ],
           "enumDeprecated": [
-            false,
             false,
             false,
             false,
@@ -3976,7 +3879,6 @@
             "TYPE_RESTRICTION_VIOLATED",
             "TYPE_RESOURCE_DELETED",
             "TYPE_ROLLOUT_UPDATE",
-            "TYPE_DEPLOY_POLICY_EVALUATION",
             "TYPE_RENDER_STATUES_CHANGE"
           ]
         }
@@ -4030,11 +3932,9 @@
             "Restriction check failed.",
             "Resource deleted.",
             "Rollout updated.",
-            "Deploy Policy evaluation.",
             "Deprecated: This field is never used. Use release_render log type instead."
           ],
           "enumDeprecated": [
-            false,
             false,
             false,
             false,
@@ -4052,7 +3952,6 @@
             "TYPE_RESTRICTION_VIOLATED",
             "TYPE_RESOURCE_DELETED",
             "TYPE_ROLLOUT_UPDATE",
-            "TYPE_DEPLOY_POLICY_EVALUATION",
             "TYPE_RENDER_STATUES_CHANGE"
           ]
         }
@@ -4086,11 +3985,9 @@
             "Restriction check failed.",
             "Resource deleted.",
             "Rollout updated.",
-            "Deploy Policy evaluation.",
             "Deprecated: This field is never used. Use release_render log type instead."
           ],
           "enumDeprecated": [
-            false,
             false,
             false,
             false,
@@ -4108,7 +4005,6 @@
             "TYPE_RESTRICTION_VIOLATED",
             "TYPE_RESOURCE_DELETED",
             "TYPE_ROLLOUT_UPDATE",
-            "TYPE_DEPLOY_POLICY_EVALUATION",
             "TYPE_RENDER_STATUES_CHANGE"
           ]
         }
@@ -4154,11 +4050,9 @@
             "Restriction check failed.",
             "Resource deleted.",
             "Rollout updated.",
-            "Deploy Policy evaluation.",
             "Deprecated: This field is never used. Use release_render log type instead."
           ],
           "enumDeprecated": [
-            false,
             false,
             false,
             false,
@@ -4176,13 +4070,19 @@
             "TYPE_RESTRICTION_VIOLATED",
             "TYPE_RESOURCE_DELETED",
             "TYPE_ROLLOUT_UPDATE",
-            "TYPE_DEPLOY_POLICY_EVALUATION",
             "TYPE_RENDER_STATUES_CHANGE"
           ]
         }
       }
     }
   },
+  "version_module": true,
+  "title": "Cloud Deploy API",
+  "ownerName": "Google",
+  "mtlsRootUrl": "https://clouddeploy.mtls.googleapis.com/",
+  "documentationLink": "https://cloud.google.com/deploy/",
+  "description": "",
+  "discoveryVersion": "v1",
   "resources": {
     "projects": {
       "resources": {
@@ -4527,7 +4427,7 @@
                   "httpMethod": "PATCH",
                   "parameters": {
                     "name": {
-                      "description": "Optional. Name of the `DeliveryPipeline`. Format is `projects/{project}/locations/{location}/deliveryPipelines/a-z{0,62}`.",
+                      "description": "Optional. Name of the `DeliveryPipeline`. Format is `projects/{project}/locations/{location}/deliveryPipelines/{deliveryPipeline}`. The `deliveryPipeline` component must match `[a-z]([a-z0-9-]{0,61}[a-z0-9])?`",
                       "pattern": "^projects/[^/]+/locations/[^/]+/deliveryPipelines/[^/]+$",
                       "location": "path",
                       "required": true,
@@ -5692,7 +5592,7 @@
                   "httpMethod": "PATCH",
                   "parameters": {
                     "name": {
-                      "description": "Optional. Name of the `Target`. Format is `projects/{project}/locations/{location}/targets/a-z{0,62}`.",
+                      "description": "Optional. Name of the `Target`. Format is `projects/{project}/locations/{location}/targets/{target}`. The `target` component must match `[a-z]([a-z0-9-]{0,61}[a-z0-9])?`",
                       "pattern": "^projects/[^/]+/locations/[^/]+/targets/[^/]+$",
                       "location": "path",
                       "required": true,
@@ -5991,7 +5891,7 @@
                   "httpMethod": "PATCH",
                   "parameters": {
                     "name": {
-                      "description": "Optional. Name of the `CustomTargetType`. Format is `projects/{project}/locations/{location}/customTargetTypes/a-z{0,62}`.",
+                      "description": "Optional. Name of the `CustomTargetType`. Format is `projects/{project}/locations/{location}/customTargetTypes/{customTargetType}`. The `customTargetType` component must match `[a-z]([a-z0-9-]{0,61}[a-z0-9])?`",
                       "pattern": "^projects/[^/]+/locations/[^/]+/customTargetTypes/[^/]+$",
                       "location": "path",
                       "required": true,
@@ -6144,22 +6044,17 @@
       }
     }
   },
-  "revision": "20240221",
-  "description": "",
-  "servicePath": "",
-  "baseUrl": "https://clouddeploy.googleapis.com/",
-  "ownerName": "Google",
-  "rootUrl": "https://clouddeploy.googleapis.com/",
-  "name": "clouddeploy",
-  "id": "clouddeploy:v1",
-  "version_module": true,
-  "title": "Cloud Deploy API",
   "batchPath": "batch",
-  "discoveryVersion": "v1",
-  "documentationLink": "https://cloud.google.com/deploy/",
-  "kind": "discovery#restDescription",
+  "id": "clouddeploy:v1",
+  "revision": "20240614",
+  "servicePath": "",
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
+  "basePath": "",
+  "canonicalName": "Cloud Deploy",
   "ownerDomain": "google.com",
-  "mtlsRootUrl": "https://clouddeploy.mtls.googleapis.com/",
   "parameters": {
     "access_token": {
       "type": "string",
@@ -6237,5 +6132,16 @@
       "location": "query"
     }
   },
-  "basePath": ""
+  "auth": {
+    "oauth2": {
+      "scopes": {
+        "https://www.googleapis.com/auth/cloud-platform": {
+          "description": "See, edit, configure, and delete your Google Cloud data and see the email address for your Google Account."
+        }
+      }
+    }
+  },
+  "rootUrl": "https://clouddeploy.googleapis.com/",
+  "name": "clouddeploy",
+  "baseUrl": "https://clouddeploy.googleapis.com/"
 }

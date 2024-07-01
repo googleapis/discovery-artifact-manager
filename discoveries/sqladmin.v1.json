@@ -1,10 +1,94 @@
 {
-  "discoveryVersion": "v1",
   "mtlsRootUrl": "https://sqladmin.mtls.googleapis.com/",
+  "basePath": "",
+  "protocol": "rest",
+  "servicePath": "",
+  "parameters": {
+    "access_token": {
+      "type": "string",
+      "description": "OAuth access token.",
+      "location": "query"
+    },
+    "alt": {
+      "type": "string",
+      "description": "Data format for response.",
+      "default": "json",
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "location": "query"
+    },
+    "callback": {
+      "type": "string",
+      "description": "JSONP",
+      "location": "query"
+    },
+    "fields": {
+      "type": "string",
+      "description": "Selector specifying which fields to include in a partial response.",
+      "location": "query"
+    },
+    "key": {
+      "type": "string",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+      "location": "query"
+    },
+    "oauth_token": {
+      "type": "string",
+      "description": "OAuth 2.0 token for the current user.",
+      "location": "query"
+    },
+    "prettyPrint": {
+      "type": "boolean",
+      "description": "Returns response with indentations and line breaks.",
+      "default": "true",
+      "location": "query"
+    },
+    "quotaUser": {
+      "type": "string",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
+      "location": "query"
+    },
+    "upload_protocol": {
+      "type": "string",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
+      "location": "query"
+    },
+    "uploadType": {
+      "type": "string",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
+      "location": "query"
+    },
+    "$.xgafv": {
+      "type": "string",
+      "description": "V1 error format.",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "location": "query"
+    }
+  },
+  "kind": "discovery#restDescription",
+  "canonicalName": "SQL Admin",
+  "ownerDomain": "google.com",
+  "description": "API for Cloud SQL database instance management",
   "icons": {
     "x16": "http://www.google.com/images/icons/product/search-16.gif",
     "x32": "http://www.google.com/images/icons/product/search-32.gif"
   },
+  "title": "Cloud SQL Admin API",
   "schemas": {
     "Operation": {
       "id": "Operation",
@@ -103,10 +187,13 @@
             "Recovers logs from an instance's old data disk.",
             "Performs auto-restart of an HA-enabled Cloud SQL database for auto recovery.",
             "Re-encrypts CMEK instances with latest key version.",
-            "Switches over to replica instance from primary.",
+            "Switches the roles of the primary and replica pair. The target instance should be the replica.",
             "Acquire a lease for the setup of SQL Server Reporting Services (SSRS).",
             "Release a lease for the setup of SQL Server Reporting Services (SSRS).",
-            "Reconfigures old primary after a promote replica operation. Effect of a promote operation to the old primary is executed in this operation, asynchronously from the promote replica operation executed to the replica."
+            "Reconfigures old primary after a promote replica operation. Effect of a promote operation to the old primary is executed in this operation, asynchronously from the promote replica operation executed to the replica.",
+            "Indicates that the instance, its read replicas, and its cascading replicas are in maintenance. Maintenance typically gets initiated on groups of replicas first, followed by the primary instance. For each instance, maintenance typically causes the instance to be unavailable for 1-3 minutes.",
+            "Indicates that the instance (and any of its replicas) are currently in maintenance. This is initiated as a self-service request by using SSM. Maintenance typically causes the instance to be unavailable for 1-3 minutes.",
+            "Switches a primary instance to a replica. This operation runs as part of a switchover operation to the original primary instance."
           ],
           "enumDeprecated": [
             false,
@@ -142,6 +229,9 @@
             true,
             true,
             true,
+            false,
+            false,
+            false,
             false,
             false,
             false,
@@ -194,7 +284,10 @@
             "SWITCHOVER",
             "ACQUIRE_SSRS_LEASE",
             "RELEASE_SSRS_LEASE",
-            "RECONFIGURE_OLD_PRIMARY"
+            "RECONFIGURE_OLD_PRIMARY",
+            "CLUSTER_MAINTENANCE",
+            "SELF_SERVICE_MAINTENANCE",
+            "SWITCHOVER_TO_REPLICA"
           ]
         },
         "importContext": {
@@ -428,6 +521,21 @@
             "stopAtMark": {
               "description": "Optional. The marked transaction where the import should stop. This field is equivalent to the STOPATMARK keyword and applies to Cloud SQL for SQL Server only.",
               "type": "string"
+            }
+          }
+        },
+        "sqlImportOptions": {
+          "description": "Optional. Options for importing data from SQL statements.",
+          "type": "object",
+          "properties": {
+            "threads": {
+              "description": "Optional. The number of threads to use for parallel import.",
+              "type": "integer",
+              "format": "int32"
+            },
+            "parallel": {
+              "description": "Optional. Whether or not the import should be parallel.",
+              "type": "boolean"
             }
           }
         }
@@ -668,7 +776,7 @@
           }
         },
         "preferredZone": {
-          "description": "Optional. (Point-in-time recovery for PostgreSQL only) Clone to an instance in the specified zone. If no zone is specified, clone to the same zone as the source instance.",
+          "description": "Optional. Copy clone and point-in-time recovery clone of an instance to the specified zone. If no zone is specified, clone to the same primary zone as the source instance. This field applies to all DB types.",
           "type": "string"
         }
       }
@@ -941,6 +1049,7 @@
             "The database version is PostgreSQL 13.",
             "The database version is PostgreSQL 14.",
             "The database version is PostgreSQL 15.",
+            "The database version is PostgreSQL 16.",
             "The database version is MySQL 8.",
             "The database major version is MySQL 8.0 and the minor version is 18.",
             "The database major version is MySQL 8.0 and the minor version is 26.",
@@ -958,6 +1067,8 @@
             "The database major version is MySQL 8.0 and the minor version is 38.",
             "The database major version is MySQL 8.0 and the minor version is 39.",
             "The database major version is MySQL 8.0 and the minor version is 40.",
+            "The database version is MySQL 8.4.",
+            "The database version is MySQL 8.4 and the patch version is 0.",
             "The database version is SQL Server 2019 Standard.",
             "The database version is SQL Server 2019 Enterprise.",
             "The database version is SQL Server 2019 Express.",
@@ -989,7 +1100,10 @@
             false,
             false,
             false,
+            false,
             true,
+            false,
+            false,
             false,
             false,
             false,
@@ -1027,6 +1141,7 @@
             "POSTGRES_13",
             "POSTGRES_14",
             "POSTGRES_15",
+            "POSTGRES_16",
             "MYSQL_8_0",
             "MYSQL_8_0_18",
             "MYSQL_8_0_26",
@@ -1044,6 +1159,8 @@
             "MYSQL_8_0_38",
             "MYSQL_8_0_39",
             "MYSQL_8_0_40",
+            "MYSQL_8_4",
+            "MYSQL_8_4_0",
             "SQLSERVER_2019_STANDARD",
             "SQLSERVER_2019_ENTERPRISE",
             "SQLSERVER_2019_EXPRESS",
@@ -1231,7 +1348,7 @@
           "$ref": "SqlScheduledMaintenance"
         },
         "satisfiesPzs": {
-          "description": "The status indicating if instance satisfiesPzs. Reserved for future use.",
+          "description": "This status indicates whether the instance satisfies PZS. The status is reserved for future use.",
           "type": "boolean"
         },
         "databaseInstalledVersion": {
@@ -1260,6 +1377,14 @@
         "maintenanceVersion": {
           "description": "The current software version on the instance.",
           "type": "string"
+        },
+        "upgradableDatabaseVersions": {
+          "description": "Output only. All database versions that are available for upgrade.",
+          "readOnly": true,
+          "type": "array",
+          "items": {
+            "$ref": "AvailableDatabaseVersion"
+          }
         },
         "sqlNetworkArchitecture": {
           "type": "string",
@@ -1296,11 +1421,11 @@
           "type": "string"
         },
         "replicationCluster": {
-          "description": "Optional. The pair of a primary instance and disaster recovery (DR) replica. A DR replica is a cross-region replica that you designate for failover in the event that the primary instance has regional failure.",
+          "description": "Optional. A primary instance and disaster recovery (DR) replica pair. A DR replica is a cross-region replica that you designate for failover in the event that the primary instance experiences regional failure. Only applicable to MySQL.",
           "$ref": "ReplicationCluster"
         },
         "geminiConfig": {
-          "description": "Gemini configuration.",
+          "description": "Gemini instance configuration.",
           "$ref": "GeminiInstanceConfig"
         }
       }
@@ -1535,7 +1660,7 @@
           "type": "string"
         },
         "advancedMachineFeatures": {
-          "description": "Specifies advance machine configuration for the instance relevant only for SQL Server.",
+          "description": "Specifies advanced machine configuration for the instances relevant only for SQL Server.",
           "$ref": "AdvancedMachineFeatures"
         },
         "dataCacheConfig": {
@@ -1544,6 +1669,10 @@
         },
         "enableGoogleMlIntegration": {
           "description": "Optional. When this parameter is set to true, Cloud SQL instances can connect to Vertex AI to pass requests for real-time predictions and insights to the AI. The default value is false. This applies only to Cloud SQL for PostgreSQL instances.",
+          "type": "boolean"
+        },
+        "enableDataplexIntegration": {
+          "description": "Optional. By default, Cloud SQL instances have schema extraction disabled for Dataplex. When this parameter is set to true, schema extraction for Dataplex on Cloud SQL instances is activated.",
           "type": "boolean"
         }
       }
@@ -1562,7 +1691,7 @@
           "type": "string"
         },
         "requireSsl": {
-          "description": "Use `ssl_mode` instead for MySQL and PostgreSQL. SQL Server uses this flag. Whether SSL/TLS connections over IP are enforced. If set to false, then allow both non-SSL/non-TLS and SSL/TLS connections. For SSL/TLS connections, the client certificate won't be verified. If set to true, then only allow connections encrypted with SSL/TLS and with valid client certificates. If you want to enforce SSL/TLS without enforcing the requirement for valid client certificates, then use the `ssl_mode` flag instead of the `require_ssl` flag.",
+          "description": "Use `ssl_mode` instead. Whether SSL/TLS connections over IP are enforced. If set to false, then allow both non-SSL/non-TLS and SSL/TLS connections. For SSL/TLS connections, the client certificate won't be verified. If set to true, then only allow connections encrypted with SSL/TLS and with valid client certificates. If you want to enforce SSL/TLS without enforcing the requirement for valid client certificates, then use the `ssl_mode` flag instead of the `require_ssl` flag.",
           "type": "boolean"
         },
         "authorizedNetworks": {
@@ -1581,13 +1710,13 @@
           "type": "boolean"
         },
         "sslMode": {
-          "description": "Specify how SSL/TLS is enforced in database connections. MySQL and PostgreSQL use the `ssl_mode` flag. If you must use the `require_ssl` flag for backward compatibility, then only the following value pairs are valid: * `ssl_mode=ALLOW_UNENCRYPTED_AND_ENCRYPTED` and `require_ssl=false` * `ssl_mode=ENCRYPTED_ONLY` and `require_ssl=false` * `ssl_mode=TRUSTED_CLIENT_CERTIFICATE_REQUIRED` and `require_ssl=true` The value of `ssl_mode` gets priority over the value of `require_ssl`. For example, for the pair `ssl_mode=ENCRYPTED_ONLY` and `require_ssl=false`, the `ssl_mode=ENCRYPTED_ONLY` means only accept SSL connections, while the `require_ssl=false` means accept both non-SSL and SSL connections. MySQL and PostgreSQL databases respect `ssl_mode` in this case and accept only SSL connections. SQL Server uses the `require_ssl` flag. You can set the value for this flag to `true` or `false`.",
+          "description": "Specify how SSL/TLS is enforced in database connections. If you must use the `require_ssl` flag for backward compatibility, then only the following value pairs are valid: For PostgreSQL and MySQL: * `ssl_mode=ALLOW_UNENCRYPTED_AND_ENCRYPTED` and `require_ssl=false` * `ssl_mode=ENCRYPTED_ONLY` and `require_ssl=false` * `ssl_mode=TRUSTED_CLIENT_CERTIFICATE_REQUIRED` and `require_ssl=true` For SQL Server: * `ssl_mode=ALLOW_UNENCRYPTED_AND_ENCRYPTED` and `require_ssl=false` * `ssl_mode=ENCRYPTED_ONLY` and `require_ssl=true` The value of `ssl_mode` has priority over the value of `require_ssl`. For example, for the pair `ssl_mode=ENCRYPTED_ONLY` and `require_ssl=false`, `ssl_mode=ENCRYPTED_ONLY` means accept only SSL connections, while `require_ssl=false` means accept both non-SSL and SSL connections. In this case, MySQL and PostgreSQL databases respect `ssl_mode` and accepts only SSL connections.",
           "type": "string",
           "enumDescriptions": [
             "The SSL mode is unknown.",
-            "Allow non-SSL/non-TLS and SSL/TLS connections. For SSL/TLS connections, the client certificate won't be verified. When this value is used, the legacy `require_ssl` flag must be false or cleared to avoid the conflict between values of two flags.",
-            "Only allow connections encrypted with SSL/TLS. When this value is used, the legacy `require_ssl` flag must be false or cleared to avoid the conflict between values of two flags.",
-            "Only allow connections encrypted with SSL/TLS and with valid client certificates. When this value is used, the legacy `require_ssl` flag must be true or cleared to avoid the conflict between values of two flags. PostgreSQL clients or users that connect using IAM database authentication must use either the [Cloud SQL Auth Proxy](https://cloud.google.com/sql/docs/postgres/connect-auth-proxy) or [Cloud SQL Connectors](https://cloud.google.com/sql/docs/postgres/connect-connectors) to enforce client identity verification."
+            "Allow non-SSL/non-TLS and SSL/TLS connections. For SSL connections to MySQL and PostgreSQL, the client certificate isn't verified. When this value is used, the legacy `require_ssl` flag must be false or cleared to avoid a conflict between the values of the two flags.",
+            "Only allow connections encrypted with SSL/TLS. For SSL connections to MySQL and PostgreSQL, the client certificate isn't verified. When this value is used, the legacy `require_ssl` flag must be false or cleared to avoid a conflict between the values of the two flags.",
+            "Only allow connections encrypted with SSL/TLS and with valid client certificates. When this value is used, the legacy `require_ssl` flag must be true or cleared to avoid the conflict between values of two flags. PostgreSQL clients or users that connect using IAM database authentication must use either the [Cloud SQL Auth Proxy](https://cloud.google.com/sql/docs/postgres/connect-auth-proxy) or [Cloud SQL Connectors](https://cloud.google.com/sql/docs/postgres/connect-connectors) to enforce client identity verification. Only applicable to MySQL and PostgreSQL. Not applicable to SQL Server."
           ],
           "enum": [
             "SSL_MODE_UNSPECIFIED",
@@ -1689,23 +1818,23 @@
       "type": "object",
       "properties": {
         "hour": {
-          "description": "hour of day - 0 to 23.",
+          "description": "Hour of day - 0 to 23. Specify in the UTC time zone.",
           "type": "integer",
           "format": "int32"
         },
         "day": {
-          "description": "day of week (1-7), starting on Monday.",
+          "description": "Day of week - `MONDAY`, `TUESDAY`, `WEDNESDAY`, `THURSDAY`, `FRIDAY`, `SATURDAY`, or `SUNDAY`. Specify in the UTC time zone. Returned in output as an integer, 1 to 7, where `1` equals Monday.",
           "type": "integer",
           "format": "int32"
         },
         "updateTrack": {
-          "description": "Maintenance timing setting: `canary` (Earlier) or `stable` (Later). [Learn more](https://cloud.google.com/sql/docs/mysql/instance-settings#maintenance-timing-2ndgen).",
+          "description": "Maintenance timing settings: `canary`, `stable`, or `week5`. For more information, see [About maintenance on Cloud SQL instances](https://cloud.google.com/sql/docs/mysql/maintenance).",
           "type": "string",
           "enumDescriptions": [
             "This is an unknown maintenance timing preference.",
-            "For instance update that requires a restart, this update track indicates your instance prefer to restart for new version early in maintenance window.",
-            "For instance update that requires a restart, this update track indicates your instance prefer to let Cloud SQL choose the timing of restart (within its Maintenance window, if applicable).",
-            "For instance update that requires a restart, this update track indicates your instance prefer to let Cloud SQL choose the timing of restart (within its Maintenance window, if applicable) to be at least 5 weeks after the notification."
+            "For an instance with a scheduled maintenance window, this maintenance timing indicates that the maintenance update is scheduled 7 to 14 days after the notification is sent out. Also referred to as `Week 1` (Console) and `preview` (gcloud CLI).",
+            "For an instance with a scheduled maintenance window, this maintenance timing indicates that the maintenance update is scheduled 15 to 21 days after the notification is sent out. Also referred to as `Week 2` (Console) and `production` (gcloud CLI).",
+            "For instance with a scheduled maintenance window, this maintenance timing indicates that the maintenance update is scheduled 35 to 42 days after the notification is sent out."
           ],
           "enum": [
             "SQL_UPDATE_TRACK_UNSPECIFIED",
@@ -1763,15 +1892,15 @@
           "format": "int32"
         },
         "transactionalLogStorageState": {
-          "description": "Output only. This value contains the storage location of transactional logs for the database for point-in-time recovery.",
+          "description": "Output only. This value contains the storage location of transactional logs used to perform point-in-time recovery (PITR) for the database.",
           "readOnly": true,
           "type": "string",
           "enumDescriptions": [
             "Unspecified.",
-            "The transaction logs for the instance are stored on a data disk.",
-            "The transaction logs for the instance are switching from being stored on a data disk to being stored in Cloud Storage.",
-            "The transaction logs for the instance are now stored in Cloud Storage. Previously, they were stored on a data disk.",
-            "The transaction logs for the instance are stored in Cloud Storage."
+            "The transaction logs used for PITR for the instance are stored on a data disk.",
+            "The transaction logs used for PITR for the instance are switching from being stored on a data disk to being stored in Cloud Storage. Only applicable to MySQL.",
+            "The transaction logs used for PITR for the instance are now stored in Cloud Storage. Previously, they were stored on a data disk. Only applicable to MySQL.",
+            "The transaction logs used for PITR for the instance are stored in Cloud Storage. Only applicable to MySQL and PostgreSQL."
           ],
           "enum": [
             "TRANSACTIONAL_LOG_STORAGE_STATE_UNSPECIFIED",
@@ -2263,17 +2392,41 @@
         }
       }
     },
-    "ReplicationCluster": {
-      "id": "ReplicationCluster",
-      "description": "Primary-DR replica pair",
+    "AvailableDatabaseVersion": {
+      "id": "AvailableDatabaseVersion",
+      "description": "An available database version. It can be a major or a minor version.",
       "type": "object",
       "properties": {
+        "majorVersion": {
+          "description": "The version's major version name.",
+          "type": "string"
+        },
+        "name": {
+          "description": "The database version name. For MySQL 8.0, this string provides the database major and minor version.",
+          "type": "string"
+        },
+        "displayName": {
+          "description": "The database version's display name.",
+          "type": "string"
+        }
+      }
+    },
+    "ReplicationCluster": {
+      "id": "ReplicationCluster",
+      "description": "A primary instance and disaster recovery (DR) replica pair. A DR replica is a cross-region replica that you designate for failover in the event that the primary instance experiences regional failure. Only applicable to MySQL.",
+      "type": "object",
+      "properties": {
+        "psaWriteEndpoint": {
+          "description": "Output only. If set, it indicates this instance has a private service access (PSA) dns endpoint that is pointing to the primary instance of the cluster. If this instance is the primary, the dns should be pointing to this instance. After Switchover or Replica failover, this DNS endpoint points to the promoted instance. This is a read-only field, returned to the user as information. This field can exist even if a standalone instance does not yet have a replica, or had a DR replica that was deleted.",
+          "readOnly": true,
+          "type": "string"
+        },
         "failoverDrReplicaName": {
-          "description": "Optional. If the instance is a primary instance, then this field identifies the disaster recovery (DR) replica. A DR replica is an optional configuration for Enterprise Plus edition instances. If the instance is a read replica, then the field is not set. Users can set this field to set a designated DR replica for a primary. Removing this field removes the DR replica.",
+          "description": "Optional. If the instance is a primary instance, then this field identifies the disaster recovery (DR) replica. A DR replica is an optional configuration for Enterprise Plus edition instances. If the instance is a read replica, then the field is not set. Set this field to a replica name to designate a DR replica for a primary instance. Remove the replica name to remove the DR replica designation.",
           "type": "string"
         },
         "drReplica": {
-          "description": "Output only. read-only field that indicates if the replica is a dr_replica; not set for a primary.",
+          "description": "Output only. Read-only field that indicates whether the replica is a DR replica. This field is not set if the instance is a primary instance.",
           "readOnly": true,
           "type": "boolean"
         }
@@ -2281,36 +2434,36 @@
     },
     "GeminiInstanceConfig": {
       "id": "GeminiInstanceConfig",
-      "description": "Gemini configuration.",
+      "description": "Gemini instance configuration.",
       "type": "object",
       "properties": {
         "entitled": {
-          "description": "Output only. Whether gemini is enabled.",
+          "description": "Output only. Whether Gemini is enabled.",
           "readOnly": true,
           "type": "boolean"
         },
         "googleVacuumMgmtEnabled": {
-          "description": "Output only. Whether vacuum management is enabled.",
+          "description": "Output only. Whether the vacuum management is enabled.",
           "readOnly": true,
           "type": "boolean"
         },
         "oomSessionCancelEnabled": {
-          "description": "Output only. Whether oom session cancel is enabled.",
+          "description": "Output only. Whether canceling the out-of-memory (OOM) session is enabled.",
           "readOnly": true,
           "type": "boolean"
         },
         "activeQueryEnabled": {
-          "description": "Output only. Whether active query is enabled.",
+          "description": "Output only. Whether the active query is enabled.",
           "readOnly": true,
           "type": "boolean"
         },
         "indexAdvisorEnabled": {
-          "description": "Output only. Whether index advisor is enabled.",
+          "description": "Output only. Whether the index advisor is enabled.",
           "readOnly": true,
           "type": "boolean"
         },
         "flagRecommenderEnabled": {
-          "description": "Output only. Whether flag recommender is enabled.",
+          "description": "Output only. Whether the flag recommender is enabled.",
           "readOnly": true,
           "type": "boolean"
         }
@@ -2549,12 +2702,12 @@
           "$ref": "MySqlSyncConfig"
         },
         "migrationType": {
-          "description": "Optional. MigrationType decides if the migration is a physical file based migration or logical migration",
+          "description": "Optional. MigrationType configures the migration to use physical files or logical dump files. If not set, then the logical dump file configuration is used. Valid values are `LOGICAL` or `PHYSICAL`. Only applicable to MySQL.",
           "type": "string",
           "enumDescriptions": [
-            "Default value is logical migration",
-            "Logical Migrations",
-            "Physical file based Migrations"
+            "Default value is a logical dump file-based migration",
+            "Logical dump file-based migration",
+            "Physical file-based migration"
           ],
           "enum": [
             "MIGRATION_TYPE_UNSPECIFIED",
@@ -2563,7 +2716,7 @@
           ]
         },
         "syncParallelLevel": {
-          "description": "Optional. Parallel level for initial data sync. Currently only applicable for PostgreSQL.",
+          "description": "Optional. Parallel level for initial data sync. Only applicable for PostgreSQL.",
           "type": "string",
           "enumDescriptions": [
             "Unknown sync parallel level. Will be defaulted to OPTIMAL.",
@@ -2691,7 +2844,11 @@
             "Count of subscriptions needed to sync source data for PostgreSQL database.",
             "Final parallel level that is used to do migration.",
             "The disk size of the replica instance is smaller than the data size of the source instance.",
-            "The data size of the source instance is greater than 1 TB, the number of cores of the replica instance is less than 8, and the memory of the replica is less than 32 GB."
+            "The data size of the source instance is greater than 1 TB, the number of cores of the replica instance is less than 8, and the memory of the replica is less than 32 GB.",
+            "The warning message indicates the unsupported extensions will not be migrated to the destination.",
+            "The warning message indicates the pg_cron extension and settings will not be migrated to the destination.",
+            "The error message indicates that pg_cron flags are enabled on the destination which is not supported during the migration.",
+            "This error message indicates that the specified extensions are not enabled on destination instance. For example, before you can migrate data to the destination instance, you must enable the PGAudit extension on the instance."
           ],
           "enum": [
             "SQL_EXTERNAL_SYNC_SETTING_ERROR_TYPE_UNSPECIFIED",
@@ -2738,7 +2895,11 @@
             "PG_SUBSCRIPTION_COUNT",
             "PG_SYNC_PARALLEL_LEVEL",
             "INSUFFICIENT_DISK_SIZE",
-            "INSUFFICIENT_MACHINE_TIER"
+            "INSUFFICIENT_MACHINE_TIER",
+            "UNSUPPORTED_EXTENSIONS_NOT_MIGRATED",
+            "EXTENSIONS_NOT_MIGRATED",
+            "PG_CRON_FLAG_ENABLED_IN_REPLICA",
+            "EXTENSIONS_NOT_ENABLED_IN_REPLICA"
           ]
         },
         "detail": {
@@ -2791,12 +2952,12 @@
           ]
         },
         "migrationType": {
-          "description": "Optional. MigrationType decides if the migration is a physical file based migration or logical migration.",
+          "description": "Optional. MigrationType configures the migration to use physical files or logical dump files. If not set, then the logical dump file configuration is used. Valid values are `LOGICAL` or `PHYSICAL`. Only applicable to MySQL.",
           "type": "string",
           "enumDescriptions": [
-            "Default value is logical migration",
-            "Logical Migrations",
-            "Physical file based Migrations"
+            "Default value is a logical dump file-based migration",
+            "Logical dump file-based migration",
+            "Physical file-based migration"
           ],
           "enum": [
             "MIGRATION_TYPE_UNSPECIFIED",
@@ -3083,6 +3244,7 @@
             "The database version is PostgreSQL 13.",
             "The database version is PostgreSQL 14.",
             "The database version is PostgreSQL 15.",
+            "The database version is PostgreSQL 16.",
             "The database version is MySQL 8.",
             "The database major version is MySQL 8.0 and the minor version is 18.",
             "The database major version is MySQL 8.0 and the minor version is 26.",
@@ -3100,6 +3262,8 @@
             "The database major version is MySQL 8.0 and the minor version is 38.",
             "The database major version is MySQL 8.0 and the minor version is 39.",
             "The database major version is MySQL 8.0 and the minor version is 40.",
+            "The database version is MySQL 8.4.",
+            "The database version is MySQL 8.4 and the patch version is 0.",
             "The database version is SQL Server 2019 Standard.",
             "The database version is SQL Server 2019 Enterprise.",
             "The database version is SQL Server 2019 Express.",
@@ -3131,7 +3295,10 @@
             false,
             false,
             false,
+            false,
             true,
+            false,
+            false,
             false,
             false,
             false,
@@ -3169,6 +3336,7 @@
             "POSTGRES_13",
             "POSTGRES_14",
             "POSTGRES_15",
+            "POSTGRES_16",
             "MYSQL_8_0",
             "MYSQL_8_0_18",
             "MYSQL_8_0_26",
@@ -3186,6 +3354,8 @@
             "MYSQL_8_0_38",
             "MYSQL_8_0_39",
             "MYSQL_8_0_40",
+            "MYSQL_8_4",
+            "MYSQL_8_4_0",
             "SQLSERVER_2019_STANDARD",
             "SQLSERVER_2019_ENTERPRISE",
             "SQLSERVER_2019_EXPRESS",
@@ -3413,6 +3583,7 @@
               "The database version is PostgreSQL 13.",
               "The database version is PostgreSQL 14.",
               "The database version is PostgreSQL 15.",
+              "The database version is PostgreSQL 16.",
               "The database version is MySQL 8.",
               "The database major version is MySQL 8.0 and the minor version is 18.",
               "The database major version is MySQL 8.0 and the minor version is 26.",
@@ -3430,6 +3601,8 @@
               "The database major version is MySQL 8.0 and the minor version is 38.",
               "The database major version is MySQL 8.0 and the minor version is 39.",
               "The database major version is MySQL 8.0 and the minor version is 40.",
+              "The database version is MySQL 8.4.",
+              "The database version is MySQL 8.4 and the patch version is 0.",
               "The database version is SQL Server 2019 Standard.",
               "The database version is SQL Server 2019 Enterprise.",
               "The database version is SQL Server 2019 Express.",
@@ -3461,7 +3634,10 @@
               false,
               false,
               false,
+              false,
               true,
+              false,
+              false,
               false,
               false,
               false,
@@ -3499,6 +3675,7 @@
               "POSTGRES_13",
               "POSTGRES_14",
               "POSTGRES_15",
+              "POSTGRES_16",
               "MYSQL_8_0",
               "MYSQL_8_0_18",
               "MYSQL_8_0_26",
@@ -3516,6 +3693,8 @@
               "MYSQL_8_0_38",
               "MYSQL_8_0_39",
               "MYSQL_8_0_40",
+              "MYSQL_8_4",
+              "MYSQL_8_4_0",
               "SQLSERVER_2019_STANDARD",
               "SQLSERVER_2019_ENTERPRISE",
               "SQLSERVER_2019_EXPRESS",
@@ -3921,8 +4100,6 @@
       }
     }
   },
-  "servicePath": "",
-  "baseUrl": "https://sqladmin.googleapis.com/",
   "resources": {
     "instances": {
       "methods": {
@@ -4420,7 +4597,7 @@
               "type": "string"
             },
             "failover": {
-              "description": "Set to true if the promote operation should attempt to re-add the original primary as a replica when it comes back online. Otherwise, if this value is false or not set, the original primary will be a standalone instance.",
+              "description": "Set to true to invoke a replica failover to the designated DR replica. As part of replica failover, the promote operation attempts to add the original primary instance as a replica of the promoted DR replica when the original primary instance comes back online. If set to false or not specified, then the original primary instance becomes an independent Cloud SQL primary instance. Only applicable to MySQL.",
               "location": "query",
               "type": "boolean"
             }
@@ -4436,7 +4613,7 @@
             "https://www.googleapis.com/auth/cloud-platform",
             "https://www.googleapis.com/auth/sqlservice.admin"
           ],
-          "description": "Promotes the read replica instance to be a stand-alone Cloud SQL instance. Using this operation might cause your instance to restart."
+          "description": "Promotes the read replica instance to be an independent Cloud SQL primary instance. Using this operation might cause your instance to restart."
         },
         "switchover": {
           "id": "sql.instances.switchover",
@@ -4474,7 +4651,7 @@
             "https://www.googleapis.com/auth/cloud-platform",
             "https://www.googleapis.com/auth/sqlservice.admin"
           ],
-          "description": "Switches over from the primary instance to the replica instance."
+          "description": "Switches over from the primary instance to the designated DR replica instance."
         },
         "resetSslConfig": {
           "id": "sql.instances.resetSslConfig",
@@ -6083,91 +6260,16 @@
       }
     }
   },
-  "basePath": "",
-  "ownerDomain": "google.com",
-  "kind": "discovery#restDescription",
-  "description": "API for Cloud SQL database instance management",
-  "id": "sqladmin:v1",
+  "revision": "20240618",
+  "rootUrl": "https://sqladmin.googleapis.com/",
+  "batchPath": "batch",
+  "ownerName": "Google",
+  "version": "v1",
+  "discoveryVersion": "v1",
   "name": "sqladmin",
-  "parameters": {
-    "access_token": {
-      "type": "string",
-      "description": "OAuth access token.",
-      "location": "query"
-    },
-    "alt": {
-      "type": "string",
-      "description": "Data format for response.",
-      "default": "json",
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ],
-      "location": "query"
-    },
-    "callback": {
-      "type": "string",
-      "description": "JSONP",
-      "location": "query"
-    },
-    "fields": {
-      "type": "string",
-      "description": "Selector specifying which fields to include in a partial response.",
-      "location": "query"
-    },
-    "key": {
-      "type": "string",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
-      "location": "query"
-    },
-    "oauth_token": {
-      "type": "string",
-      "description": "OAuth 2.0 token for the current user.",
-      "location": "query"
-    },
-    "prettyPrint": {
-      "type": "boolean",
-      "description": "Returns response with indentations and line breaks.",
-      "default": "true",
-      "location": "query"
-    },
-    "quotaUser": {
-      "type": "string",
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
-      "location": "query"
-    },
-    "upload_protocol": {
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
-      "location": "query"
-    },
-    "uploadType": {
-      "type": "string",
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
-      "location": "query"
-    },
-    "$.xgafv": {
-      "type": "string",
-      "description": "V1 error format.",
-      "enum": [
-        "1",
-        "2"
-      ],
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ],
-      "location": "query"
-    }
-  },
-  "title": "Cloud SQL Admin API",
-  "documentationLink": "https://developers.google.com/cloud-sql/",
+  "fullyEncodeReservedExpansion": true,
+  "id": "sqladmin:v1",
+  "baseUrl": "https://sqladmin.googleapis.com/",
   "auth": {
     "oauth2": {
       "scopes": {
@@ -6180,12 +6282,5 @@
       }
     }
   },
-  "version": "v1",
-  "rootUrl": "https://sqladmin.googleapis.com/",
-  "fullyEncodeReservedExpansion": true,
-  "canonicalName": "SQL Admin",
-  "protocol": "rest",
-  "revision": "20240317",
-  "batchPath": "batch",
-  "ownerName": "Google"
+  "documentationLink": "https://developers.google.com/cloud-sql/"
 }

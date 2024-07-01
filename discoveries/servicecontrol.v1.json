@@ -1,10 +1,10 @@
 {
-  "mtlsRootUrl": "https://servicecontrol.mtls.googleapis.com/",
-  "kind": "discovery#restDescription",
+  "fullyEncodeReservedExpansion": true,
+  "name": "servicecontrol",
+  "batchPath": "batch",
+  "rootUrl": "https://servicecontrol.googleapis.com/",
+  "documentationLink": "https://cloud.google.com/service-control/",
   "description": "Provides admission control and telemetry reporting for services integrated with Service Infrastructure. ",
-  "revision": "20240223",
-  "version": "v1",
-  "title": "Service Control API",
   "auth": {
     "oauth2": {
       "scopes": {
@@ -17,93 +17,8 @@
       }
     }
   },
-  "discoveryVersion": "v1",
-  "ownerName": "Google",
-  "rootUrl": "https://servicecontrol.googleapis.com/",
-  "parameters": {
-    "access_token": {
-      "type": "string",
-      "description": "OAuth access token.",
-      "location": "query"
-    },
-    "alt": {
-      "type": "string",
-      "description": "Data format for response.",
-      "default": "json",
-      "enum": [
-        "json",
-        "media",
-        "proto"
-      ],
-      "enumDescriptions": [
-        "Responses with Content-Type of application/json",
-        "Media download with context-dependent Content-Type",
-        "Responses with Content-Type of application/x-protobuf"
-      ],
-      "location": "query"
-    },
-    "callback": {
-      "type": "string",
-      "description": "JSONP",
-      "location": "query"
-    },
-    "fields": {
-      "type": "string",
-      "description": "Selector specifying which fields to include in a partial response.",
-      "location": "query"
-    },
-    "key": {
-      "type": "string",
-      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
-      "location": "query"
-    },
-    "oauth_token": {
-      "type": "string",
-      "description": "OAuth 2.0 token for the current user.",
-      "location": "query"
-    },
-    "prettyPrint": {
-      "type": "boolean",
-      "description": "Returns response with indentations and line breaks.",
-      "default": "true",
-      "location": "query"
-    },
-    "quotaUser": {
-      "type": "string",
-      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
-      "location": "query"
-    },
-    "upload_protocol": {
-      "type": "string",
-      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
-      "location": "query"
-    },
-    "uploadType": {
-      "type": "string",
-      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
-      "location": "query"
-    },
-    "$.xgafv": {
-      "type": "string",
-      "description": "V1 error format.",
-      "enum": [
-        "1",
-        "2"
-      ],
-      "enumDescriptions": [
-        "v1 error format",
-        "v2 error format"
-      ],
-      "location": "query"
-    }
-  },
-  "id": "servicecontrol:v1",
-  "protocol": "rest",
   "baseUrl": "https://servicecontrol.googleapis.com/",
-  "documentationLink": "https://cloud.google.com/service-control/",
-  "version_module": true,
-  "canonicalName": "Service Control",
-  "servicePath": "",
+  "basePath": "",
   "schemas": {
     "AllocateQuotaRequest": {
       "id": "AllocateQuotaRequest",
@@ -1567,6 +1482,24 @@
         "resourceAttributes": {
           "description": "Resource attributes used in IAM condition evaluation. This field contains resource attributes like resource type and resource name. To get the whole view of the attributes used in IAM condition evaluation, the user must also look into `AuditLog.request_metadata.request_attributes`.",
           "$ref": "Resource"
+        },
+        "permissionType": {
+          "description": "The type of the permission that was checked. For data access audit logs this corresponds with the permission type that must be enabled in the project/folder/organization IAM policy in order for the log to be written.",
+          "type": "string",
+          "enumDescriptions": [
+            "Default. Should not be used.",
+            "Permissions that gate reading resource configuration or metadata.",
+            "Permissions that gate modification of resource configuration or metadata.",
+            "Permissions that gate reading user-provided data.",
+            "Permissions that gate writing user-provided data."
+          ],
+          "enum": [
+            "PERMISSION_TYPE_UNSPECIFIED",
+            "ADMIN_READ",
+            "ADMIN_WRITE",
+            "DATA_READ",
+            "DATA_WRITE"
+          ]
         }
       }
     },
@@ -1651,7 +1584,8 @@
       "type": "object",
       "properties": {
         "payload": {
-          "description": "Optional. Resource payload that is currently in scope and is subjected to orgpolicy conditions. This payload may be the subset of the actual Resource that may come in the request. This payload should not contain any core content.",
+          "description": "Optional. Deprecated. Resource payload that is currently in scope and is subjected to orgpolicy conditions. This payload may be the subset of the actual Resource that may come in the request.",
+          "deprecated": true,
           "type": "object",
           "additionalProperties": {
             "type": "any",
@@ -1663,7 +1597,8 @@
           "type": "string"
         },
         "resourceTags": {
-          "description": "Optional. Tags referenced on the resource at the time of evaluation. These also include the federated tags, if they are supplied in the CheckOrgPolicy or CheckCustomConstraints Requests. Optional field as of now. These tags are the Cloud tags that are available on the resource during the policy evaluation and will be available as part of the OrgPolicy check response for logging purposes.",
+          "description": "Optional. Deprecated. Tags referenced on the resource at the time of evaluation.",
+          "deprecated": true,
           "type": "object",
           "additionalProperties": {
             "type": "string"
@@ -1834,6 +1769,10 @@
           "items": {
             "type": "string"
           }
+        },
+        "credentialId": {
+          "description": "Identifies the client credential id used for authentication. credential_id is in the format of AUTH_METHOD:IDENTIFIER, e.g. \"serviceaccount:XXXXX, apikey:XXXXX\" where the format of the IDENTIFIER can vary for different AUTH_METHODs.",
+          "type": "string"
         }
       }
     },
@@ -2089,16 +2028,73 @@
           "type": "string"
         }
       }
+    },
+    "V1ResourceEvent": {
+      "id": "V1ResourceEvent",
+      "description": "Report v2 extension proto for passing the resource metadata associated with a resource create/update/delete/undelete event from ESF to Chemist. ResourceEvent proto should be serialized into the ReportRequest.operations.extensions.",
+      "type": "object",
+      "properties": {
+        "payload": {
+          "description": "The payload contains metadata associated with the resource event. A ResourceEventPayloadStatus is provided instead if the original payload cannot be returned due to a limitation (e.g. size limit).",
+          "type": "object",
+          "additionalProperties": {
+            "type": "any",
+            "description": "Properties of the object. Contains field @type with type URL."
+          }
+        },
+        "type": {
+          "description": "The resource event type determines how the backend service should process the event.",
+          "type": "string",
+          "enumDescriptions": [
+            "The resource event type is unclear. We do not expect any events to fall into this category.",
+            "The resource is created/inserted.",
+            "The resource is updated.",
+            "The resource is deleted.",
+            "The resource is un-deleted."
+          ],
+          "enum": [
+            "TYPE_UNSPECIFIED",
+            "CREATE",
+            "UPDATE",
+            "DELETE",
+            "UNDELETE"
+          ]
+        },
+        "destinations": {
+          "description": "The destinations field determines which backend services should handle the event. This should be specified as a comma-delimited string.",
+          "type": "string"
+        },
+        "resource": {
+          "description": "The resource associated with the event.",
+          "$ref": "Resource"
+        },
+        "parent": {
+          "description": "The parent resource for the resource.",
+          "$ref": "Resource"
+        },
+        "path": {
+          "description": "The api path the resource event was created in. This should match the source of the `payload` field. For direct integrations with Chemist, this should generally be the RESPONSE. go/resource-event-pipeline-type",
+          "type": "string",
+          "enumDescriptions": [
+            "Default value. Do not use.",
+            "The request path.",
+            "The response path."
+          ],
+          "enum": [
+            "API_PATH_UNSPECIFIED",
+            "REQUEST",
+            "RESPONSE"
+          ]
+        }
+      }
     }
   },
-  "fullyEncodeReservedExpansion": true,
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "batchPath": "batch",
-  "basePath": "",
-  "name": "servicecontrol",
+  "canonicalName": "Service Control",
+  "version": "v1",
+  "version_module": true,
+  "title": "Service Control API",
+  "ownerDomain": "google.com",
+  "ownerName": "Google",
   "resources": {
     "services": {
       "methods": {
@@ -2189,5 +2185,92 @@
       }
     }
   },
-  "ownerDomain": "google.com"
+  "protocol": "rest",
+  "id": "servicecontrol:v1",
+  "servicePath": "",
+  "kind": "discovery#restDescription",
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
+  "revision": "20240531",
+  "mtlsRootUrl": "https://servicecontrol.mtls.googleapis.com/",
+  "discoveryVersion": "v1",
+  "parameters": {
+    "access_token": {
+      "type": "string",
+      "description": "OAuth access token.",
+      "location": "query"
+    },
+    "alt": {
+      "type": "string",
+      "description": "Data format for response.",
+      "default": "json",
+      "enum": [
+        "json",
+        "media",
+        "proto"
+      ],
+      "enumDescriptions": [
+        "Responses with Content-Type of application/json",
+        "Media download with context-dependent Content-Type",
+        "Responses with Content-Type of application/x-protobuf"
+      ],
+      "location": "query"
+    },
+    "callback": {
+      "type": "string",
+      "description": "JSONP",
+      "location": "query"
+    },
+    "fields": {
+      "type": "string",
+      "description": "Selector specifying which fields to include in a partial response.",
+      "location": "query"
+    },
+    "key": {
+      "type": "string",
+      "description": "API key. Your API key identifies your project and provides you with API access, quota, and reports. Required unless you provide an OAuth 2.0 token.",
+      "location": "query"
+    },
+    "oauth_token": {
+      "type": "string",
+      "description": "OAuth 2.0 token for the current user.",
+      "location": "query"
+    },
+    "prettyPrint": {
+      "type": "boolean",
+      "description": "Returns response with indentations and line breaks.",
+      "default": "true",
+      "location": "query"
+    },
+    "quotaUser": {
+      "type": "string",
+      "description": "Available to use for quota purposes for server-side applications. Can be any arbitrary string assigned to a user, but should not exceed 40 characters.",
+      "location": "query"
+    },
+    "upload_protocol": {
+      "type": "string",
+      "description": "Upload protocol for media (e.g. \"raw\", \"multipart\").",
+      "location": "query"
+    },
+    "uploadType": {
+      "type": "string",
+      "description": "Legacy upload protocol for media (e.g. \"media\", \"multipart\").",
+      "location": "query"
+    },
+    "$.xgafv": {
+      "type": "string",
+      "description": "V1 error format.",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "enumDescriptions": [
+        "v1 error format",
+        "v2 error format"
+      ],
+      "location": "query"
+    }
+  }
 }

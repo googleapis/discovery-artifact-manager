@@ -1,16 +1,4 @@
 {
-  "batchPath": "batch",
-  "icons": {
-    "x16": "http://www.google.com/images/icons/product/search-16.gif",
-    "x32": "http://www.google.com/images/icons/product/search-32.gif"
-  },
-  "servicePath": "",
-  "id": "datamigration:v1",
-  "mtlsRootUrl": "https://datamigration.mtls.googleapis.com/",
-  "description": "Manage Cloud Database Migration Service resources on Google Cloud Platform.",
-  "documentationLink": "https://cloud.google.com/database-migration/",
-  "revision": "20240315",
-  "baseUrl": "https://datamigration.googleapis.com/",
   "resources": {
     "projects": {
       "resources": {
@@ -2032,6 +2020,14 @@
       }
     }
   },
+  "baseUrl": "https://datamigration.googleapis.com/",
+  "mtlsRootUrl": "https://datamigration.mtls.googleapis.com/",
+  "ownerName": "Google",
+  "version_module": true,
+  "revision": "20240609",
+  "basePath": "",
+  "protocol": "rest",
+  "servicePath": "",
   "schemas": {
     "ListOperationsResponse": {
       "id": "ListOperationsResponse",
@@ -2233,7 +2229,8 @@
             "The migration job is running the promote phase.",
             "Only RDS flow - waiting for source writes to stop",
             "Only RDS flow - the sources writes stopped, waiting for dump to begin",
-            "The migration job is ready to be promoted."
+            "The migration job is ready to be promoted.",
+            "The migration job is in the differential backup phase."
           ],
           "enum": [
             "PHASE_UNSPECIFIED",
@@ -2242,7 +2239,8 @@
             "PROMOTE_IN_PROGRESS",
             "WAITING_FOR_SOURCE_WRITES_TO_STOP",
             "PREPARING_THE_DUMP",
-            "READY_FOR_PROMOTE"
+            "READY_FOR_PROMOTE",
+            "DIFF_BACKUP"
           ]
         },
         "type": {
@@ -2325,12 +2323,26 @@
           "type": "string"
         },
         "performanceConfig": {
-          "description": "Optional. Data dump parallelism settings used by the migration. Currently applicable only for MySQL to Cloud SQL for MySQL migrations only.",
+          "description": "Optional. Data dump parallelism settings used by the migration.",
           "$ref": "PerformanceConfig"
         },
         "sqlserverHomogeneousMigrationJobConfig": {
           "description": "Optional. Configuration for SQL Server homogeneous migration.",
           "$ref": "SqlServerHomogeneousMigrationJobConfig"
+        },
+        "dumpType": {
+          "description": "Optional. The type of the data dump. Supported for MySQL to CloudSQL for MySQL migrations only.",
+          "type": "string",
+          "enumDescriptions": [
+            "If not specified, defaults to LOGICAL",
+            "Logical dump.",
+            "Physical file-based dump. Supported for MySQL to CloudSQL for MySQL migrations only."
+          ],
+          "enum": [
+            "DUMP_TYPE_UNSPECIFIED",
+            "LOGICAL",
+            "PHYSICAL"
+          ]
         }
       }
     },
@@ -2500,6 +2512,10 @@
           "items": {
             "$ref": "SqlServerDatabaseBackup"
           }
+        },
+        "useDiffBackup": {
+          "description": "Optional. Enable differential backups.",
+          "type": "boolean"
         }
       }
     },
@@ -2558,7 +2574,12 @@
       "id": "ResumeMigrationJobRequest",
       "description": "Request message for 'ResumeMigrationJob' request.",
       "type": "object",
-      "properties": {}
+      "properties": {
+        "skipValidation": {
+          "description": "Optional. Resume the migration job without running prior configuration verification. Defaults to `false`.",
+          "type": "boolean"
+        }
+      }
     },
     "PromoteMigrationJobRequest": {
       "id": "PromoteMigrationJobRequest",
@@ -3194,13 +3215,15 @@
             "The database major version is MySQL 8.0 and the minor version is 33.",
             "The database major version is MySQL 8.0 and the minor version is 34.",
             "The database major version is MySQL 8.0 and the minor version is 35.",
+            "The database major version is MySQL 8.0 and the minor version is 36.",
             "PostgreSQL 9.6.",
             "PostgreSQL 11.",
             "PostgreSQL 10.",
             "PostgreSQL 12.",
             "PostgreSQL 13.",
             "PostgreSQL 14.",
-            "PostgreSQL 15."
+            "PostgreSQL 15.",
+            "PostgreSQL 16."
           ],
           "enum": [
             "SQL_DATABASE_VERSION_UNSPECIFIED",
@@ -3217,13 +3240,15 @@
             "MYSQL_8_0_33",
             "MYSQL_8_0_34",
             "MYSQL_8_0_35",
+            "MYSQL_8_0_36",
             "POSTGRES_9_6",
             "POSTGRES_11",
             "POSTGRES_10",
             "POSTGRES_12",
             "POSTGRES_13",
             "POSTGRES_14",
-            "POSTGRES_15"
+            "POSTGRES_15",
+            "POSTGRES_16"
           ]
         },
         "userLabels": {
@@ -5298,6 +5323,13 @@
             "type": "string"
           }
         },
+        "tableColumnsDescending": {
+          "description": "For each table_column, mark whether it's sorting order is ascending (false) or descending (true). If no value is defined, assume all columns are sorted in ascending order. Otherwise, the number of items must match that of table_columns with each value specifying the direction of the matched column by its index.",
+          "type": "array",
+          "items": {
+            "type": "boolean"
+          }
+        },
         "unique": {
           "description": "Boolean value indicating whether the index is unique.",
           "type": "boolean"
@@ -6130,9 +6162,7 @@
       }
     }
   },
-  "version_module": true,
-  "name": "datamigration",
-  "kind": "discovery#restDescription",
+  "documentationLink": "https://cloud.google.com/database-migration/",
   "auth": {
     "oauth2": {
       "scopes": {
@@ -6142,6 +6172,21 @@
       }
     }
   },
+  "discoveryVersion": "v1",
+  "canonicalName": "Database Migration Service",
+  "fullyEncodeReservedExpansion": true,
+  "icons": {
+    "x16": "http://www.google.com/images/icons/product/search-16.gif",
+    "x32": "http://www.google.com/images/icons/product/search-32.gif"
+  },
+  "ownerDomain": "google.com",
+  "title": "Database Migration API",
+  "id": "datamigration:v1",
+  "rootUrl": "https://datamigration.googleapis.com/",
+  "kind": "discovery#restDescription",
+  "description": "Manage Cloud Database Migration Service resources on Google Cloud Platform.",
+  "batchPath": "batch",
+  "name": "datamigration",
   "parameters": {
     "access_token": {
       "type": "string",
@@ -6219,14 +6264,5 @@
       "location": "query"
     }
   },
-  "ownerDomain": "google.com",
-  "version": "v1",
-  "protocol": "rest",
-  "discoveryVersion": "v1",
-  "ownerName": "Google",
-  "fullyEncodeReservedExpansion": true,
-  "rootUrl": "https://datamigration.googleapis.com/",
-  "canonicalName": "Database Migration Service",
-  "basePath": "",
-  "title": "Database Migration API"
+  "version": "v1"
 }
