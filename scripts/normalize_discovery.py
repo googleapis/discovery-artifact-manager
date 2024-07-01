@@ -21,26 +21,26 @@ import os
 
 
 def main() -> None:
-  """The entrypoint for normalizing discovery documents.
+    """The entrypoint for normalizing discovery documents.
 
-  This script sorts the JSON keys in each discovery document and writes it back
-  to the file. This makes it easier to compare documents for semantic diffs.
-  """
-  logging.basicConfig(level=logging.INFO)
-  os.chdir("discoveries")
-  for filename in glob.glob("*.json"):
-    logging.info("Normalizing %s", filename)
-    with open(filename, "rb+") as f:
-      content = f.read()
-      data = json.loads(content)
-      normalized_content = json.dumps(data, indent=2, sort_keys=True).encode(
-          "utf-8"
-      )
+    This script sorts the JSON keys in each discovery document and writes it back
+    to the file. This makes it easier to compare documents for semantic diffs.
+    """
+    logging.basicConfig(level=logging.INFO)
+    os.chdir("discoveries")
+    for filename in glob.glob("*.json"):
+        logging.info("Normalizing %s", filename)
+        with open(filename, "rb+") as f:
+            content = f.read()
+            data = json.loads(content)
+            normalized_content = json.dumps(data, indent=2, sort_keys=True).encode(
+                "utf-8"
+            )
 
-    with open(filename, "wb") as f:
-      f.write(normalized_content)
-  os.chdir("..")
+        with open(filename, "wb") as f:
+            f.write(normalized_content)
+    os.chdir("..")
 
 
 if __name__ == "__main__":
-  main()
+    main()
