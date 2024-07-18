@@ -8,9 +8,9 @@ and artifacts for client libraries and generated code samples of Google APIs def
 To aid hermetic testing of client libraries and samples (avoiding synchronization issues), the `discoveries`
 directory hosts a local cache of Discovery docs from the [API Discovery Service](https://developers.google.com/discovery/).
 
-This cache is updated by an internal mechanism and cannot be run locally at this time. Discovery files are expected to be
-updated O(day) from availability in the API Discovery Service.These documents are only updated if they materially
-change and are normalized to make reviewing diffs possible.
+This cache is updated by an internal mechanism and cannot be run locally at this time. Discovery files are expected
+(but not guaranteed) to be updated O(day) from availability in the API Discovery Service. These documents are only
+updated if they materially change and are normalized (sorted keys) to make reviewing diffs possible.
 
 ## Deprecations
 
