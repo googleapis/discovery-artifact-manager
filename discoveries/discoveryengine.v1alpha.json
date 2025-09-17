@@ -203,6 +203,40 @@
             "https://www.googleapis.com/auth/cloud-platform"
           ]
         },
+        "patch": {
+          "description": "Updates the editable settings of a Discovery Engine Project.",
+          "flatPath": "v1alpha/projects/{projectsId}",
+          "httpMethod": "PATCH",
+          "id": "discoveryengine.projects.patch",
+          "parameterOrder": [
+            "name"
+          ],
+          "parameters": {
+            "name": {
+              "description": "Output only. Full resource name of the project, for example `projects/{project}`. Note that when making requests, project number and project id are both acceptable, but the server will always respond in project number.",
+              "location": "path",
+              "pattern": "^projects/[^/]+$",
+              "required": true,
+              "type": "string"
+            },
+            "updateMask": {
+              "description": "Optional. The list of fields to update. Supported fields: * `customer_provided_config`",
+              "format": "google-fieldmask",
+              "location": "query",
+              "type": "string"
+            }
+          },
+          "path": "v1alpha/{+name}",
+          "request": {
+            "$ref": "GoogleCloudDiscoveryengineV1alphaProject"
+          },
+          "response": {
+            "$ref": "GoogleCloudDiscoveryengineV1alphaProject"
+          },
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform"
+          ]
+        },
         "provision": {
           "description": "Provisions the project resource. During the process, related systems will get prepared and initialized. Caller must read the [Terms for data use](https://cloud.google.com/retail/data-use-terms), and optionally specify in request to provide consent to that service terms.",
           "flatPath": "v1alpha/projects/{projectsId}:provision",
@@ -9676,7 +9710,7 @@
       }
     }
   },
-  "revision": "20250908",
+  "revision": "20250914",
   "rootUrl": "https://discoveryengine.googleapis.com/",
   "schemas": {
     "ApiservingMediaRequestInfo": {
@@ -9717,6 +9751,11 @@
             "Such requests occur after an END and signal that the response has been sent back to the client. RESPONSE_SENT is only sent to the backend if it is configured to receive them. The response does not need to contain anything.",
             "Such requests indicate that an error occurred while processing the request. ERROR is only sent to the backend if it is configured to receive them. It is not guaranteed that all errors will result in this notification to the backend, even if the backend requests them. Since these requests are just for informational purposes, the response does not need to contain anything."
           ],
+          "type": "string"
+        },
+        "physicalHeaders": {
+          "description": "The physical headers provided by RequestReceivedParameters in Scotty request. type is uploader_service.KeyValuePairs.",
+          "format": "byte",
           "type": "string"
         },
         "requestId": {
@@ -11991,6 +12030,18 @@
           "$ref": "GoogleCloudDiscoveryengineV1EngineCommonConfig",
           "description": "Common config spec that specifies the metadata of the engine."
         },
+        "configurableBillingApproach": {
+          "description": "Optional. Configuration for configurable billing approach. See go/vais-repricing-billing-dd for more details.",
+          "enum": [
+            "CONFIGURABLE_BILLING_APPROACH_UNSPECIFIED",
+            "CONFIGURABLE_BILLING_APPROACH_ENABLED"
+          ],
+          "enumDescriptions": [
+            "Default value. For Spark and non-Spark non-configurable billing approach. General pricing model.",
+            "The billing approach follows configurations specified by customer."
+          ],
+          "type": "string"
+        },
         "createTime": {
           "description": "Output only. Timestamp the Recommendation Engine was created at.",
           "format": "google-datetime",
@@ -12026,7 +12077,7 @@
             ],
             "type": "string"
           },
-          "description": "Optional. Feature config for the engine to opt in or opt out of features. Supported keys: * `*`: all features, if it's present, all other feature state settings are ignored. * `agent-gallery` * `no-code-agent-builder` * `prompt-gallery` * `model-selector` * `notebook-lm` * `people-search` * `people-search-org-chart` * `bi-directional-audio` * `feedback` * `session-sharing` * `personalization-memory` - Enables personalization based on user preferences.",
+          "description": "Optional. Feature config for the engine to opt in or opt out of features. Supported keys: * `*`: all features, if it's present, all other feature state settings are ignored. * `agent-gallery` * `no-code-agent-builder` * `prompt-gallery` * `model-selector` * `notebook-lm` * `people-search` * `people-search-org-chart` * `bi-directional-audio` * `feedback` * `session-sharing` * `personalization-memory` * `disable-image-generation` * `disable-video-generation`",
           "type": "object"
         },
         "industryVertical": {
@@ -12574,6 +12625,10 @@
           "readOnly": true,
           "type": "string"
         },
+        "customerProvidedConfig": {
+          "$ref": "GoogleCloudDiscoveryengineV1ProjectCustomerProvidedConfig",
+          "description": "Optional. Customer provided configurations."
+        },
         "name": {
           "description": "Output only. Full resource name of the project, for example `projects/{project}`. Note that when making requests, project number and project id are both acceptable, but the server will always respond in project number.",
           "readOnly": true,
@@ -12592,6 +12647,43 @@
           "description": "Output only. A map of terms of services. The key is the `id` of ServiceTerms.",
           "readOnly": true,
           "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "GoogleCloudDiscoveryengineV1ProjectCustomerProvidedConfig": {
+      "description": "Customer provided configurations.",
+      "id": "GoogleCloudDiscoveryengineV1ProjectCustomerProvidedConfig",
+      "properties": {
+        "notebooklmConfig": {
+          "$ref": "GoogleCloudDiscoveryengineV1ProjectCustomerProvidedConfigNotebooklmConfig",
+          "description": "Optional. Configuration for NotebookLM settings."
+        }
+      },
+      "type": "object"
+    },
+    "GoogleCloudDiscoveryengineV1ProjectCustomerProvidedConfigNotebooklmConfig": {
+      "description": "Configuration for NotebookLM.",
+      "id": "GoogleCloudDiscoveryengineV1ProjectCustomerProvidedConfigNotebooklmConfig",
+      "properties": {
+        "modelArmorConfig": {
+          "$ref": "GoogleCloudDiscoveryengineV1ProjectCustomerProvidedConfigNotebooklmConfigModelArmorConfig",
+          "description": "Model Armor configuration to be used for sanitizing user prompts and LLM responses."
+        }
+      },
+      "type": "object"
+    },
+    "GoogleCloudDiscoveryengineV1ProjectCustomerProvidedConfigNotebooklmConfigModelArmorConfig": {
+      "description": "Configuration for customer defined Model Armor templates to be used for sanitizing user prompts and LLM responses.",
+      "id": "GoogleCloudDiscoveryengineV1ProjectCustomerProvidedConfigNotebooklmConfigModelArmorConfig",
+      "properties": {
+        "responseTemplate": {
+          "description": "Optional. The resource name of the Model Armor Template for sanitizing LLM responses. Format: projects/{project}/locations/{location}/templates/{template_id} If not specified, no sanitization will be applied to the LLM response.",
+          "type": "string"
+        },
+        "userPromptTemplate": {
+          "description": "Optional. The resource name of the Model Armor Template for sanitizing user prompts. Format: projects/{project}/locations/{location}/templates/{template_id} If not specified, no sanitization will be applied to the user prompt.",
+          "type": "string"
         }
       },
       "type": "object"
@@ -15776,6 +15868,10 @@
           "description": "Domain name from the document URI. Note that the `uri` field may contain a URL that redirects to the actual website, in which case this will contain the domain name of the target site.",
           "type": "string"
         },
+        "mimeType": {
+          "description": "The mime type of the document. https://www.iana.org/assignments/media-types/media-types.xhtml.",
+          "type": "string"
+        },
         "pageIdentifier": {
           "description": "Page identifier.",
           "type": "string"
@@ -17974,6 +18070,10 @@
           "description": "Optional. Indicates whether incremental syncs are paused for this connector. This is independent of auto_run_disabled. Applicable to only 3P connectors. When the refresh interval is set to the same value as the incremental refresh interval, incremental sync will be disabled, i.e. set to true.",
           "type": "boolean"
         },
+        "jsonParams": {
+          "description": "Required data connector parameters in json string format.",
+          "type": "string"
+        },
         "kmsKeyName": {
           "description": "Input only. The KMS key to be used to protect the DataStores managed by this connector. Must be set for requests that need to comply with CMEK Org Policy protections. If this field is set and processed successfully, the DataStores created by this connector will be protected by the KMS key.",
           "type": "string"
@@ -18004,7 +18104,7 @@
             "description": "Properties of the object.",
             "type": "any"
           },
-          "description": "Required. Params needed to access the source in the format of (Key, Value) pairs. Required parameters for all data sources: * Key: `instance_uri` * Value: type STRING. The uri to access the data source. Required parameters for sources that support OAUTH, i.e. `salesforce`: * Key: `client_id` * Value: type STRING. The client ID for the third party service provider to identify your application. * Key: `client_secret` * Value:type STRING. The client secret generated by the third party authorization server. * Key: `access_token` * Value: type STRING. OAuth token for UCS to access to the protected resource. * Key: `refresh_token` * Value: type STRING. OAuth refresh token for UCS to obtain a new access token without user interaction. Required parameters for sources that support basic API token auth, i.e. `jira`, `confluence`: * Key: `user_account` * Value: type STRING. The username or email with the source. * Key: `api_token` * Value: type STRING. The API token generated for the source account, that is used for authenticating anywhere where you would have used a password. Example: ```json { \"instance_uri\": \"https://xxx.atlassian.net\", \"user_account\": \"xxxx.xxx@xxx.com\", \"api_token\": \"test-token\" } ``` Optional parameter to specify the authorization type to use for multiple authorization types support: * Key: `auth_type` * Value: type STRING. The authorization type for the data source. Supported values: `BASIC_AUTH`, `OAUTH`, `OAUTH_ACCESS_TOKEN`, `OAUTH_TWO_LEGGED`, `OAUTH_JWT_BEARER`, `OAUTH_PASSWORD_GRANT`, `JWT`, `API_TOKEN`, `FEDERATED_CREDENTIAL`.",
+          "description": "Required data connector parameters in structured json format.",
           "type": "object"
         },
         "privateConnectivityProjectId": {
@@ -18226,6 +18326,10 @@
           "$ref": "GoogleCloudDiscoveryengineV1alphaHealthcareFhirConfig",
           "description": "Optional. Configuration for `HEALTHCARE_FHIR` vertical."
         },
+        "jsonParams": {
+          "description": "The parameters for the entity to facilitate data ingestion in json string format.",
+          "type": "string"
+        },
         "keyPropertyMappings": {
           "additionalProperties": {
             "type": "string"
@@ -18238,7 +18342,7 @@
             "description": "Properties of the object.",
             "type": "any"
           },
-          "description": "The parameters for the entity to facilitate data ingestion. E.g. for BigQuery connectors: * Key: `document_id_column` * Value: type STRING. The value of the column ID.",
+          "description": "The parameters for the entity to facilitate data ingestion in structured json format.",
           "type": "object"
         },
         "startingSchema": {
@@ -18621,6 +18725,10 @@
           },
           "type": "array"
         },
+        "jsonParams": {
+          "description": "Additional parameters for this destination config in json string format.",
+          "type": "string"
+        },
         "key": {
           "description": "Optional. Unique destination identifier that is supported by the connector.",
           "type": "string"
@@ -18630,7 +18738,7 @@
             "description": "Properties of the object.",
             "type": "any"
           },
-          "description": "Optional. Additional parameters for this destination config.",
+          "description": "Optional. Additional parameters for this destination config in structured json format.",
           "type": "object"
         }
       },
@@ -19088,6 +19196,18 @@
           "$ref": "GoogleCloudDiscoveryengineV1alphaEngineCommonConfig",
           "description": "Common config spec that specifies the metadata of the engine."
         },
+        "configurableBillingApproach": {
+          "description": "Optional. Configuration for configurable billing approach. See go/vais-repricing-billing-dd for more details.",
+          "enum": [
+            "CONFIGURABLE_BILLING_APPROACH_UNSPECIFIED",
+            "CONFIGURABLE_BILLING_APPROACH_ENABLED"
+          ],
+          "enumDescriptions": [
+            "Default value. For Spark and non-Spark non-configurable billing approach. General pricing model.",
+            "The billing approach follows configurations specified by customer."
+          ],
+          "type": "string"
+        },
         "createTime": {
           "description": "Output only. Timestamp the Recommendation Engine was created at.",
           "format": "google-datetime",
@@ -19123,7 +19243,7 @@
             ],
             "type": "string"
           },
-          "description": "Optional. Feature config for the engine to opt in or opt out of features. Supported keys: * `*`: all features, if it's present, all other feature state settings are ignored. * `agent-gallery` * `no-code-agent-builder` * `prompt-gallery` * `model-selector` * `notebook-lm` * `people-search` * `people-search-org-chart` * `bi-directional-audio` * `feedback` * `session-sharing` * `personalization-memory` - Enables personalization based on user preferences.",
+          "description": "Optional. Feature config for the engine to opt in or opt out of features. Supported keys: * `*`: all features, if it's present, all other feature state settings are ignored. * `agent-gallery` * `no-code-agent-builder` * `prompt-gallery` * `model-selector` * `notebook-lm` * `people-search` * `people-search-org-chart` * `bi-directional-audio` * `feedback` * `session-sharing` * `personalization-memory` * `disable-image-generation` * `disable-video-generation`",
           "type": "object"
         },
         "industryVertical": {
@@ -21642,6 +21762,10 @@
           "readOnly": true,
           "type": "string"
         },
+        "customerProvidedConfig": {
+          "$ref": "GoogleCloudDiscoveryengineV1alphaProjectCustomerProvidedConfig",
+          "description": "Optional. Customer provided configurations."
+        },
         "name": {
           "description": "Output only. Full resource name of the project, for example `projects/{project}`. Note that when making requests, project number and project id are both acceptable, but the server will always respond in project number.",
           "readOnly": true,
@@ -21660,6 +21784,43 @@
           "description": "Output only. A map of terms of services. The key is the `id` of ServiceTerms.",
           "readOnly": true,
           "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "GoogleCloudDiscoveryengineV1alphaProjectCustomerProvidedConfig": {
+      "description": "Customer provided configurations.",
+      "id": "GoogleCloudDiscoveryengineV1alphaProjectCustomerProvidedConfig",
+      "properties": {
+        "notebooklmConfig": {
+          "$ref": "GoogleCloudDiscoveryengineV1alphaProjectCustomerProvidedConfigNotebooklmConfig",
+          "description": "Optional. Configuration for NotebookLM settings."
+        }
+      },
+      "type": "object"
+    },
+    "GoogleCloudDiscoveryengineV1alphaProjectCustomerProvidedConfigNotebooklmConfig": {
+      "description": "Configuration for NotebookLM.",
+      "id": "GoogleCloudDiscoveryengineV1alphaProjectCustomerProvidedConfigNotebooklmConfig",
+      "properties": {
+        "modelArmorConfig": {
+          "$ref": "GoogleCloudDiscoveryengineV1alphaProjectCustomerProvidedConfigNotebooklmConfigModelArmorConfig",
+          "description": "Model Armor configuration to be used for sanitizing user prompts and LLM responses."
+        }
+      },
+      "type": "object"
+    },
+    "GoogleCloudDiscoveryengineV1alphaProjectCustomerProvidedConfigNotebooklmConfigModelArmorConfig": {
+      "description": "Configuration for customer defined Model Armor templates to be used for sanitizing user prompts and LLM responses.",
+      "id": "GoogleCloudDiscoveryengineV1alphaProjectCustomerProvidedConfigNotebooklmConfigModelArmorConfig",
+      "properties": {
+        "responseTemplate": {
+          "description": "Optional. The resource name of the Model Armor Template for sanitizing LLM responses. Format: projects/{project}/locations/{location}/templates/{template_id} If not specified, no sanitization will be applied to the LLM response.",
+          "type": "string"
+        },
+        "userPromptTemplate": {
+          "description": "Optional. The resource name of the Model Armor Template for sanitizing user prompts. Format: projects/{project}/locations/{location}/templates/{template_id} If not specified, no sanitization will be applied to the user prompt.",
+          "type": "string"
         }
       },
       "type": "object"
@@ -21736,6 +21897,10 @@
       "properties": {
         "acceptBizQos": {
           "description": "Optional. Set to `true` to specify that caller has read and would like to give consent to the [Terms for Agent Space quality of service].",
+          "type": "boolean"
+        },
+        "isBiz": {
+          "description": "Optional. Indicates if the current request is for Biz edition (= true) or not (= false).",
           "type": "boolean"
         }
       },
@@ -23044,7 +23209,7 @@
           "description": "Config for natural language query understanding capabilities, such as extracting structured field filters from the query. Refer to [this documentation](https://cloud.google.com/generative-ai-app-builder/docs/natural-language-queries) for more information. If `naturalLanguageQueryUnderstandingSpec` is not specified, no additional natural language query understanding will be done."
         },
         "offset": {
-          "description": "A 0-indexed integer that specifies the current offset (that is, starting result location, amongst the Documents deemed by the API as relevant) in search results. This field is only considered if page_token is unset. If this field is negative, an `INVALID_ARGUMENT` is returned.",
+          "description": "A 0-indexed integer that specifies the current offset (that is, starting result location, amongst the Documents deemed by the API as relevant) in search results. This field is only considered if page_token is unset. If this field is negative, an `INVALID_ARGUMENT` is returned. A large offset may be capped to a reasonable threshold.",
           "format": "int32",
           "type": "integer"
         },
@@ -23143,6 +23308,10 @@
         "safeSearch": {
           "description": "Whether to turn on safe search. This is only supported for website search.",
           "type": "boolean"
+        },
+        "searchAddonSpec": {
+          "$ref": "GoogleCloudDiscoveryengineV1alphaSearchRequestSearchAddonSpec",
+          "description": "Optional. SearchAddonSpec is used to disable add-ons for search as per new repricing model. Refer go/vais-repricing-prd. This field is only supported for search requests."
         },
         "searchAsYouTypeSpec": {
           "$ref": "GoogleCloudDiscoveryengineV1alphaSearchRequestSearchAsYouTypeSpec",
@@ -23650,6 +23819,13 @@
       "description": "Specification to enable natural language understanding capabilities for search requests.",
       "id": "GoogleCloudDiscoveryengineV1alphaSearchRequestNaturalLanguageQueryUnderstandingSpec",
       "properties": {
+        "allowedFieldNames": {
+          "description": "Optional. Allowlist of fields that can be used for natural language filter extraction. By default, if this is unspecified, all indexable fields are eligible for natural language filter extraction (but are not guaranteed to be used). If any fields are specified in allowed_field_names, only the fields that are both marked as indexable in the schema and specified in the allowlist will be eligible for natural language filter extraction. Note: for multi-datastore search, this is not yet supported, and will be ignored.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "extractedFilterBehavior": {
           "description": "Optional. Controls behavior of how extracted filters are applied to the search. The default behavior depends on the request. For single datastore structured search, the default is `HARD_FILTER`. For multi-datastore search, the default behavior is `SOFT_BOOST`. Location-based filters are always applied as hard filters, and the `SOFT_BOOST` setting will not affect them. This field is only used if SearchRequest.natural_language_query_understanding_spec.filter_extraction_condition is set to FilterExtractionCondition.ENABLED.",
           "enum": [
@@ -23740,6 +23916,25 @@
       "properties": {
         "returnRelevanceScore": {
           "description": "Optional. Whether to return the relevance score for search results. The higher the score, the more relevant the document is to the query.",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "GoogleCloudDiscoveryengineV1alphaSearchRequestSearchAddonSpec": {
+      "description": "SearchAddonSpec is used to disable add-ons for search as per new repricing model. Refer go/vais-repricing-prd. By default if the SearchAddonSpec is not specified, we consider that the customer wants to enable them wherever applicable.",
+      "id": "GoogleCloudDiscoveryengineV1alphaSearchRequestSearchAddonSpec",
+      "properties": {
+        "disableGenerativeAnswerAddOn": {
+          "description": "Optional. If true, generative answer add-on is disabled. Generative answer add-on includes natural language to filters and simple answers.",
+          "type": "boolean"
+        },
+        "disableKpiPersonalizationAddOn": {
+          "description": "Optional. If true, disables event re-ranking and personalization to optimize KPIs & personalize results.",
+          "type": "boolean"
+        },
+        "disableSemanticAddOn": {
+          "description": "Optional. If true, semantic add-on is disabled. Semantic add-on includes embeddings and jetstream.",
           "type": "boolean"
         }
       },
@@ -26583,6 +26778,10 @@
           "description": "Whether or not to enable autocomplete.",
           "type": "boolean"
         },
+        "enableCreateAgentButton": {
+          "description": "Optional. If set to true, the widget will enable the create agent button.",
+          "type": "boolean"
+        },
         "enablePeopleSearch": {
           "description": "Optional. If set to true, the widget will enable people search.",
           "type": "boolean"
@@ -26617,7 +26816,7 @@
             ],
             "type": "string"
           },
-          "description": "Output only. Feature config for the engine to opt in or opt out of features. Supported keys: * `agent-gallery` * `no-code-agent-builder` * `prompt-gallery` * `model-selector` * `notebook-lm` * `people-search` * `people-search-org-chart` * `bi-directional-audio` * `feedback` * `session-sharing` * `personalization-memory` - Enables personalization based on user preferences.",
+          "description": "Output only. Feature config for the engine to opt in or opt out of features. Supported keys: * `agent-gallery` * `no-code-agent-builder` * `prompt-gallery` * `model-selector` * `notebook-lm` * `people-search` * `people-search-org-chart` * `bi-directional-audio` * `feedback` * `session-sharing` * `personalization-memory` * `disable-image-generation` * `disable-video-generation`",
           "readOnly": true,
           "type": "object"
         },
@@ -27875,6 +28074,18 @@
           "$ref": "GoogleCloudDiscoveryengineV1betaEngineCommonConfig",
           "description": "Common config spec that specifies the metadata of the engine."
         },
+        "configurableBillingApproach": {
+          "description": "Optional. Configuration for configurable billing approach. See go/vais-repricing-billing-dd for more details.",
+          "enum": [
+            "CONFIGURABLE_BILLING_APPROACH_UNSPECIFIED",
+            "CONFIGURABLE_BILLING_APPROACH_ENABLED"
+          ],
+          "enumDescriptions": [
+            "Default value. For Spark and non-Spark non-configurable billing approach. General pricing model.",
+            "The billing approach follows configurations specified by customer."
+          ],
+          "type": "string"
+        },
         "createTime": {
           "description": "Output only. Timestamp the Recommendation Engine was created at.",
           "format": "google-datetime",
@@ -27910,7 +28121,7 @@
             ],
             "type": "string"
           },
-          "description": "Optional. Feature config for the engine to opt in or opt out of features. Supported keys: * `*`: all features, if it's present, all other feature state settings are ignored. * `agent-gallery` * `no-code-agent-builder` * `prompt-gallery` * `model-selector` * `notebook-lm` * `people-search` * `people-search-org-chart` * `bi-directional-audio` * `feedback` * `session-sharing` * `personalization-memory` - Enables personalization based on user preferences.",
+          "description": "Optional. Feature config for the engine to opt in or opt out of features. Supported keys: * `*`: all features, if it's present, all other feature state settings are ignored. * `agent-gallery` * `no-code-agent-builder` * `prompt-gallery` * `model-selector` * `notebook-lm` * `people-search` * `people-search-org-chart` * `bi-directional-audio` * `feedback` * `session-sharing` * `personalization-memory` * `disable-image-generation` * `disable-video-generation`",
           "type": "object"
         },
         "industryVertical": {
@@ -28721,6 +28932,10 @@
           "readOnly": true,
           "type": "string"
         },
+        "customerProvidedConfig": {
+          "$ref": "GoogleCloudDiscoveryengineV1betaProjectCustomerProvidedConfig",
+          "description": "Optional. Customer provided configurations."
+        },
         "name": {
           "description": "Output only. Full resource name of the project, for example `projects/{project}`. Note that when making requests, project number and project id are both acceptable, but the server will always respond in project number.",
           "readOnly": true,
@@ -28739,6 +28954,43 @@
           "description": "Output only. A map of terms of services. The key is the `id` of ServiceTerms.",
           "readOnly": true,
           "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "GoogleCloudDiscoveryengineV1betaProjectCustomerProvidedConfig": {
+      "description": "Customer provided configurations.",
+      "id": "GoogleCloudDiscoveryengineV1betaProjectCustomerProvidedConfig",
+      "properties": {
+        "notebooklmConfig": {
+          "$ref": "GoogleCloudDiscoveryengineV1betaProjectCustomerProvidedConfigNotebooklmConfig",
+          "description": "Optional. Configuration for NotebookLM settings."
+        }
+      },
+      "type": "object"
+    },
+    "GoogleCloudDiscoveryengineV1betaProjectCustomerProvidedConfigNotebooklmConfig": {
+      "description": "Configuration for NotebookLM.",
+      "id": "GoogleCloudDiscoveryengineV1betaProjectCustomerProvidedConfigNotebooklmConfig",
+      "properties": {
+        "modelArmorConfig": {
+          "$ref": "GoogleCloudDiscoveryengineV1betaProjectCustomerProvidedConfigNotebooklmConfigModelArmorConfig",
+          "description": "Model Armor configuration to be used for sanitizing user prompts and LLM responses."
+        }
+      },
+      "type": "object"
+    },
+    "GoogleCloudDiscoveryengineV1betaProjectCustomerProvidedConfigNotebooklmConfigModelArmorConfig": {
+      "description": "Configuration for customer defined Model Armor templates to be used for sanitizing user prompts and LLM responses.",
+      "id": "GoogleCloudDiscoveryengineV1betaProjectCustomerProvidedConfigNotebooklmConfigModelArmorConfig",
+      "properties": {
+        "responseTemplate": {
+          "description": "Optional. The resource name of the Model Armor Template for sanitizing LLM responses. Format: projects/{project}/locations/{location}/templates/{template_id} If not specified, no sanitization will be applied to the LLM response.",
+          "type": "string"
+        },
+        "userPromptTemplate": {
+          "description": "Optional. The resource name of the Model Armor Template for sanitizing user prompts. Format: projects/{project}/locations/{location}/templates/{template_id} If not specified, no sanitization will be applied to the user prompt.",
+          "type": "string"
         }
       },
       "type": "object"
@@ -29087,7 +29339,7 @@
           "description": "Config for natural language query understanding capabilities, such as extracting structured field filters from the query. Refer to [this documentation](https://cloud.google.com/generative-ai-app-builder/docs/natural-language-queries) for more information. If `naturalLanguageQueryUnderstandingSpec` is not specified, no additional natural language query understanding will be done."
         },
         "offset": {
-          "description": "A 0-indexed integer that specifies the current offset (that is, starting result location, amongst the Documents deemed by the API as relevant) in search results. This field is only considered if page_token is unset. If this field is negative, an `INVALID_ARGUMENT` is returned.",
+          "description": "A 0-indexed integer that specifies the current offset (that is, starting result location, amongst the Documents deemed by the API as relevant) in search results. This field is only considered if page_token is unset. If this field is negative, an `INVALID_ARGUMENT` is returned. A large offset may be capped to a reasonable threshold.",
           "format": "int32",
           "type": "integer"
         },
@@ -29186,6 +29438,10 @@
         "safeSearch": {
           "description": "Whether to turn on safe search. This is only supported for website search.",
           "type": "boolean"
+        },
+        "searchAddonSpec": {
+          "$ref": "GoogleCloudDiscoveryengineV1betaSearchRequestSearchAddonSpec",
+          "description": "Optional. SearchAddonSpec is used to disable add-ons for search as per new repricing model. Refer go/vais-repricing-prd. This field is only supported for search requests."
         },
         "searchAsYouTypeSpec": {
           "$ref": "GoogleCloudDiscoveryengineV1betaSearchRequestSearchAsYouTypeSpec",
@@ -29689,6 +29945,13 @@
       "description": "Specification to enable natural language understanding capabilities for search requests.",
       "id": "GoogleCloudDiscoveryengineV1betaSearchRequestNaturalLanguageQueryUnderstandingSpec",
       "properties": {
+        "allowedFieldNames": {
+          "description": "Optional. Allowlist of fields that can be used for natural language filter extraction. By default, if this is unspecified, all indexable fields are eligible for natural language filter extraction (but are not guaranteed to be used). If any fields are specified in allowed_field_names, only the fields that are both marked as indexable in the schema and specified in the allowlist will be eligible for natural language filter extraction. Note: for multi-datastore search, this is not yet supported, and will be ignored.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "extractedFilterBehavior": {
           "description": "Optional. Controls behavior of how extracted filters are applied to the search. The default behavior depends on the request. For single datastore structured search, the default is `HARD_FILTER`. For multi-datastore search, the default behavior is `SOFT_BOOST`. Location-based filters are always applied as hard filters, and the `SOFT_BOOST` setting will not affect them. This field is only used if SearchRequest.natural_language_query_understanding_spec.filter_extraction_condition is set to FilterExtractionCondition.ENABLED.",
           "enum": [
@@ -29779,6 +30042,25 @@
       "properties": {
         "returnRelevanceScore": {
           "description": "Optional. Whether to return the relevance score for search results. The higher the score, the more relevant the document is to the query.",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "GoogleCloudDiscoveryengineV1betaSearchRequestSearchAddonSpec": {
+      "description": "SearchAddonSpec is used to disable add-ons for search as per new repricing model. Refer go/vais-repricing-prd. By default if the SearchAddonSpec is not specified, we consider that the customer wants to enable them wherever applicable.",
+      "id": "GoogleCloudDiscoveryengineV1betaSearchRequestSearchAddonSpec",
+      "properties": {
+        "disableGenerativeAnswerAddOn": {
+          "description": "Optional. If true, generative answer add-on is disabled. Generative answer add-on includes natural language to filters and simple answers.",
+          "type": "boolean"
+        },
+        "disableKpiPersonalizationAddOn": {
+          "description": "Optional. If true, disables event re-ranking and personalization to optimize KPIs & personalize results.",
+          "type": "boolean"
+        },
+        "disableSemanticAddOn": {
+          "description": "Optional. If true, semantic add-on is disabled. Semantic add-on includes embeddings and jetstream.",
           "type": "boolean"
         }
       },
@@ -30328,15 +30610,14 @@
       "description": "An audio overview of a notebook. This is a summary of the notebook in audio format.",
       "id": "GoogleCloudNotebooklmV1alphaAudioOverview",
       "properties": {
-        "audio": {
-          "description": "The audio overview in wav format. This is only present if the status is AUDIO_OVERVIEW_STATUS_COMPLETE.",
-          "format": "byte",
-          "type": "string"
-        },
         "audioOverviewId": {
           "description": "Output only. Unique ID of the audio overview.",
           "readOnly": true,
           "type": "string"
+        },
+        "generationOptions": {
+          "$ref": "GoogleCloudNotebooklmV1alphaAudioOverviewGenerationOptions",
+          "description": "The options used to generate the audio overview."
         },
         "languageCode": {
           "description": "The language code of the generated audio overview. Use the BCP 47 language code (e.g. \"en\", \"es\", \"hi\", etc.).",
@@ -30358,10 +30639,6 @@
         },
         "name": {
           "description": "Identifier. The full resource name of the notebook. Format: `projects/{project}/locations/{location}/notebooks/{notebook}/audioOverviews/{audio_overview_id}`. This field must be a UTF-8 encoded string with a length limit of 1024 characters.",
-          "type": "string"
-        },
-        "playbackUrl": {
-          "description": "The url used to play the audio overview.",
           "type": "string"
         },
         "status": {
