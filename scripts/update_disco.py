@@ -17,6 +17,7 @@ import json
 import logging
 import os
 import os.path
+import re
 import sys
 import urllib.request
 from typing import Any, Optional
@@ -116,11 +117,19 @@ def load_documents(index_document: DocumentInfo) -> list[DocumentInfo]:
     """
     print("LOADING service documents ...")
     service_documents: list[DocumentInfo] = []
+    non_channel_version_pattern = re.compile(r"(?:v[a-z0-9]+-)?\d{4}-\d{2}-\d{2}(?:-[a-zA-Z]+)?")
     for item in index_document.json["items"]:
         name: str = item["name"]
         version: str = item["version"]
         discovery_rest_url: str = item["discoveryRestUrl"]
         filename: str = f"{name}.{version}.json"
+        # Skip documents with a non-channel-based version segment in the URL.
+        # For example: ".../v1-2023-01-01-preview/...".
+        if non_channel_version_pattern.search(discovery_rest_url):
+            logging.info(
+                f"Skipping {filename} containing non-channel version in URL: {discovery_rest_url}"
+            )
+            continue
         # Sometimes the index lists services that don't exist. So log any
         # errors but don't let them crash the entire script.
         try:

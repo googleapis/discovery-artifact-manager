@@ -96,6 +96,31 @@ INDEX_2_CONTENT_SORTED = b"""{
   ]
 }"""
 
+INDEX_3_CONTENT_NON_CHANNEL_VERSIONS = b"""{
+  "items": [
+    {
+      "name": "service1",
+      "version": "v1-2023-01-01-preview",
+      "discoveryRestUrl": "https://example.com/service1/v1-2023-01-01-preview.json"
+    },
+    {
+      "name": "service2",
+      "version": "2023-01-01-preview",
+      "discoveryRestUrl": "https://example.com/service2/2023-01-01-preview.json"
+    },
+    {
+      "name": "service3",
+      "version": "2023-01-01",
+      "discoveryRestUrl": "https://example.com/service3/2023-01-01.json"
+    },
+    {
+      "name": "service4",
+      "version": "v1alpha1-2023-01-01",
+      "discoveryRestUrl": "https://example.com/service4/v1alpha1-2023-01-01.json"
+    }
+  ]
+}"""
+
 
 class TestUpdateDisco(unittest.TestCase):
     def setUp(self):
@@ -249,6 +274,20 @@ class TestUpdateDisco(unittest.TestCase):
         index_doc = update_disco.DocumentInfo(INDEX_1_CONTENT)
         docs = update_disco.load_documents(index_doc)
         self.assertEqual(0, len(docs))
+
+    @patch("urllib.request.urlopen")
+    def test_load_documents_skip_non_channel(self, mock_urlopen):
+        # This mock is not strictly necessary as the code should skip before
+        # making the HTTP request, but it's good practice to have it in place
+        # for @patch.
+        mock_urlopen.return_value.__enter__.return_value.status = 200
+        mock_urlopen.return_value.__enter__.return_value.read.return_value = b"{}"
+
+        index_doc = update_disco.DocumentInfo(INDEX_3_CONTENT_NON_CHANNEL_VERSIONS)
+        docs = update_disco.load_documents(index_doc)
+        self.assertEqual(0, len(docs))
+
+
 
 
 if __name__ == "__main__":
