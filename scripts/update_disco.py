@@ -126,8 +126,8 @@ def load_documents(index_document: DocumentInfo) -> list[DocumentInfo]:
         discovery_rest_url: str = item["discoveryRestUrl"]
         filename: str = f"{name}.{version}.json"
         # Skip documents with a non-channel-based version.
-        # For example: ".../v1-2023-01-01-preview/...".
-        if non_channel_version_pattern.search(version):
+        # For example: "v1-2023-01-01-preview".
+        if non_channel_version_pattern.match(version):
             logging.info(
                 f"Skipping {filename} containing non-channel version: {version}"
             )
