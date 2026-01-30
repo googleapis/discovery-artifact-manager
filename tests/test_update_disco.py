@@ -288,7 +288,5 @@ class TestUpdateDisco(unittest.TestCase):
         self.assertEqual(0, len(docs))
 
 
-
-
 if __name__ == "__main__":
     unittest.main()

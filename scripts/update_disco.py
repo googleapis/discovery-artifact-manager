@@ -117,7 +117,9 @@ def load_documents(index_document: DocumentInfo) -> list[DocumentInfo]:
     """
     print("LOADING service documents ...")
     service_documents: list[DocumentInfo] = []
-    non_channel_version_pattern = re.compile(r"(?:v[a-z0-9]+-)?\d{4}-\d{2}-\d{2}(?:-[a-zA-Z]+)?")
+    non_channel_version_pattern = re.compile(
+        r"(?:v[a-z0-9]+-)?\d{4}-\d{2}-\d{2}(?:-[a-zA-Z]+)?"
+    )
     for item in index_document.json["items"]:
         name: str = item["name"]
         version: str = item["version"]
