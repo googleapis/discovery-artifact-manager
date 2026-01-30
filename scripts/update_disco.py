@@ -123,11 +123,11 @@ def load_documents(index_document: DocumentInfo) -> list[DocumentInfo]:
         version: str = item["version"]
         discovery_rest_url: str = item["discoveryRestUrl"]
         filename: str = f"{name}.{version}.json"
-        # Skip documents with a non-channel-based version segment in the URL.
+        # Skip documents with a non-channel-based version.
         # For example: ".../v1-2023-01-01-preview/...".
-        if non_channel_version_pattern.search(discovery_rest_url):
+        if non_channel_version_pattern.search(version):
             logging.info(
-                f"Skipping {filename} containing non-channel version in URL: {discovery_rest_url}"
+                f"Skipping {filename} containing non-channel version: {version}"
             )
             continue
         # Sometimes the index lists services that don't exist. So log any
