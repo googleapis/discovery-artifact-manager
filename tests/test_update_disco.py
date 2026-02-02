@@ -164,6 +164,10 @@ class TestUpdateDisco(unittest.TestCase):
         self.assertIsNone(doc.revision)
         self.assertEqual(expected_json, doc.json_without_revision)
 
+    def test_document_info_skips_non_channel_indices(self):
+        index_doc = update_disco.DocumentInfo(INDEX_3_CONTENT_NON_CHANNEL_VERSIONS)
+        self.assertEqual(0, len(index_doc.json.get("items")))
+
     def test_document_info_fails_parsing(self):
         doc = update_disco.DocumentInfo("{", "disc.json")
         self.assertEqual("disc.json", doc.filename)
@@ -272,18 +276,6 @@ class TestUpdateDisco(unittest.TestCase):
     def test_load_documents_failures(self, mock_urlopen):
         mock_urlopen.return_value.__enter__.return_value.status = 404
         index_doc = update_disco.DocumentInfo(INDEX_1_CONTENT)
-        docs = update_disco.load_documents(index_doc)
-        self.assertEqual(0, len(docs))
-
-    @patch("urllib.request.urlopen")
-    def test_load_documents_skip_non_channel(self, mock_urlopen):
-        # This mock is not strictly necessary as the code should skip before
-        # making the HTTP request, but it's good practice to have it in place
-        # for @patch.
-        mock_urlopen.return_value.__enter__.return_value.status = 200
-        mock_urlopen.return_value.__enter__.return_value.read.return_value = b"{}"
-
-        index_doc = update_disco.DocumentInfo(INDEX_3_CONTENT_NON_CHANNEL_VERSIONS)
         docs = update_disco.load_documents(index_doc)
         self.assertEqual(0, len(docs))
 

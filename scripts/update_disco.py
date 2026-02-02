@@ -22,6 +22,12 @@ import sys
 import urllib.request
 from typing import Any, Optional
 
+# Regular expression that matches on API versions that use a non-CBV, date-like
+# version format. Used to filter these artifacts out of the cache.
+non_channel_version_pattern = re.compile(
+    r"(?:v[a-z0-9]+-)?\d{4}-\d{2}-\d{2}(?:-[a-zA-Z]+)?"
+)
+
 
 def main() -> None:
     """The entrypoint for updating discovery documents
@@ -72,7 +78,18 @@ class DocumentInfo:
         self.filename = filename or "index.json"
         self.content = content
         try:
-            self.json = json.loads(content)
+            content_json = json.loads(content)
+            if self.filename == "index.json":
+                # Drop date-like version identifiers, prefer CBV-style versions.
+                original_items = content_json.get("items")
+                filtered = [
+                    item for item in original_items if not _non_cbv_version(item)
+                ]
+                if len(filtered) < len(original_items):
+                    content_json["items"] = filtered
+                    self.content = json.dumps(content_json, indent=2).encode()
+
+            self.json = content_json
             self.revision = self.json.get("revision")
             self.json_without_revision = self.json.copy()
             self.json_string = json.dumps(self.json, indent=2, sort_keys=True)
@@ -85,6 +102,10 @@ class DocumentInfo:
             self.json_without_revision = None
             self.revision = None
             self.json_string = ""
+
+
+def _non_cbv_version(i):
+    return non_channel_version_pattern.match(i.get("version"))
 
 
 def load_index() -> DocumentInfo:
@@ -117,21 +138,11 @@ def load_documents(index_document: DocumentInfo) -> list[DocumentInfo]:
     """
     print("LOADING service documents ...")
     service_documents: list[DocumentInfo] = []
-    non_channel_version_pattern = re.compile(
-        r"(?:v[a-z0-9]+-)?\d{4}-\d{2}-\d{2}(?:-[a-zA-Z]+)?"
-    )
     for item in index_document.json["items"]:
         name: str = item["name"]
         version: str = item["version"]
         discovery_rest_url: str = item["discoveryRestUrl"]
         filename: str = f"{name}.{version}.json"
-        # Skip documents with a non-channel-based version.
-        # For example: "v1-2023-01-01-preview".
-        if non_channel_version_pattern.match(version):
-            logging.info(
-                f"Skipping {filename} containing non-channel version: {version}"
-            )
-            continue
         # Sometimes the index lists services that don't exist. So log any
         # errors but don't let them crash the entire script.
         try:
