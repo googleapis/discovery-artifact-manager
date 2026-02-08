@@ -96,6 +96,31 @@ INDEX_2_CONTENT_SORTED = b"""{
   ]
 }"""
 
+INDEX_3_CONTENT_NON_CHANNEL_VERSIONS = b"""{
+  "items": [
+    {
+      "name": "service1",
+      "version": "v1-2023-01-01-preview",
+      "discoveryRestUrl": "https://example.com/service1/v1-2023-01-01-preview.json"
+    },
+    {
+      "name": "service2",
+      "version": "2023-01-01-preview",
+      "discoveryRestUrl": "https://example.com/service2/2023-01-01-preview.json"
+    },
+    {
+      "name": "service3",
+      "version": "2023-01-01",
+      "discoveryRestUrl": "https://example.com/service3/2023-01-01.json"
+    },
+    {
+      "name": "service4",
+      "version": "v1alpha1-2023-01-01",
+      "discoveryRestUrl": "https://example.com/service4/v1alpha1-2023-01-01.json"
+    }
+  ]
+}"""
+
 
 class TestUpdateDisco(unittest.TestCase):
     def setUp(self):
@@ -138,6 +163,10 @@ class TestUpdateDisco(unittest.TestCase):
         self.assertEqual(expected_json, doc.json)
         self.assertIsNone(doc.revision)
         self.assertEqual(expected_json, doc.json_without_revision)
+
+    def test_document_info_skips_non_channel_indices(self):
+        index_doc = update_disco.DocumentInfo(INDEX_3_CONTENT_NON_CHANNEL_VERSIONS)
+        self.assertEqual(0, len(index_doc.json.get("items")))
 
     def test_document_info_fails_parsing(self):
         doc = update_disco.DocumentInfo("{", "disc.json")

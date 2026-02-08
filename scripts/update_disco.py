@@ -17,9 +17,16 @@ import json
 import logging
 import os
 import os.path
+import re
 import sys
 import urllib.request
 from typing import Any, Optional
+
+# Regular expression that matches on API versions that use a non-CBV, date-like
+# version format. Used to filter these artifacts out of the cache.
+non_channel_version_pattern = re.compile(
+    r"(?:v[a-z0-9]+-)?\d{4}-\d{2}-\d{2}(?:-[a-zA-Z]+)?"
+)
 
 
 def main() -> None:
@@ -71,7 +78,18 @@ class DocumentInfo:
         self.filename = filename or "index.json"
         self.content = content
         try:
-            self.json = json.loads(content)
+            content_json = json.loads(content)
+            if self.filename == "index.json":
+                # Drop date-like version identifiers, prefer CBV-style versions.
+                original_items = content_json.get("items")
+                filtered = [
+                    item for item in original_items if not _non_cbv_version(item)
+                ]
+                if len(filtered) < len(original_items):
+                    content_json["items"] = filtered
+                    self.content = json.dumps(content_json, indent=2).encode()
+
+            self.json = content_json
             self.revision = self.json.get("revision")
             self.json_without_revision = self.json.copy()
             self.json_string = json.dumps(self.json, indent=2, sort_keys=True)
@@ -84,6 +102,10 @@ class DocumentInfo:
             self.json_without_revision = None
             self.revision = None
             self.json_string = ""
+
+
+def _non_cbv_version(i):
+    return non_channel_version_pattern.match(i.get("version"))
 
 
 def load_index() -> DocumentInfo:
