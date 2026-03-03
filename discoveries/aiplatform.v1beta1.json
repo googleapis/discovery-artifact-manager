@@ -38816,9 +38816,42 @@
       }
     }
   },
-  "revision": "20260217",
+  "revision": "20260228",
   "rootUrl": "https://aiplatform.googleapis.com/",
   "schemas": {
+    "CloudAiLargeModelsVisionGenerateVideoExperiments": {
+      "description": "Experimental parameters for video generation.",
+      "id": "CloudAiLargeModelsVisionGenerateVideoExperiments",
+      "properties": {
+        "humanPose": {
+          "$ref": "CloudAiLargeModelsVisionHumanPose",
+          "description": "Human pose parameters for Pose Control"
+        },
+        "modelName": {
+          "description": "Model names, as defined in: xyz ",
+          "type": "string"
+        },
+        "numDiffusionSteps": {
+          "description": "Number of diffusion steps",
+          "format": "int32",
+          "type": "integer"
+        },
+        "promptInputs": {
+          "$ref": "CloudAiLargeModelsVisionPromptInputs",
+          "description": "Prompt chunks for \"ProModel\" prompting. If set, the prompt will not be rewritten, and top-level prompt ignored."
+        },
+        "videoTransformMaskGcsUri": {
+          "description": "GCS URI of the grayscale video mask for Differential Diffusion. Maps to sdedit_video_tmax_scale_map ",
+          "type": "string"
+        },
+        "videoTransformStrength": {
+          "description": "SDEdit: Scalar noise level (0.0 to 1.0) Maps to sdedit_tmax ",
+          "format": "float",
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
     "CloudAiLargeModelsVisionGenerateVideoResponse": {
       "description": "Generate video response.",
       "id": "CloudAiLargeModelsVisionGenerateVideoResponse",
@@ -38859,12 +38892,30 @@
           "description": "Base64 encoded bytes string representing the video.",
           "type": "string"
         },
+        "experimentsMetadata": {
+          "$ref": "CloudAiLargeModelsVisionGenerateVideoExperiments",
+          "description": "Optional metadata returned from experimental requests. Likely only includes the rewritten prompt chunks."
+        },
         "gcsUri": {
           "description": "Cloud Storage URI where the generated video is written.",
           "type": "string"
         },
         "mimeType": {
           "description": "The MIME type of the content of the video. - video/mp4",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "CloudAiLargeModelsVisionHumanPose": {
+      "id": "CloudAiLargeModelsVisionHumanPose",
+      "properties": {
+        "bodyLandmarksGcsUri": {
+          "description": "GCS URI of the human pose video to condition video generation.",
+          "type": "string"
+        },
+        "faceLandmarksGcsUri": {
+          "description": "GCS URI of the face landmarks video to condition video generation.",
           "type": "string"
         }
       },
@@ -38998,6 +39049,36 @@
         "y2": {
           "format": "float",
           "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "CloudAiLargeModelsVisionPromptInputs": {
+      "description": "\"Direct\" prompting for Experimental Video Generation. These will be sent directly to the LDM without being rewritten.",
+      "id": "CloudAiLargeModelsVisionPromptInputs",
+      "properties": {
+        "audioPrompt": {
+          "description": "Description of audio content in the video, without speech.",
+          "type": "string"
+        },
+        "negativeAudioPrompt": {
+          "description": "Negative description of audio content in the video.",
+          "type": "string"
+        },
+        "negativePrompt": {
+          "description": "Single negative prompt for what not to generate.",
+          "type": "string"
+        },
+        "promptChunks": {
+          "description": "2s, 256 tokens per chunk, 4 total chunks. Required.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "transcript": {
+          "description": "Spoken transcript of the video for characters.",
+          "type": "string"
         }
       },
       "type": "object"
@@ -45594,12 +45675,12 @@
       "id": "GoogleCloudAiplatformV1beta1EvaluationInstance",
       "properties": {
         "agentData": {
-          "$ref": "GoogleCloudAiplatformV1beta1EvaluationInstanceAgentData",
+          "$ref": "LegacyAgentData",
           "deprecated": true,
           "description": "Optional. Deprecated. Use `agent_eval_data` instead. Data used for agent evaluation."
         },
         "agentEvalData": {
-          "$ref": "GoogleCloudAiplatformV1beta1EvaluationInstanceAgentData",
+          "$ref": "LegacyAgentData",
           "description": "Optional. Data used for agent evaluation."
         },
         "otherData": {
@@ -45628,45 +45709,6 @@
       },
       "type": "object"
     },
-    "GoogleCloudAiplatformV1beta1EvaluationInstanceAgentConfig": {
-      "deprecated": true,
-      "description": "Configuration for an Agent.",
-      "id": "GoogleCloudAiplatformV1beta1EvaluationInstanceAgentConfig",
-      "properties": {
-        "agentId": {
-          "description": "Optional. Unique identifier of the agent. This ID is used to refer to this agent, e.g., in AgentEvent.author, or in the `sub_agents` field. It must be unique within the `agents` map.",
-          "type": "string"
-        },
-        "agentType": {
-          "description": "Optional. The type or class of the agent (e.g., \"LlmAgent\", \"RouterAgent\", \"ToolUseAgent\"). Useful for the autorater to understand the expected behavior of the agent.",
-          "type": "string"
-        },
-        "description": {
-          "description": "Optional. A high-level description of the agent's role and responsibilities. Critical for evaluating if the agent is routing tasks correctly.",
-          "type": "string"
-        },
-        "developerInstruction": {
-          "$ref": "GoogleCloudAiplatformV1beta1EvaluationInstanceInstanceData",
-          "description": "Optional. Contains instructions from the developer for the agent. Can be static or a dynamic prompt template used with the `AgentEvent.state_delta` field."
-        },
-        "subAgents": {
-          "description": "Optional. The list of valid agent IDs (names) that this agent can delegate to. This defines the directed edges in the agent system graph topology.",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "tools": {
-          "$ref": "GoogleCloudAiplatformV1beta1EvaluationInstanceAgentConfigTools",
-          "description": "List of tools."
-        },
-        "toolsText": {
-          "description": "A JSON string containing a list of tools available to an agent with info such as name, description, parameters and required parameters.",
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
     "GoogleCloudAiplatformV1beta1EvaluationInstanceAgentConfigTools": {
       "description": "Represents a list of tools for an agent.",
       "id": "GoogleCloudAiplatformV1beta1EvaluationInstanceAgentConfigTools",
@@ -45675,51 +45717,6 @@
           "description": "Optional. List of tools: each tool can have multiple function declarations.",
           "items": {
             "$ref": "GoogleCloudAiplatformV1beta1Tool"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "GoogleCloudAiplatformV1beta1EvaluationInstanceAgentData": {
-      "deprecated": true,
-      "description": "Contains data specific to agent evaluations.",
-      "id": "GoogleCloudAiplatformV1beta1EvaluationInstanceAgentData",
-      "properties": {
-        "agentConfig": {
-          "$ref": "GoogleCloudAiplatformV1beta1EvaluationInstanceAgentConfig",
-          "description": "Optional. Agent configuration."
-        },
-        "agents": {
-          "additionalProperties": {
-            "$ref": "GoogleCloudAiplatformV1beta1EvaluationInstanceAgentConfig"
-          },
-          "description": "Optional. The static Agent Configuration. This map defines the graph structure of the agent system. Key: agent_id (matches the `author` field in events). Value: The static configuration of the agent (tools, instructions, sub-agents).",
-          "type": "object"
-        },
-        "developerInstruction": {
-          "$ref": "GoogleCloudAiplatformV1beta1EvaluationInstanceInstanceData",
-          "deprecated": true,
-          "description": "Optional. Deprecated. A field containing instructions from the developer for the agent. Please use `agents.developer_instruction` or `turns.events.active_instruction` instead."
-        },
-        "events": {
-          "$ref": "GoogleCloudAiplatformV1beta1EvaluationInstanceAgentDataEvents",
-          "description": "A list of events."
-        },
-        "tools": {
-          "$ref": "GoogleCloudAiplatformV1beta1EvaluationInstanceAgentDataTools",
-          "deprecated": true,
-          "description": "List of tools."
-        },
-        "toolsText": {
-          "deprecated": true,
-          "description": "A JSON string containing a list of tools available to an agent with info such as name, description, parameters and required parameters.",
-          "type": "string"
-        },
-        "turns": {
-          "description": "Optional. The chronological list of conversation turns. Each turn represents a logical execution cycle (e.g., User Input -> Agent Response).",
-          "items": {
-            "$ref": "GoogleCloudAiplatformV1beta1EvaluationInstanceAgentDataConversationTurn"
           },
           "type": "array"
         }
@@ -46625,6 +46622,10 @@
           "$ref": "GoogleCloudAiplatformV1beta1GroundingMetadata",
           "description": "Optional. Metadata returned to client when grounding is enabled."
         },
+        "inputTranscription": {
+          "$ref": "GoogleCloudAiplatformV1beta1Transcription",
+          "description": "Optional. Audio transcription of user input."
+        },
         "interrupted": {
           "description": "Optional. Flag indicating that LLM was interrupted when generating the content. Usually it's due to user interruption during a bidi streaming.",
           "type": "boolean"
@@ -46635,6 +46636,10 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "outputTranscription": {
+          "$ref": "GoogleCloudAiplatformV1beta1Transcription",
+          "description": "Optional. Audio transcription of model output."
         },
         "partial": {
           "description": "Optional. Indicates whether the text content is part of a unfinished text stream. Only used for streaming mode and when the content is plain text.",
@@ -50918,7 +50923,7 @@
       "id": "GoogleCloudAiplatformV1beta1GenerateInstanceRubricsRequest",
       "properties": {
         "agentConfig": {
-          "$ref": "GoogleCloudAiplatformV1beta1EvaluationInstanceAgentConfig",
+          "$ref": "LegacyAgentConfig",
           "description": "Optional. Agent configuration, required for agent-based rubric generation."
         },
         "contents": {
@@ -51621,6 +51626,10 @@
       "description": "A piece of evidence that supports a claim made by the model. This is used to show a citation for a claim made by the model. When grounding is enabled, the model returns a `GroundingChunk` that contains a reference to the source of the information.",
       "id": "GoogleCloudAiplatformV1beta1GroundingChunk",
       "properties": {
+        "image": {
+          "$ref": "GoogleCloudAiplatformV1beta1GroundingChunkImage",
+          "description": "A grounding chunk from an image search result. See the `Image` message for details."
+        },
         "maps": {
           "$ref": "GoogleCloudAiplatformV1beta1GroundingChunkMaps",
           "description": "A grounding chunk from Google Maps. See the `Maps` message for details."
@@ -51636,6 +51645,29 @@
       },
       "type": "object"
     },
+    "GoogleCloudAiplatformV1beta1GroundingChunkImage": {
+      "description": "An `Image` chunk is a piece of evidence that comes from an image search result. It contains the URI of the image search result and the URI of the image. This is used to provide the user with a link to the source of the information.",
+      "id": "GoogleCloudAiplatformV1beta1GroundingChunkImage",
+      "properties": {
+        "domain": {
+          "description": "The domain of the image search result page.",
+          "type": "string"
+        },
+        "imageUri": {
+          "description": "The URI of the image.",
+          "type": "string"
+        },
+        "sourceUri": {
+          "description": "The URI of the image search result page.",
+          "type": "string"
+        },
+        "title": {
+          "description": "The title of the image search result page.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "GoogleCloudAiplatformV1beta1GroundingChunkMaps": {
       "description": "A `Maps` chunk is a piece of evidence that comes from Google Maps, containing information about places or routes. This is used to provide the user with rich, location-based information.",
       "id": "GoogleCloudAiplatformV1beta1GroundingChunkMaps",
@@ -51647,6 +51679,11 @@
         "placeId": {
           "description": "This Place's resource name, in `places/{place_id}` format. This can be used to look up the place in the Google Maps API.",
           "type": "string"
+        },
+        "route": {
+          "$ref": "GoogleCloudAiplatformV1beta1GroundingChunkMapsRoute",
+          "description": "Output only. Route information.",
+          "readOnly": true
         },
         "text": {
           "description": "The text of the place answer.",
@@ -51691,6 +51728,27 @@
         },
         "title": {
           "description": "The title of the review.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "GoogleCloudAiplatformV1beta1GroundingChunkMapsRoute": {
+      "description": "Route information from Google Maps.",
+      "id": "GoogleCloudAiplatformV1beta1GroundingChunkMapsRoute",
+      "properties": {
+        "distanceMeters": {
+          "description": "The total distance of the route, in meters.",
+          "format": "int32",
+          "type": "integer"
+        },
+        "duration": {
+          "description": "The total duration of the route.",
+          "format": "google-duration",
+          "type": "string"
+        },
+        "encodedPolyline": {
+          "description": "An encoded polyline of the route. See https://developers.google.com/maps/documentation/utilities/polylinealgorithm",
           "type": "string"
         }
       },
@@ -51766,6 +51824,13 @@
           },
           "type": "array"
         },
+        "imageSearchQueries": {
+          "description": "Optional. The image search queries that were used to generate the content. This field is populated only when the grounding source is Google Search with the Image Search search_type enabled.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "retrievalMetadata": {
           "$ref": "GoogleCloudAiplatformV1beta1RetrievalMetadata",
           "description": "Optional. Output only. Metadata related to the retrieval grounding source.",
@@ -51816,7 +51881,7 @@
       "type": "object"
     },
     "GoogleCloudAiplatformV1beta1GroundingSupport": {
-      "description": "A collection of supporting references for a segment of the model's response.",
+      "description": "A collection of supporting references for a segment or part of the model's response.",
       "id": "GoogleCloudAiplatformV1beta1GroundingSupport",
       "properties": {
         "confidenceScores": {
@@ -51829,6 +51894,14 @@
         },
         "groundingChunkIndices": {
           "description": "A list of indices into the `grounding_chunks` field of the `GroundingMetadata` message. These indices specify which grounding chunks support the claim made in the content segment. For example, if this field has the values `[1, 3]`, it means that `grounding_chunks[1]` and `grounding_chunks[3]` are the sources for the claim in the content segment.",
+          "items": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "renderedParts": {
+          "description": "Indices into the `rendered_parts` field of the `GroundingMetadata` message. These indices specify which rendered parts are associated with this support message.",
           "items": {
             "format": "int32",
             "type": "integer"
@@ -52440,7 +52513,8 @@
         },
         "ragFileMetadataConfig": {
           "$ref": "GoogleCloudAiplatformV1beta1RagFileMetadataConfig",
-          "description": "Specifies the metadata config for RagFiles. Including paths for metadata schema and metadata."
+          "deprecated": true,
+          "description": "Specifies the metadata config for RagFiles. Including paths for metadata schema and metadata. Deprecated: Not in use."
         },
         "ragFileParsingConfig": {
           "$ref": "GoogleCloudAiplatformV1beta1RagFileParsingConfig",
@@ -73181,8 +73255,39 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "searchTypes": {
+          "$ref": "GoogleCloudAiplatformV1beta1ToolGoogleSearchSearchTypes",
+          "description": "Optional. The set of search types to enable. If not set, web search is enabled by default."
         }
       },
+      "type": "object"
+    },
+    "GoogleCloudAiplatformV1beta1ToolGoogleSearchImageSearch": {
+      "description": "Image search for grounding and related configurations.",
+      "id": "GoogleCloudAiplatformV1beta1ToolGoogleSearchImageSearch",
+      "properties": {},
+      "type": "object"
+    },
+    "GoogleCloudAiplatformV1beta1ToolGoogleSearchSearchTypes": {
+      "description": "Different types of search that can be enabled on the GoogleSearch tool.",
+      "id": "GoogleCloudAiplatformV1beta1ToolGoogleSearchSearchTypes",
+      "properties": {
+        "imageSearch": {
+          "$ref": "GoogleCloudAiplatformV1beta1ToolGoogleSearchImageSearch",
+          "description": "Optional. Setting this field enables image search. Image bytes are returned."
+        },
+        "webSearch": {
+          "$ref": "GoogleCloudAiplatformV1beta1ToolGoogleSearchWebSearch",
+          "description": "Optional. Setting this field enables web search. Only text results are returned."
+        }
+      },
+      "type": "object"
+    },
+    "GoogleCloudAiplatformV1beta1ToolGoogleSearchWebSearch": {
+      "description": "Standard web search for grounding and related configurations. Only text results are returned.",
+      "id": "GoogleCloudAiplatformV1beta1ToolGoogleSearchWebSearch",
+      "properties": {},
       "type": "object"
     },
     "GoogleCloudAiplatformV1beta1ToolNameMatchInput": {
@@ -74009,6 +74114,21 @@
       },
       "type": "object"
     },
+    "GoogleCloudAiplatformV1beta1Transcription": {
+      "description": "Audio transcription in Server Content.",
+      "id": "GoogleCloudAiplatformV1beta1Transcription",
+      "properties": {
+        "finished": {
+          "description": "Optional. The bool indicates the end of the transcription.",
+          "type": "boolean"
+        },
+        "text": {
+          "description": "Optional. Transcription text.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
     "GoogleCloudAiplatformV1beta1Trial": {
       "description": "A message representing a Trial. A Trial contains a unique set of Parameters that has been or will be evaluated, along with the objective metrics got by running the Trial.",
       "id": "GoogleCloudAiplatformV1beta1Trial",
@@ -74784,7 +74904,8 @@
         },
         "ragFileMetadataConfig": {
           "$ref": "GoogleCloudAiplatformV1beta1RagFileMetadataConfig",
-          "description": "Specifies the metadata config for RagFiles. Including paths for metadata schema and metadata. Alteratively, inline metadata schema and metadata can be provided."
+          "deprecated": true,
+          "description": "Optional. Specifies the metadata config for RagFiles. Including paths for metadata schema and metadata. Alteratively, inline metadata schema and metadata can be provided. Deprecated: Not in use."
         },
         "ragFileParsingConfig": {
           "$ref": "GoogleCloudAiplatformV1beta1RagFileParsingConfig",
@@ -75848,6 +75969,90 @@
           "description": "The whole units of the amount. For example if `currencyCode` is `\"USD\"`, then 1 unit is one US dollar.",
           "format": "int64",
           "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "LegacyAgentConfig": {
+      "deprecated": true,
+      "description": "Configuration for an Agent.",
+      "id": "LegacyAgentConfig",
+      "properties": {
+        "agentId": {
+          "description": "Optional. Unique identifier of the agent. This ID is used to refer to this agent, e.g., in AgentEvent.author, or in the `sub_agents` field. It must be unique within the `agents` map.",
+          "type": "string"
+        },
+        "agentType": {
+          "description": "Optional. The type or class of the agent (e.g., \"LlmAgent\", \"RouterAgent\", \"ToolUseAgent\"). Useful for the autorater to understand the expected behavior of the agent.",
+          "type": "string"
+        },
+        "description": {
+          "description": "Optional. A high-level description of the agent's role and responsibilities. Critical for evaluating if the agent is routing tasks correctly.",
+          "type": "string"
+        },
+        "developerInstruction": {
+          "$ref": "GoogleCloudAiplatformV1beta1EvaluationInstanceInstanceData",
+          "description": "Optional. Contains instructions from the developer for the agent. Can be static or a dynamic prompt template used with the `AgentEvent.state_delta` field."
+        },
+        "subAgents": {
+          "description": "Optional. The list of valid agent IDs (names) that this agent can delegate to. This defines the directed edges in the agent system graph topology.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "tools": {
+          "$ref": "GoogleCloudAiplatformV1beta1EvaluationInstanceAgentConfigTools",
+          "description": "List of tools."
+        },
+        "toolsText": {
+          "description": "A JSON string containing a list of tools available to an agent with info such as name, description, parameters and required parameters.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "LegacyAgentData": {
+      "deprecated": true,
+      "description": "Contains data specific to agent evaluations.",
+      "id": "LegacyAgentData",
+      "properties": {
+        "agentConfig": {
+          "$ref": "LegacyAgentConfig",
+          "description": "Optional. Agent configuration."
+        },
+        "agents": {
+          "additionalProperties": {
+            "$ref": "LegacyAgentConfig"
+          },
+          "description": "Optional. The static Agent Configuration. This map defines the graph structure of the agent system. Key: agent_id (matches the `author` field in events). Value: The static configuration of the agent (tools, instructions, sub-agents).",
+          "type": "object"
+        },
+        "developerInstruction": {
+          "$ref": "GoogleCloudAiplatformV1beta1EvaluationInstanceInstanceData",
+          "deprecated": true,
+          "description": "Optional. Deprecated. A field containing instructions from the developer for the agent. Please use `agents.developer_instruction` or `turns.events.active_instruction` instead."
+        },
+        "events": {
+          "$ref": "GoogleCloudAiplatformV1beta1EvaluationInstanceAgentDataEvents",
+          "description": "A list of events."
+        },
+        "tools": {
+          "$ref": "GoogleCloudAiplatformV1beta1EvaluationInstanceAgentDataTools",
+          "deprecated": true,
+          "description": "List of tools."
+        },
+        "toolsText": {
+          "deprecated": true,
+          "description": "A JSON string containing a list of tools available to an agent with info such as name, description, parameters and required parameters.",
+          "type": "string"
+        },
+        "turns": {
+          "description": "Optional. The chronological list of conversation turns. Each turn represents a logical execution cycle (e.g., User Input -> Agent Response).",
+          "items": {
+            "$ref": "GoogleCloudAiplatformV1beta1EvaluationInstanceAgentDataConversationTurn"
+          },
+          "type": "array"
         }
       },
       "type": "object"
