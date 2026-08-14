@@ -9742,7 +9742,7 @@
       }
     }
   },
-  "revision": "20260802",
+  "revision": "20260809",
   "rootUrl": "https://discoveryengine.googleapis.com/",
   "schemas": {
     "A2aV1APIKeySecurityScheme": {
@@ -19704,6 +19704,10 @@
           ],
           "type": "string"
         },
+        "relevanceFilterSpec": {
+          "$ref": "GoogleCloudDiscoveryengineV1SearchRequestRelevanceFilterSpec",
+          "description": "Optional. The granular relevance filtering specification. If not specified, the global `relevance_threshold` will be used for all sub-searches. If specified, this overrides the global `relevance_threshold` to use thresholds on a per sub-search basis. This feature is currently supported only for custom and site search."
+        },
         "relevanceScoreSpec": {
           "$ref": "GoogleCloudDiscoveryengineV1SearchRequestRelevanceScoreSpec",
           "description": "Optional. The specification for returning the relevance score."
@@ -20287,6 +20291,51 @@
       },
       "type": "object"
     },
+    "GoogleCloudDiscoveryengineV1SearchRequestRelevanceFilterSpec": {
+      "description": "Relevance filtering specification.",
+      "id": "GoogleCloudDiscoveryengineV1SearchRequestRelevanceFilterSpec",
+      "properties": {
+        "keywordSearchThreshold": {
+          "$ref": "GoogleCloudDiscoveryengineV1SearchRequestRelevanceFilterSpecRelevanceThresholdSpec",
+          "description": "Optional. Relevance filtering threshold specification for keyword search."
+        },
+        "semanticSearchThreshold": {
+          "$ref": "GoogleCloudDiscoveryengineV1SearchRequestRelevanceFilterSpecRelevanceThresholdSpec",
+          "description": "Optional. Relevance filtering threshold specification for semantic search."
+        }
+      },
+      "type": "object"
+    },
+    "GoogleCloudDiscoveryengineV1SearchRequestRelevanceFilterSpecRelevanceThresholdSpec": {
+      "description": "Specification for relevance filtering on a specific sub-search.",
+      "id": "GoogleCloudDiscoveryengineV1SearchRequestRelevanceFilterSpecRelevanceThresholdSpec",
+      "properties": {
+        "relevanceThreshold": {
+          "description": "Pre-defined relevance threshold for the sub-search.",
+          "enum": [
+            "RELEVANCE_THRESHOLD_UNSPECIFIED",
+            "LOWEST",
+            "LOW",
+            "MEDIUM",
+            "HIGH"
+          ],
+          "enumDescriptions": [
+            "Default value. In this case, server behavior defaults to Google defined threshold.",
+            "Lowest relevance threshold.",
+            "Low relevance threshold.",
+            "Medium relevance threshold.",
+            "High relevance threshold."
+          ],
+          "type": "string"
+        },
+        "semanticRelevanceThreshold": {
+          "description": "Custom relevance threshold for the sub-search. The value must be in [0.0, 1.0].",
+          "format": "float",
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
     "GoogleCloudDiscoveryengineV1SearchRequestRelevanceScoreSpec": {
       "description": "The specification for returning the document relevance score.",
       "id": "GoogleCloudDiscoveryengineV1SearchRequestRelevanceScoreSpec",
@@ -20708,6 +20757,10 @@
         "rankSignals": {
           "$ref": "GoogleCloudDiscoveryengineV1SearchResponseSearchResultRankSignals",
           "description": "Optional. A set of ranking signals associated with the result."
+        },
+        "retrievalSignals": {
+          "$ref": "GoogleCloudDiscoveryengineV1SearchResponseSearchResultRetrievalSignals",
+          "description": "Optional. A set of signals used by the relevance filter meant for use to fine-tune the relevance filter thresholds."
         }
       },
       "type": "object"
@@ -20784,6 +20837,35 @@
         },
         "value": {
           "description": "Optional. Float value representing the ranking signal (e.g. 1.25 for BM25).",
+          "format": "float",
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "GoogleCloudDiscoveryengineV1SearchResponseSearchResultRetrievalSignals": {
+      "description": "Contains a set of signals used by the relevance filter.",
+      "id": "GoogleCloudDiscoveryengineV1SearchResponseSearchResultRetrievalSignals",
+      "properties": {
+        "retrievalSources": {
+          "description": "Optional. Indicates how the result was retrieved.",
+          "items": {
+            "enum": [
+              "RETRIEVAL_SOURCE_UNSPECIFIED",
+              "KEYWORD_SEARCH",
+              "SEMANTIC_SEARCH"
+            ],
+            "enumDescriptions": [
+              "Unspecified retrieval source.",
+              "Indicates the result was retrieved by keyword search.",
+              "Indicates the result was retrieved by semantic search."
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "semanticRelevanceScore": {
+          "description": "Optional. Relevance score used by the filter when semantic_relevance_threshold is set.",
           "format": "float",
           "type": "number"
         }
@@ -23117,6 +23199,11 @@
           "description": "Output only. Whether the model is currently in preview. Clients should surface this via a \"Preview\" badge in the selector UI.",
           "readOnly": true,
           "type": "boolean"
+        },
+        "label": {
+          "description": "Output only. Short label shown in the compact selector bar chip (e.g. `3.x Flash`) as opposed to the full `display_name` (`Gemini 3.x Flash`). Falls back to `display_name` when the backend registry does not specify a distinct short label.",
+          "readOnly": true,
+          "type": "string"
         },
         "modelId": {
           "description": "Output only. Unique identifier of the model (e.g. `gemini-2.5-flash`, `gemini-3.1-pro-preview`). This is the same identifier that clients pass back to the assistant service to select this model. Virtual / \"pseudo\" models (e.g. `gemini-fast`) are also valid values here; they are resolved to the underlying concrete model on the backend.",
