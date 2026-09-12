@@ -84,7 +84,7 @@ public class JavaSampleMethodToViewTransformer implements SampleMethodToViewTran
     // derived from the service type, skipping the type table can't cause any
     // issues.
     String requestTypeName =
-        typeTable.getRequestTypeName(config.apiTypeName(), methodInfo.requestType()).getNickname();
+        typeTable.getRequestTypeName(serviceTypeName, methodInfo.requestType()).getNickname();
 
     List<SampleFieldView> requiredFields = new ArrayList<>();
     List<SampleFieldView> optionalFields = new ArrayList<>();
